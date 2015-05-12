@@ -5,7 +5,7 @@ import json
 from datetime import date
 from datetime import datetime
 
-from db.models import Portal
+from odpw.db.models import Portal
 
 import logging
 logger = logging.getLogger(__name__)

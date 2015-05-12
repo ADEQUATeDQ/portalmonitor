@@ -14,6 +14,8 @@ submodules=[dbcli, initcli, fetchcli]
 def start ():
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.',prog='ODPW')
 
+    print 'Here'
+
     pa.add_argument(
         '-d', '--debug',
         help="Print lots of debugging statements",

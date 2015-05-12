@@ -4,7 +4,7 @@ files = ["resources/*"]
 setup(
     name='odpw',
     version='',
-    packages=['odpw'],
+    packages=['odpw', 'odpw.db' ],
     url='',
     license='',
     author='jumbrich',

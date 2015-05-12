@@ -1,7 +1,10 @@
 __author__ = 'jumbrich'
 
-import util
-import ckanclient
+
+
+
+import odpw.util
+import odpw.ckanclient
 import requests
 
 import logging
