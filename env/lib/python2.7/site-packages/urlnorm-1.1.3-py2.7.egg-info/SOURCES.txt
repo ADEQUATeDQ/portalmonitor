@@ -1,0 +1,6 @@
+README.txt
+urlnorm.py
+urlnorm.egg-info/PKG-INFO
+urlnorm.egg-info/SOURCES.txt
+urlnorm.egg-info/dependency_links.txt
+urlnorm.egg-info/top_level.txt
