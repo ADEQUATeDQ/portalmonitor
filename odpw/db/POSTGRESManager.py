@@ -535,7 +535,7 @@ class PostGRESManager:
         with self.con:
             with self.con.cursor() as cur:
                 print "Current table sizes:"
-                for table in self.tables:
+                for table in self.tablesInit:
                     cur.execute("SELECT count(*) from "+table)
                     print str(cur.fetchone()[0]).rjust(8),"rows in Table:"+table
 
