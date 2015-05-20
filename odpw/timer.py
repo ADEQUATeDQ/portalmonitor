@@ -39,4 +39,5 @@ class Timer(object):
         stats={}
         for m in Timer.measures:
             stats[m]={'avg':Timer.measures[m].mean, 'calls':Timer.measures[m].n, 'min':Timer.measures[m].min, 'max':Timer.measures[m].max}
+        return stats
 
