@@ -9,11 +9,13 @@ from db.POSTGRESManager import PostGRESManager
 import init as initcli
 import fetch as fetchcli
 import stats as statscli
+import time
 
 
 submodules=[dbcli, initcli, fetchcli,statscli]
 
 def start ():
+    start= time.now()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.',prog='odpw')
 
 
@@ -54,7 +56,16 @@ def start ():
         logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
 
     dbm= PostGRESManager(host=args.dbhost, port=args.dbport)
+
+
+
     args.func(args,dbm)
+
+    end = time.time()
+    secs = end - start
+    msecs = secs * 1000
+    logger = logging.getLogger(__name__)
+    logger.info("END time elapsed %s ms",msecs)
 
 if __name__ == "__main__":
     start()

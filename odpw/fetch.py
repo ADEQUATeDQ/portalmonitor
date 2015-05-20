@@ -259,7 +259,9 @@ def cli(args,dbm):
     except Exception as e:
         log.exception(e)
 
-    #Timer.printStats()
-    Timer.getStats()
+    Timer.printStats()
+    log.info("Timer", stats=Timer.getStats())
+
+
 
     #dbm.updateTimeInSnapshotStatusTable(sn=sn, key="fetch_end")
