@@ -4,7 +4,7 @@ from urlparse import urlparse
 import urlnorm
 from datetime import datetime
 import sys
-import requests
+import requests.exceptions
 
 def computeID(url):
     up = urlparse(urlnorm.norm(url))
@@ -320,13 +320,18 @@ def getExceptionCode(e):
     #connection erorrs
     if isinstance(e,requests.exceptions.ConnectionError):
         return 702
-
     if isinstance(e,requests.exceptions.ConnectTimeout):
         return 703
     if isinstance(e,requests.exceptions.ReadTimeout):
         return 704
     if isinstance(e,requests.exceptions.HTTPError):
         return 705
+    if isinstance(e,requests.exceptions.TooManyRedirects):
+        return 706
+    if isinstance(e,requests.exceptions.Timeout):
+        return 707
+    if isinstance(e,requests.exceptions.RetryError):
+        return 708
 
     #parser errors
     if isinstance(e, exceptions.ValueError):
@@ -335,6 +340,10 @@ def getExceptionCode(e):
     #format errors
     if isinstance(e,urlnorm.InvalidUrl):
         return 901
+    if isinstance(e,requests.exceptions.InvalidSchema):
+        return 902
+    if isinstance(e,requests.exceptions.MissingSchema):
+        return 903
 
     else:
         return 600
