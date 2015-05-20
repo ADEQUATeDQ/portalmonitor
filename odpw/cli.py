@@ -1,33 +1,44 @@
 __author__ = 'jumbrich'
-import os
+
 import argparse
-import sys
 import logging
 import logging.config
-from db import cli as dbcli
+
+from db import POSTGRESManager as dbcli
+from db.POSTGRESManager import PostGRESManager
 import init as initcli
 import fetch as fetchcli
+import stats as statscli
 
 
-submodules=[dbcli, initcli, fetchcli]
+submodules=[dbcli, initcli, fetchcli,statscli]
 
 def start ():
-    pa = argparse.ArgumentParser(description='Open Portal Watch toolset.',prog='ODPW')
+    pa = argparse.ArgumentParser(description='Open Portal Watch toolset.',prog='odpw')
 
-    print 'Here'
 
-    pa.add_argument(
+    logg=pa.add_argument_group("Logging")
+    logg.add_argument(
         '-d', '--debug',
         help="Print lots of debugging statements",
         action="store_const", dest="loglevel", const=logging.DEBUG,
         default=logging.WARNING,
     )
-    pa.add_argument(
+    logg.add_argument(
         '-v', '--verbose',
         help="Be verbose",
         action="store_const", dest="loglevel", const=logging.INFO,
     )
-    pa.add_argument('--host', help="DB host", dest='dbhost')
+    logg.add_argument(
+        '-l', '--logconf',
+        help="Load logging config",
+        type=file, dest='logfile'
+    )
+
+    dbg=pa.add_argument_group("DB")
+    dbg.add_argument('--host', help="DB host", dest='dbhost', default="localhost")
+    dbg.add_argument('--port', help="DB port", dest='dbport',type=int, default=5433)
+    #dbg.add_argument('--dbconf', help="DB config", dest='dbconf',type=file)
 
     sp = pa.add_subparsers(title='Modules', description="Available sub modules")
     for sm in submodules:
@@ -37,9 +48,13 @@ def start ():
 
     args = pa.parse_args()
 
-    logging.basicConfig(level=args.loglevel)
+    if args.logfile:
+        logging.config.fileConfig(args.logfile,disable_existing_loggers=0)
+    else:
+        logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
 
-    args.func(args)
+    dbm= PostGRESManager(host=args.dbhost, port=args.dbport)
+    args.func(args,dbm)
 
 if __name__ == "__main__":
     start()

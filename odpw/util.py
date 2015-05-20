@@ -2,6 +2,9 @@ __author__ = 'jumbrich'
 
 from urlparse import urlparse
 import urlnorm
+from datetime import datetime
+import sys
+import requests
 
 def computeID(url):
     up = urlparse(urlnorm.norm(url))
@@ -310,3 +313,105 @@ def getCountry(url):
 		return all[url_elements[-1]]
 	else:
 		return "unknown"
+
+import exceptions
+def getExceptionCode(e):
+
+    #connection erorrs
+    if isinstance(e,requests.exceptions.ConnectionError):
+        return 702
+
+    if isinstance(e,requests.exceptions.ConnectTimeout):
+        return 703
+    if isinstance(e,requests.exceptions.ReadTimeout):
+        return 704
+    if isinstance(e,requests.exceptions.HTTPError):
+        return 705
+
+    #parser errors
+    if isinstance(e, exceptions.ValueError):
+        return 801
+
+    #format errors
+    if isinstance(e,urlnorm.InvalidUrl):
+        return 901
+
+    else:
+        return 600
+
+
+def getSnapshot(args):
+    if args.snapshot:
+        return args.snapshot
+    else:
+        now = datetime.now()
+        y=now.isocalendar()[0]
+        w=now.isocalendar()[1]
+        sn=str(y)+'-'+str(w)
+        if not args.ignore:
+            while True:
+                choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
+                if choice == 'y':
+                    break
+                elif choice == 'n':
+                    return None
+                else:
+                    sys.stdout.write("Please respond with 'y' or 'n' \n")
+        return sn
+
+
+def analyseStatus(statusmap, status):
+    sstr=str(status)
+    if sstr[0]=='2':
+        statusmap['ok']+=1
+    elif sstr[0]=='4':
+        statusmap['offline']+=1
+    elif sstr[0]=='5':
+        statusmap['serverErr']+=1
+    elif sstr[0]=='7':
+        statusmap['connErr']+=1
+    elif sstr[0]=='8':
+        statusmap['parserErr']+=1
+    elif sstr[0]=='9':
+        statusmap['formatErr']+=1
+    statusmap['count']+=1
+
+def initStatusMap():
+    return {
+        'count':0,
+        'ok':0,
+        'offline':0,
+        'serverErr':0,
+        'connErr':0,
+        'parserErr':0,
+        'formatErr':0
+    }
+
+
+def extractMimeType( ct):
+    if ";" in ct:
+        return str(ct)[:ct.find(";")].strip()
+    return ct.strip()
+
+def head(url, redirects=0, props=None):
+    if not props:
+        props={}
+    headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
+
+    header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
+    props['size']=header_dict['content-length']
+    props['mime']=extractMimeType(header_dict['content-type'])
+    props['status']=headResp.status_code
+    props['header']=header_dict
+
+    if headResp.status_code == requests.codes.moved:
+        moved_url = header_dict['location']
+        if redirects == 0:
+            props['redirects']=[]
+        props['redirects'].append(header_dict)
+        if redirects < 3:
+            redirects += 1
+            return head(url=moved_url, redirects=redirects,props=props)
+        else:
+            props['status']=777
+    return props

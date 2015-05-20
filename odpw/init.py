@@ -6,34 +6,31 @@ from db.models import Portal
 from db.POSTGRESManager import PostGRESManager
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
+from structlog import get_logger, configure
+from structlog.stdlib import LoggerFactory
+configure(logger_factory=LoggerFactory())
+log = get_logger()
 
 def name():
     return 'Init'
 def setupCLI(pa):
     pa.add_argument('-p','--portals',type=file, dest='plist')
-    pa.add_argument('-s','--software',choices=['CKAN'], dest='software')
-    pa.add_argument('-db','--db',  action='store_true', dest='dbinit')
 
-def cli(args):
-
-    dbm = PostGRESManager(host=args.dbhost)
-    if args.dbinit:
-        while True:
-            choice = raw_input("WARNING: Do you really want to init the DB? (This destroys all data): (Y/N)").lower()
-            if choice == 'y':
-                logger.info("Reseting DB now")
-                dbm.initTables()
-                break
-            elif choice == 'n':
-                logger.info("Thought so :)")
-                break
-            else:
-                sys.stdout.write("Please respond with 'y' or 'n' \n")
-
+def cli(args,dbm):
     if args.plist:
+        ok=0
+        fail=0
         for l in args.plist:
-            if len(l.split(","))==2 and len(l.split(",")[1].strip())>0:
-                p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
-
-                dbm.insertPortal(p)
+            try:
+                if len(l.split(","))==2 and len(l.split(",")[1].strip())>0:
+                    p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
+                    dbm.insertPortal(p)
+                    ok+=1
+                    log.info("processed")
+                else:
+                    log.info("Skipping line",line=l )
+            except Exception as e:
+                log.exception(e)
+                fail+=1
+        log.info("Initialised portals", total=(ok+fail), ok=ok, failed=fail)
