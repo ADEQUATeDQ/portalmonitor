@@ -24,7 +24,7 @@ psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
 
-from timer import Timer
+from odpw.timer import Timer
 
 
 ##date handler and nested json functions are necessary to convert the mongodb content  into valid postgres json
