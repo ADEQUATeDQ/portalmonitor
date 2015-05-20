@@ -15,7 +15,7 @@ import time
 submodules=[dbcli, initcli, fetchcli,statscli]
 
 def start ():
-    start= time.now()
+    start= time.time()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.',prog='odpw')
 
 
