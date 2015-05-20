@@ -11,5 +11,12 @@ setup(
     author_email='',
     description='',
     scripts = ["bin/odpw"],
+    install_requires=[
+        "requests",
+        "faststat",
+        'psycopg2',
+        'structlog',
+        'urlnorm'
+    ],
 
 )
