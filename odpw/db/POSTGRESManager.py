@@ -64,8 +64,17 @@ def nested_json(o):
 
 class PostGRESManager:
 
+
+
     def __init__(self, db='portalwatch', host="localhost", port=5433):
         try:
+            self.tablesInit={
+                'portals': self.initPortalsTable,
+                'datasets': self.initDatasetsTable,
+                'resources': self.initResourceTable,
+                'portal_meta_data': self.initPortalMetaDataTable,
+            }
+
             #Define our connection string
             self.log = log.new()
             conn_string = "dbname='%s' user='opwu' host='%s' port=%s password='0pwu'" % (db, host,port)
@@ -74,20 +83,24 @@ class PostGRESManager:
             self.log.debug("Connecting to database", conn_string=conn_string)
             self.con = psycopg2.connect(conn_string)
             self.log.info("Connection established",host=host, port=port)
+
+
         except Exception as e:
             logger.critical("Unable to conntect to db(host=%s, db=%s)", host,db,exc_info=True)
 
     def initTables(self):
         self.log.info("(Re)Initialising DB tables")
-        self.initPortalsTable()
-        self.initDatasetsTable()
-        self.initPortalMetaDataTable()
+
+        for table in self.tablesInit:
+            self.tablesInit[table]()
+
         self.printSize()
         self.log.info("Initialised DB tables")
 
      #PORTALS TABLE
 
     def initPortalsTable(self):
+        print 'here'
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute("DROP TABLE IF EXISTS portals ")
@@ -522,16 +535,9 @@ class PostGRESManager:
         with self.con:
             with self.con.cursor() as cur:
                 print "Current table sizes:"
-                cur.execute("SELECT count(*) from portals")
-                print str(cur.fetchone()[0]).rjust(8),"rows in Table:portals"
-
-                cur.execute("SELECT count(*) from portal_meta_data")
-                print str(cur.fetchone()[0]).rjust(8),"rows in Table:portal_meta_data"
-
-                cur.execute("SELECT count(*) from datasets")
-                print str(cur.fetchone()[0]).rjust(8),"rows in Table:datasets"
-
-
+                for table in self.tables:
+                    cur.execute("SELECT count(*) from "+table)
+                    print str(cur.fetchone()[0]).rjust(8),"rows in Table:"+table
 
 def name():
     return 'DB'
@@ -565,6 +571,8 @@ if __name__ == '__main__':
     #p.initPortalsTable()
     #p.initDatasetsTable()
     #p.initPortalMetaDataTable()
-    p.initResourceTable()
+    #p.initResourceTable()
+    p.printSize()
+    p
     #p.initTables()
 
