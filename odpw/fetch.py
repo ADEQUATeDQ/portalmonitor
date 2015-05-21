@@ -131,7 +131,7 @@ def extract_keys(data, stats):
                     extra.append(k)
         else:
             if key not in core:
-                core.append(k)
+                core.append(key)
 
     return stats
 
