@@ -358,7 +358,7 @@ def getExceptionCode(e):
         else:
             return 600
     except Exception as e:
-        log.exception("Get Exception code", exctype=type(e), excmsg=e.message)
+        log.error("Get Exception code", exctype=type(e), excmsg=e.message,exc_info=True)
         return 601
 
 
@@ -422,7 +422,12 @@ def head(url, redirects=0, props=None):
     headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
 
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
+    print header_dict
+    #if 'content-type' in header_dict:
     props['mime']=extractMimeType(header_dict['content-type'])
+    #else:
+    #    props['mime']='missing'
+
     props['status']=headResp.status_code
     props['header']=header_dict
     if headResp.status_code == requests.codes.ok:

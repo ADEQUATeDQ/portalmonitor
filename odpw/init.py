@@ -31,6 +31,6 @@ def cli(args,dbm):
                 else:
                     log.info("Skipping line",line=l )
             except Exception as e:
-                log.exception("Insert new Portal", line=l,exctype=type(e), excmsg=e.message,)
+                log.error("Insert new Portal", line=l,exctype=type(e), excmsg=e.message,exc_info=True)
                 fail+=1
         log.info("Initialised portals", total=(ok+fail), ok=ok, failed=fail)

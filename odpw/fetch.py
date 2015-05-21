@@ -52,7 +52,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
                 log.info('process status', pid=Portal.id, done=c, total=Portal.datasets)
 
         except Exception as e:
-            log.exception("GET MetaData", pid=Portal.id, exctype=type(e), excmsg=e.message, did=entity)
+            log.error("GET MetaData", pid=Portal.id, exctype=type(e), excmsg=e.message, did=entity,exc_info=True)
             #log.exception('GET MetaData', pid=Portal.id,  did=entity,exc_info=True)
     log.info("Fetched Meta data", pid=Portal.id, done=c, total=len(package_list))
 
@@ -106,7 +106,7 @@ def fetchDataset(entity, stats, dbm, sn, first=False):
                         time.sleep(randint(1, 2))
                     lastDomain=curdomain
     except Exception as e:
-        log.exception('fetching dataset information', pid=stats['portal'].id,apiurl=stats['portal'].apiurl,exctype=type(e), excmsg=e.message)
+        log.error('fetching dataset information', pid=stats['portal'].id,apiurl=stats['portal'].apiurl,exctype=type(e), excmsg=e.message,exc_info=True)
         props['status']=util.getExceptionCode(e)
         props['exception']=str(type(e))+":"+str(e.message)
 
@@ -180,7 +180,7 @@ def fetching(obj):
                 stats['resources']=Portal.resources
 
     except Exception as e:
-        log.exception("fetching dataset information", apiurl=Portal.apiurl, exctype=type(e), excmsg=e.message)
+        log.error("fetching dataset information", apiurl=Portal.apiurl, exctype=type(e), excmsg=e.message,exc_info=True)
         #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
         Portal.status=getExceptionCode(e)
         Portal.exception=str(type(e))+":"+str(e.message)
@@ -193,7 +193,7 @@ def fetching(obj):
         #   ds-fetch statistics
         dbm.upsertPortalMetaData(pmd)
     except Exception as e:
-        log.critical('Updating DB', pid=Portal.id, exctype=type(e), excmsg=e.message)
+        log.critical('Updating DB', pid=Portal.id, exctype=type(e), excmsg=e.message,exc_info=True)
         #log.exception('Updating DB', pid=Portal.id,  exc_info=True)
 
     return stats
@@ -264,7 +264,7 @@ def cli(args,dbm):
         log.info("fetch result", data=portals)
 
     except Exception as e:
-        log.exception("Processing fetch",exctype=type(e), excmsg=e.message)
+        log.error("Processing fetch",exctype=type(e), excmsg=e.message,exc_info=True)
 
     Timer.printStats()
     log.info("Timer", stats=Timer.getStats())

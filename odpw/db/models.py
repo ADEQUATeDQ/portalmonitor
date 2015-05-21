@@ -48,7 +48,7 @@ class Portal:
         except Exception as e:
             print 'here'
             #log.warning("fetching dataset information", apiurl=apiurl, exctype=type(e), excmsg=e.message)
-            log.exception('fetching dataset information', apiurl=apiurl,exctype=type(e), excmsg=e.message)
+            log.error('fetching dataset information', apiurl=apiurl,exctype=type(e), excmsg=e.message,exc_info=True)
             props['status']=util.getExceptionCode(e)
             props['exception']=str(type(e))+":"+str(e.message)
 
@@ -138,7 +138,7 @@ class Resource:
             props=util.head(url)
 
         except Exception as e:
-            log.exception('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
+            log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot,exc_info=True)
             props['status']=util.getExceptionCode(e)
             props['exception']=str(type(e))+":"+str(e.message)
 
@@ -193,12 +193,9 @@ class Resource:
 
 if __name__ == '__main__':
     logging.basicConfig()
-    r = Resource.newInstance(url="http://data.edostate.gov.ng/storage/f/2013-08-21T12:06:01.747Z/2005-budget-analysis.csv", snapshot='2015-10')
+    r = Resource.newInstance(url="http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1", snapshot='2015-10')
     print r.__dict__
-    r.updateOrigin(pid='test', did='test')
-    print r.__dict__
-    r.updateOrigin(pid='test', did='test')
-    print r.__dict__
+
 
 
 
