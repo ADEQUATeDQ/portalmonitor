@@ -7,9 +7,19 @@ import sys
 import requests.exceptions
 import exceptions
 
+import logging
+log = logging.getLogger(__name__)
+from structlog import get_logger, configure
+from structlog.stdlib import LoggerFactory
+configure(logger_factory=LoggerFactory())
+log = get_logger()
+
 def computeID(url):
-    up = urlparse(urlnorm.norm(url))
-    return up.hostname
+    try:
+        up = urlparse(urlnorm.norm(url))
+        return up.hostname
+    except Exception as e:
+        return None
 
 # The mappings
 nameorgs = {
@@ -317,37 +327,40 @@ def getCountry(url):
 
 
 def getExceptionCode(e):
-    print type(e)
     #connection erorrs
-    if isinstance(e,requests.exceptions.ConnectionError):
-        return 702
-    if isinstance(e,requests.exceptions.ConnectTimeout):
-        return 703
-    if isinstance(e,requests.exceptions.ReadTimeout):
-        return 704
-    if isinstance(e,requests.exceptions.HTTPError):
-        return 705
-    if isinstance(e,requests.exceptions.TooManyRedirects):
-        return 706
-    if isinstance(e,requests.exceptions.Timeout):
-        return 707
-    if isinstance(e,requests.exceptions.RetryError):
-        return 708
+    try:
+        if isinstance(e,requests.exceptions.ConnectionError):
+            return 702
+        if isinstance(e,requests.exceptions.ConnectTimeout):
+            return 703
+        if isinstance(e,requests.exceptions.ReadTimeout):
+            return 704
+        if isinstance(e,requests.exceptions.HTTPError):
+            return 705
+        if isinstance(e,requests.exceptions.TooManyRedirects):
+            return 706
+        if isinstance(e,requests.exceptions.Timeout):
+            return 707
+        #if isinstance(e,requests.exceptions.RetryError):
+        #    return 708
 
-    #parser errors
-    if isinstance(e, exceptions.ValueError):
-        return 801
+        #parser errors
+        if isinstance(e, exceptions.ValueError):
+            return 801
 
-    #format errors
-    if isinstance(e,urlnorm.InvalidUrl):
-        return 901
-    if isinstance(e,requests.exceptions.InvalidSchema):
-        return 902
-    if isinstance(e,requests.exceptions.MissingSchema):
-        return 903
+        #format errors
+        if isinstance(e,urlnorm.InvalidUrl):
+            return 901
+        if isinstance(e,requests.exceptions.InvalidSchema):
+            return 902
+        if isinstance(e,requests.exceptions.MissingSchema):
+            return 903
+        else:
+            return 600
+    except Exception as e:
+        log.exception("Get Exception code", exctype=type(e), excmsg=e.message)
+        return 601
 
-    else:
-        return 600
 
 
 def getSnapshot(args):
@@ -409,7 +422,6 @@ def head(url, redirects=0, props=None):
     headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
 
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
-    print header_dict
     props['mime']=extractMimeType(header_dict['content-type'])
     props['status']=headResp.status_code
     props['header']=header_dict

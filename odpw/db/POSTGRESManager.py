@@ -89,6 +89,7 @@ class PostGRESManager:
             logger.critical("Unable to conntect to db(host=%s, db=%s)", host,db,exc_info=True)
 
     def initTables(self):
+
         self.log.info("(Re)Initialising DB tables")
 
         for table in self.tablesInit:
@@ -100,7 +101,6 @@ class PostGRESManager:
      #PORTALS TABLE
 
     def initPortalsTable(self):
-        print 'here'
         with self.con:
             with self.con.cursor() as cur:
                 cur.execute("DROP TABLE IF EXISTS portals ")
@@ -112,6 +112,7 @@ class PostGRESManager:
                     "country text,"
                     "changefeed boolean,"
                     "status smallint,"
+                    "exception text,"
                     "datasets integer,"
                     "resources integer,"
                     "latest_snapshot VARCHAR(7),"
@@ -126,7 +127,7 @@ class PostGRESManager:
         with self.con:
             with self.con.cursor() as cur,\
                     Timer(key="insertPortal") as t:
-                cur.execute("INSERT INTO portals VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())",
+                cur.execute("INSERT INTO portals VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())",
                     (Portal.id,
                     Portal.url,
                     Portal.apiurl,
@@ -134,6 +135,7 @@ class PostGRESManager:
                     Portal.country,
                     Portal.changefeed,
                     Portal.status,
+                    Portal.exception,
                     Portal.datasets,
                     Portal.resources,
                     Portal.latest_snapshot
@@ -147,13 +149,29 @@ class PostGRESManager:
             with self.con.cursor() as cur,\
                     Timer(key="upsertPortal") as t:
                 cur.execute(
-                    "UPDATE portals SET changefeed=%s, status=%s,datasets=%s, resources=%s, updated=now(), latest_snapshot=%s WHERE id=%s;"
-                    "INSERT INTO portals (id,url,apiurl,software,country,changefeed, status,datasets,resources,latest_snapshot,updated)"
-                    "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now() "
+                    "UPDATE portals SET changefeed=%s, status=%s,exception=%s, datasets=%s, resources=%s, updated=now(), latest_snapshot=%s WHERE id=%s;"
+                    "INSERT INTO portals (id,url,apiurl,software,country,changefeed, status,exception,datasets,resources,latest_snapshot,updated)"
+                    "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now() "
                     "WHERE NOT EXISTS (SELECT 1 FROM portals WHERE id=%s);",
-                    (Portal.changefeed, Portal.status,Portal.datasets, Portal.resources, Portal.latest_snapshot,Portal.id, #update, id
-                     Portal.id, Portal.url,Portal.apiurl,Portal.software,               #insert
-                     Portal.country,Portal.changefeed,Portal.status,Portal.datasets,Portal.resources,Portal.latest_snapshot,  #insert
+                    (Portal.changefeed,
+                     Portal.status,
+                     Portal.exception,
+                     Portal.datasets,
+                     Portal.resources,
+                     Portal.latest_snapshot,
+                     Portal.id, #update, id
+
+                     Portal.id,
+                     Portal.url,
+                     Portal.apiurl,
+                     Portal.software,               #insert
+                     Portal.country,
+                     Portal.changefeed,
+                     Portal.status,
+                     Portal.exception,
+                     Portal.datasets,
+                     Portal.resources,
+                     Portal.latest_snapshot,  #insert
                      Portal.id
                     )
                 )
@@ -253,6 +271,7 @@ class PostGRESManager:
                     "portal TEXT,"
                     "data JSONB,"
                     "status smallint,"
+                    "exception text,"
                     "md5 TEXT,"
                     "change smallint,"
                     "fetch_time timestamp,"
@@ -279,13 +298,14 @@ class PostGRESManager:
                         change=0
                     else: change=1
 
-                cur.execute("INSERT INTO datasets (dataset,snapshot,portal, data, status, md5, change, fetch_time) "
-                            "SELECT %s,%s,%s,%s,%s,%s,%s,now()",
+                cur.execute("INSERT INTO datasets (dataset,snapshot,portal, data, status, exception,md5, change, fetch_time) "
+                            "SELECT %s,%s,%s,%s,%s,%s,%s,%s,now()",
                     (   Dataset.dataset,
                         Dataset.snapshot,
                         Dataset.portal,
                         json.dumps(nested_json(Dataset.data),default=date_handler),
                         Dataset.status,
+                        Dataset.exception,
                         Dataset.md5,
                         change
                     ))
@@ -307,13 +327,13 @@ class PostGRESManager:
                     else: change=1
 
                 data=json.dumps(nested_json(Dataset.data),default=date_handler)
-                cur.execute("UPDATE datasets SET data=%s, status=%s, md5=%s, change=%s, fetch_time=now() WHERE dataset=%s AND snapshot=%s AND portal=%s;"
+                cur.execute("UPDATE datasets SET data=%s, status=%s, exception=%s,md5=%s, change=%s, fetch_time=now() WHERE dataset=%s AND snapshot=%s AND portal=%s;"
                             ""
-                            "INSERT INTO datasets (dataset,snapshot,portal, data, status, md5, change, fetch_time) "
-                            "SELECT %s,%s,%s,%s,%s,%s,%s,now()"
+                            "INSERT INTO datasets (dataset,snapshot,portal, data, status,exception, md5, change, fetch_time) "
+                            "SELECT %s,%s,%s,%s,%s,%s,%s,%s,now()"
                             "WHERE NOT EXISTS (SELECT 1 FROM datasets WHERE dataset=%s AND snapshot=%s AND portal=%s);",
                     (   #update
-                        data,Dataset.status,Dataset.md5,change,
+                        data,Dataset.status,Dataset.exception,Dataset.md5,change,
                         Dataset.dataset,Dataset.snapshot,Dataset.portal,
                         #insert
                         Dataset.dataset,
@@ -321,6 +341,7 @@ class PostGRESManager:
                         Dataset.portal,
                         data,
                         Dataset.status,
+                        Dataset.exception,
                         Dataset.md5,
                         change,
                         #not exists
@@ -455,6 +476,7 @@ class PostGRESManager:
                     "url Text, "
                     "snapshot VARCHAR (7),"
                     "status smallint,"
+                    "exception Text,"
                     "header JSONB,"
                     "mime TEXT,"
                     "size bigint,"
@@ -493,10 +515,10 @@ class PostGRESManager:
                 if Resource.redirects:
                     redirects=json.dumps(nested_json(Resource.redirects),default=date_handler)
 
-                cur.execute("UPDATE resources SET status=%s, origin=%s, header=%s, mime=%s,size=%s,timestamp=%s,redirects=%s WHERE snapshot=%s AND url=%s;"
+                cur.execute("UPDATE resources SET status=%s, origin=%s, header=%s, mime=%s,size=%s,timestamp=%s,redirects=%s, exception=%s WHERE snapshot=%s AND url=%s;"
                             ""
-                            "INSERT INTO resources (url, snapshot, status, origin, header, mime, size, timestamp,redirects) "
-                            "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s "
+                            "INSERT INTO resources (url, snapshot, status, origin, header, mime, size, timestamp,redirects,exception) "
+                            "SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s "
                             "WHERE NOT EXISTS (SELECT 1 FROM resources WHERE snapshot=%s AND url=%s);",
                     (   #update
                         Resource.status,
@@ -506,6 +528,7 @@ class PostGRESManager:
                         Resource.size,
                         Resource.timestamp,
                         redirects,
+                        Resource.exception,
 
                         #where update
                         Resource.snapshot,
@@ -520,6 +543,7 @@ class PostGRESManager:
                         Resource.size,
                         Resource.timestamp,
                         redirects,
+                        Resource.exception,
 
                         #not exists
                         Resource.snapshot,
@@ -569,10 +593,15 @@ def cli(args,dbm):
 if __name__ == '__main__':
     p= PostGRESManager(host="137.208.51.23")
     #p.initPortalsTable()
-    #p.initDatasetsTable()
-    #p.initPortalMetaDataTable()
-    #p.initResourceTable()
-    p.printSize()
-    p
+    p.initDatasetsTable()
+    p.initPortalMetaDataTable()
+    p.initResourceTable()
+    #P = p.getPortal(url='http://dados.gov.br')
+    #p.upsertPortal(P)
+    #p.initTables()
+    #P= Portal.newInstance(apiurl='http://data.glasgow.gov.uk/api', url='http://data.edostate.gov.ng/')
+    #p.insertPortal(P)
+    #p.printSize()
+
     #p.initTables()
 

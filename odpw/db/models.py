@@ -27,32 +27,38 @@ class Portal:
 
     @classmethod
     def newInstance(cls,url=None, apiurl=None, software='CKAN'):
-        ds=-1
-        status=-1
+        props={
+            'datasets':-1,
+            'status':-1,
+            'exception':None,
+            'software':software,
+            'resources':-1,
+            'changefeed':False
+        }
         try:
             resp = ckanclient.package_get(apiurl)
-            status=resp.status_code
+            props['status']=resp.status_code
 
             if resp.status_code != requests.codes.ok:
                 log.error("No package list received", apiurl=apiurl, status=resp.status_code)
             else:
                 package_list = resp.json()
-                ds=len(package_list)
-                log.info('Received packages', apiurl=apiurl, status=resp.status_code)
+                props['datasets']=len(package_list)
+                log.info('Received packages', apiurl=apiurl, status=resp.status_code,count=props['datasets'])
         except Exception as e:
+            print 'here'
             #log.warning("fetching dataset information", apiurl=apiurl, exctype=type(e), excmsg=e.message)
-            log.exception('fetching dataset information', apiurl=apiurl,  exc_info=True)
-            status=util.getExceptionCode(e)
+            log.exception('fetching dataset information', apiurl=apiurl,exctype=type(e), excmsg=e.message)
+            props['status']=util.getExceptionCode(e)
+            props['exception']=str(type(e))+":"+str(e.message)
 
         #TODO detect changefeed
         p=cls(url=url,
                    apiurl=apiurl,
                    country=util.getCountry(url),
-                   software=software,
-                   datasets=ds,
-                   resources=-1,
-                   changefeed=False,
-                   status=status
+                   **props
+
+
         )
         log.info("new portal instance",pid=p.id, apiurl=p.apiurl)
         return p
@@ -93,6 +99,7 @@ class PortalMetaData:
         self.res_stats={}
         self.qa_stats={}
         self.general_stats={}
+        self.exception=None
 
         self.fetch_stats={'fetch_start':datetime.now()}
         for key, value in kwargs.items():
@@ -107,6 +114,10 @@ class PortalMetaData:
 
         if 'general_stats' in stats:
             self.general_stats['keys']=stats['general_stats']['keys']
+        if 'res_stats' in stats:
+            self.res_stats['respCodes']=stats['res_stats']['respCodes']
+            self.res_stats['total']=stats['res_stats']['total']
+            self.res_stats['unique']=len(stats['res_stats']['resList'])
 
     @classmethod
     def fromResult(cls, result):
@@ -127,9 +138,10 @@ class Resource:
             props=util.head(url)
 
         except Exception as e:
-            log.warning('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
-            log.exception()
+            log.exception('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
             props['status']=util.getExceptionCode(e)
+            props['exception']=str(type(e))+":"+str(e.message)
+
         r = cls(url=url, snapshot=snapshot,**props)
         log.info("new portal instance",url=r.url, snapshot=r.snapshot)
         return r
@@ -143,6 +155,7 @@ class Resource:
         self.timestamp=datetime.now()
         self.status=-1
         self.origin=None
+        self.exception=None
         self.header=None
         self.mime=None
         self.redirects=None
@@ -180,7 +193,7 @@ class Resource:
 
 if __name__ == '__main__':
     logging.basicConfig()
-    r = Resource.newInstance(url="http://10.255.255.1/", snapshot='2015-10')
+    r = Resource.newInstance(url="http://data.edostate.gov.ng/storage/f/2013-08-21T12:06:01.747Z/2005-budget-analysis.csv", snapshot='2015-10')
     print r.__dict__
     r.updateOrigin(pid='test', did='test')
     print r.__dict__
