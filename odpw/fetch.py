@@ -122,15 +122,15 @@ def extract_keys(data, stats):
     for key in data.keys():
         if key == 'resources':
             for r in data['resources']:
-                for key in r.keys():
-                    if key not in res:
-                        res.append(key)
+                for k in r.keys():
+                    if k not in res:
+                        res.append(k)
         elif key == 'extras' and isinstance(data['extras'],dict):
             for k in data['extras'].keys():
                 if k not in extra:
                     extra.append(k)
         else:
-            if k not in core:
+            if key not in core:
                 core.append(k)
 
     return stats
