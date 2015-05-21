@@ -5,6 +5,7 @@ import urlnorm
 from datetime import datetime
 import sys
 import requests.exceptions
+import exceptions
 
 def computeID(url):
     up = urlparse(urlnorm.norm(url))
@@ -314,7 +315,7 @@ def getCountry(url):
 	else:
 		return "unknown"
 
-import exceptions
+
 def getExceptionCode(e):
 
     #connection erorrs
