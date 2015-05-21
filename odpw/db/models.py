@@ -127,9 +127,9 @@ class Resource:
             props=util.head(url)
 
         except Exception as e:
-            props['status']=util.getExceptionCode(e)
             log.warning('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
             log.exception()
+            props['status']=util.getExceptionCode(e)
         r = cls(url=url, snapshot=snapshot,**props)
         log.info("new portal instance",url=r.url, snapshot=r.snapshot)
         return r
@@ -180,7 +180,7 @@ class Resource:
 
 if __name__ == '__main__':
     logging.basicConfig()
-    r = Resource.newInstance(url="http://polleres.net/", snapshot='2015-10')
+    r = Resource.newInstance(url="http://10.255.255.1/", snapshot='2015-10')
     print r.__dict__
     r.updateOrigin(pid='test', did='test')
     print r.__dict__

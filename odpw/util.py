@@ -317,7 +317,7 @@ def getCountry(url):
 
 
 def getExceptionCode(e):
-
+    print type(e)
     #connection erorrs
     if isinstance(e,requests.exceptions.ConnectionError):
         return 702
@@ -398,7 +398,7 @@ def initStatusMap():
     }
 
 
-def extractMimeType( ct):
+def extractMimeType(ct):
     if ";" in ct:
         return str(ct)[:ct.find(";")].strip()
     return ct.strip()
@@ -409,10 +409,15 @@ def head(url, redirects=0, props=None):
     headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
 
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
-    props['size']=header_dict['content-length']
+    print header_dict
     props['mime']=extractMimeType(header_dict['content-type'])
     props['status']=headResp.status_code
     props['header']=header_dict
+    if headResp.status_code == requests.codes.ok:
+        if 'content-length' in header_dict:
+            props['size']=header_dict['content-length']
+        else:
+            props['size']=0
 
     if headResp.status_code == requests.codes.moved:
         moved_url = header_dict['location']
