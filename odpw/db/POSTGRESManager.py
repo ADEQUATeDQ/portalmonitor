@@ -202,6 +202,7 @@ class PostGRESManager:
                     cur.execute("SELECT * FROM portals")
                 else:
                     cur.execute("SELECT * FROM portals WHERE "+' AND '.join(s),t)
+
                 self.log.debug(query=cur.query)
                 return cur.fetchall()
 
@@ -562,6 +563,13 @@ class PostGRESManager:
                 for table in self.tablesInit:
                     cur.execute("SELECT count(*) from "+table)
                     print str(cur.fetchone()[0]).rjust(8),"rows in Table:"+table
+
+    def selectQuery(self, query):
+         with self.con:
+            with self.con.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(query)
+                self.log.debug(query=cur.query)
+                return cur.fetchall()
 
 def name():
     return 'DB'

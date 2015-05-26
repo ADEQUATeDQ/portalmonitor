@@ -383,33 +383,30 @@ def getSnapshot(args):
         return sn
 
 
+
+statusDict={
+    '2':'ok',
+    '4':'offline',
+    '5':'server-error',
+    '6':'other-error',
+    '7':'connection-error',
+    '8':'value-error',
+    '9':'uri-error'
+}
+
 def analyseStatus(statusmap, status):
     sstr=str(status)
-    if sstr[0]=='2':
-        statusmap['ok']+=1
-    elif sstr[0]=='4':
-        statusmap['offline']+=1
-    elif sstr[0]=='5':
-        statusmap['serverErr']+=1
-    elif sstr[0]=='7':
-        statusmap['connErr']+=1
-    elif sstr[0]=='8':
-        statusmap['parserErr']+=1
-    elif sstr[0]=='9':
-        statusmap['formatErr']+=1
-    statusmap['count']+=1
+    if sstr[0] not in statusDict:
+        statusmap[sstr[0]]=0
+    statusmap[statusDict[sstr[0]]]+=1
+    statusmap['total']+=1
 
 def initStatusMap():
-    return {
-        'count':0,
-        'ok':0,
-        'offline':0,
-        'serverErr':0,
-        'connErr':0,
-        'parserErr':0,
-        'formatErr':0
-    }
-
+    d={}
+    for v in statusDict.values():
+        d[v]=0
+    d['total']=0
+    return d
 
 def extractMimeType(ct):
     if ";" in ct:

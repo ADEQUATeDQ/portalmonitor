@@ -2,7 +2,7 @@ __author__ = 'jumbrich'
 
 import util
 from util import getSnapshot
-from util import analyseStatus
+import util
 
 from db.models import Portal
 from db.models import PortalMetaData
@@ -16,48 +16,61 @@ configure(logger_factory=LoggerFactory())
 log = get_logger()
 
 
-def fetchStats(dbm,sn):
+def systemStats(dbm,sn):
     log.info("Computing fetch stats",sn=sn)
 
     #get all portals
-    portals=util.initStatusMap()
+    statusMap=util.initStatusMap()
+    size={'datasets':0, 'resources':0}
+
 
     for pRes in dbm.getPortals():
         p = Portal.fromResult(pRes)
+        util.analyseStatus(statusMap, p.status)
+        size['datasets']+=p.datasets
+        size['resources']+=p.resources
 
-        analyseStatus(portals, p.status)
+    print statusMap
+    print size
 
-    log.info("portals status", total=portals['count'], active=portals['active'], offline=portals['offline'], servererror=portals['servererr'], connectionerror=portals['connerr'])
+    sn_status={
+        'datasets':0,
+        'resources':0,
+        'process-stats':{'fetched':0, 'res':0, 'qa':0, 'count':0}
+    }
 
-    status={'fetched':0, 'res':0, 'qa':0, 'count':0}
+    status=sn_status['process-stats']
     for pmdRes in dbm.getPortalMetaData(snapshot=sn):
         status['count']+=1
         pmd=PortalMetaData.fromResult(pmdRes)
         if len(pmd.fetch_stats) >0:
             status['fetched']+=1
+            sn_status['datasets']+=pmd.fetch_stats['datasets']
         if len(pmd.res_stats) >0:
             status['res']+=1
+            sn_status['resources']+=pmd.res_stats['total']
+            print pmd.res_stats
         if len(pmd.qa_stats) >0:
             status['qa']+=1
-    log.info("system status", total=status['count'], fetched=status['fetched'], qa=status['qa'], res=status['res'])
 
-
+    res = dbm.selectQuery("SELECT ")
+    print sn_status
 
 
 def name():
     return 'Stats'
 def setupCLI(pa):
-    pa.add_argument('-f','--fetch',  action='store_true', dest='fetch', help='compute fetch statistics')
+    pa.add_argument('-s','--system',  action='store_true', dest='system', help='compute system statistics')
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
 
 def cli(args,dbm):
 
 
-    if args.fetch:
+    if args.system:
         sn = getSnapshot(args)
         if not sn:
             return
-        fetchStats(dbm,sn)
+        systemStats(dbm,sn)
 
 
