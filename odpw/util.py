@@ -428,9 +428,8 @@ def extractMimeType(ct):
 def head(url, redirects=0, props=None):
     if not props:
         props={}
-    headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
+    headResp = requests.head(url=url,timeout=(2, 30.0))#con, read -timeout
 
-    print "TEST"
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
 
     #if 'content-type' in header_dict:

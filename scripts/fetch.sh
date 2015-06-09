@@ -34,8 +34,12 @@ mkdir -p $OUT_BASE
 yw=`date +"%Y-%V"`
 OUT_DIR=$OUT_BASE/$yw
 mkdir -p $OUT_DIR
+LOG=$OUT_DIR/log
+mkdir -p $LOG
+
 PLIST=$OUT_DIR/portals.txt
 PIDLIST=$OUT_DIR/pids.txt
+
 
 
 #queue pid functions
@@ -44,45 +48,11 @@ function queue {
   NUM=$(($NUM+1))
 }
 
-function regeneratequeue {
-	OLDREQUEUE=$QUEUE
-	QUEUE=""
-	NUM=0
-	for PID in $OLDREQUEUE
-	do
-		if ps -p $PID > /dev/null
-		then
-			QUEUE="$QUEUE $PID"
-			NUM=$(($NUM+1))
-		fi
-	done
-	echo "#Q:$QUEUE, N=$NUM after regeneratequeue"
-}
-
-function checkqueue {
-	OLDCHQUEUE=$QUEUE
-	for PID in $OLDCHQUEUE
-	do
-		if ! ps -p $PID > /dev/null
-			then
-				
-                time=`date +%Y-%m-%d:%H:%M:%S`
-                echo "#Process $PID is done"
-                sed -ie "s/^$PID.*$/& $time/g" $PIDLIST
-                echo $c
-                $c
-                
-				regeneratequeue # at least one PID has finished
-				break
-		fi
-	done
-}
-
 function checkQueue {
     OLDREQUEUE=$QUEUE
 	QUEUE=""
-    echo "pids in queue $NUM"
-	NUM=0
+    cur=$NUM
+    NUM=0
     for PID in $OLDREQUEUE
 	do
        if ps -p $PID > /dev/null
@@ -95,8 +65,6 @@ function checkQueue {
             sed -ie "s/^$PID.*$/& $time/g" $PIDLIST
         fi 
     done
-    echo "active pids in queue $NUM"
-    
 }
 
 #-----------
@@ -113,16 +81,18 @@ echo "
 #######################"
 
 echo "#Fetching list of portals -> $PLIST"
-CMD="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -p -i -o $PLIST"
+CMD="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -p -sn $yw -o $PLIST"
 echo ">$CMD"
 $CMD
 
 echo "#Processing portals"
-CMD_FETCH="sleep 1"
+
 while read line
 do
-    echo ">$CMD_FETCH $line"
-    $CMD_FETCH &
+    tokens=($line)
+    CMD_FETCH="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -sn $yw --force -u ${tokens[0]} 1> $LOG/${tokens[1]}.out 2> $LOG/${tokens[1]}.err"
+    echo ">$CMD_FETCH"
+    eval $CMD_FETCH &
     # DEFINE COMMAND END
  
     PID=$!

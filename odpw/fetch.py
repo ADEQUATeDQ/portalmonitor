@@ -156,7 +156,8 @@ def fetching(obj):
         'res_stats':{'respCodes':{},'total':0, 'resList':[]}
     }
     pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
-
+    dbm.upsertPortalMetaData(pmd)
+    
     try:
         if fullfetch:
             #fetch the dataset descriptions
@@ -237,7 +238,7 @@ def cli(args,dbm):
         sql="SELECT p.* FROM portals p WHERE p.id NOT IN ( select pmd.portal from portal_meta_data pmd WHERE snapshot='"+sn+"' AND p.id=pmd.portal) ORDER  BY p.datasets;"
         with args.outfile as file:
             for pRes in dbm.selectQuery(sql):
-                file.write(pRes['apiurl']+"\n")
+                file.write(pRes['apiurl']+" "+pRes['id']+"\n")
         
         return
     
