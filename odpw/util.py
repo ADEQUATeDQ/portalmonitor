@@ -6,6 +6,7 @@ from datetime import datetime
 import sys
 import requests.exceptions
 import exceptions
+import math
 
 import logging
 log = logging.getLogger(__name__)
@@ -386,6 +387,7 @@ def getSnapshot(args):
 
 statusDict={
     '2':'ok',
+    '3':'redirect-loop',
     '4':'offline',
     '5':'server-error',
     '6':'other-error',
@@ -393,6 +395,16 @@ statusDict={
     '8':'value-error',
     '9':'uri-error'
 }
+
+def convertSize(size):
+   size_name = ("B","KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size,1024)))
+   p = math.pow(1024,i)
+   s = round(size/p,2)
+   if (s > 0):
+       return '%s %s' % (s,size_name[i])
+   else:
+       return '0B'
 
 def analyseStatus(statusmap, status):
     sstr=str(status)
@@ -418,10 +430,14 @@ def head(url, redirects=0, props=None):
         props={}
     headResp = requests.head(url=url,timeout=(1, 10.0))#con, read -timeout
 
+    print "TEST"
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
-    print header_dict
+
     #if 'content-type' in header_dict:
-    props['mime']=extractMimeType(header_dict['content-type'])
+    if 'content-type' in header_dict:
+        props['mime']=extractMimeType(header_dict['content-type'])
+    else:
+        props['mime']='missing'
     #else:
     #    props['mime']='missing'
 

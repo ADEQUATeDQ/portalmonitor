@@ -111,6 +111,7 @@ class PortalMetaData:
             self.fetch_stats['fullfetch']=stats['fetch_stats']['fullfetch']
             self.fetch_stats['respCodes']=stats['fetch_stats']['respCodes']
             self.fetch_stats['datasets']=stats['datasets']
+            self.fetch_stats['portal_status']=stats['status']
 
         if 'general_stats' in stats:
             self.general_stats['keys']=stats['general_stats']['keys']
@@ -119,16 +120,6 @@ class PortalMetaData:
             self.res_stats['total']=stats['res_stats']['total']
             self.res_stats['unique']=len(stats['res_stats']['resList'])
 
-    @classmethod
-    def fromResult(cls, result):
-        portal=result['portal']
-        snapshot=result['snapshot']
-        del result['portal']
-        del result['snapshot']
-
-        return cls(portal=portal,
-                   snapshot=snapshot,**result)
-
 class Resource:
     @classmethod
     def newInstance(cls, url=None, snapshot=None):
@@ -136,7 +127,6 @@ class Resource:
         try:
             url=urlnorm.norm(url)
             props=util.head(url)
-
         except Exception as e:
             log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot,exc_info=True)
             props['status']=util.getExceptionCode(e)
@@ -193,7 +183,8 @@ class Resource:
 
 if __name__ == '__main__':
     logging.basicConfig()
-    r = Resource.newInstance(url="http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1", snapshot='2015-10')
+    #http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1
+    r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
     print r.__dict__
 
 

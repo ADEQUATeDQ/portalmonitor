@@ -1,6 +1,5 @@
 __author__ = 'jumbrich'
 
-from db.POSTGRESManager import PostGRESManager
 from db.models import Portal
 from db.models import Dataset
 from db.models import PortalMetaData
@@ -11,8 +10,8 @@ from util import getExceptionCode
 from util import getSnapshot
 
 from timer import Timer
-import sys
 import math
+import argparse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,13 +20,10 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
-from datetime import datetime
-
-import requests
+import requests 
 from random import randint
 import time
 
-from multiprocessing import Pool, Lock, Value
 from multiprocessing.dummy import Pool as ThreadPool
 import json
 import hashlib
@@ -85,11 +81,18 @@ def fetchDataset(entity, stats, dbm, sn, first=False):
                 lastDomain=None
                 for resJson in data['resources']:
                     stats['res_stats']['total']+=1
+
                     R = dbm.getResource(url=resJson['url'], snapshot=sn)
                     if not R:
-                    #do the lookup
+                        #do the lookup
                         with Timer(key="newRes") as t:
                             R = Resource.newInstance(url=resJson['url'], snapshot=sn)
+                        
+                        curdomain=util.computeID(R.url)
+                        if lastDomain and curdomain and lastDomain==curdomain:
+                            #WAIT between two consecutive GET requests
+                            time.sleep(randint(1, 2))
+                        lastDomain=curdomain
 
                     R.updateOrigin(pid=stats['portal'].id, did=entity)
                     dbm.upsertResource(R)
@@ -100,11 +103,7 @@ def fetchDataset(entity, stats, dbm, sn, first=False):
                     if R.url not in stats['res_stats']['resList']:
                         stats['res_stats']['resList'].append(R.url)
 
-                    curdomain=util.computeID(R.url)
-                    if lastDomain and curdomain and lastDomain==curdomain:
-                         #WAIT between two consecutive GET requests
-                        time.sleep(randint(1, 2))
-                    lastDomain=curdomain
+
     except Exception as e:
         log.error('fetching dataset information', pid=stats['portal'].id,apiurl=stats['portal'].apiurl,exctype=type(e), excmsg=e.message,exc_info=True)
         props['status']=util.getExceptionCode(e)
@@ -210,12 +209,16 @@ def setupCLI(pa):
     gfilter.add_argument('-d','--datasets',type=int, dest='ds', help='filter portals with more than specified datasets')
     gfilter.add_argument('-r','--resources',type=int, dest='res')
     gfilter.add_argument('-s','--software',choices=['CKAN'], dest='software')
-    gfilter.add_argument('-u','--url',type=str, dest='url')
+    gfilter.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
 
+    getportals = pa.add_argument_group('Portal info', 'information about portals')
+    getportals.add_argument('-o','--out_file',type=argparse.FileType('w'), dest='outfile', help='store portal list')
+    getportals.add_argument('-p','--portals',action='store_true', dest='getPortals')
+    
     pa.add_argument("--force", action='store_true', help='force a full fetch, otherwise use update',dest='fetch')
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
-    pa.add_argument("-p","--procs", type=int, help='Number of processors to use', dest='processors', default=1)
+    pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
 
 def cli(args,dbm):
 
@@ -223,12 +226,25 @@ def cli(args,dbm):
     if not sn:
         return
 
+
+    if args.getPortals:
+        if not args.outfile:
+            log.warning("No outputfile defined")
+            return
+        
+        sql="SELECT p.* FROM portals p WHERE p.id NOT IN ( select pmd.portal from portal_meta_data pmd WHERE snapshot='"+sn+"' AND p.id=pmd.portal) ORDER  BY p.datasets;"
+        with args.outfile as file:
+            for pRes in dbm.selectQuery(sql):
+                file.write(pRes['apiurl']+"\n")
+        
+        return
+    
     jobs=[]
     fetch=True
     if args.fetch:
         fetch=True
     if args.url:
-        p= dbm.getPortal(url=args.url)
+        p= dbm.getPortal(apiurl=args.url)
         log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
         jobs.append(
             {   'portal':p,
@@ -238,7 +254,7 @@ def cli(args,dbm):
             }
         )
     else:
-        for result in dbm.getPortals(maxDS=args.ds, maxRes=args.res, software=args.software,status=200):
+        for result in dbm.getPortals(maxDS=args.ds, maxRes=args.res, software=args.software):
             p = Portal.fromResult(result)
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
             jobs.append(

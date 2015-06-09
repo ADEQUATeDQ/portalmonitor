@@ -207,7 +207,7 @@ class PostGRESManager:
                 return cur.fetchall()
 
     #timer
-    def getPortal(self, url=None, id=None, apiURL=None):
+    def getPortal(self, url=None, id=None, apiurl=None):
         with self.con:
             with self.con.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur,\
                     Timer(key="getPortal") as t:
@@ -219,9 +219,9 @@ class PostGRESManager:
                 elif url:
                     where+=" url=%s "
                     t = t+(url,)
-                elif apiURL:
+                elif apiurl:
                     where+=" apiurl=%s"
-                    t = t+(apiURL,)
+                    t = t+(apiurl,)
                 cur.execute("SELECT * FROM portals WHERE "+where,t)
                 self.log.debug(query=cur.query)
                 res = cur.fetchone()
@@ -577,7 +577,11 @@ def name():
 def setupCLI(pa):
     pa.add_argument('--size', help='get table entries',action='store_true')
     pa.add_argument('-i','--init',  action='store_true', dest='dbinit')
+    
+    
+    
 
+    
 def cli(args,dbm):
 
     if args.size:
@@ -593,6 +597,9 @@ def cli(args,dbm):
                 break
             else:
                 sys.stdout.write("Please respond with 'y' or 'n' \n")
+    
+    
+            
 
 
 
