@@ -105,7 +105,9 @@ def fetchDataset(entity, stats, dbm, sn, first=False):
 
 
     except Exception as e:
-        log.error('fetching dataset information', pid=stats['portal'].id,apiurl=stats['portal'].apiurl,exctype=type(e), excmsg=e.message,exc_info=True)
+        log.error('fetching dataset information', pid=stats['portal'].id,
+                  apiurl=stats['portal'].apiurl,
+                  exctype=type(e), excmsg=e.message,exc_info=True)
         props['status']=util.getExceptionCode(e)
         props['exception']=str(type(e))+":"+str(e.message)
 
