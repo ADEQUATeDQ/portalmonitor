@@ -6,7 +6,7 @@ MAX_NPROC=2
 
 #CMD
 USAGE="Usage: `basename $0` [-h] [-p nb_processes] [-o output_folder]
-	-h      Shows this help
+    -h      Shows this help
     -p      number of processors to use
     -o      output folder to store portal list, logs, etc..
     "
@@ -50,16 +50,16 @@ function queue {
 
 function checkQueue {
     OLDREQUEUE=$QUEUE
-	QUEUE=""
+    QUEUE=""
     cur=$NUM
     NUM=0
     for PID in $OLDREQUEUE
-	do
+    do
        if ps -p $PID > /dev/null
-		then
-			QUEUE="$QUEUE $PID"
-			NUM=$(($NUM+1))
-		else
+        then
+            QUEUE="$QUEUE $PID"
+            NUM=$(($NUM+1))
+        else
             time=`date +%Y-%m-%d:%H:%M:%S`
             echo "#Process $PID is done"
             sed -ie "s/^$PID.*$/& $time/g" $PIDLIST
@@ -81,7 +81,7 @@ echo "
 #######################"
 
 echo "#Fetching list of portals -> $PLIST"
-CMD="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -p -sn $yw -o $PLIST"
+CMD="/usr/local/bin/odpw --host localhost Fetch -p -sn $yw -o $PLIST"
 echo ">$CMD"
 $CMD
 
@@ -90,16 +90,16 @@ echo "#Processing portals"
 while read line
 do
     tokens=($line)
-    CMD_FETCH="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -sn $yw --force -u ${tokens[0]} 1> $LOG/${tokens[1]}.out 2> $LOG/${tokens[1]}.err"
+    CMD_FETCH="/usr/local/bin/odpw --host localhost Fetch -sn $yw --force -u ${tokens[0]} 1> $LOG/${tokens[1]}.out 2> $LOG/${tokens[1]}.err"
     echo ">$CMD_FETCH"
     eval $CMD_FETCH &
     # DEFINE COMMAND END
- 
+
     PID=$!
     queue $PID
-    
+
     time=`date +%Y-%m-%d:%H:%M:%S`
-    
+
     echo "$PID $line $time" >> $PIDLIST
     echo "#Q:$QUEUE, N=$NUM"
     while [ $NUM -ge $MAX_NPROC ]; do
@@ -112,8 +112,3 @@ wait # wait for all processes to finish before exit
 
 echo "#all portals are processed"
 checkQueue
-for i in "${!pMap[@]}"
-do
-  echo "key  : $i"
-  echo "value: ${pMap[$i]}"
-done
