@@ -54,11 +54,11 @@ function queue {
 
 function checkQueue {
     OLDREQUEUE=$QUEUE
-	QUEUE=""
+    QUEUE=""
     cur=$NUM
     NUM=0
     for PID in $OLDREQUEUE
-	do
+    do
        if ps -p $PID > /dev/null
 	then
 			QUEUE="$QUEUE $PID"
@@ -109,7 +109,7 @@ do
     map[$PID]=${tokens[0]}
     
     time=`date +%Y-%m-%d:%H:%M:%S`
-    
+
     echo "$PID $line $time" >> $PIDLIST
     echo "#Q:$QUEUE, N=$NUM"
     while [ $NUM -ge $MAX_NPROC ]; do
