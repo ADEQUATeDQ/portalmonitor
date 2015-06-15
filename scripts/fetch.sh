@@ -3,12 +3,17 @@
 NUM=0
 QUEUE=""
 MAX_NPROC=2
+HOST="localhost"
+
+declare -A map
+
 
 #CMD
-USAGE="Usage: `basename $0` [-h] [-p nb_processes] [-o output_folder]
-	-h      Shows this help
+USAGE="Usage: `basename $0` [-h db host] [-p nb_processes] [-o output_folder]
+	-?      Shows this help
     -p      number of processors to use
     -o      output folder to store portal list, logs, etc..
+    -h      host of the database
     "
 
 # parse command line
@@ -17,11 +22,10 @@ if [ $# -eq 0 ]; then #  must be at least one arg
     exit 1
 fi
 
-while getopts p:o:h OPT; do # "j:" waits for an argument "h" doesnt
+while getopts p:o:h:? OPT; do # "j:" waits for an argument "h" doesnt
     case $OPT in
-    h)  echo "$USAGE"
-        exit 0 ;;
     p)  MAX_NPROC=$OPTARG ;;
+    h)  HOST=$OPTARG ;;
     o)  OUT_BASE=$OPTARG ;;
     \?) # getopts issues an error message
         echo "$USAGE" >&2
@@ -56,14 +60,18 @@ function checkQueue {
     for PID in $OLDREQUEUE
 	do
        if ps -p $PID > /dev/null
-		then
+	then
 			QUEUE="$QUEUE $PID"
 			NUM=$(($NUM+1))
-		else
-            time=`date +%Y-%m-%d:%H:%M:%S`
-            echo "#Process $PID is done"
-            sed -ie "s/^$PID.*$/& $time/g" $PIDLIST
-        fi 
+	else
+		time=`date +%Y-%m-%d:%H:%M:%S`
+		echo "#Process $PID is done"
+		echo "${map[$PID]}"
+		text=${map[$PID]}
+		cmd="sed -ie 's/$text.*$/& $time/g' $PIDLIST"
+		echo $cmd
+		eval $cmd
+	fi
     done
 }
 
@@ -81,7 +89,7 @@ echo "
 #######################"
 
 echo "#Fetching list of portals -> $PLIST"
-CMD="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -p -sn $yw -o $PLIST"
+CMD="/usr/local/bin/odpw --host $HOST Fetch -p -sn $yw -o $PLIST"
 echo ">$CMD"
 $CMD
 
@@ -90,13 +98,15 @@ echo "#Processing portals"
 while read line
 do
     tokens=($line)
-    CMD_FETCH="/usr/local/bin/odpw --host bandersnatch.ai.wu.ac.at Fetch -sn $yw --force -u ${tokens[0]} 1> $LOG/${tokens[1]}.out 2> $LOG/${tokens[1]}.err"
+    CMD_FETCH="/usr/local/bin/odpw --host $HOST Fetch -sn $yw --force -u ${tokens[0]} 1> $LOG/${tokens[1]}.out 2> $LOG/${tokens[1]}.err"
+    #CMD_FETCH="sleep $[ ( $RANDOM % 10 )  + 1 ]s"
     echo ">$CMD_FETCH"
     eval $CMD_FETCH &
     # DEFINE COMMAND END
- 
+    
     PID=$!
     queue $PID
+    map[$PID]=${tokens[0]}
     
     time=`date +%Y-%m-%d:%H:%M:%S`
     
@@ -109,11 +119,5 @@ do
 done < $PLIST
 
 wait # wait for all processes to finish before exit
-
-echo "#all portals are processed"
 checkQueue
-for i in "${!pMap[@]}"
-do
-  echo "key  : $i"
-  echo "value: ${pMap[$i]}"
-done
+echo "#all portals are processed"
