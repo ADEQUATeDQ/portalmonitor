@@ -106,7 +106,7 @@ do
     
     PID=$!
     queue $PID
-    map[$PID]=${tokens[0]}
+    map[$PID]=${tokens[1]}
     
     time=`date +%Y-%m-%d:%H:%M:%S`
 
