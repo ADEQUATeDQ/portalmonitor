@@ -7,6 +7,7 @@ import sys
 import requests.exceptions
 import exceptions
 import math
+from collections import defaultdict
 
 import logging
 log = logging.getLogger(__name__)
@@ -327,6 +328,23 @@ def getCountry(url):
 		return "unknown"
 
 
+class ErrorHandler():
+
+    exceptions=defaultdict(long)
+    
+    @classmethod
+    def handleError(cls,log, msg=None, exception=None, **kwargs):
+        name=type(exception).__name__
+        cls.exceptions[name] +=1
+        log.error(msg,exctype=type(exception), excmsg=exception.message,**kwargs)
+    
+    @classmethod
+    def printStats(cls):
+        print "Numbers of Exceptions:"
+        for exc, count in cls.exceptions.iteritems():
+            print exc, count
+        
+
 def getExceptionCode(e):
     #connection erorrs
     try:
@@ -393,18 +411,19 @@ statusDict={
     '6':'other-error',
     '7':'connection-error',
     '8':'value-error',
-    '9':'uri-error'
+    '9':'uri-error',
+    '-':'unknown'
 }
 
 def convertSize(size):
-   size_name = ("B","KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-   i = int(math.floor(math.log(size,1024)))
-   p = math.pow(1024,i)
-   s = round(size/p,2)
-   if (s > 0):
-       return '%s %s' % (s,size_name[i])
-   else:
-       return '0B'
+    size_name = ("B","KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size,1024)))
+    p = math.pow(1024,i)
+    s = round(size/p,2)
+    if (s > 0):
+        return '%s %s' % (s,size_name[i])
+    else:
+        return '0B'
 
 def analyseStatus(statusmap, status):
     sstr=str(status)
@@ -459,3 +478,14 @@ def head(url, redirects=0, props=None):
         else:
             props['status']=777
     return props
+
+if __name__ == '__main__':
+    logging.basicConfig()
+    log = get_logger()
+    
+    try:
+        raise ValueError('A very specific bad thing happened')
+    except Exception as e:
+        ErrorHandler.handleError(log, "test", exception=e, line="line")
+        
+    print ErrorHandler.exceptions

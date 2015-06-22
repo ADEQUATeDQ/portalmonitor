@@ -4,6 +4,7 @@ __author__ = 'jumbrich'
 
 import urlnorm
 import odpw.util as util
+from odpw.util import ErrorHandler as eh
 from odpw import ckanclient
 import requests
 from datetime import datetime
@@ -46,9 +47,7 @@ class Portal:
                 props['datasets']=len(package_list)
                 log.info('Received packages', apiurl=apiurl, status=resp.status_code,count=props['datasets'])
         except Exception as e:
-            print 'here'
-            #log.warning("fetching dataset information", apiurl=apiurl, exctype=type(e), excmsg=e.message)
-            log.error('fetching dataset information', apiurl=apiurl,exctype=type(e), excmsg=e.message,exc_info=True)
+            eh.handleError(log, 'fetching dataset information', exception=e,apiurl=apiurl,exc_info=True)
             props['status']=util.getExceptionCode(e)
             props['exception']=str(type(e))+":"+str(e.message)
 
@@ -136,9 +135,6 @@ class Resource:
         log.info("new portal instance",url=r.url, snapshot=r.snapshot)
         return r
 
-
-
-
     def __init__(self, url=None, snapshot=None, **kwargs):
         self.snapshot=snapshot
         self.url=url
@@ -161,14 +157,6 @@ class Resource:
         else:
             self.origin[pid].append(did)
 
-
-
-
-
-
-
-
-
     @classmethod
     def fromResult(cls, result):
         url=result['url']
@@ -179,13 +167,14 @@ class Resource:
         return cls(url=url,
                    snapshot=snapshot,**result)
 
-
-
 if __name__ == '__main__':
     logging.basicConfig()
     #http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1
-    r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
-    print r.__dict__
+    #r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
+    #print r.__dict__
+    
+    
+    
 
 
 

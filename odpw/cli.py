@@ -10,9 +10,10 @@ import init as initcli
 import fetch as fetchcli
 import stats as statscli
 import time
+import datamonitor as dmcli
 
 
-submodules=[dbcli, initcli, fetchcli,statscli]
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli]
 
 def start ():
     start= time.time()

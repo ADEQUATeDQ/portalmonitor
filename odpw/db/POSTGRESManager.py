@@ -66,18 +66,36 @@ class PostGRESManager:
 
 
 
-    def __init__(self, db='portalwatch', host="localhost", port=5433):
+    def __init__(self, db='portalwatch', host="localhost", port=5433, password='0pwu', user='opwu'):
         try:
             self.tablesInit={
                 'portals': self.initPortalsTable,
                 'datasets': self.initDatasetsTable,
                 'resources': self.initResourceTable,
                 'portal_meta_data': self.initPortalMetaDataTable,
+                'snapshot_stats': self.initSnapshotStatusTable,
             }
 
             #Define our connection string
             self.log = log.new()
-            conn_string = "dbname='%s' user='opwu' host='%s' port=%s password='0pwu'" % (db, host,port)
+            
+            conn_string = "dbname='%s'" %db
+            if user:
+                conn_string += " user='%s'" %(user)
+                
+            if port:
+                conn_string += " port=%s"%(port,)
+                
+            if host:
+                conn_string += " host='%s'"%(host,)
+                
+            if password:
+                conn_string += " password='%s'"%(password)
+                
+            
+            
+
+            print conn_string
 
             # print the connection string we will use to connect
             self.log.debug("Connecting to database", conn_string=conn_string)
@@ -86,6 +104,8 @@ class PostGRESManager:
 
 
         except Exception as e:
+            print "Unable to conntect to db(host=%s, db=%s)", host,db
+            print e
             logger.critical("Unable to conntect to db(host=%s, db=%s)", host,db,exc_info=True)
 
     def initTables(self):
@@ -98,6 +118,7 @@ class PostGRESManager:
         self.printSize()
         self.log.info("Initialised DB tables")
 
+    
      #PORTALS TABLE
 
     def initPortalsTable(self):
@@ -235,20 +256,40 @@ class PostGRESManager:
     def initSnapshotStatusTable(self):
         with self.con:
             with self.con.cursor() as cur:
-                cur.execute("DROP TABLE IF EXISTS sn_status ")
-                cur.execute("CREATE TABLE IF NOT EXISTS  sn_status ("
+                
+                
+                
+                
+                cur.execute("DROP TABLE IF EXISTS snapshot_stats ")
+                cur.execute("CREATE TABLE IF NOT EXISTS  snapshot_stats ("
                     "snapshot VARCHAR (7) PRIMARY KEY,"
-                    "fetch_start timestamp,"
-                    "fetch_end timestamp,"
-                    "fetch_data JSONB,"
-                    "head_start timestamp,"
-                    "head_end timestamp,"
-                    "head_data JSONB,"
-                    "qa_start timestamp,"
-                    "qa_end timestamp,"
-                    "qa_data JSONB"
+                    "portal_stats JSONB,"
+                    "dataset_stats JSONB,"
+                    "resource_stats JSONB,"
+                    "qa_stats JSONB"
                     ");"
                 )
+                self.log.debug(query=cur.query)
+        self.log.info("INIT", table='snapshot_stats')
+
+    def upsertSnapshotStats(self, status, sn):
+        with self.con:
+            with self.con.cursor() as cur:
+                ps=json.dumps(nested_json(status['portal_stats']),default=date_handler)
+                ds=json.dumps(nested_json(status['dataset_stats']),default=date_handler)
+                rs=json.dumps(nested_json(status['resource_stats']),default=date_handler)
+                qs=json.dumps(nested_json(status['qa_stats']),default=date_handler)
+                
+                cur.execute("UPDATE snapshot_stats SET " 
+                            "portal_stats=%s,dataset_stats=%s, resource_stats=%s,qa_stats=%s "
+                            "WHERE snapshot=%s;"
+                            "INSERT INTO snapshot_stats (snapshot,portal_stats,dataset_stats,resource_stats,qa_stats) "
+                            "SELECT %s,%s,%s,%s,%s"
+                            "WHERE NOT EXISTS (SELECT 1 FROM snapshot_stats WHERE snapshot=%s);"
+                            ,(ps,ds,rs,qs,sn,
+                              sn,ps,ds,rs,qs,
+                              sn)
+                            )
 
     def updateTimeInSnapshotStatusTable(self, sn, key):
         with self.con:
@@ -564,12 +605,25 @@ class PostGRESManager:
                     cur.execute("SELECT count(*) from "+table)
                     print str(cur.fetchone()[0]).rjust(8),"rows in Table:"+table
 
-    def selectQuery(self, query):
+    def selectQuery(self, query, tuple=None):
          with self.con:
             with self.con.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute(query)
+                if tuple:
+                    cur.execute(query,tuple)
+                else:
+                    cur.execute(query)
                 self.log.debug(query=cur.query)
                 return cur.fetchall()
+    
+    def insertQuery(self, query, tuple=None):
+         with self.con:
+            with self.con.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                if tuple:
+                    cur.execute(query,tuple)
+                else:
+                    cur.execute(query)
+                self.log.debug(query=cur.query)
+                
 
 def name():
     return 'DB'
@@ -606,11 +660,13 @@ def cli(args,dbm):
 
 
 if __name__ == '__main__':
-    p= PostGRESManager(host="137.208.51.23")
+    logging.basicConfig()
+    p= PostGRESManager(host="bandersnatch.ai.wu.ac.at")
     #p.initPortalsTable()
-    p.initDatasetsTable()
-    p.initPortalMetaDataTable()
-    p.initResourceTable()
+    p.initSnapshotStatusTable()
+#     p.initDatasetsTable()
+#     p.initPortalMetaDataTable()
+#     p.initResourceTable()
     #P = p.getPortal(url='http://dados.gov.br')
     #p.upsertPortal(P)
     #p.initTables()
