@@ -129,7 +129,7 @@ def cli(args,dbm):
                     print(traceback.format_exc())
        
         for format in formats: 
-            print "check ", format
+            print "check ", format.encode('utf-8') 
         
         mfiles=[]
         for m in meta:
