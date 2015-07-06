@@ -70,7 +70,7 @@ def cli(args,dbm):
     
     
     experiment='odwu'
-    dm_dbm= PostGRESManager(db='datamonitor', host="137.208.51.23", port=5432, password=None, user='postgres')
+    dm_dbm= PostGRESManager(db='datamonitor', host="localhost", port=5432, password=None, user='postgres')
     for portal in dbm.selectQuery("SELECT * FROM portal_meta_data WHERE portal='data.gv.at' ORDER BY snapshot DESC"):
         dir=os.path.join(args.outfile,portal['portal'])
         if not os.path.exists(dir):
@@ -112,9 +112,8 @@ def cli(args,dbm):
                                 if format not in formats:
                                     formats.append(format)
                 except Exception as e:
-                    print data
-                    print e, e.message
                     print(traceback.format_exc())
+       
         for format in formats: 
             print "check ", format
         
