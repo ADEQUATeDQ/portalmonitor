@@ -42,7 +42,18 @@ def getCrawlLog(dbm, url, start, end):
             return crawllog
     return None  
 
+def default(obj):
+    """Default JSON serializer."""
+    import calendar, datetime
 
+    if isinstance(obj, datetime.datetime):
+        if obj.utcoffset() is not None:
+            obj = obj - obj.utcoffset()
+    millis = int(
+        calendar.timegm(obj.timetuple()) * 1000 +
+        obj.microsecond / 1000
+    )
+    return millis
 
 def name():
     return 'ExtractCSV'
@@ -158,7 +169,7 @@ def cli(args,dbm):
                                 log['disklocation']=ddir
                     mfiles.append(m)
         with open(os.path.join(dir, "meta.json"), 'w') as outfile:
-            json.dump(mfiles, outfile)
+            json.dump(mfiles, outfile, default=default)
         
         break    
         
