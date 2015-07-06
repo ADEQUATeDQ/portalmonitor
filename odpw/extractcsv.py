@@ -50,7 +50,7 @@ def name():
 def setupCLI(pa):
     getportals = pa.add_argument_group('Portal info', 'information about portals')
     getportals.add_argument('-o','--out_file', dest='outfile', help='store portal list')
-    getportals.add_argument('-p','--portals',action='store_true', dest='getPortals')
+    getportals.add_argument('--dmhost',action='store_true', dest='host')
     
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
@@ -70,7 +70,7 @@ def cli(args,dbm):
     
     
     experiment='odwu'
-    dm_dbm= PostGRESManager(db='datamonitor', host="localhost", port=5432, password=None, user='postgres')
+    dm_dbm= PostGRESManager(db='datamonitor', host=args.host, port=5432, password=None, user='postgres')
     for portal in dbm.selectQuery("SELECT * FROM portal_meta_data WHERE portal='data.gv.at' ORDER BY snapshot DESC"):
         dir=os.path.join(args.outfile,portal['portal'])
         if not os.path.exists(dir):
