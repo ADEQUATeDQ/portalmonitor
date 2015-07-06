@@ -42,6 +42,9 @@ def getCrawlLog(dbm, url, start, end):
             return crawllog
     return None  
 
+def date_handler(obj):
+    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
+
 def default(obj):
     """Default JSON serializer."""
     import calendar, datetime
@@ -169,9 +172,8 @@ def cli(args,dbm):
                                 log['disklocation']=ddir
                     mfiles.append(m)
         with open(os.path.join(dir, "meta.json"), 'w') as outfile:
-            json.dump(mfiles, outfile, default=default)
+            json.dump(mfiles, outfile, default=date_handler)
         
-        break    
         
    
 
