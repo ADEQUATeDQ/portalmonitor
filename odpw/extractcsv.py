@@ -50,7 +50,7 @@ def name():
 def setupCLI(pa):
     getportals = pa.add_argument_group('Portal info', 'information about portals')
     getportals.add_argument('-o','--out_file', dest='outfile', help='store portal list')
-    getportals.add_argument('--dmhost',action='store_true', dest='host')
+    getportals.add_argument('--dmhost', dest='host')
     
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
