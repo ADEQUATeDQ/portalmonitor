@@ -11,9 +11,9 @@ import fetch as fetchcli
 import stats as statscli
 import time
 import datamonitor as dmcli
+import extractcsv as extractcli
 
-
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli]
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli,extractcli]
 
 def start ():
     start= time.time()
