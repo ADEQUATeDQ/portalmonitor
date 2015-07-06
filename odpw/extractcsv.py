@@ -146,7 +146,7 @@ def cli(args,dbm):
                     ddir= os.path.join(ddir, tofile)
             
                     print "copy", disk,"to",ddir    
-                    shutil.copyfile(disk, ddir)
+                    shutil.copyfile(data, ddir)
                     
                     if isinstance(m['crawllog'], dict):
                         if m['crawllog']['status'] == 200:
