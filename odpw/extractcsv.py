@@ -70,7 +70,7 @@ def cli(args,dbm):
     
     
     experiment='odwu'
-    dm_dbm= PostGRESManager(db='datamonitor', host=args.host, port=5432, password=None, user='postgres')
+    dm_dbm= PostGRESManager(db='datamonitor', host=args.host, port=5432, password='p0stgres', user='postgres')
     for portal in dbm.selectQuery("SELECT * FROM portal_meta_data WHERE portal='data.gv.at' ORDER BY snapshot DESC"):
         dir=os.path.join(args.outfile,portal['portal'])
         if not os.path.exists(dir):
