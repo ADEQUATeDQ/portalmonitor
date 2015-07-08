@@ -9,12 +9,13 @@ from db.dbm import PostgressDBM
 
 from util import ErrorHandler as eh
 from timer import Timer
+import time
 
-from db.dbm import PostgressDBM as dbcli
+from db import dbm as dbcli
 import init as initcli
 import fetch as fetchcli
 import stats as statscli
-import time
+
 import datamonitor as dmcli
 import extractcsv as extractcli
 import head as headcli

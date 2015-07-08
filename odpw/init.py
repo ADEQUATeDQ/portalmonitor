@@ -27,10 +27,14 @@ def cli(args,dbm):
             for l in args.plist:
                 try:
                     if len(l.split(","))==2 and len(l.split(",")[1].strip())>0:
-                        p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
-                        if args.insert:
-                            dbm.insertPortal(p)
-                        ok+=1
+                        p = dbm.getPortal(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
+                        if p:
+                            print "Portal", p.url, "exists"
+                        else: 
+                            if args.insert:
+                                p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
+                                dbm.insertPortal(p)
+                                ok+=1
                     else:
                         log.info("Skipping line",line=l )
                 except Exception as e:

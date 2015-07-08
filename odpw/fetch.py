@@ -38,7 +38,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
         try:
            
             
-            props= analyseDataset(data, datasetID,stats, dbm, sn,200)
+            props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
         
             #TODO
             #remove dataset form package_list
@@ -89,7 +89,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
             
     log.info("Fetched Meta data", pid=Portal.id, done=c, total=len(package_list))
 
-def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, first=False, status):
+def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
     props={
         'status':-1,
         'md5':None,
