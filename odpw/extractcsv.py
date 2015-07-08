@@ -173,10 +173,6 @@ def cli(args,dbm):
                     mfiles.append(m)
         with open(os.path.join(dir, "meta.json"), 'w') as outfile:
             json.dump(mfiles, outfile, default=date_handler)
-        
-        
-   
-
 
 
     #dbm.updateTimeInSnapshotStatusTable(sn=sn, key="fetch_end")

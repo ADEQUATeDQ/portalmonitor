@@ -444,21 +444,53 @@ def extractMimeType(ct):
         return str(ct)[:ct.find(";")].strip()
     return ct.strip()
 
+
+from datetime import timedelta
+
+def timer(delta):
+    hours, rem = divmod(delta, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return ("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
+
+def progressINdicator(processed, total,bar_width=20,elapsed=None, interim=None):
+    
+    
+    percent = float(processed) / total
+    hashes = '#' * int(round(percent * bar_width))
+    spaces = ' ' * (bar_width - len(hashes))
+    
+    el_str=""
+    if elapsed:
+        el_str= "runtime: "+timer(elapsed)
+        #str(timedelta(seconds=elapsed))
+    it_str=""
+    if interim:
+        it_str="interim: "+timer(interim)
+        #str(timedelta(seconds=interim))
+    
+    sys.stdout.write("\rProgress: {1}% [{0}] ({2}/{3}) {4} {5}".format(hashes + spaces, int(round(percent * 100)), processed, total, el_str,it_str))
+    sys.stdout.flush()
+
 def head(url, redirects=0, props=None):
     if not props:
         props={}
+        props['mime']=None
+        props['size']=None
+        props['redirects']=None
+        props['status']=None
+        props['header']=None
+        props['exception']=None
+    
+    
     headResp = requests.head(url=url,timeout=(2, 30.0))#con, read -timeout
 
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
-
-    #if 'content-type' in header_dict:
+    
     if 'content-type' in header_dict:
         props['mime']=extractMimeType(header_dict['content-type'])
     else:
         props['mime']='missing'
-    #else:
-    #    props['mime']='missing'
-
+    
     props['status']=headResp.status_code
     props['header']=header_dict
     if headResp.status_code == requests.codes.ok:
@@ -467,16 +499,20 @@ def head(url, redirects=0, props=None):
         else:
             props['size']=0
 
-    if headResp.status_code == requests.codes.moved:
+    if headResp.status_code in [ requests.codes.moved, requests.codes.see_other]:
         moved_url = header_dict['location']
         if redirects == 0:
             props['redirects']=[]
         props['redirects'].append(header_dict)
         if redirects < 3:
             redirects += 1
-            return head(url=moved_url, redirects=redirects,props=props)
+            if moved_url:
+                return head(url=moved_url, redirects=redirects,props=props)
+            else:
+                props['status']=778
         else:
             props['status']=777
+    
     return props
 
 if __name__ == '__main__':

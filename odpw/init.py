@@ -1,9 +1,7 @@
 __author__ = 'jumbrich'
 
 
-import sys
 from db.models import Portal
-from db.POSTGRESManager import PostGRESManager
 from util import ErrorHandler as eh
 
 import logging
@@ -15,9 +13,9 @@ log = get_logger()
 
 def name():
     return 'Init'
+
 def setupCLI(pa):
     pa.add_argument('-p','--portals',type=file, dest='plist')
-    pa.add_argument('-u','--update',action='store_true', dest='update')
     pa.add_argument('-i','--insert',action='store_true', dest='insert')
 
 def cli(args,dbm):
@@ -32,8 +30,6 @@ def cli(args,dbm):
                         p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
                         if args.insert:
                             dbm.insertPortal(p)
-                        elif args.update:
-                            dbm.upsertPortal(p)
                         ok+=1
                     else:
                         log.info("Skipping line",line=l )
@@ -42,8 +38,3 @@ def cli(args,dbm):
                     #log.error("Insert new Portal", line=l, exctype=type(e), excmsg=e.message,exc_info=True)
                     fail+=1
             log.info("Initialised portals", total=(ok+fail), ok=ok, failed=fail)
-       
-     
-    print "Numbers of Exceptions:"
-    for exc, count in eh.exceptions.iteritems():
-        print exc, count

@@ -95,6 +95,10 @@ $CMD
 
 echo "#Processing portals"
 
+#---
+# iterate over list of portals
+#--
+
 while read line
 do
     tokens=($line)

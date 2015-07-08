@@ -13,6 +13,7 @@ from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
+import json
 
 class Portal:
 
@@ -68,6 +69,13 @@ class Portal:
         self.url=url
         self.latest_snapshot=None
         self.apiurl=apiurl
+        self.software=None
+        self.datasets=-1
+        self.status=-1
+        self.exception=None
+        self.resources=-1
+        self.changefeed=False
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -77,8 +85,37 @@ class Dataset:
         self.snapshot=snapshot
         self.portal=portal
         self.dataset=dataset
+        
+        self.data=None
+        self.status=None
+        self.exception=None
+        self.md5=None
+        self.change=None
+        self.fetch_time=None
+        self.qa=None
+        self.qa_time=None
+        
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
+    
+    @classmethod
+    def fromResult(cls, result):
+        snapshot=result['snapshot']
+        portal=result['portal']
+        dataset=result['dataset']
+        
+        del result['portal']
+        del result['dataset']
+        del result['snapshot']
+
+        for i in ['data','qa']:
+            if isinstance(result[i], unicode ):
+                result[i] = json.loads(result[i])
+
+        return cls(portal=portal,
+                   snapshot=snapshot,**result)      
+    
 
 class PortalMetaData:
 
@@ -89,43 +126,70 @@ class PortalMetaData:
         del result['portal']
         del result['snapshot']
 
+
+        for i in ['res_stats','qa_stats','general_stats','fetch_stats']:
+            if isinstance(result[i], unicode ):
+                result[i] = json.loads(result[i])
+
         return cls(portal=portal,
                    snapshot=snapshot,**result)
 
     def __init__(self, portal=None, snapshot=None, **kwargs):
         self.snapshot=snapshot
         self.portal=portal
-        self.res_stats={}
-        self.qa_stats={}
-        self.general_stats={}
+        self.res_stats=None
+        self.qa_stats=None
+        self.general_stats=None
         self.exception=None
-
-        self.fetch_stats={'fetch_start':datetime.now()}
+        self.resources=-1
+        self.datasets=-1
+        self.fetch_stats=None
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def updateFetchStats(self, stats):
+    def fetchstart(self):
+        if self.fetch_stats:
+            self.fetch_stats['fetch_start']=datetime.now().isoformat()
+        else:
+            self.fetch_stats={'fetch_start':datetime.now().isoformat()}
+        
+        
+    def updateStats(self, stats):
         if 'fetch_stats' in stats:
-            self.fetch_stats['fetch_end']=datetime.now()
+            if not self.fetch_stats:
+                self.fetch_stats={}
+            self.fetch_stats['fetch_end']=datetime.now().isoformat()
             self.fetch_stats['fullfetch']=stats['fetch_stats']['fullfetch']
             self.fetch_stats['respCodes']=stats['fetch_stats']['respCodes']
             self.fetch_stats['datasets']=stats['datasets']
             self.fetch_stats['portal_status']=stats['status']
 
         if 'general_stats' in stats:
-            self.general_stats['keys']=stats['general_stats']['keys']
+            if not self.general_stats:
+                self.general_stats={}
+            for key in stats['general_stats'].keys():
+                self.general_stats[key]=stats['general_stats'][key]
+        
         if 'res_stats' in stats:
+            if not self.res_stats:
+                self.res_stats={}
             self.res_stats['respCodes']=stats['res_stats']['respCodes']
             self.res_stats['total']=stats['res_stats']['total']
             self.res_stats['unique']=len(stats['res_stats']['resList'])
-
+        if 'datasets' in stats:
+            self.datasets=stats['datasets']
+        if 'resources' in stats:
+            self.resources=stats['resources']  
+    
+      
 class Resource:
     @classmethod
     def newInstance(cls, url=None, snapshot=None):
         props={}
         try:
             url=urlnorm.norm(url)
-            props=util.head(url)
+            #props=util.head(url)
         except Exception as e:
             log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot,exc_info=True)
             props['status']=util.getExceptionCode(e)
@@ -153,9 +217,13 @@ class Resource:
         if not self.origin:
             self.origin={}
         if pid not in self.origin:
-            self.origin[pid]=[did]
-        else:
+            self.origin[pid]=[]
+        if did not in self.origin[pid]: 
             self.origin[pid].append(did)
+
+    def updateStats(self, stats):
+        for key, value in stats.items():
+            setattr(self, key, value)
 
     @classmethod
     def fromResult(cls, result):
@@ -163,6 +231,10 @@ class Resource:
         snapshot=result['snapshot']
         del result['url']
         del result['snapshot']
+        
+        for i in ['header','origin','redirects']:
+            if isinstance(result[i], unicode ):
+                result[i] = json.loads(result[i])
 
         return cls(url=url,
                    snapshot=snapshot,**result)

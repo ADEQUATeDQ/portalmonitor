@@ -5,15 +5,20 @@ import logging
 import logging.config
 
 from db import POSTGRESManager as dbcli
+from db.dbm import PostgressDBM
 from db.POSTGRESManager import PostGRESManager
+from util import ErrorHandler as eh
+from timer import Timer
+
 import init as initcli
 import fetch as fetchcli
 import stats as statscli
 import time
 import datamonitor as dmcli
 import extractcsv as extractcli
+import head as headcli
 
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli,extractcli]
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli]
 
 def start ():
     start= time.time()
@@ -56,7 +61,8 @@ def start ():
     else:
         logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
 
-    dbm= PostGRESManager(host=args.dbhost, port=args.dbport)
+
+    dbm= PostgressDBM(host=args.dbhost, port=args.dbport)
 
 
 
@@ -67,6 +73,16 @@ def start ():
     msecs = secs * 1000
     logger = logging.getLogger(__name__)
     logger.info("END time elapsed %s ms",msecs)
+    
+    eh.printStats()
+    for exc, count in eh.exceptions.iteritems():
+        print exc, count
+        
+    Timer.printStats()
+    
+    
+    
+
 
 if __name__ == "__main__":
     start()

@@ -28,7 +28,6 @@ def cli(args,dbm):
         if not sn:
             return
         
-        
         today = datetime.now()
         start = today + timedelta( (6-today.weekday()) % 7 )
     

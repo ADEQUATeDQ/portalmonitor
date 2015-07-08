@@ -1,11 +1,14 @@
 __author__ = 'jumbrich'
 
+from util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
-from util import getSnapshot
 import util
+import sys
+import time
+from timer import Timer
 
-from db.models import Portal
-from db.models import PortalMetaData
+import math
+from db.models import Portal,  PortalMetaData, Dataset, Resource
 from urlparse import  urlparse
 from collections import defaultdict
 
@@ -51,7 +54,7 @@ def computePortalStats(dbm,sn):
         'softwareDist':defaultdict(int),
         'process-stats':{'fetched':0, 'res':0, 'qa':0}
     }
-    for pmdRes in dbm.getPortalMetaData(snapshot=sn):
+    for pmdRes in dbm.getPortalMetaDatas(snapshot=sn):
         pmd=PortalMetaData.fromResult(pmdRes)
         
         #count number of portals
@@ -151,20 +154,185 @@ def systemStats(dbm,sn):
     ###
     #
     ###
+def extract_keys(data, stats):
+
+    core=stats['general_stats']['keys']['core']
+    extra=stats['general_stats']['keys']['extra']
+    res=stats['general_stats']['keys']['res']
+
+    for key in data.keys():
+        if key == 'resources':
+            for r in data['resources']:
+                for k in r.keys():
+                    if k not in res:
+                        res.append(k)
+        elif key == 'extras' and isinstance(data['extras'],dict):
+            for k in data['extras'].keys():
+                if k not in extra:
+                    extra.append(k)
+        else:
+            if key not in core:
+                core.append(key)
+
+    return stats
+
+def simulateFetch(portal, dbm, snapshot):
+    log.info("Simulate Fetching", pid=portal.id, sn=snapshot)
+
+    stats={
+        'portal':portal,
+        'datasets':-1, 'resources':-1,
+        'status':-1,
+        'fetch_stats':{'respCodes':{}, 'fullfetch':True},
+        'general_stats':{
+            'datasets':0,
+            'keys':{'core':[],'extra':[],'res':[]}
+        },
+        'res_stats':{'respCodes':{},'total':0, 'resList':[]}
+    }
+    
+    pmd = dbm.getPortalMetaData(portalID=portal.id, snapshot=snapshot)
+    if not pmd:
+        pmd = PortalMetaData(portal=portal.id, snapshot=snapshot)
+        dbm.insertPortalMetaData(pmd)
+    else:
+        pmd.fetchstart()
+        dbm.updatePortalMetaData(pmd)
+    
+    try:
+        stats['res']=[]
+        c=0
+        for ds in dbm.getDatasets(portalID=portal.id, snapshot=snapshot):
+            stats['status']=200
+            dataset = Dataset.fromResult(dict(ds))
+            
+            cnt= stats['fetch_stats']['respCodes'].get(dataset.status,0)
+            stats['fetch_stats']['respCodes'][dataset.status]= (cnt+1)
+
+            data =dataset.data
+            stats=extract_keys(data, stats)
+
+            if 'resources' in data:
+                stats['res'].append(len(data['resources']))
+                for resJson in data['resources']:
+                    stats['res_stats']['total']+=1
+                    R = dbm.getResource(url=resJson['url'], snapshot=snapshot)
+                    if not R:
+                        #do the lookup
+                        R = Resource.newInstance(url=resJson['url'], snapshot=snapshot)
+                        print 'Created new resource for ', resJson['url'], 'and snapshot',snapshot 
+                        
+
+                    R.updateOrigin(pid=portal.id, did=dataset.dataset)
+                    dbm.updateResource(R)
+
+            dbm.updateDataset(dataset)
+            
+            c = c + 1
+            if (c > 0) and (math.fmod(c, 100) == 0):
+                log.info('process status', pid=portal.id, done=c, total=portal.datasets)
+
+            stats['resources']=sum(stats['res'])
+        stats['datasets']=c
+    except Exception as e:
+        eh.handleError(log,"fetching dataset information", exception=e, apiurl=portal.apiurl,exc_info=True)
+        #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
+    try:
+        pmd.updateStats(stats)
+        ##UPDATE
+        #General portal information (ds, res)
+        #Portal Meta Data
+        #   ds-fetch statistics
+        dbm.updatePortalMetaData(pmd)
+    except Exception as e:
+        eh.handleError(log,'Updating DB',exception=e,pid=portal.id, exc_info=True)
+        log.critical('Updating DB', pid=portal.id, exctype=type(e), excmsg=e.message,exc_info=True)
+
+    
+
+def fetchStats(dbm, sn):
+    """
+    Compute the fetchStats lookup stats
+    """
+    
+    for p in dbm.getPortals():
+        portal = Portal.fromResult(dict(p))
+        
+        simulateFetch(portal, dbm,sn)
+    
+    
+    
+def headStats(dbm, sn):
+    """
+    Compute the head lookup stats
+    """
+    portalStats={}
+    
+    total=0
+    
+    for res in dbm.countProcessedResources(snapshot=sn):
+        total=res[0]
+    log.info("Computing head lookup stats",sn=sn, count=total)
+    print total
+    c=0;
+    steps=total/10
+    
+    start = time.time()
+    interim = time.time()
+    for res in dbm.getProcessedResources(snapshot=sn):
+        c+=1
+        for portalID in res['origin'].keys():
+            if portalID not in portalStats:
+                portalStats[portalID]= {'res_stats':{'respCodes':{},'total':0, 'resList':[]}}
+            stats = portalStats[portalID]
+        cnt= stats['res_stats']['respCodes'].get(res['status'],0)
+        stats['res_stats']['respCodes'][res['status']]= (cnt+1)
+        stats['res_stats']['total']+=1
+        
+        if res['url'] not in stats['res_stats']['resList']:
+            stats['res_stats']['resList'].append(res['url'])
+        
+        if c%steps == 0:
+            elapsed = (time.time() - start)
+            interim = (time.time() - interim)
+            util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+            interim = time.time()
+
+    interim = (time.time() - interim)
+    util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+    for portalID in portalStats.keys():
+        pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
+        
+        pmd.updateStats(portalStats[portalID])
+        ##UPDATE
+        dbm.updatePortalMetaData(pmd)
+
 
 def name():
     return 'Stats'
 def setupCLI(pa):
     pa.add_argument('-s','--system',  action='store_true', dest='system', help='compute system statistics')
+    
+    pa.add_argument('--head',  action='store_true', dest='head', help='compute head lookup statistics')
+    pa.add_argument('--fetch',  action='store_true', dest='fetch', help='recompute fetch statistics')
+    
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
 
 def cli(args,dbm):
-
+    sn = getSnapshot(args)
+    if not sn:
+        return
+        
     if args.system:
-        sn = getSnapshot(args)
-        if not sn:
-            return
         systemStats(dbm,sn)
-
+    if args.head:
+        headStats(dbm, sn)
+    if args.fetch:
+        fetchStats(dbm, sn)
+        
+    Timer.printStats()
+    log.info("Timer", stats=Timer.getStats())
+    
+    eh.printStats()
 

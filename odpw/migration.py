@@ -14,7 +14,8 @@ from pymc.distributions import snapshot
 import json
 import hashlib
 from db.models import Portal, Dataset, PortalMetaData, Resource
-from db.POSTGRESManager import PostGRESManager
+from db.dbm import PostgressDBM
+#from db.POSTGRESManager import PostGRESManager
 
 class KeyTransform(SONManipulator):
     """Transforms keys going to database and restores them coming out.
@@ -117,7 +118,6 @@ def fetchDataset(dsJSON, stats, dbm, sn, first=False):
 
             if 'resources' in data:
                 stats['res'].append(len(data['resources']))
-                lastDomain=None
                 for resJson in data['resources']:
                     stats['res_stats']['total']+=1
 
@@ -128,7 +128,7 @@ def fetchDataset(dsJSON, stats, dbm, sn, first=False):
                         
 
                     R.updateOrigin(pid=stats['portal'].id, did=dsJSON['id'])
-                    dbm.upsertResource(R)
+                    dbm.updateResource(R)
 
                     cnt= stats['res_stats']['respCodes'].get(R.status,0)
                     stats['res_stats']['respCodes'][R.status]= (cnt+1)
@@ -144,8 +144,10 @@ def fetchDataset(dsJSON, stats, dbm, sn, first=False):
         props['status']=util.getExceptionCode(e)
         props['exception']=str(type(e))+":"+str(e.message)
 
+    
     d = Dataset(snapshot=sn,portal=stats['portalID'],dataset=dsJSON['id'], **props)
-    dbm.upsertDatasetFetch(d)
+    
+    dbm.updateDataset(d)
 
 def extract_keys(data, stats):
 
@@ -176,8 +178,9 @@ def fetching(obj):
     dbm=obj['dbm']
     fullfetch=obj['fullfetch']
 
-    #log.info("Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
     id=util.computeID(Portal['pURL'])
+    
+    
     stats={
         'portal':Portal,'portalID':id,
         'datasets':-1, 'resources':-1,
@@ -190,15 +193,17 @@ def fetching(obj):
     }
     stats['res']=[]
     
-    pmd = PortalMetaData(portal=id, snapshot=sn)
-    pmd.fetch_stats['fetch_start']=obj['sn-time'] 
-            
-    dbm.upsertPortalMetaData(pmd)
+    pmd = dbm.getPortalMetaData(portalID=id, snapshot=sn)
+    if not pmd:
+        pmd = PortalMetaData(portal=id, snapshot=sn)
+        dbm.insertPortalMetaData(pmd)
+        
+    pmd.fetch_stats['fetch_start']=obj['sn-time'].isoformat()
+    dbm.updatePortalMetaData(pmd)
             
     try:
         if fullfetch:
             #fetch the dataset descriptions
-            
             print "  -> ", snapshot,date, sn 
             for ds in db[portal['id']].find({'time': snapshot}, timeout=False):
                 if stats['datasets']==-1:
@@ -223,10 +228,10 @@ def fetching(obj):
         #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
         pass
     try:
-        pmd.updateFetchStats(stats)
+        pmd.updateStats(stats)
         ##UPDATE
         #   ds-fetch statistics
-        dbm.upsertPortalMetaData(pmd)
+        dbm.updatePortalMetaData(pmd)
     except Exception as e:
         #eh.handleError(log,'Updating DB',exception=e,pid=Portal.id, exc_info=True)
         #log.critical('Updating DB', pid=Portal.id, exctype=type(e), excmsg=e.message,exc_info=True)
@@ -238,44 +243,47 @@ def fetching(obj):
 
 from pprint import pprint
 import datetime
+
 if __name__ == '__main__':
     con = Connection("137.208.51.23", 27017)
     db = con["odwu"]
     db.add_son_manipulator(KeyTransform(".", "_dot_"))
-    
-    dbm = PostGRESManager(host="bandersnatch.ai.wu.ac.at")
+    dbm= PostgressDBM(host="bandersnatch.ai.wu.ac.at")
+    #dbm = PostGRESManager(host="bandersnatch.ai.wu.ac.at")
     
     portals=[]
     for p in db['odp'].find(timeout=False):
         portals.append(p)
     
     processed=[
-               'http://datacatalogs.org/',
-               'http://data.yokohamaopendata.jp',
-               'http://dati.gov.it/',
-               'http://data.gov.au',
-               'http://data.graz.gv.at/',
-               'http://data.gv.at',
-               'http://data.hdx.rwlabs.org',
-               'http://datahub.io/',
-               'http://data.kk.dk/',
-               'http://data.lexingtonky.gov/',
-               'http://datameti.go.jp/data/',
-               'http://data.nsw.gov.au',
-               'http://data.ohouston.org/',
-               'http://data.ottawa.ca/',
-               'http://data.qld.gov.au',
-               'http://data.rio.rj.gov.br/',
-               'http://data.sa.gov.au/',
-               'http://data.ug/',
-               'http://dati.toscana.it/',
-               'http://datosabiertos.malaga.eu/',
-               'http://datos.codeandomexico.org/',
-               'http://donnees.ville.montreal.qc.ca/',
-               'http://gisdata.mn.gov',
-               'http://hubofdata.ru/',
-               'http://www.openumea.se/',
-               'http://daten.hamburg.de/'
+               #================================================================
+               # 'http://datacatalogs.org/',
+               # 'http://data.yokohamaopendata.jp',
+               # 'http://dati.gov.it/',
+               # 'http://data.gov.au',
+               # 'http://data.graz.gv.at/',
+               # 'http://data.gv.at',
+               # 'http://data.hdx.rwlabs.org',
+               # 'http://datahub.io/',
+               # 'http://data.kk.dk/',
+               # 'http://data.lexingtonky.gov/',
+               # 'http://datameti.go.jp/data/',
+               # 'http://data.nsw.gov.au',
+               # 'http://data.ohouston.org/',
+               # 'http://data.ottawa.ca/',
+               # 'http://data.qld.gov.au',
+               # 'http://data.rio.rj.gov.br/',
+               # 'http://data.sa.gov.au/',
+               # 'http://data.ug/',
+               # 'http://dati.toscana.it/',
+               # 'http://datosabiertos.malaga.eu/',
+               # 'http://datos.codeandomexico.org/',
+               # 'http://donnees.ville.montreal.qc.ca/',
+               # 'http://gisdata.mn.gov',
+               # 'http://hubofdata.ru/',
+               # 'http://www.openumea.se/',
+               # 'http://daten.hamburg.de/'
+               #================================================================
                
                
                ]
