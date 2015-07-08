@@ -16,6 +16,7 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
+
 def computeID(url):
     try:
         up = urlparse(urlnorm.norm(url))

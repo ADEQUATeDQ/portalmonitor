@@ -4,12 +4,13 @@ import argparse
 import logging
 import logging.config
 
-from db import POSTGRESManager as dbcli
+
 from db.dbm import PostgressDBM
-from db.POSTGRESManager import PostGRESManager
+
 from util import ErrorHandler as eh
 from timer import Timer
 
+from db.dbm import PostgressDBM as dbcli
 import init as initcli
 import fetch as fetchcli
 import stats as statscli
@@ -46,6 +47,10 @@ def start ():
     dbg=pa.add_argument_group("DB")
     dbg.add_argument('--host', help="DB host", dest='dbhost', default="localhost")
     dbg.add_argument('--port', help="DB port", dest='dbport',type=int, default=5433)
+    dbg.add_argument('--user', help="DB user", dest='dbuser', default="opwu")
+    dbg.add_argument('--db', help="DB database", dest='dbdb', default="portalwatch")
+    dbg.add_argument('--password', help="DB password", dest='dbpwd',default='0pwu')
+    
     #dbg.add_argument('--dbconf', help="DB config", dest='dbconf',type=file)
 
     sp = pa.add_subparsers(title='Modules', description="Available sub modules")
@@ -62,7 +67,7 @@ def start ():
         logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
 
 
-    dbm= PostgressDBM(host=args.dbhost, port=args.dbport)
+    dbm= PostgressDBM(host=args.dbhost, port=args.dbport, password=args.dbpwd, user=args.dbuser, db=args.dbdb )
 
 
 
