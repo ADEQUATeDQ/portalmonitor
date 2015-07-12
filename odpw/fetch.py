@@ -32,16 +32,14 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
     c=0
     
     # get all meta data as json 
-    for datasetJSON in ckanclient.fullMetaDataList(stats['portal'].apiurl):
-        #datasetID = datasetJSON[...]
+    for datasetJSON in ckanclient.full_metadata_list(stats['portal'].apiurl):
+        datasetID = datasetJSON['name']
         data = datasetJSON['data']
         try:
-           
-            
             props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
-        
-            #TODO
+
             #remove dataset form package_list
+            package_list.remove(datasetID)
         
             d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=datasetID, **props)
             dbm.insertDatasetFetch(d)
@@ -285,7 +283,7 @@ def cli(args,dbm):
         )
     else:
         for result in dbm.getPortals(maxDS=args.ds, maxRes=args.res, software=args.software):
-            p = Portal.fromResult(result)
+            p = Portal.fromResult(dict(result))
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
             jobs.append(
                 {   'portal':p,
