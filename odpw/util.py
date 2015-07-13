@@ -317,16 +317,20 @@ all.update(countries)
 
 
 def getCountry(url):
+    try:
+        
+        url_elements = urlparse(url).netloc.split(".")
 
-	url_elements = urlparse(url).netloc.split(".")
-
-	tld = ".".join(url_elements[-2:])
-	if tld in all:
-		return all[tld]
-	elif url_elements[-1] in all:
-		return all[url_elements[-1]]
-	else:
-		return "unknown"
+        tld = ".".join(url_elements[-2:])
+        if tld in all:
+            return all[tld]
+        elif url_elements[-1] in all:
+            return all[url_elements[-1]]
+        else:
+            return "unknown"
+    except Exception as e:
+        print e, 'for', url
+        return 'error'
 
 
 class ErrorHandler():
@@ -404,17 +408,6 @@ def getSnapshot(args):
 
 
 
-statusDict={
-    '2':'ok',
-    '3':'redirect-loop',
-    '4':'offline',
-    '5':'server-error',
-    '6':'other-error',
-    '7':'connection-error',
-    '8':'value-error',
-    '9':'uri-error',
-    '-':'unknown'
-}
 
 def convertSize(size):
     size_name = ("B","KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -426,19 +419,7 @@ def convertSize(size):
     else:
         return '0B'
 
-def analyseStatus(statusmap, status):
-    sstr=str(status)
-    if sstr[0] not in statusDict:
-        statusmap[sstr[0]]=0
-    statusmap[statusDict[sstr[0]]]+=1
-    statusmap['total']+=1
 
-def initStatusMap():
-    d={}
-    for v in statusDict.values():
-        d[v]=0
-    d['total']=0
-    return d
 
 def extractMimeType(ct):
     if ";" in ct:

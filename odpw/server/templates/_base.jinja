@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+    <head>
+    
+        <title>Open Data Portal Watch</title>
+        
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        {% block css %}
+            <link rel="stylesheet" href="{{ static_url('css/kube.min.css') }}" />
+            <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
+            <link rel="stylesheet" href="{{ static_url('css/plots.css') }}" />
+            <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Julius+Sans+One|Muli:300,400|Open+Sans:400,300|Sorts+Mill+Goudy|Raleway:400,300,700|Open+Sans+Condensed:300">
+        {% endblock %}
+        
+        {% block scripts %}
+            <script type="text/javascript" src="{{ static_url('js/plot.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/d3.v3.min.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/topojson.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/d3.geo.projection.v0.min.js') }}" ></script>
+        {% endblock %}
+    </head>
+        
+    <body>
+        <!-- Header -->
+        {% include "_header.jinja" %}
+      
+        <!--  Navigation Bar -->
+        {% include "_mainnav.jinja" %}
+       
+        <!-- Content -->
+        <div class="units-row container">
+            {% block content %}{% endblock %}
+        </div>
+        
+        {% include "_footer.jinja" %}
+        {% block pageScripts %}{% endblock %}
+    </body>
+</html>

@@ -38,7 +38,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
         try:
            
             
-            props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
+            props= analyseDataset(data, datasetID, stats, dbm, sn, 200)
         
             #TODO
             #remove dataset form package_list
@@ -115,13 +115,15 @@ def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
 
             stats=extract_keys(data, stats)
 
+            
             if 'resources' in data:
                 stats['res'].append(len(data['resources']))
                 lastDomain=None
                 for resJson in data['resources']:
                     stats['res_stats']['total']+=1
 
-                    R = dbm.getResource(url=resJson['url'], snapshot=sn)
+                    tR =  Resource.newInstance(url=resJson['url'], snapshot=sn)
+                    R = dbm.getResource(tR)
                     if not R:
                         #do the lookup
                         with Timer(key="newRes") as t:
@@ -130,7 +132,9 @@ def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
                         
                     R.updateOrigin(pid=stats['portal'].id, did=datasetID)
                     dbm.updateResource(R)
+                    
     except Exception as e:
+        print e
         eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
                   apiurl=stats['portal'].apiurl,
                   exc_info=True)
@@ -182,7 +186,7 @@ def fetching(obj):
         'res_stats':{'respCodes':{},'total':0, 'resList':[]}
     }
     
-    pmd = dbm.getPortalMetaData(portal=Portal.id, snapshot=sn)
+    pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
     if not pmd:
         pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
         dbm.insertPortalMetaData(pmd)
@@ -285,7 +289,7 @@ def cli(args,dbm):
         )
     else:
         for result in dbm.getPortals(maxDS=args.ds, maxRes=args.res, software=args.software):
-            p = Portal.fromResult(result)
+            p = Portal.fromResult(dict(result))
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
             jobs.append(
                 {   'portal':p,

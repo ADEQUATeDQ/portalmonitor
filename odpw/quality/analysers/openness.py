@@ -1,0 +1,151 @@
+import os
+import string
+from odpw.quality.analysers import licenses_openness_rating
+
+__author__ = 'jumbrich'
+
+import json
+import numpy as np
+import analyze_resource_format
+
+LICENSES_PATH = '/usr/local/opendatawu/resources/licenses.json'
+
+# http://en.wikipedia.org/wiki/Open_format
+OPEN_FORMATS = ['csv', 'html', 'latex', 'dvi',
+                'postscript', 'json', 'rdf',
+                'xml', 'txt', 'ical', 'rss',
+                'geojson',
+                'ods', 'ttf', 'otf'
+                              'svg', 'gif', 'png']
+
+# what about
+#svg geotiff otf xls
+
+class OpennessAnalyser:
+    def __init__(self):
+        # license rating
+        self.license_rating = licenses_openness_rating.LicensesOpennessRating()
+
+        #retrieval stats
+        self.quality = {'format': 0,
+                        'license': 0,
+                        'total': 0
+        }
+
+        #open formats for at least one resource for a dataset
+        self.openformats = np.array([])
+
+        #open formats for at least one resource for a dataset
+        self.opentotal = np.array([])
+
+        #open licenses for at least one resource for a dataset
+        self.openlicenses = np.array([])
+
+    def visit(self, dataset):
+        data = dataset.data
+        # if no dict, return (e.g. access denied)
+        if not isinstance(data, dict):
+            return
+
+        self._format_openess(data)
+        self._license_openess(data)
+
+
+    def update(self, PMD):
+        stats={'qa_stats':{'Qo': self.quality}}
+        PMD.updateStats(stats)
+        
+        
+
+    def computeSummary(self):
+
+        self.quality['format'] = self.openformats.mean()
+        self.quality['license'] = self.openlicenses.mean()
+        self.quality['total'] = self.opentotal.mean()
+
+    def _format_openess(self, data):
+        open = False
+        if 'resources' in data:
+            for res in data['resources']:
+                fv = res.get("format", str(None))
+                format = analyze_resource_format.get_format(fv).lower()
+                if format in OPEN_FORMATS:
+                    open = True
+                    break
+                    #else:
+                    #   print format
+
+        self.openformats = np.append(self.openformats, 1 if open else 0)
+        self.opentotal = np.append(self.opentotal, 1 if open else 0)
+
+    def _license_openess(self, data):
+        license_title = data.get('license', str(None))
+        license_id = data.get('license_id', str(None))
+        license_url = data.get('license_url', str(None))
+
+        open = self.license_rating.is_open_license(license_title, license_id, license_url)
+
+        self.openlicenses = np.append(self.openlicenses, 1 if open else 0)
+        self.opentotal = np.append(self.opentotal, 1 if open else 0)
+
+
+## NOT WORKING!!!!!!!
+def _is_open_license(title, lid, url):
+    with open(LICENSES_PATH) as f:
+        json_data = json.load(f)
+
+    candidates = []
+
+    if lid:
+        d = (lid.split('-'))
+        for i in range(len(d), 0, -1):
+            join = '-'.join(d[:i])
+            for row in json_data['license']:
+                if join.lower() in (row['license_id']).encode('utf-8').lower() and (row not in candidates):
+                    candidates.append(row)
+            if len(candidates) > 0:
+                break
+    else:
+        for row in json_data['license']:
+            candidates.append(row)
+
+    if not url or url == '':
+        pass
+    else:
+        b = []
+        for candidate in candidates:
+            for x in candidate['license_url']:
+                if (url in str(x) or str(x) in url) and (candidate not in b):
+                    b.append(candidate)
+        if len(b) > 0:
+            candidates = b
+
+    if not title or title == '':
+        pass
+    else:
+        c = []
+        e = (title.split())
+        for i in range(len(e), 0, -1):
+            join = ' '.join(e[:i])
+            for candidate in candidates:
+                if join.lower() in candidate['license_title'] and (candidate not in c):
+                    c.append(candidate)
+            if len(c) > 0:
+                break
+        if len(c) > 0:
+            candidates = c
+
+    if not candidates:
+        return False
+    else:
+        op = False
+        for license in candidates:
+            if license['od_conformance'] == False:
+                return False
+            elif license['od_conformance'] == True:
+                op = True
+
+            if license['osd_conformance'] == True and not op:
+                op = True
+
+        return op

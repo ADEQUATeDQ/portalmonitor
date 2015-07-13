@@ -1,7 +1,7 @@
 __author__ = 'jumbrich'
 
 import argparse
-import logging
+
 import logging.config
 
 
@@ -15,12 +15,14 @@ from db import dbm as dbcli
 import init as initcli
 import fetch as fetchcli
 import stats as statscli
-
 import datamonitor as dmcli
 import extractcsv as extractcli
 import head as headcli
+import quality.quality as qualitycli
+import status as statuscli
+from server import server as servercli
 
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli]
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli, qualitycli, statuscli, servercli]
 
 def start ():
     start= time.time()
@@ -71,7 +73,7 @@ def start ():
     dbm= PostgressDBM(host=args.dbhost, port=args.dbport, password=args.dbpwd, user=args.dbuser, db=args.dbdb )
 
 
-
+    print args
     args.func(args,dbm)
 
     end = time.time()

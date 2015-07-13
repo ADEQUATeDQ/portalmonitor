@@ -80,6 +80,7 @@ class Portal:
             setattr(self, key, value)
 
 
+
 class Dataset:
     def __init__(self, snapshot=None, portal=None, dataset=None,**kwargs):
         self.snapshot=snapshot
@@ -165,11 +166,19 @@ class PortalMetaData:
             self.fetch_stats['datasets']=stats['datasets']
             self.fetch_stats['portal_status']=stats['status']
 
+        if 'qa_stats' in stats:
+            if not self.qa_stats:
+                self.qa_stats={}
+            for key in stats['qa_stats'].keys():
+                self.qa_stats[key]=stats['qa_stats'][key]
+        
+
         if 'general_stats' in stats:
             if not self.general_stats:
                 self.general_stats={}
             for key in stats['general_stats'].keys():
                 self.general_stats[key]=stats['general_stats'][key]
+        
         
         if 'res_stats' in stats:
             if not self.res_stats:
@@ -177,6 +186,7 @@ class PortalMetaData:
             self.res_stats['respCodes']=stats['res_stats']['respCodes']
             self.res_stats['total']=stats['res_stats']['total']
             self.res_stats['unique']=len(stats['res_stats']['resList'])
+        
         if 'datasets' in stats:
             self.datasets=stats['datasets']
         if 'resources' in stats:

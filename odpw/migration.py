@@ -4,9 +4,9 @@ Created on Jun 25, 2015
 @author: jumbrich
 '''
 
-
+from util import getSnapshot,getExceptionCode,ErrorHandler as eh
 import util
-
+import time
 from pymongo import Connection
 from pymongo.son_manipulator import SONManipulator
 from _socket import timeout
@@ -15,7 +15,16 @@ import json
 import hashlib
 from db.models import Portal, Dataset, PortalMetaData, Resource
 from db.dbm import PostgressDBM
+from fetch import analyseDataset
 #from db.POSTGRESManager import PostGRESManager
+
+import logging
+from sqlalchemy.exc import IntegrityError
+log = logging.getLogger(__name__)
+from structlog import get_logger, configure
+from structlog.stdlib import LoggerFactory
+configure(logger_factory=LoggerFactory())
+log = get_logger()
 
 class KeyTransform(SONManipulator):
     """Transforms keys going to database and restores them coming out.
@@ -93,61 +102,63 @@ class KeyTransform(SONManipulator):
         return son
 
 
-def fetchDataset(dsJSON, stats, dbm, sn, first=False):
-    props={
-        'status':-1,
-        'md5':None,
-        'data':None,
-        'exception':None
-        }
-    try:
-        props['status']=dsJSON['respCode']
-
-        cnt= stats['fetch_stats']['respCodes'].get(dsJSON['respCode'],0)
-        stats['fetch_stats']['respCodes'][dsJSON['respCode']]= (cnt+1)
-
-        if dsJSON['respCode'] == 200:
-            data = dsJSON['content']
-            
-            d = json.dumps(data, sort_keys=True, ensure_ascii=True)
-            data_md5 = hashlib.md5(d).hexdigest()
-            props['md5']=data_md5
-            props['data']=data
-
-            stats=extract_keys(data, stats)
-
-            if 'resources' in data:
-                stats['res'].append(len(data['resources']))
-                for resJson in data['resources']:
-                    stats['res_stats']['total']+=1
-
-                    R = dbm.getResource(url=resJson['url'], snapshot=sn)
-                    if not R:
-                        #do the lookup
-                        R = Resource(url=resJson['url'], snapshot=sn)
-                        
-
-                    R.updateOrigin(pid=stats['portal'].id, did=dsJSON['id'])
-                    dbm.updateResource(R)
-
-                    cnt= stats['res_stats']['respCodes'].get(R.status,0)
-                    stats['res_stats']['respCodes'][R.status]= (cnt+1)
-
-                    if R.url not in stats['res_stats']['resList']:
-                        stats['res_stats']['resList'].append(R.url)
-
-
-    except Exception as e:
-        #eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
-        #          apiurl=stats['portal'].apiurl,
-        #          exc_info=True)
-        props['status']=util.getExceptionCode(e)
-        props['exception']=str(type(e))+":"+str(e.message)
-
-    
-    d = Dataset(snapshot=sn,portal=stats['portalID'],dataset=dsJSON['id'], **props)
-    
-    dbm.updateDataset(d)
+#===============================================================================
+# def fetchDataset(dsJSON, stats, dbm, sn, first=False):
+#     props={
+#         'status':-1,
+#         'md5':None,
+#         'data':None,
+#         'exception':None
+#         }
+#     try:
+#         props['status']=dsJSON['respCode']
+# 
+#         cnt= stats['fetch_stats']['respCodes'].get(dsJSON['respCode'],0)
+#         stats['fetch_stats']['respCodes'][dsJSON['respCode']]= (cnt+1)
+# 
+#         if dsJSON['respCode'] == 200:
+#             data = dsJSON['content']
+#             
+#             d = json.dumps(data, sort_keys=True, ensure_ascii=True)
+#             data_md5 = hashlib.md5(d).hexdigest()
+#             props['md5']=data_md5
+#             props['data']=data
+# 
+#             stats=extract_keys(data, stats)
+# 
+#             if 'resources' in data:
+#                     stats['res'].append(len(data['resources']))
+#                     for resJson in data['resources']:
+#                         stats['res_stats']['total']+=1
+#                         
+#                         tR =  Resource.newInstance(url=resJson['url'], snapshot=snapshot)
+#                         R = dbm.getResource(tR)
+#                         if not R:
+#                             #do the lookup
+#                             R = Resource.newInstance(url=resJson['url'], snapshot=snapshot)
+#                             try:
+#                                 dbm.insertResource(R)
+#                             except Exception as e:
+#                                 print e, resJson['url'],'-',snapshot
+# 
+#                         R.updateOrigin(pid=portal.id, did=dataset.dataset)
+#                         dbm.updateResource(R)
+# 
+#             dbm.updateDataset(dataset)
+# 
+# 
+#     except Exception as e:
+#         #eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
+#         #          apiurl=stats['portal'].apiurl,
+#         #          exc_info=True)
+#         props['status']=util.getExceptionCode(e)
+#         props['exception']=str(type(e))+":"+str(e.message)
+# 
+#     
+#     d = Dataset(snapshot=sn,portal=stats['portalID'],dataset=dsJSON['id'], **props)
+#     
+#     dbm.updateDataset(d)
+#===============================================================================
 
 def extract_keys(data, stats):
 
@@ -173,16 +184,21 @@ def extract_keys(data, stats):
 
 
 def fetching(obj):
-    Portal = obj['portal']
+    portal = obj['portal']
     sn=obj['sn']
     dbm=obj['dbm']
     fullfetch=obj['fullfetch']
-
-    id=util.computeID(Portal['pURL'])
     
+    
+    P = Portal.newInstance(url=portal['pURL'],apiurl=portal['url'])
+    P = dbm.getPortal(portalID=P.id)
+    if not P: 
+        P = Portal.newInstance(url=portal['pURL'],apiurl=portal['url'])
+        dbm.insertPortal(P)
+        print "Inserting new Portal"
     
     stats={
-        'portal':Portal,'portalID':id,
+        'portal':portal,
         'datasets':-1, 'resources':-1,
         'status':-1,
         'fetch_stats':{'respCodes':{}, 'fullfetch':fullfetch},
@@ -193,26 +209,74 @@ def fetching(obj):
     }
     stats['res']=[]
     
-    pmd = dbm.getPortalMetaData(portalID=id, snapshot=sn)
+    pmd = dbm.getPortalMetaData(portalID=P.id, snapshot=sn)
     if not pmd:
-        pmd = PortalMetaData(portal=id, snapshot=sn)
+        pmd = PortalMetaData(portal=P.id, snapshot=sn)
         dbm.insertPortalMetaData(pmd)
         
+    total = db[portal['id']].find({'time': snapshot}).count()
+    if pmd.datasets == total:
+        print '    Portal',id,'for', sn,'already migrated', pmd.datasets, total
+        return 
+
+    if not pmd.fetch_stats:
+        pmd.fetch_stats={}                
     pmd.fetch_stats['fetch_start']=obj['sn-time'].isoformat()
     dbm.updatePortalMetaData(pmd)
             
     try:
         if fullfetch:
             #fetch the dataset descriptions
-            print "  -> ", snapshot,date, sn 
+            
+            
+            
+            c=0;
+            steps=total/10
+            start = time.time()
+            interim = time.time()
+            
+            print "... migrating ", sn, 'with', total, 'datasts', 'currently',pmd.datasets
             for ds in db[portal['id']].find({'time': snapshot}, timeout=False):
-                if stats['datasets']==-1:
+                c+=1
+                if stats['datasets'] ==-1:
                     stats['datasets']=1
                 else:
                     stats['datasets']+=1
                 
-                fetchDataset(ds, stats, dbm, sn, first=False)    
+                status=ds['respCode']
+                data = ds['content']
+                entity=ds['id']
+                props={
+                        'status':-1,
+                        'md5':None,
+                        'data':None,
+                        'exception':None
+                        }
+                try:
+                    stats['portal']=P
+                    props=analyseDataset(data, entity, stats, dbm, sn,status)
+                    
+                except Exception as e:
+                    print e
+                    eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portalID'],
+                                   url=Portal['url'],
+                                   exc_info=True)
+                    props['status']=util.getExceptionCode(e)
+                    props['exception']=str(type(e))+":"+str(e.message)
                 
+                d = Dataset(snapshot=sn,portal=P.id, dataset=entity, **props)
+                try:
+                    dbm.insertDatasetFetch(d)
+                except IntegrityError as e:
+                    pass
+                      
+                
+                if c%steps == 0:
+                    elapsed = (time.time() - start)
+                    interim = (time.time() - interim)
+                    util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+                    interim = time.time()
+
                 
             #if we had results
             if stats['datasets']>0: 
@@ -224,9 +288,10 @@ def fetching(obj):
             stats['resources']=sum(stats['res'])
 
     except Exception as e:
-        #eh.handleError(log,"fetching dataset information", exception=e, apiurl=Portal.apiurl,exc_info=True)
+        print e
+        eh.handleError(log,"fetching dataset information", exception=e, apiurl=P.apiurl,exc_info=True)
         #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
-        pass
+        
     try:
         pmd.updateStats(stats)
         ##UPDATE
@@ -245,6 +310,7 @@ from pprint import pprint
 import datetime
 
 if __name__ == '__main__':
+    logging.basicConfig()
     con = Connection("137.208.51.23", 27017)
     db = con["odwu"]
     db.add_son_manipulator(KeyTransform(".", "_dot_"))
@@ -259,7 +325,7 @@ if __name__ == '__main__':
                #================================================================
                # 'http://datacatalogs.org/',
                # 'http://data.yokohamaopendata.jp',
-               # 'http://dati.gov.it/',
+                'http://dati.gov.it/',
                # 'http://data.gov.au',
                # 'http://data.graz.gv.at/',
                # 'http://data.gv.at',
@@ -287,28 +353,28 @@ if __name__ == '__main__':
                
                
                ]
-    
+    print len(portals)
     for portal in portals:
-        print "Portal: ", portal['pURL']
-        
-        if portal['pURL'] in processed:
-            continue
-        for snapshot in portal['snapshots']:
-            date=datetime.datetime.fromtimestamp(snapshot)
-            y=date.isocalendar()[0]
-            w=date.isocalendar()[1]
-            sn=str(y)+'-'+str(w)
-            
-            obj={
-                 'portal':portal,
-                 'sn':sn,
-                 'sn-time':date,
-                 'dbm':dbm,
-                 'fullfetch':True,
-                 'mdb':db
-                }
-            
-            fetching(obj)
+        if 'pURL' in portal and portal['pURL'] not in processed:
+            print "Migrating", portal['pURL'],"with",len(portal['snapshots']), 'snapshots'
+            for snapshot in portal['snapshots']:
+                date=datetime.datetime.fromtimestamp(snapshot)
+                y=date.isocalendar()[0]
+                w=date.isocalendar()[1]
+                sn=str(y)+'-'+str(w)
+             
+                
+                
+                obj={
+                      'portal':portal,
+                      'sn':sn,
+                      'sn-time':date,
+                      'dbm':dbm,
+                      'fullfetch':True,
+                      'mdb':db
+                      }
+                print "  -> (", snapshot,')', date, ' ->',sn 
+                fetching(obj)
                 
             
         

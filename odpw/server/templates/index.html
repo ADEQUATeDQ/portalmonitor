@@ -1,0 +1,167 @@
+<!{% extends "_base.jinja" %}
+
+{% block content %}
+    <aside>
+        <nav class="side">
+            <ul>
+                <li class="cur">
+                    <a> <i class="fa fa-server fa-2x"></i>
+                        <p>Overview</p>
+                    </a>
+                </li>
+                <li>
+                    <a> <i class="fa fa-cubes  fa-2x"></i>
+                        <p>Portals</p>
+                    </a>
+                </li>
+                <li>
+                    <a> <i class="fa fa-pie-chart fa-2x"></i>
+                        <p>System</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+    <section class="content">
+        <h2>General Overview</h2>
+        <div class="units-row panel">
+
+                <div class="unit-20 card">
+                    <div class="header"><h3>Portals in system</h3></div>
+                    
+                    <div class="cnt">
+                        <div id="donut"></div>
+                    </div>
+                    <div class="footer">footer</div>
+                </div>
+                
+                <div class="unit-50 card">
+                    <div class="header"><h3>Portal map</h3></div>
+                    
+                    <div class="cnt">
+                        <div id="map"></div>
+                    </div>
+                    <div class="footer">footer</div>
+                </div>
+                
+                <div class="unit-20 card">
+                    <div class="header"><h3>Portal by country code</h3></div>
+                    
+                    <div class="cnt">
+                        <div id="topCountries"></div>
+                    </div>
+                    <div class="footer">footer</div>
+                </div>
+                <div style="height:500px;"></div>
+                
+            </div>
+    </section>
+{% endblock %}
+
+{% block pageScripts %}
+ <script>
+ function test_func(data) {
+     console.log(data);
+ }
+ //test_func({{ data|safe }})
+ 
+    function dict2keyvalue(sn){
+            var data = []
+            for( var k in sn)
+                data.push({key:k,value:sn[k]})
+            return data;
+        }
+        
+//      var data = dict2keyvalue(!{JSON.stringify(view.data.insystem.software)})
+        //data=[  {key:'CKAN', value:90},
+        //        {key:'KAN', value:90}]
+                
+        portalSoftware({{ data|safe }}.softwaredist,"#donut")
+
+//      var countries=!{JSON.stringify(view.data.active.country)}
+        mapPlot({{ data|safe }}.countrydist,"#map")
+    
+        function sortDict(data){
+            var tuples = [];
+            for (var key in data) tuples.push([key, data[key]]);
+
+            tuples.sort(function(a, b) {
+                a = a[1];
+                b = b[1];
+                return b-a;
+            });
+            return tuples
+        }
+        
+        console.log({{ data|safe }}.tlddist)
+        var s=sortDict({{ data|safe }}.tlddist)
+        
+        display(s,5)
+        function display(data,topk){
+        	console.log(data)
+            ul = d3.select("#topCountries").append("ul")
+            for (var i=0; i <topk;i++){
+            	console.log(data[i])
+            	li = ul.append('li')
+                li.append("span").text('.'+data[i][0])
+                li.append("span").text(data[i][1]) 
+            }
+        }
+        
+
+            
+        progressRing(0.33, '#dsContact')        
+        progressRing(0.33, '#dsOpen')
+        progressRing(0.83, '#resUnique')
+        
+        function progressRing(value, el){
+            var     width = 130,
+                height = 170,
+                twoPi = 2 * Math.PI; 
+            formatPercent = d3.format(".0%");
+            
+            var arc = d3.svg.arc()
+                .innerRadius(40)
+                .outerRadius(50)
+                .startAngle(0);
+ 
+            var svg = d3.select(el).append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+            var meter = svg.append("g")
+                .attr("class", "season-progress");
+ 
+            var background = meter.append("path")
+                .datum({endAngle: twoPi})
+                .style("fill", "#ddd")
+                .attr("d", arc);
+ 
+            var foreground = meter.append("path")
+                .datum({endAngle:0})
+                .style("fill", "orange")
+                .attr("class", "foreground")
+                .attr("d", arc);
+ 
+            foreground.transition()
+                .duration(1000)
+                .ease("linear")
+                .attrTween("d", function(d) {
+                           var interpolate = d3.interpolate(d.endAngle, twoPi * value)
+                           return function(t) {
+                              d.endAngle = interpolate(t);
+                              return arc(d);
+                           }  
+                        });
+
+              var text =  meter.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", ".35em")
+                .attr("font-size", "24")
+                .text(formatPercent(value));
+            
+        }
+    </script>
+{% endblock %}

@@ -19,6 +19,11 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
+
+
+
+
+
 def portalOverview(dbm):
     
     statusMap=util.initStatusMap()
@@ -201,42 +206,56 @@ def simulateFetch(portal, dbm, snapshot):
     
     try:
         stats['res']=[]
+        
+        total=0
+        for res in dbm.countDatasets(portalID=portal.id, snapshot=snapshot):
+            total=res[0]
+        
+        print "Analysing ", total, "datasets"
         c=0
+        steps=total/10
+        if steps ==0:
+            steps=1
         for ds in dbm.getDatasets(portalID=portal.id, snapshot=snapshot):
+            c+=1
             stats['status']=200
             dataset = Dataset.fromResult(dict(ds))
-            
-            cnt= stats['fetch_stats']['respCodes'].get(dataset.status,0)
-            stats['fetch_stats']['respCodes'][dataset.status]= (cnt+1)
+            try:
+                cnt= stats['fetch_stats']['respCodes'].get(dataset.status,0)
+                stats['fetch_stats']['respCodes'][dataset.status]= (cnt+1)
 
-            data =dataset.data
-            stats=extract_keys(data, stats)
+                data =dataset.data
+                
+                stats=extract_keys(data, stats)
 
-            if 'resources' in data:
-                stats['res'].append(len(data['resources']))
-                for resJson in data['resources']:
-                    stats['res_stats']['total']+=1
-                    R = dbm.getResource(url=resJson['url'], snapshot=snapshot)
-                    if not R:
-                        #do the lookup
-                        R = Resource.newInstance(url=resJson['url'], snapshot=snapshot)
-                        print 'Created new resource for ', resJson['url'], 'and snapshot',snapshot 
+                if 'resources' in data:
+                    stats['res'].append(len(data['resources']))
+                    for resJson in data['resources']:
+                        stats['res_stats']['total']+=1
                         
+                        tR =  Resource.newInstance(url=resJson['url'], snapshot=snapshot)
+                        R = dbm.getResource(tR)
+                        if not R:
+                            #do the lookup
+                            R = Resource.newInstance(url=resJson['url'], snapshot=snapshot)
+                            try:
+                                dbm.insertResource(R)
+                            except Exception as e:
+                                print e, resJson['url'],'-',snapshot
 
-                    R.updateOrigin(pid=portal.id, did=dataset.dataset)
-                    dbm.updateResource(R)
+                        R.updateOrigin(pid=portal.id, did=dataset.dataset)
+                        dbm.updateResource(R)
 
-            dbm.updateDataset(dataset)
+                dbm.updateDataset(dataset)
+            except Exception as e:
+                eh.handleError(log,"fetching dataset information", exception=e, apiurl=portal.apiurl,exc_info=True, dataset=dataset.dataset)
+            if c%steps == 0:
+                util.progressINdicator(c, total)
             
-            c = c + 1
-            if (c > 0) and (math.fmod(c, 100) == 0):
-                log.info('process status', pid=portal.id, done=c, total=portal.datasets)
-
             stats['resources']=sum(stats['res'])
         stats['datasets']=c
     except Exception as e:
         eh.handleError(log,"fetching dataset information", exception=e, apiurl=portal.apiurl,exc_info=True)
-        #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
     try:
         pmd.updateStats(stats)
         ##UPDATE

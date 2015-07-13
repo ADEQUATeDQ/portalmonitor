@@ -27,7 +27,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from sqlalchemy.sql import select, text
 from sqlalchemy import and_, func
-
+import math
 import json
 
 import psycopg2.extras
@@ -352,7 +352,16 @@ class PostgressDBM:
             self.log.debug(query=s, params=s.compile().params)    
             
             return self.conn.execute(s)
-        
+    def countDatasets(self, portalID=None, snapshot=None):
+        with Timer(key="countDatasets") as t:
+            s = select([func.count(self.datasets.c.dataset)])
+            if snapshot:
+                s= s.where(self.datasets.c.snapshot == snapshot)
+            if portalID:
+                s= s.where(self.datasets.c.portal == portalID)
+            
+        self.log.debug(query=s, params=s.compile().params)
+        return  self.conn.execute(s)
             
     def getDataset(self, datasetID=None, snapshot=None, portal=None):
         with Timer(key="getDataset") as t:
@@ -472,20 +481,17 @@ class PostgressDBM:
             self.log.debug(query=s, params=s.compile().params)
             return self.conn.execute(s)
             
-    def getResource(self, url=None, snapshot=None):
-        
+    def getResource(self, Resource):
         with Timer(key="getResource") as t:
             s = select([self.resources])
         
-            if url:
-                s= s.where(self.resources.c.url == url)
-            if snapshot:
-                s= s.where(self.resources.c.snapshot == snapshot)
+            s= s.where(self.resources.c.url == Resource.url)
+            
+            s= s.where(self.resources.c.snapshot == Resource.snapshot)
             
             self.log.debug(query=s, params=s.compile().params)    
             
             res = self.conn.execute(s).fetchone()
-        
             if res:
                 return Resource.fromResult( dict( res))
             return None
@@ -518,7 +524,18 @@ class PostgressDBM:
             self.log.debug(query=ins, params=ins.compile().params)
             self.conn.execute(ins) 
         self.log.info("UPSERT INTO resources", sn=Resource.snapshot, url=Resource.url)
-                
+          
+          
+    ##############
+    # STATS
+    #####
+    def datasetsPerSnapshot(self, portalID=None):
+        with Timer(key="datasetsPerSnapshot") as t:
+            s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.dataset).label('datasets')]).\
+            where(self.datasets.c.portal==portalID).group_by(self.datasets.c.snapshot)
+            
+            self.log.debug(query=s, params=s.compile().params)
+            return self.conn.execute(s)
                 
 def name():
     return 'DB'
@@ -560,7 +577,9 @@ if __name__ == '__main__':
     #         print c
     #===========================================================================
         
-        
+
+    r = p.getResource(url='http://data.gov.au/storage/f/2013-12-02T03:04:43.895Z/agil20131129.kmz', snapshot='2015-24')
+    print r.url    
     
     dataset = p.getDataset(snapshot='2015-28', portal='data.wu.ac.at', datasetID='all_campus_rooms')
     
