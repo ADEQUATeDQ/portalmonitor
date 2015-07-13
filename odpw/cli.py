@@ -1,3 +1,4 @@
+from ConfigParser import ConfigParser
 __author__ = 'jumbrich'
 
 import argparse
@@ -54,6 +55,9 @@ def start ():
     dbg.add_argument('--db', help="DB database", dest='dbdb', default="portalwatch")
     dbg.add_argument('--password', help="DB password", dest='dbpwd',default='0pwu')
     
+    config=pa.add_argument_group("Config")
+    dbg.add_argument('-c','--config', help="config file", dest='config',type=file)
+    
     #dbg.add_argument('--dbconf', help="DB config", dest='dbconf',type=file)
 
     sp = pa.add_subparsers(title='Modules', description="Available sub modules")
@@ -69,9 +73,7 @@ def start ():
     else:
         logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
 
-
     dbm= PostgressDBM(host=args.dbhost, port=args.dbport, password=args.dbpwd, user=args.dbuser, db=args.dbdb )
-
 
     print args
     args.func(args,dbm)

@@ -1,3 +1,7 @@
+from datetime import datetime
+from multiprocessing.process import Process
+from time import sleep
+from odpw.head import HeadProcess
 __author__ = 'jumbrich'
 
 from db.models import Portal, Dataset, PortalMetaData, Resource
@@ -22,7 +26,7 @@ import requests
 from random import randint
 import time
 
-from multiprocessing.dummy import Pool as ThreadPool
+
 import json
 import hashlib
 
@@ -36,7 +40,6 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
         datasetID = datasetJSON['name']
         data = datasetJSON['data']
         try:
-
             props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
 
             #remove dataset form package_list
@@ -164,6 +167,8 @@ def extract_keys(data, stats):
 
     return stats
 
+def fetchingDummy(obj):
+    sleep(10)
 
 def fetching(obj):
     Portal = obj['portal']
@@ -235,6 +240,24 @@ def fetching(obj):
 
     return stats
 
+
+def checkProcesses(processes, pidFile, job):
+    for portalID in processes.keys():
+        (pid, process, start) = processes[portalID]
+                        
+        if not process.is_alive():
+            process.join() # Allow tidyup
+            status = process.exitcode
+            end = datetime.now()
+            if status ==0:
+                log.info("FINISHED", PID= process.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, exitcode=process.exitcode)
+                pidFile.write("FINISHED\t %s \t %s (%s)\t %s \t %s \n"%(process.pid, job['portal'].id, job['portal'].apiurl,process.exitcode,end))
+            else:
+                log.info("ABORTED", PID= process.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, exitcode=process.exitcode)
+                pidFile.write("ABORTED\t %s \t %s (%s)\t %s \t %s \n"%(process.pid, job['portal'].id, job['portal'].apiurl,process.exitcode,end))
+            pidFile.flush()
+            del processes[portalID] # Removed finished items from the dictionary
+
 def name():
     return 'Fetch'
 
@@ -265,10 +288,10 @@ def cli(args,dbm):
             log.warning("No outputfile defined")
             return
         
-        sql="SELECT p.* FROM portals p WHERE p.id NOT IN ( select pmd.portal from portal_meta_data pmd WHERE snapshot='"+sn+"' AND p.id=pmd.portal) ORDER  BY p.datasets;"
         with args.outfile as file:
-            for pRes in dbm.selectQuery(sql):
-                file.write(pRes['apiurl']+" "+pRes['id']+"\n")
+            for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
+                p = Portal.fromResult(dict(portalRes))
+                file.write(p.apiurl+" "+p.id+"\n")
         
         return
     
@@ -287,8 +310,9 @@ def cli(args,dbm):
             }
         )
     else:
-        for result in dbm.getPortals(maxDS=args.ds, maxRes=args.res, software=args.software):
-            p = Portal.fromResult(dict(result))
+        
+        for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
+            p = Portal.fromResult(dict(portalRes))
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
             jobs.append(
                 {   'portal':p,
@@ -300,19 +324,49 @@ def cli(args,dbm):
 
     try:
         log.info("Start processing", portals=len(jobs), processors=args.processors)
-        pool = ThreadPool(processes=args.processors)
-        results = pool.map(fetching, jobs)multi
-        pool.close()
-        pool.join()
-
         
-        portals=util.initStatusMap()
-        for r in results:
-            log.info("Done", pid=r['portal'].id, status=r['status'])
-            util.analyseStatus(portals,r['status'])
-
-        log.info("fetch result", data=portals)
-
+        
+        
+        headProcess = HeadProcess(dbm, sn)
+        headProcess.start()
+        processes={}
+        
+        fetch_processors = args.processors
+        with args.outfile as pidFile:
+            
+            total=len(jobs)
+            c=0
+            for job in jobs:
+                p = Process(target=fetchingDummy, args=((job,)))
+                p.start()
+                c+=1
+            
+                start = datetime.now()
+                processes[job['portal'].id]=(p.pid, p, start )
+                
+                log.info("STARTED", PID= p.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, datasets=job['portal'].datasets)
+                pidFile.write("STARTED\t %s \t %s (%s)\t %s \t %s \n"%(p.pid, job['portal'].id, job['portal'].apiurl,job['portal'].datasets,start))
+                pidFile.flush()
+                
+                while len(processes) >= fetch_processors:
+                
+                    checkProcesses(processes,pidFile,job)
+                    
+                    sleep(1)
+                
+                util.progressINdicator(c, total)
+            
+            while len(processes) >0 :
+                checkProcesses(processes,pidFile,job)
+                sleep(1)
+        
+        headProcess.stop()        
+        headProcess.join()
+        headProcess = HeadProcess(dbm, sn)
+        headProcess.start()
+        headProcess.stop()
+        headProcess.join()
+        
     except Exception as e:
         eh.handleError(log, "Processing fetch", exception=e, exc_info=True)
 

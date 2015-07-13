@@ -189,6 +189,22 @@ class PostgressDBM:
             self.conn.execute(ins)
         self.log.info("UPDATE INTO portals", pid=Portal.id)
     
+    
+    def getUnprocessedPortals(self,snapshot=None):
+        with Timer(key="getUnprocessedPortals") as t:
+            
+            
+            pmdid= select([self.pmd.c.portal]).where(and_(
+                                                 self.pmd.c.snapshot==snapshot,
+                                                 self.portals.c.id== self.pmd.c.portal
+                                                 ))
+            s = select([self.portals]).where(~self.portals.c.id.in_(pmdid))
+            
+            self.log.debug(query=s, params=s.compile().params)    
+            
+            return  self.conn.execute(s).fetchall()
+        
+            
     def getPortal(self, url=None, portalID=None, apiurl=None):
         with Timer(key="getPortal") as t:
             s = select([self.portals])
@@ -578,12 +594,14 @@ if __name__ == '__main__':
     #===========================================================================
         
 
-    r = p.getResource(url='http://data.gov.au/storage/f/2013-12-02T03:04:43.895Z/agil20131129.kmz', snapshot='2015-24')
-    print r.url    
+    #r = p.getResource(url='http://data.gov.au/storage/f/2013-12-02T03:04:43.895Z/agil20131129.kmz', snapshot='2015-24')
+    #print r.url    
     
     dataset = p.getDataset(snapshot='2015-28', portal='data.wu.ac.at', datasetID='all_campus_rooms')
     
-    print dataset
+    por=p.getUnprocessedPortals(snapshot="2015-30")
+    print len(por)
+        
     
     
     

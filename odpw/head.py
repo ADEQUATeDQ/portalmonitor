@@ -1,3 +1,4 @@
+from multiprocessing.process import Process
 __author__ = 'jumbrich'
 
 from db.models import Portal, Dataset, PortalMetaData, Resource
@@ -42,6 +43,45 @@ def head (dbm, sn, resource):
     except Exception as e:
         eh.handleError(log, "head function", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
+
+def getResources(dbm, snapshot):
+    resources =[]
+    for res in dbm.getResourceWithoutHead(snapshot=snapshot):
+        try:
+            url=urlnorm.norm(res['url'])
+            R = Resource.fromResult(dict(res))
+            resources.append(R)    
+        except Exception as e:
+            log.debug('Drop head lookup', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
+    return resources
+        
+class HeadProcess(Process):
+    def __init__(self, dbm, snapshot):
+        super(HeadProcess, self).__init__()
+        self.dbm=dbm
+        self.snapshot=snapshot
+        self.run=True
+        self.processors=4
+        
+    def run(self):
+        resources=getResources(self.dbm, self.snapshot)
+        while self.run or len(resources) != 0:
+            
+            log.info("Starting head lookups", count=len(resources), cores=self.processors)
+    
+            pool = ThreadPool(processes=self.processors,) 
+    
+            head_star = partial(head, self.dbm, self.snapshot)
+            results = pool.map(head_star, resources)
+            pool.close()
+            pool.join()
+            resources=getResources(self.dbm, self.snapshot)
+            
+    def stop(self):
+        self.run= False
+    def setProcessors(self, processors):
+        self.processors=processors
+
 def name():
     return 'Head'
 
@@ -68,7 +108,7 @@ def cli(args,dbm):
 
     
     log.info("Starting head lookups", count=len(resources), cores=args.processors)
-
+    
     pool = ThreadPool(processes=args.processors,) 
     
     head_star = partial(head, dbm, sn)
