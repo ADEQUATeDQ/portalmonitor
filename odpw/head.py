@@ -60,12 +60,12 @@ class HeadProcess(Process):
         super(HeadProcess, self).__init__()
         self.dbm=dbm
         self.snapshot=snapshot
-        self.run=True
+        self.running=True
         self.processors=4
         
     def run(self):
         resources=getResources(self.dbm, self.snapshot)
-        while self.run or len(resources) != 0:
+        while self.running or len(resources) != 0:
             
             log.info("Starting head lookups", count=len(resources), cores=self.processors)
     
@@ -78,7 +78,7 @@ class HeadProcess(Process):
             resources=getResources(self.dbm, self.snapshot)
             
     def stop(self):
-        self.run= False
+        self.running= False
     def setProcessors(self, processors):
         self.processors=processors
 
