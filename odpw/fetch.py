@@ -337,7 +337,7 @@ def cli(args,dbm):
             total=len(jobs)
             c=0
             for job in jobs:
-                p = Process(target=fetchingDummy, args=((job,)))
+                p = Process(target=fetching, args=((job,)))
                 p.start()
                 c+=1
             
