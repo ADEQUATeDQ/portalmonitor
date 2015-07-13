@@ -19,7 +19,7 @@ import stats as statscli
 import datamonitor as dmcli
 import extractcsv as extractcli
 import head as headcli
-import quality.quality as qualitycli
+from quality import  quality as qualitycli
 import status as statuscli
 from server import server as servercli
 
