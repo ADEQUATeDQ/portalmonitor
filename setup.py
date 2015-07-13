@@ -3,7 +3,7 @@ from setuptools import setup
 files = ["resources/*"]
 setup(
     name='odpw',
-    version='',
+    version='0.1',
     packages=['odpw', 'odpw.db','odpw.quality','odpw.quality.analysers','odpw.reports','odpw.server','odpw.server.handler', 'odpw.utils' ],
     url='',
     license='',
