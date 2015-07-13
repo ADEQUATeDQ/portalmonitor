@@ -19,11 +19,11 @@ import stats as statscli
 import datamonitor as dmcli
 import extractcsv as extractcli
 import head as headcli
-from odpw.quality import  quality as qualitycli
+#import odpw.quality.quality as qualitycli
 import status as statuscli
 from server import server as servercli
-
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli, qualitycli, statuscli, servercli]
+#qualitycli,
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli,  statuscli, servercli]
 
 def start ():
     start= time.time()
