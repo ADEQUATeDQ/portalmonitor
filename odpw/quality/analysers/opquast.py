@@ -13,8 +13,8 @@ __author__ = 'jumbrich'
 import string
 from pprint import  pprint
 import analyze_resource_format
-from analysis.interpret_meta_field import is_empty
-from analysis import interpret_meta_field
+from odpw.quality.interpret_meta_field import is_empty
+from odpw.quality import interpret_meta_field
 #no sure
 def m1_22_personrole(data):
     ''' The identity and role of the person responsible for each dataset is specified

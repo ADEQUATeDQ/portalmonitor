@@ -1,7 +1,7 @@
 __author__ = 'jumbrich'
 
 import numpy as np
-from analysis.interpret_meta_field import is_empty
+from odpw.quality.interpret_meta_field import is_empty
 
 class CompletenessAnalyser:
 

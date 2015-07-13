@@ -1,8 +1,8 @@
 __author__ = 'jumbrich'
 
 import numpy as np
-from analysis.interpret_meta_field import is_empty
-from analysis import interpret_meta_field
+from odpw.quality.interpret_meta_field import is_empty
+from odpw.quality import interpret_meta_field
 
 class ContactabilityAnalyser:
 
