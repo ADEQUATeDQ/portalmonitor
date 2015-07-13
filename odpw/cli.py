@@ -20,7 +20,7 @@ import datamonitor as dmcli
 import extractcsv as extractcli
 import head as headcli
 import quality.quality as qualitycli
-import odpw.status as statuscli
+import status as statuscli
 from server import server as servercli
 
 submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli,  statuscli, qualitycli,servercli]
