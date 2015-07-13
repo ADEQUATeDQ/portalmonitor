@@ -1,3 +1,4 @@
+import json
 import requests
 import logging
 
@@ -15,7 +16,7 @@ refs['Dataset Search'] = '/search/dataset'
 refs['Resource Search'] = '/search/resource'
 refs['Revision Search'] = '/search/revision'
 refs['Tag Counts'] = '/tag_counts'
-
+refs['Full List'] = '/action/package_search'
 
 
 def openURL( url , path):
@@ -58,6 +59,20 @@ def tags_counts(url):
     data = openURL(url, refs['Tag Counts'])
     return data
 
-
-
+def full_metadata_list(url):
+    try:
+        # find out the number of datasets (stored in result.count)
+        resp = openURL(url, refs['Full List']+'?rows=0')
+        data = resp.json()
+        if data['success'] and 'result' in data:
+            total = data['result']['count']
+            # try to get the full list of all datasets
+            resp = openURL(url, refs['Full List']+'?rows='+str(total))
+            data = resp.json()
+            if data['success'] and 'result' in data:
+                return data['result']['results']
+    except Exception as e:
+        pass
+    # in any case return an empty list
+    return []
 
