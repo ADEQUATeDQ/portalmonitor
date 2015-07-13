@@ -78,7 +78,7 @@ class PostgressDBM:
                 conn_string += ":"+str(port)
             conn_string += "/"+db
             
-            self.engine = create_engine(conn_string, ppol_size=20)
+            self.engine = create_engine(conn_string, pool_size=20)
             self.conn = self.engine.connect()
             
             self.metadata = MetaData(bind=self.engine)
