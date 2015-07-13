@@ -176,6 +176,8 @@ def fetching(obj):
     dbm=obj['dbm']
     fullfetch=obj['fullfetch']
 
+    dbm.engine.dispose()
+
     log.info("Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
 
     stats={

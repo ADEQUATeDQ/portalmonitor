@@ -64,6 +64,7 @@ class HeadProcess(Process):
         self.processors=4
         
     def run(self):
+        self.dbm.engine.dispose()
         resources=getResources(self.dbm, self.snapshot)
         while self.running or len(resources) != 0:
             
