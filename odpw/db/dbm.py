@@ -1,5 +1,7 @@
 from __future__ import generators
 
+from _collections import defaultdict
+
 
 
 __author__ = 'jumbrich'
@@ -30,10 +32,10 @@ from sqlalchemy import and_, func
 import math
 import json
 
-import psycopg2.extras
-psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
+#import psycopg2.extras
+#psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+#psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
+#psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
 
 from datetime import date
 from collections import Mapping, Sequence
@@ -79,10 +81,10 @@ class PostgressDBM:
             conn_string += "/"+db
             
             self.engine = create_engine(conn_string, pool_size=20)
-            self.conn = self.engine.connect()
+            #self.conn = self.engine.connect()
             
             self.metadata = MetaData(bind=self.engine)
-            psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
+            #psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
             
             ##TABLES
             self.portals = Table('portals',self.metadata,
@@ -221,9 +223,8 @@ class PostgressDBM:
         
             self.log.debug(query=s, params=s.compile().params)    
             
-            res = s.excute().fetchone()
-            #res = self.conn.execute(s).fetchone()
-        
+            res = s.execute().fetchone()
+            
             if res:
                 return Portal.fromResult(dict( res))
             return None
@@ -339,20 +340,20 @@ class PostgressDBM:
                                                        self.datasets.c.snapshot!=Dataset.snapshot)
                                                    ).order_by(self.datasets.c.snapshot.desc()).limit(1)
             self.log.debug(query=s, params=s.compile().params)
-            result=self.conn.execute(s)
+            result=s.execute()
             if result:
                 for res in result:
                     if Dataset.md5 == res['md5'] :
                         change=0
             else: change=1
             
-            data=json.dumps(nested_json(Dataset.data),default=date_handler)
+            #data=json.dumps(nested_json(Dataset.data),default=date_handler)
         
             ins = self.datasets.insert().values(
                                                 dataset=Dataset.dataset, 
                                                 portal=Dataset.portal,
                                                 snapshot=Dataset.snapshot,
-                                                data=data,
+                                                data=Dataset.data,
                                                 status=Dataset.status,
                                                 exception=Dataset.exception,
                                                 md5=Dataset.md5,
@@ -463,7 +464,7 @@ class PostgressDBM:
                                                status=Resource.status,
                                                url = Resource.url,
                                                snapshot = Resource.snapshot,
-                                               origin=Resource.origin,
+                                               origin=origin,
                                                header=header,
                                                mime=Resource.mime,
                                                size=Resource.size,
@@ -508,7 +509,7 @@ class PostgressDBM:
         with Timer(key="getResourceWithoutHead") as t:
             s=select([self.resources]).\
                 where(self.resources.c.snapshot==snapshot).\
-                where(self.resources.c.header == None)
+                where(self.resources.c.header == "null")
             if status:
                 s= s.where(self.resources.c.status == status)
             self.log.debug(query=s, params=s.compile().params)
@@ -601,7 +602,7 @@ def cli(args,dbm):
                 
 if __name__ == '__main__':
     logging.basicConfig()
-    p= PostgressDBM(host="bandersnatch.ai.wu.ac.at")
+    p= PostgressDBM(host="localhost", port=5432)
     
     
     #===========================================================================
@@ -618,13 +619,21 @@ if __name__ == '__main__':
     #r = p.getResource(url='http://data.gov.au/storage/f/2013-12-02T03:04:43.895Z/agil20131129.kmz', snapshot='2015-24')
     #print r.url    
     
-    dataset = p.getDataset(snapshot='2015-28', portal='data.wu.ac.at', datasetID='all_campus_rooms')
-    
-    por=p.getUnprocessedPortals(snapshot="2015-30")
-    print len(por)
+    #===========================================================================
+    # dataset = p.getDataset(snapshot='2015-28', portal='data.wu.ac.at', datasetID='all_campus_rooms')
+    # 
+    # por=p.getUnprocessedPortals(snapshot="2015-30")
+    # for po in por:
+    #     portal = Portal.fromResult(dict(po))
+    # print len(por)
+    #===========================================================================
         
     
+    r = Resource.newInstance(url="http://data.wu.ac.at/dataset/169e2d7c-41f6-493b-b229-88fac2a0321a/resource/5150029d-d4c9-472f-8d8a-4e28f456ae41/download/allcoursesandevents01s.csv", snapshot='2015-29')
+    res = p.getResource(r)
+    print r.url
     
+    print res
     
     
     #print p.getPortal(url='http://www.test.com/')

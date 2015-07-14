@@ -2,11 +2,12 @@ from datetime import datetime
 from multiprocessing.process import Process
 from time import sleep
 from odpw.head import HeadProcess
+from urlparse import urlparse
 __author__ = 'jumbrich'
 
 from db.models import Portal, Dataset, PortalMetaData, Resource
 
-import ckanclient
+import ckanapi
 import util
 from util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
@@ -26,34 +27,45 @@ import requests
 from random import randint
 import time
 
-
+import urlparse
 import json
 import hashlib
 
+from pprint import  pprint
 def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
     stats['res']=[]
     Portal = stats['portal']
     c=0
+    try:
+        # get all meta data as json 
+        api = ckanapi.RemoteCKAN(stats['portal'].apiurl, get_only=True)
+        response = api.action.package_search(rows=1000000)
     
-    # get all meta data as json 
-    for datasetJSON in ckanclient.full_metadata_list(stats['portal'].apiurl):
-        datasetID = datasetJSON['name']
-        data = datasetJSON['data']
-        try:
-            props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
+        if response:
+            datasets= response["results"]
+            util.extras_to_dicts(datasets)
+            for datasetJSON in datasets:
+                datasetID = datasetJSON['name']
+                data = datasetJSON
+                try:
+                    props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
 
-            #remove dataset form package_list
-            package_list.remove(datasetID)
+                    #remove dataset form package_list
+                    if datasetID in package_list:
+                        package_list.remove(datasetID)
+                    if datasetJSON['id'] in package_list:
+                        package_list.remove(datasetJSON['id'])
+                    d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=datasetID, **props)
+                    dbm.insertDatasetFetch(d)
         
-            d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=datasetID, **props)
-            dbm.insertDatasetFetch(d)
-        
-            c = c + 1
-            if (c > 0) and (math.fmod(c, 100) == 0):
-                log.info('process status', pid=Portal.id, done=c, total=Portal.datasets)
-        except Exception as e:
-            eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,  did=datasetID,exc_info=True)
-    
+                    c = c + 1
+                    if (c > 0) and (math.fmod(c, 100) == 0):
+                        log.info('process status', pid=Portal.id, done=c, total=Portal.datasets)
+                except Exception as e:
+                    eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,  did=datasetID,exc_info=True)
+    except Exception as e:
+        eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,exc_info=True)
+                    
     #process remaining datasets which were not available in the fullMetaData list    
     for entity in package_list:
         #WAIT between two consecutive GET requests
@@ -70,8 +82,10 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
                         'exception':None
                         }
                 try:
-                    resp = ckanclient.package_entity(stats['portal'].apiurl, entity)
-                    props=analyseDataset(resp.json(), entity, stats, dbm, sn,resp.status_code)
+                    resp = api.action.package_show(id=entity)
+                    data = resp.json()
+                    util.extras_to_dict(data)
+                    props=analyseDataset(data, entity, stats, dbm, sn,resp.status_code)
                     
                 except Exception as e:
                     eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
@@ -108,6 +122,8 @@ def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
 
         if status == requests.codes.ok:
             data = entityJSON
+            
+            
             
             d = json.dumps(data, sort_keys=True, ensure_ascii=True)
             data_md5 = hashlib.md5(d).hexdigest()
@@ -203,17 +219,15 @@ def fetching(obj):
     try:
         if fullfetch:
             #fetch the dataset descriptions
-            resp = ckanclient.package_get(Portal.apiurl)
-            stats['status']=resp.status_code
-            Portal.status=resp.status_code
-
-            if resp.status_code != requests.codes.ok:
-                log.error("No package list received", apiurl=Portal.apiurl, status=resp.status_code)
-            else:
-                package_list = resp.json()
+            
+            
+                package_list, status = util.getPackageList(stats['portal'].apiurl)
+                stats['status']=status
+                Portal.status=status
+                
                 Portal.datasets=len(package_list)
 
-                log.info('Received packages', apiurl=Portal.apiurl, status=resp.status_code, count=Portal.datasets)
+                log.info('Received packages', apiurl=Portal.apiurl, status=status, count=Portal.datasets)
 
                 stats['datasets']=Portal.datasets
 
@@ -223,6 +237,7 @@ def fetching(obj):
                 Portal.latest_snapshot=sn
                 stats['resources']=Portal.resources
 
+                
     except Exception as e:
         eh.handleError(log,"fetching dataset information", exception=e, apiurl=Portal.apiurl,exc_info=True)
         #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
@@ -362,11 +377,13 @@ def cli(args,dbm):
                 checkProcesses(processes,pidFile,job)
                 sleep(1)
         
-        headProcess.stop()        
+        headProcess.shutdown()        
         headProcess.join()
+        
+        
         headProcess = HeadProcess(dbm, sn)
         headProcess.start()
-        headProcess.stop()
+        headProcess.shutdown()
         headProcess.join()
         
     except Exception as e:

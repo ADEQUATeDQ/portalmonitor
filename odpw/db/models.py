@@ -1,3 +1,5 @@
+import ckanapi
+from urlparse import urlparse
 __author__ = 'jumbrich'
 
 
@@ -5,7 +7,7 @@ __author__ = 'jumbrich'
 import urlnorm
 import odpw.util as util
 from odpw.util import ErrorHandler as eh
-from odpw import ckanclient
+
 import requests
 from datetime import datetime
 import logging
@@ -14,11 +16,13 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 import json
+import urlparse
 
 class Portal:
 
     @classmethod
     def fromResult(cls, result):
+        
         url=result['url']
         apiurl=result['apiurl']
         del result['url']
@@ -38,15 +42,13 @@ class Portal:
             'changefeed':False
         }
         try:
-            resp = ckanclient.package_get(apiurl)
-            props['status']=resp.status_code
-
-            if resp.status_code != requests.codes.ok:
-                log.error("No package list received", apiurl=apiurl, status=resp.status_code)
-            else:
-                package_list = resp.json()
-                props['datasets']=len(package_list)
-                log.info('Received packages', apiurl=apiurl, status=resp.status_code,count=props['datasets'])
+            
+            
+            package_list, status = util.getPackageList(apiurl)
+            
+            props['status']=status
+            props['datasets']=len(package_list)
+            log.info('Received packages', apiurl=apiurl, status=status,count=props['datasets'])
         except Exception as e:
             eh.handleError(log, 'fetching dataset information', exception=e,apiurl=apiurl,exc_info=True)
             props['status']=util.getExceptionCode(e)

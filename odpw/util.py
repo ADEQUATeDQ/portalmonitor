@@ -1,6 +1,7 @@
+import ckanapi
 __author__ = 'jumbrich'
 
-from urlparse import urlparse
+import urlparse
 import urlnorm
 from datetime import datetime
 import sys
@@ -17,9 +18,55 @@ configure(logger_factory=LoggerFactory())
 log = get_logger()
 
 
+
+def getPackageList(apiurl):
+    ex =None
+    try:
+        api = ckanapi.RemoteCKAN(apiurl, get_only=True)
+        package_list = api.action.package_list()
+        
+        return package_list, 200
+    except Exception as e:
+        ex = e
+    
+    ex1=None
+    try:
+        url = urlparse.urljoin(apiurl, "/api/2/rest/dataset")
+        resp = requests.get(url)
+        if resp.status_code == requests.codes.ok:
+            package_list = resp.json()
+            return package_list,200
+        else:
+            return [],  resp.status_code   
+    except Exception as e:
+        ex1=e
+    
+    if ex:
+        raise ex
+    elif ex1:
+        raise ex1
+    else:
+        return [], 888
+         
+    
+
+def extras_to_dicts(datasets):
+    for dataset in datasets:
+        extras_to_dict(dataset)
+        
+
+def extras_to_dict(dataset):
+    extras_dict = {}
+    for extra in dataset.get("extras", []):
+        key = extra["key"]
+        value = extra["value"]
+        assert key not in extras_dict
+        extras_dict[key] = value
+    dataset["extras"] = extras_dict
+
 def computeID(url):
     try:
-        up = urlparse(urlnorm.norm(url))
+        up = urlparse.urlparse(urlnorm.norm(url))
         return up.hostname
     except Exception as e:
         return None
@@ -319,7 +366,7 @@ all.update(countries)
 def getCountry(url):
     try:
         
-        url_elements = urlparse(url).netloc.split(".")
+        url_elements = urlparse.urlparse(url).netloc.split(".")
 
         tld = ".".join(url_elements[-2:])
         if tld in all:
@@ -353,6 +400,7 @@ class ErrorHandler():
 def getExceptionCode(e):
     #connection erorrs
     try:
+        
         if isinstance(e,requests.exceptions.ConnectionError):
             return 702
         if isinstance(e,requests.exceptions.ConnectTimeout):
@@ -365,6 +413,9 @@ def getExceptionCode(e):
             return 706
         if isinstance(e,requests.exceptions.Timeout):
             return 707
+        if isinstance(e,ckanapi.errors.CKANAPIError):
+            return 708
+        
         #if isinstance(e,requests.exceptions.RetryError):
         #    return 708
 

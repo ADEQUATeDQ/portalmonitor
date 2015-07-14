@@ -10,6 +10,7 @@ from odpw  import util
 from collections import defaultdict
 from urlparse import urlparse 
 import json
+from odpw.db.dbm import nested_json, date_handler
 
 class BaseHandler(RequestHandler):
     @property
@@ -47,6 +48,15 @@ class NoDestinationHandler(RequestHandler):
         raise HTTPError(503)
 
 
+class PortalList(BaseHandler):
+    def get(self):
+        
+        portals=[]
+        for pRes in self.db.getPortals():
+            portals.append(dict(pRes))
+        
+        self.render('portallist.jinja',index=True, data=portals)
+
 class IndexHandler(BaseHandler):
     def get(self):
         
@@ -57,8 +67,8 @@ class IndexHandler(BaseHandler):
         res=0
         ds=0
         
-        for pRes in self.db.selectQuery("SELECT * FROM portals"):
-            p = Portal.fromResult(pRes)
+        for pRes in self.db.getPortals():
+            p = Portal.fromResult(dict(pRes))
         
         
             if p.datasets !=-1:

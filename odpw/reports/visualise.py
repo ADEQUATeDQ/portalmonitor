@@ -15,10 +15,9 @@ from odpw.reports import PortalStatusReporter
 if __name__ == '__main__':
     #Iterable
     
-    dbm= PostgressDBM(host="bandersnatch.ai.wu.ac.at")
+    dbm= PostgressDBM(host="localhost", port=5432)
     
     ae = AnalyseEngine()
-    
     
     ae.add(PortalSoftwareDistAnalyser())
     ae.add(PortalStatusReporter())

@@ -17,6 +17,7 @@ def name():
 def setupCLI(pa):
     pa.add_argument('-p','--portals',type=file, dest='plist')
     pa.add_argument('-i','--insert',action='store_true', dest='insert')
+    pa.add_argument('-u','--update',action='store_true', dest='update')
 
 def cli(args,dbm):
     if args.plist:
@@ -27,14 +28,25 @@ def cli(args,dbm):
             for l in args.plist:
                 try:
                     if len(l.split(","))==2 and len(l.split(",")[1].strip())>0:
-                        p = dbm.getPortal(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
-                        if p:
-                            print "Portal", p.url, "exists"
-                        else: 
-                            if args.insert:
-                                p = Portal.newInstance(url=l.split(",")[0].strip(), apiurl=l.split(",")[1].strip())
+                        url = l.split(",")[0].strip()
+                        apiurl=l.split(",")[1].strip()
+                        if args.insert:
+                            p = dbm.getPortal(url=url, apiurl=apiurl)
+                            if p:
+                                print "Portal", p.url, "exists"
+                            else: 
+                                p = Portal.newInstance(url=url, apiurl=apiurl)
                                 dbm.insertPortal(p)
                                 ok+=1
+                        if args.update:
+                            p = dbm.getPortal(url=l.split(",")[0].strip())
+                            pn= Portal.newInstance(url=url, apiurl=apiurl)
+                            if p:
+                                p.apiurl=pn.apiurl
+                                p.exception = pn.exception
+                                dbm.updatePortal(p)
+                            else:
+                                dbm.insertPortal(pn)
                     else:
                         log.info("Skipping line",line=l )
                 except Exception as e:

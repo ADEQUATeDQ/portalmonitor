@@ -1,22 +1,18 @@
 <!{% extends "_base.jinja" %}
 
+
 {% block content %}
     <aside>
         <nav class="side">
             <ul>
-                <li class="cur">
+                <li href="/" class="cur">
                     <a> <i class="fa fa-server fa-2x"></i>
-                        <p>Overview</p>
-                    </a>
-                </li>
-                <li>
-                    <a> <i class="fa fa-cubes  fa-2x"></i>
-                        <p>Portals</p>
-                    </a>
-                </li>
-                <li>
-                    <a> <i class="fa fa-pie-chart fa-2x"></i>
                         <p>System</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/list/portals"> <i class="fa fa-cubes  fa-2x"></i>
+                        <p>Portals</p>
                     </a>
                 </li>
             </ul>
@@ -52,14 +48,27 @@
                     </div>
                     <div class="footer">footer</div>
                 </div>
-                <div style="height:500px;"></div>
                 
             </div>
+            <div class="units-row panel">
+                <div class="unit-100 card">
+                <div id="vis"></div>
+                </div>
+            </div>           
     </section>
 {% endblock %}
 
 {% block pageScripts %}
  <script>
+ 
+  function parse(spec, panel ) {
+	  vg.parse.spec(spec, function(chart) { chart({el:panel}).update(); });
+	}
+	parse("{{ static_url('data/software_pie.json') }}", "#vis");
+    
+
+
+ 
  function test_func(data) {
      console.log(data);
  }

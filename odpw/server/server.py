@@ -11,10 +11,11 @@ from odpw.db.POSTGRESManager import PostGRESManager
 
 from os.path import dirname, join, isfile
 
+
 here = dirname(__file__)
 project_root = join(here, '..')
 
-from handler import IndexHandler, NoDestinationHandler, DataHandler
+from handler import IndexHandler, NoDestinationHandler, DataHandler,PortalList
 
 # # List for famous movie rendering
 # movie_list = [[1,"The Hitchhiker's Guide to the Galaxy"],[2,"Back to future"],[3,"Matrix"]]
@@ -26,7 +27,7 @@ class Application(tornado.web.Application):
         template_path = join(here, 'templates')
         handlers = [
             (r'/', IndexHandler),
-            (r'/ui/(.*)/', IndexHandler),
+            (r'/list/portals', PortalList),
             (r'/static/(.*)', StaticFileHandler),
             (r'/data/(.*)/(.*)', DataHandler),
             (r'/.*$', NoDestinationHandler)
@@ -49,12 +50,10 @@ def name():
     return 'Server'
 
 def setupCLI(pa):
-    pa.add_argument('-p','--port',type=int, dest='port')    
+    pa.add_argument('-p','--port',type=int, dest='port', default=2340)    
 
 def cli(args,dbm):
-    print 'Here'
-    d=PostGRESManager(host="bandersnatch.ai.wu.ac.at")
-    http_server = tornado.httpserver.HTTPServer(Application(db=d))
+    http_server = tornado.httpserver.HTTPServer(Application(db=dbm))
     http_server.listen(args.port)
     
     print('Starting Tornado on http://localhost:{}/'.format(args.port))

@@ -1,4 +1,5 @@
 from time import sleep
+import requests
 __author__ = 'jumbrich'
 
 from ConfigParser import SafeConfigParser
@@ -13,6 +14,28 @@ def fetch(i):
 
 if __name__ == '__main__':
     ps= range(10)
+    
+    
+    import ckanapi as ckan
+    
+    resp = requests.head("http://africaopendata.org/api",allow_redirects=True)
+    print resp
+    api = ckan.RemoteCKAN("http://africaopendata.org/", get_only=True)
+    response = api.action.package_list()
+    print response
+    
+    resp = api.action.package_show(id='2005-budget-1')
+    print resp
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     nop=4

@@ -1,4 +1,5 @@
 from multiprocessing.process import Process
+import multiprocessing
 __author__ = 'jumbrich'
 
 from db.models import Portal, Dataset, PortalMetaData, Resource
@@ -58,16 +59,19 @@ def getResources(dbm, snapshot):
 class HeadProcess(Process):
     def __init__(self, dbm, snapshot):
         super(HeadProcess, self).__init__()
+        self.exit = multiprocessing.Event()
+        
         self.dbm=dbm
         self.snapshot=snapshot
-        self.running=True
+        
         self.processors=4
         
     def run(self):
         self.dbm.engine.dispose()
         resources=getResources(self.dbm, self.snapshot)
-        while self.running or len(resources) != 0:
-            
+        
+        while not self.exit.is_set() or len(resources) != 0:
+
             log.info("Starting head lookups", count=len(resources), cores=self.processors)
     
             pool = ThreadPool(processes=self.processors,) 
@@ -75,11 +79,16 @@ class HeadProcess(Process):
             head_star = partial(head, self.dbm, self.snapshot)
             results = pool.map(head_star, resources)
             pool.close()
+            
             pool.join()
+            
             resources=getResources(self.dbm, self.snapshot)
             
-    def stop(self):
-        self.running= False
+            
+            
+    def shutdown(self):
+        print "Shutdown initiated"
+        self.exit.set()
     def setProcessors(self, processors):
         self.processors=processors
 
