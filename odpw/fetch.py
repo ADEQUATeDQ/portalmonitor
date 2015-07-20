@@ -260,12 +260,11 @@ def fetching(obj):
     return stats
 
 
-def checkProcesses(processes, pidFile, job):
+def checkProcesses(processes, pidFile):
     rem=[]
     p= len(processes)
     for portalID in processes.keys():
-        (pid, process, start) = processes[portalID]
-                        
+        (pid, process, start,apiurl) = processes[portalID]
         if not process.is_alive():
             process.join() # Allow tidyup
             status = process.exitcode
@@ -274,17 +273,17 @@ def checkProcesses(processes, pidFile, job):
             rem.append(portalID) # Removed finished items from the dictionary
             try:
                 if status ==0:
-                    log.info("FIN", PID= process.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, exitcode=process.exitcode)
-                    pidFile.write("FIN\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, job['portal'].id, job['portal'].apiurl))
+                    log.info("FIN", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start, exitcode=process.exitcode)
+                    pidFile.write("FIN\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, portalID, apiurl))
                 else:
-                    log.info("ABORT", PID= process.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, exitcode=process.exitcode)
-                    pidFile.write("ABORT\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, job['portal'].id, job['portal'].apiurl))
+                    log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start, exitcode=process.exitcode)
+                    pidFile.write("ABORT\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, portalID, apiurl))
                 pidFile.flush()
             except Exception as e:
                 print e, e.message()
     
-    for pid in rem:
-        del processes[pid]
+    for pID in rem:
+        del processes[pID]
     assert p-len(processes) == len(rem) 
 
 def name():
@@ -374,14 +373,14 @@ def cli(args,dbm):
                 c+=1
             
                 start = datetime.now()
-                processes[job['portal'].id]=(p.pid, p, start)
+                processes[job['portal'].id]=(p.pid, p, start, job['portal'].apiurl)
                 
                 log.info("START", PID= p.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, datasets=job['portal'].datasets)
                 pidFile.write("START\t %s \t %s \t %s \t %s (%s)\n"%(p.pid, job['portal'].datasets,start, job['portal'].id, job['portal'].apiurl))
                 pidFile.flush()
                 
                 while len(processes) >= fetch_processors:
-                    checkProcesses(processes,pidFile,job)
+                    checkProcesses(processes, pidFile)
                     checks+=1
                     sleep(10)
                     if checks % 900==0:
@@ -390,7 +389,7 @@ def cli(args,dbm):
                 util.progressINdicator(c, total)
             
             while len(processes) >0 :
-                checkProcesses(processes,pidFile,job)
+                checkProcesses(processes,pidFile)
                 checks+=1
                 sleep(10)
                 if checks % 900==0:
