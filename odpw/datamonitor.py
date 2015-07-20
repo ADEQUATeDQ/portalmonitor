@@ -2,9 +2,9 @@ __author__ = 'jumbrich'
 
 
 import sys
-from db.models import Portal
-from db.POSTGRESManager import PostGRESManager
-from util import ErrorHandler as eh, getSnapshot
+from odpw.db.models import Portal
+from odpw.db.POSTGRESManager import PostGRESManager
+from odpw.util import ErrorHandler as eh, getSnapshot
 from datetime import date, datetime, timedelta
 
 import logging

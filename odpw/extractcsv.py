@@ -1,11 +1,11 @@
 __author__ = 'jumbrich'
 
-from db.models import Portal, Resource
+from odpw.db.models import Portal, Resource
 
-import util
-from util import getSnapshot,getExceptionCode,ErrorHandler as eh
-from db.POSTGRESManager import PostGRESManager
-from timer import Timer
+
+from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.db.POSTGRESManager import PostGRESManager
+from odpw.timer import Timer
 import math
 import argparse
 import os

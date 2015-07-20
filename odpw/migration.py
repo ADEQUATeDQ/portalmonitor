@@ -4,8 +4,8 @@ Created on Jun 25, 2015
 @author: jumbrich
 '''
 
-from util import getSnapshot,getExceptionCode,ErrorHandler as eh
-import util
+from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+import odpw.util as util
 import time
 from pymongo import Connection
 from pymongo.son_manipulator import SONManipulator
@@ -13,9 +13,9 @@ from _socket import timeout
 
 import json
 import hashlib
-from db.models import Portal, Dataset, PortalMetaData, Resource
-from db.dbm import PostgressDBM
-from fetch import analyseDataset
+from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
+from odpw.db.dbm import PostgressDBM
+from odpw.fetch import analyseDataset
 #from db.POSTGRESManager import PostGRESManager
 
 import logging

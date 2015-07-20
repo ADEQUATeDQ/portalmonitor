@@ -11,6 +11,7 @@ import vincent
 from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
     PortalCountryDistAnalyser
 from odpw.reports import PortalStatusReporter
+from odpw.db.models import Portal
 
 if __name__ == '__main__':
     #Iterable
@@ -23,22 +24,13 @@ if __name__ == '__main__':
     ae.add(PortalStatusReporter())
     ae.add(PortalCountryDistAnalyser())
     
-    ae.process_all( dbm.getPortals() )
+    ae.process_all( Portal.iter(dbm.getPortals()) )
     
     ######
     sda = ae.getAnalyser(PortalSoftwareDistAnalyser)
     
     
     #######--------------------######
-    d= ae.getAnalyser(PortalCountryDistAnalyser)
-    print d.getResult()
-    
-    geo_data = [{'name': 'countries',
-             'url': "https://github.com/wrobstory/vincent_map_data/blob/master/world-countries.json",
-             'feature': 'world-countries'}]
-
-    vis = vincent.Map(geo_data=geo_data, scale=200)
-    vis.to_json('portal_map.json',html_out=True,html_path='portal_map.html')
     
     
     #######--------------------######
@@ -56,6 +48,8 @@ if __name__ == '__main__':
     
     dfa = psr.getDataFrame().copy()
     dfa=dfa.set_index('label')
+    print dfa
+    
     dfa= dfa.drop(['total'])
     pie = vincent.Pie(dfa, inner_radius=30, columns=['count'])
     pie.legend('Status')

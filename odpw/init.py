@@ -1,8 +1,8 @@
 __author__ = 'jumbrich'
 
 
-from db.models import Portal
-from util import ErrorHandler as eh
+from odpw.db.models import Portal
+from odpw.util import ErrorHandler as eh
 
 import logging
 log = logging.getLogger(__name__)

@@ -196,13 +196,11 @@ class PostgressDBM:
     
     def getUnprocessedPortals(self,snapshot=None):
         with Timer(key="getUnprocessedPortals") as t:
-            
-            
             pmdid= select([self.pmd.c.portal]).where(and_(
                                                  self.pmd.c.snapshot==snapshot,
                                                  self.portals.c.id== self.pmd.c.portal
                                                  ))
-            s = select([self.portals]).where(~self.portals.c.id.in_(pmdid))
+            s = select([self.portals]).where(~self.portals.c.id.in_(pmdid)).order_by(self.portals.c.datasets)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
@@ -264,6 +262,18 @@ class PostgressDBM:
             if res:
                 return PortalMetaData.fromResult(dict( res))
             return None
+        
+    def getPortalMetaDatas(self, snapshot=None, portalID=None):
+        with Timer(key="getPortalMetaDatas") as t:
+            s = select([self.pmd])
+            if snapshot:
+                s=s.where(self.pmd.c.snapshot == snapshot)
+            if portalID:
+                s= s.where(self.pmd.c.portal == portalID)
+                
+            self.log.debug(query=s.compile(), params=s.compile().params)
+               
+            return s.execute().fetchall()
 
     def insertPortalMetaData(self, PortalMetaData):
         with Timer(key="insertPortalMetaData") as t:
@@ -571,7 +581,7 @@ class PostgressDBM:
           
     ##############
     # STATS
-    #####
+    ##############
     def datasetsPerSnapshot(self, portalID=None):
         with Timer(key="datasetsPerSnapshot") as t:
             s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.dataset).label('datasets')]).\
@@ -580,7 +590,14 @@ class PostgressDBM:
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)
-                
+    def resourcesPerSnapshot(self,portalID=None):
+        with Timer(key="resourcesPerSnapshot") as t:
+            s=select( [self.resources.c.snapshot, func.count(self.resources.c.url).label('resources')]).\
+            where(self.resources.c.origin[portalID]!=None).group_by(self.resources.c.snapshot)
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
+             
 def name():
     return 'DB'
 

@@ -1,5 +1,3 @@
-import ckanapi
-from urlparse import urlparse
 __author__ = 'jumbrich'
 
 
@@ -8,7 +6,6 @@ import urlnorm
 import odpw.util as util
 from odpw.util import ErrorHandler as eh
 
-import requests
 from datetime import datetime
 import logging
 from structlog import get_logger, configure
@@ -16,10 +13,17 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 import json
-import urlparse
 
-class Portal:
+class Portal(object):
 
+
+    @classmethod
+    def iter(cls, iterable):
+        for i in iterable:
+            r = Portal.fromResult(dict(i))
+            yield r
+        return
+        
     @classmethod
     def fromResult(cls, result):
         
@@ -83,7 +87,7 @@ class Portal:
 
 
 
-class Dataset:
+class Dataset(object):
     def __init__(self, snapshot=None, portal=None, dataset=None,**kwargs):
         self.snapshot=snapshot
         self.portal=portal
@@ -120,7 +124,14 @@ class Dataset:
                    snapshot=snapshot,**result)      
     
 
-class PortalMetaData:
+class PortalMetaData(object):
+
+    @classmethod
+    def iter(cls, iterable):
+        for i in iterable:
+            r = PortalMetaData.fromResult(dict(i))
+            yield r
+        return
 
     @classmethod
     def fromResult(cls, result):
@@ -195,7 +206,7 @@ class PortalMetaData:
             self.resources=stats['resources']  
     
       
-class Resource:
+class Resource(object):
     @classmethod
     def newInstance(cls, url=None, snapshot=None):
         props={}

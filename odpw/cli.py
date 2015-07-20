@@ -4,26 +4,26 @@ __author__ = 'jumbrich'
 import argparse
 
 import logging.config
-
-
-from db.dbm import PostgressDBM
-
-from util import ErrorHandler as eh
 from timer import Timer
 import time
 
-from db import dbm as dbcli
-import init as initcli
-import fetch as fetchcli
-import stats as statscli
-import datamonitor as dmcli
-import extractcsv as extractcli
-import head as headcli
-import quality.quality as qualitycli
-import status as statuscli
-from server import server as servercli
+from odpw.db.dbm import PostgressDBM
+from odpw.util import ErrorHandler as eh
 
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli,  statuscli, qualitycli,servercli]
+from odpw.db import dbm as dbcli
+import odpw.init as initcli
+import odpw.fetch as fetchcli
+import odpw.stats as statscli
+import odpw.datamonitor as dmcli
+import odpw.extractcsv as extractcli
+import odpw.head as headcli
+import odpw.quality.quality as qualitycli
+import odpw.sanity as statuscli
+from odpw.server import server as servercli
+import odpw.head_stats as headStatscli
+import odpw.fetch_stats as fetchStatscli
+
+submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli,  statuscli, qualitycli,servercli,headStatscli,fetchStatscli]
 
 def start ():
     start= time.time()

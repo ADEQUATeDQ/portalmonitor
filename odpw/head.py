@@ -2,12 +2,12 @@ from multiprocessing.process import Process
 import multiprocessing
 __author__ = 'jumbrich'
 
-from db.models import Portal, Dataset, PortalMetaData, Resource
+from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 
-import util
-from util import getSnapshot,getExceptionCode,ErrorHandler as eh
+import odpw.util as util
+from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
-from timer import Timer
+from odpw.timer import Timer
 import argparse
 
 import logging
