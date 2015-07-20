@@ -261,6 +261,8 @@ def fetching(obj):
 
 
 def checkProcesses(processes, pidFile, job):
+    rem=[]
+    p= len(processes)
     for portalID in processes.keys():
         (pid, process, start) = processes[portalID]
                         
@@ -268,7 +270,8 @@ def checkProcesses(processes, pidFile, job):
             process.join() # Allow tidyup
             status = process.exitcode
             end = datetime.now()
-            del processes[portalID] # Removed finished items from the dictionary
+            
+            rem.append(portalID) # Removed finished items from the dictionary
             try:
                 if status ==0:
                     log.info("FIN", PID= process.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, exitcode=process.exitcode)
@@ -279,7 +282,10 @@ def checkProcesses(processes, pidFile, job):
                 pidFile.flush()
             except Exception as e:
                 print e, e.message()
-            
+    
+    for pid in rem:
+        del processes[pid]
+    assert p-len(processes) == len(rem) 
 
 def name():
     return 'Fetch'

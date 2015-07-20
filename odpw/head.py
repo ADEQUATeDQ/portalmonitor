@@ -1,5 +1,6 @@
 from multiprocessing.process import Process
 import multiprocessing
+from time import sleep
 __author__ = 'jumbrich'
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
@@ -70,9 +71,10 @@ class HeadProcess(Process):
         self.dbm.engine.dispose()
         resources=getResources(self.dbm, self.snapshot)
         
+        checks=0
         while not self.exit.is_set() or len(resources) != 0:
 
-            log.info("Starting head lookups", count=len(resources), cores=self.processors)
+            log.debug("Starting head lookups", count=len(resources), cores=self.processors)
     
             pool = ThreadPool(processes=self.processors,) 
     
@@ -83,6 +85,11 @@ class HeadProcess(Process):
             pool.join()
             
             resources=getResources(self.dbm, self.snapshot)
+            checks+=1
+            sleep(60)
+            if checks % 15==0:
+                log.info("Head lookup check", count=len(resources), cores=self.processors) 
+            
             
             
             
