@@ -47,7 +47,12 @@ class NoDestinationHandler(RequestHandler):
     def get(self):
         raise HTTPError(503)
 
-
+class PortalHandler(BaseHandler):
+    def get(self):
+        portals=[]
+        for pRes in self.db.getPortals():
+            portals.append(dict(pRes))
+        self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
 class PortalList(BaseHandler):
     def get(self):
         
@@ -55,7 +60,7 @@ class PortalList(BaseHandler):
         for pRes in self.db.getPortals():
             portals.append(dict(pRes))
         
-        self.render('portallist.jinja',index=True, data=portals)
+        self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
 
 class IndexHandler(BaseHandler):
     def get(self):

@@ -10,7 +10,7 @@ import time
 from pymongo import Connection
 from pymongo.son_manipulator import SONManipulator
 from _socket import timeout
-from pymc.distributions import snapshot
+
 import json
 import hashlib
 from db.models import Portal, Dataset, PortalMetaData, Resource

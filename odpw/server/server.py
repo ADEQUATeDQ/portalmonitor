@@ -15,7 +15,7 @@ from os.path import dirname, join, isfile
 here = dirname(__file__)
 project_root = join(here, '..')
 
-from handler import IndexHandler, NoDestinationHandler, DataHandler,PortalList
+from handler import IndexHandler, NoDestinationHandler, DataHandler,PortalList,PortalHandler
 
 # # List for famous movie rendering
 # movie_list = [[1,"The Hitchhiker's Guide to the Galaxy"],[2,"Back to future"],[3,"Matrix"]]
@@ -28,6 +28,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r'/', IndexHandler),
             (r'/list/portals', PortalList),
+            (r'/portal/', PortalHandler),
             (r'/static/(.*)', StaticFileHandler),
             (r'/data/(.*)/(.*)', DataHandler),
             (r'/.*$', NoDestinationHandler)

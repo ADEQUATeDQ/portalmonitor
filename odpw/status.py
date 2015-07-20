@@ -48,9 +48,9 @@ def cli(args,dbm):
                 for count in dbm.countDatasets(portalID=portal.id, snapshot=res['snapshot']):
                     total=count[0]
         
-                if total< 5000:
+                #if total< 5000:
                     
-                    simulateFetch(portal, dbm, res['snapshot'])
+                #    simulateFetch(portal, dbm, res['snapshot'])
                 
             elif res['datasets'] !=  pmd.fetch_stats['datasets']:
                 stats['ds_missmatch'].append( res['snapshot'])
@@ -58,8 +58,8 @@ def cli(args,dbm):
                 for count in dbm.countDatasets(portalID=portal.id, snapshot=res['snapshot']):
                     total=count[0]
         
-                if total< 10000:
-                    simulateFetch(portal, dbm, res['snapshot'])
+                #if total< 10000:
+                #    simulateFetch(portal, dbm, res['snapshot'])
             else:
                 stats['OK'].append( res['snapshot'])
                 

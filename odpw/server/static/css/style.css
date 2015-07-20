@@ -326,13 +326,18 @@ footer {
   margin-left: 26px;
 }
 
+#portalList ul.blocks-4 li {
+height: 160px;
+  
+	}
+
 #portalList li {
   border-radius: 3px;
-  height: 50px;
+  height: 60px;
   box-shadow: 0 0 2px rgba(0,0,0,0.75);
   background: #e6e6e6;
   padding: 5px;
-  margin: 10px 20px 0px 20px;
+  margin: 5px;
 }
 #portalList li .title h3 {
   font-size: 15px;
