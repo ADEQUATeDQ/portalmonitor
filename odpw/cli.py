@@ -84,10 +84,9 @@ def start ():
     logger = logging.getLogger(__name__)
     logger.info("END time elapsed %s ms",msecs)
     
+    
     eh.printStats()
-    for exc, count in eh.exceptions.iteritems():
-        print exc, count
-        
+    
     Timer.printStats()
     
     

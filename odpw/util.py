@@ -385,17 +385,18 @@ class ErrorHandler():
     exceptions=defaultdict(long)
     
     @classmethod
-    def handleError(cls,log, msg=None, exception=None, **kwargs):
+    def handleError(cls, log, msg=None, exception=None, **kwargs):
         name=type(exception).__name__
         cls.exceptions[name] +=1
         log.error(msg,exctype=type(exception), excmsg=exception.message,**kwargs)
     
     @classmethod
     def printStats(cls):
-        print "Numbers of Exceptions:"
+        print "\n -------------------------"
+        print "  Numbers of Exceptions:"
         for exc, count in cls.exceptions.iteritems():
-            print exc, count
-        
+            print " ",exc, count
+        print "\n -------------------------"
 
 def getExceptionCode(e):
     #connection erorrs

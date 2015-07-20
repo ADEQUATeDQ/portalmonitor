@@ -30,8 +30,11 @@ class Timer(object):
 
     @classmethod
     def printStats(cls):
+        print "\n -------------------------"
+        print "  Timing stats:" 
         import pprint
         pprint.pprint(cls.getStats())
+        print "\n -------------------------"
 
 
     @classmethod
