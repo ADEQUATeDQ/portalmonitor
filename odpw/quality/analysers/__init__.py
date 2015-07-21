@@ -9,6 +9,7 @@ __author__ = 'jumbrich'
 
 from _collections import defaultdict
 import time
+import numpy as np
 
 class Analyser:
     def analyse(self, element): pass
@@ -19,23 +20,13 @@ class Analyser:
     def done(self): pass
 
 
-    
-    
-class MapDistribution(object):
-    def __init__(self):
-        self.dist={}
-        
-    def add(self, key, value):
-        if key not in self.dist:
-            self.dist[key]=defaultdict(int) 
-        self.dist[key][value]+=1
-    def getDist(self):
-        d = {}
-        for a in self.dist:
-            d[a] = dict(self.dist[a])
-        return d
+
+
 
 class CountAnalser(object):
+    """
+    Analyser which provides a count per distinct element
+    """
     def __init__(self):
         self.dist=defaultdict(int)
     def add(self, value): 
@@ -44,7 +35,7 @@ class CountAnalser(object):
         return dict(self.dist)
     
 
-class StatusCodeDistribution(CountAnalser):
+class StatusCodeAnalyser(CountAnalser):
     dist={
                 '2':'ok',
                 '3':'redirect-loop (3xx)',
@@ -60,8 +51,8 @@ class StatusCodeDistribution(CountAnalser):
     
     def add(self, value):
         status = sstr=str(value)[0]
-        super(StatusCodeDistribution,self).add(status)
-        super(StatusCodeDistribution,self).add('total')
+        super(StatusCodeAnalyser,self).add(status)
+        super(StatusCodeAnalyser,self).add('total')
 
     def getDist(self):
         d={}
@@ -69,35 +60,6 @@ class StatusCodeDistribution(CountAnalser):
             d[k]={'count':v, 'label': self.__class__.dist[k]}
         return d
 
-class StatusCodeMapDistribution(MapDistribution):
-    dist={
-                '2':'ok',
-                '3':'redirect-loop (3xx)',
-                '4':'offline (4xx)',
-                '5':'server-error (5xx)',
-                '6':'other-error',
-                '7':'connection-error',
-                '8':'value-error',
-                '9':'uri-error',
-                '-':'unknown',
-                'total':'total'
-    }
-
-    
-    def add(self, key, value):
-        status = sstr=str(value)[0]
-        super(StatusCodeMapDistribution, self).add(key, status)
-        super(StatusCodeMapDistribution, self).add(key, 'total')
-        
-    def getDist(self):
-        d={}
-        for k,v in dict(self.dist).iteritems():
-            d[k]={}
-            for s,c in dict(v).iteritems():
-                d[k][s]={'count':c, 'label': self.__class__.dist[s]}
-        return d
-    
-    
 class PortalSoftwareDistAnalyser(Analyser,CountAnalser):
     def analyse(self, portal):
         if not isinstance(portal, Portal):
@@ -122,7 +84,7 @@ class PortalCountryDistAnalyser(Analyser,CountAnalser):
         return pandas.DataFrame([[col1,col2] for col1,col2 in self.getDist().items()], columns=['country', 'count'])
         
 
-class PortalStatusAnalyser(StatusCodeDistribution, Analyser):
+class PortalStatusAnalyser(StatusCodeAnalyser, Analyser):
     def analyse(self, portal):
         if not isinstance(portal, Portal):
             return
@@ -135,17 +97,15 @@ class PortalStatusAnalyser(StatusCodeDistribution, Analyser):
         return pandas.DataFrame([[status,val['count'],val['label']] for status, val in self.getDist().items() ], columns=['status_prefix', 'count', 'label'])
 
 
-class PortalMetaDataStatusAnalyser(StatusCodeMapDistribution, Analyser):
+class StatusAnalyserPMD(StatusCodeAnalyser, Analyser):
     def analyse(self, pmd):
-        
-        
         if not isinstance(pmd, PortalMetaData):
             return
         
         if pmd.fetch_stats and "portal_status" in pmd.fetch_stats:
-            self.add(pmd.snapshot,pmd.fetch_stats['portal_status'])
+            self.add(pmd.fetch_stats['portal_status'])
         else:
-                self.add(pmd.snapshot,-10)
+                self.add(999)
         
     def getResult(self):
         return self.getDist()
@@ -158,32 +118,50 @@ class PortalMetaDataStatusAnalyser(StatusCodeMapDistribution, Analyser):
             
         return pandas.DataFrame(data, columns=['snapshot','status_prefix', 'count', 'label'])
 
-class PortalMetaDataFetchStatsAnalyser(Analyser,CountAnalser):
-    def analyse(self, pmd):
-        if not isinstance(pmd, PortalMetaData):
-            return
-        
-        if pmd.fetch_stats and pmd.fetch_stats.get("portal_status",0)==200:
-            if "fetch_end" in pmd.fetch_stats:
-                self.add('processed')
-            else:
-                self.add('unprocessed')
-    def getResult(self):
-        return self.getDist()   
+
+class DatasetDistAnalyserPMD(Analyser): 
     
-class PortalMetaDataResourceStatsAnalyser(Analyser,CountAnalser):
+    def __init__(self):
+        self.total=[]
+        self.processed=[]
+    
     def analyse(self, pmd):
         if not isinstance(pmd, PortalMetaData):
             return
         
-        if pmd.fetch_stats and pmd.fetch_stats.get("portal_status",0)==200:
-            if bool(pmd.res_stats['respCodes']):
-                self.add('processed')
-            else:
-                self.add('unprocessed')
-                
+        if pmd.datasets>0:
+            self.total.append(pmd.datasets)
+        else:
+            self.total.append(0)
+        if pmd.fetch_stats and "datasets" in pmd.fetch_stats and pmd.fetch_stats['datasets']!=-1:
+            self.processed.append(pmd.fetch_stats['datasets'])
+        else:
+            self.processed.append(0)
+
     def getResult(self):
-        return self.getDist()  
+        return {'total':self.total, 'processed':self.processed}
+
+class ResourceDistAnalyserPMD(Analyser): 
+    
+    def __init__(self):
+        self.total=[]
+        self.processed=[]
+    
+    def analyse(self, pmd):
+        if not isinstance(pmd, PortalMetaData):
+            return
+        
+        if pmd.resources>0:
+            self.total.append(pmd.resources)
+        else:
+            self.total.append(0)
+        if pmd.res_stats and "total" in pmd.res_stats and pmd.res_stats['total']!=-1:
+            self.processed.append(pmd.res_stats['total'])
+        else:
+            self.processed.append(0)
+
+    def getResult(self):
+        return {'total':self.total, 'processed':self.processed}
 
 class AnalyseEngine(object):
     def __init__(self):

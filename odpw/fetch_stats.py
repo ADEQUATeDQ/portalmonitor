@@ -1,5 +1,4 @@
-from odpw.quality.analysers import PortalMetaDataStatusAnalyser, AnalyseEngine,\
-    PortalMetaDataFetchStatsAnalyser, PortalMetaDataResourceStatsAnalyser
+
 import time
 import odpw.util as util
 __author__ = 'jumbrich'
@@ -100,6 +99,7 @@ def simulateFetch(portal, dbm, snapshot):
         #General portal information (ds, res)
         #Portal Meta Data
         #   ds-fetch statistics
+        print pmd.res_stats
         dbm.updatePortalMetaData(pmd)
     except Exception as e:
         eh.handleError(log,'Updating DB',exception=e,pid=portal.id, exc_info=True)
@@ -107,16 +107,7 @@ def simulateFetch(portal, dbm, snapshot):
 
     
 
-def fetchStats(dbm, sn):
-    """
-    Compute the fetchStats lookup stats
-    """
-    
-    for p in dbm.getPortals():
-        portal = Portal.fromResult(dict(p))
-        
-        simulateFetch(portal, dbm,sn)
-    
+
 
 def name():
     return 'FetchStats'
@@ -124,10 +115,25 @@ def setupCLI(pa):
     
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
-
+    pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
+    
 def cli(args,dbm):
     sn = getSnapshot(args)
     if not sn:
         return
+    
+    portals=[]
+    if args.url:
+        p = dbm.getPortal(apiurl=args.url)
+        portals.append(p)
+    else:
+        for res in dbm.getPortals():
+            p = Portal.fromResult(dict(res))
+            portals.append(p)
+    
+    for p in portals:
         
-    fetchStats(dbm,sn)
+        simulateFetch(p, dbm,sn)
+    
+    
+    

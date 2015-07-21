@@ -9,11 +9,10 @@ from collections import defaultdict
 from matplotlib.pyplot import plot
 
 
-from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
-    PortalStatusAnalyser, PortalMetaDataStatusAnalyser,\
-    PortalMetaDataFetchStatsAnalyser
+from odpw.quality.analysers import AnalyseEngine, StatusAnalyserPMD, DatasetDistAnalyserPMD,\
+    ResourceDistAnalyserPMD
 from odpw.db.dbm import PostgressDBM
-from odpw.reports import PortalStatusReporter, PortalMetaDataStatusReporter
+
 
 
 
@@ -21,25 +20,28 @@ from odpw.timer import Timer
 import json
 
 from pprint import pprint 
+import pandas as pd
 
 if __name__ == '__main__':
     
     dbm= PostgressDBM(host="bandersnatch.ai.wu.ac.at")
-    ae = AnalyseEngine()
-    ae.add(PortalMetaDataStatusReporter())
     
-    portals = dbm.getPortalMetaDatas()
+    
+    portals = dbm.getPortalMetaDatas(snapshot="2015-29")
+    
+    ae = AnalyseEngine()
+    
+    sa=StatusAnalyserPMD()
+    da=DatasetDistAnalyserPMD()
+    ra=ResourceDistAnalyserPMD()
+    ae.add(sa)
+    ae.add(da)
+    ae.add(ra)
+    
     ae.process_all(PortalMetaData.iter(portals))
     
-    pmdfs = ae.getAnalyser(PortalMetaDataFetchStatsAnalyser)
-    print pmdfs.getResult()
     
-    data = ae.getAnalyser(PortalMetaDataStatusReporter).getResult()
-    pprint(data)
-    
-    vd= ae.getAnalyser(PortalMetaDataStatusReporter).getVegaData()
-    print json.dumps(vd)
-    Timer.printStats()
-    
+    print sa.getResult()
+    print sum(da.getResult()['total']),sum(da.getResult()['processed'])
 
-
+    

@@ -153,9 +153,14 @@ class PostgressDBM:
         self.metadata.create_all(self.engine)    
            
            
-    def getSnapshots(self):
+    def getSnapshots(self, portalID=None):
         with Timer(key="getSnapshots") as t:
-            s = select([self.pmd.c.snapshot]).distinct()
+            s = select([self.pmd.c.snapshot])
+            
+            if portalID:
+                s= s.where(self.pmd.c.portal==portalID)
+            
+            s=s.distinct()
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().fetchall()
@@ -343,7 +348,7 @@ class PostgressDBM:
                                                resources=PortalMetaData.resources,
                                                datasets=PortalMetaData.datasets
                                                )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
+            self.log.error("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
             ins.execute()
             #self.conn.execute(ins) 
         
@@ -495,31 +500,41 @@ class PostgressDBM:
             ins.execute() 
         self.log.info("UPSERT INTO resources", sn=Resource.snapshot, url=Resource.url)
 
-    def countProcessedResources(self, snapshot=None):
+    def countProcessedResources(self, snapshot=None,portalID=None):
         with Timer(key="countProcessedResources") as t:
             s = select([func.count(self.resources.c.url)],\
-                       and_(self.resources.c.snapshot==snapshot,
-                            self.resources.c.status != None)
+                       and_(self.resources.c.snapshot==snapshot
+                            #,self.resources.c.status != -1
+                            )
                        )
-        self.log.debug(query=s.compile(), params=s.compile().params)
-        return s.execute()
+            if portalID:
+                s= s.where(self.resources.c.origin[portalID]!=None)
+            
+            print s.compile(), s.compile().params    
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
         #return  self.conn.execute(s)
       
-    def getResources(self, snapshot=None):
+    def getResources(self, snapshot=None, portalID=None):
         with Timer(key="getResources") as t:
             s = select([self.resources])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)
+            if portalID:
+                s= s.where(self.resources.c.origin[portalID]!=None)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)
         
-    def getProcessedResources(self, snapshot=None):
+    def getProcessedResources(self, snapshot=None, portalID=None):
         with Timer(key="getProcessedResources") as t:
             s = select([self.resources])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)
-            s=s.where(self.resources.c.status !=None)
+            if portalID:
+                s= s.where(self.resources.c.origin[portalID]!=None)  
+                 
+            #s=s.where(self.resources.c.status !=-1)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)

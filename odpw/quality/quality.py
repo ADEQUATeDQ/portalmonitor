@@ -15,6 +15,7 @@ import argparse
 
 import logging
 import pprint
+import odpw.util as util
 logger = logging.getLogger(__name__)
 from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
@@ -58,7 +59,7 @@ def packageQuality(portal, snapshot, dbm):
         RetrievabilityAnalyser(dbm, portal.id, snapshot),
         CompletenessAnalyser(),
         ContactabilityAnalyser(),
-        #OpennessAnalyser(),
+        OpennessAnalyser(),
         OPQuastAnalyser()
     ]
 
@@ -95,7 +96,12 @@ def packageQuality(portal, snapshot, dbm):
     logger.info("(%s) analysed %s packages", portal.url, c)
 
 
-def analyseQuality(pmd, dbm, datasets=False, resources=False):
+def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
+    
+    pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=snapshot)
+    if not pmd:
+        print "no pmd for", portal.id, "and", snapshot
+    
     analysers=[]
     if datasets:
         analysers.append(KeyAnalyser())
@@ -108,8 +114,16 @@ def analyseQuality(pmd, dbm, datasets=False, resources=False):
     if resources:
         analysers.append(RetrievabilityAnalyser(dbm, pmd.portal, pmd.snapshot))
     
+    total=0
+    for res in dbm.countDatasets(portalID=portal.id, snapshot=snapshot):
+        total=res[0]
+    c=0
+    steps=total/10
+    if steps ==0:
+        steps=1
     
     for ds in dbm.getDatasets(portalID= pmd.portal, snapshot=pmd.snapshot):
+        c+=1
         dataset = Dataset.fromResult(dict(ds))
         for analyser in analysers:
             try:
@@ -117,14 +131,15 @@ def analyseQuality(pmd, dbm, datasets=False, resources=False):
             except Exception as e:
                 logger.exception('Exception during quality analyser:')
                 logger.exception(e)
-        
+        if c%steps == 0:
+            util.progressINdicator(c, total)
     
     for analyser in analysers:
         analyser.computeSummary()
         analyser.update(pmd)
 
-    import pprint
-    pprint.pprint(pmd.__dict__)
+    import pprint 
+    pprint.pprint(pmd.qa_stats)
     dbm.updatePortalMetaData(pmd)
 
                 
@@ -135,24 +150,35 @@ def setupCLI(pa):
     pa.add_argument('-d','--datasets', dest='datasets',action='store_true')
     pa.add_argument('-r','--resources', dest='resources',action='store_true')
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
-    pa.add_argument("-p","--portal",  help='specify portal id', dest='portal')
+    pa.add_argument("-u","--apiurl",  help='specify portal api url', dest='url')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     
 def cli(args,dbm):
     sn = getSnapshot(args)
-    if not sn:
-        return
     
-    
-    if args.portal:
-        pmd = dbm.getPortalMetaData(portalID= args.portal, snapshot=sn)
-        analyseQuality(pmd, dbm, datasets=args.datasets, resources=args.resources)
-        
+    portals=[]
+    if args.url:
+        p = dbm.getPortal(apiurl=args.url)
+        portals.append(p)
     else:
-        for res in dbm.getPortalMetaDatas(snapshot=sn):
-            pmd = PortalMetaData.fromResult(dict(res))
+        for res in dbm.getPortals():
+            p = Portal.fromResult(dict(res))
+            portals.append(p)
+    
+    
+    for portal in portals:
+        snapshots=[]
+        if not sn:
+            for s in dbm.getSnapshots(portalID=portal.id):
+                snapshots.append(s['snapshot'])
+        else:
+            snapshots.append(sn)
+            
+        for sn in snapshots:
+            analyseQuality(portal, sn, dbm, datasets=args.datasets, resources=args.resources)
+    
+    
         
-            analyseQuality(pmd, dbm, datasets=args.datasets, resources=args.resources)
         
         
         

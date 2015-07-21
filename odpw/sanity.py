@@ -1,19 +1,15 @@
+from odpw.head_stats import headStats
+from odpw.fetch_stats import simulateFetch
+
 __author__ = 'jumbrich'
 
 
-import util
-import sys
-import time
 
-from odpw.timer import Timer
+from pprint import pprint
 from odpw.db.models import Portal,  PortalMetaData, Dataset, Resource
 from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
 
-import math
-
-from urlparse import  urlparse
-from collections import defaultdict
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,15 +27,13 @@ def setupCLI(pa):
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
 
+    pa.add_argument("-f","--fix",  help='try to fix missing steps', dest='fix', action='store_true')
+
 def cli(args,dbm):
     
-    snapshots=[]
+    
     sn = getSnapshot(args)
-    if not sn:
-        for s in dbm.getSnapshots():
-            snapshots.append(s['snapshot'])
-    else:
-        snapshots.append(sn)
+    
     
     portals=[]
     if args.url:
@@ -50,28 +44,89 @@ def cli(args,dbm):
             p = Portal.fromResult(dict(res))
             portals.append(p)
     
+    
+    data={}
     for portal in portals:
+        data[portal.id]={'missing':{}, 'snapshots':{}, 'sanity':{}}
         print "Sanity check for", portal.id
+        snapshots=[]
+        if not sn:
+            for s in dbm.getSnapshots(portalID=portal.id):
+                snapshots.append(s['snapshot'])
+        else:
+            snapshots.append(sn)
+            
         for sn in snapshots:
             print "  snapshot",sn
             
-            stats={}
+            data[portal.id]['snapshots'][sn]={'status':{}, 'sanity':{}}
             
-            pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
-            stats['pmd']='ok' if pmd else 'missing'
-            stats['fetch']='ok' if pmd.fetch_stats and 'fetch_end' in pmd.fetch_stats else 'missing'
-            stats['head']='ok' if pmd.res_stats and bool(pmd.res_stats['respCodes']) else 'missing'
-            stats['qa']='ok' if pmd.qa_stats else 'missing'
+            status=data[portal.id]['snapshots'][sn]['status']
+            sanity=data[portal.id]['snapshots'][sn]['sanity']
             
-            ds=0
-            for res in dbm.datasetsPerSnapshot(portalID=portal.id,snapshot=sn):
-                ds=res['datasets']
-            res=0
-            for result in dbm.resourcesPerSnapshot(portalID=portal.id,snapshot=sn):
-                res=result['resources']
+            while True:
+                pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
+                if pmd:
+                    status['pmd']=True 
+                    status['fetch']=True if pmd.fetch_stats and 'fetch_end' in pmd.fetch_stats else False
+                    status['head']=True if pmd.res_stats and (bool(pmd.res_stats['respCodes']) or pmd.res_stats['total']==0) else False
+                    status['qa']=True if pmd.qa_stats else False
+            
+                    ds=0
+                    for res in dbm.datasetsPerSnapshot(portalID=portal.id,snapshot=sn):
+                        ds=res['datasets']
                 
+                    sanity['fetch_stats']= True if pmd.fetch_stats and pmd.fetch_stats['datasets'] == ds else False
             
-            print ds, res, pmd.fetch_stats['datasetsy']
+                    res=0
+                    for result in dbm.resourcesPerSnapshot(portalID=portal.id,snapshot=sn):
+                        res=result['resources']
+                
+                    if status['head']:
+                        sanity['res_stats']= True if pmd.res_stats and pmd.res_stats['unique'] == res else False
+                        
+                    else:
+                        sanity['res_stats']= None
+                else:
+                    status['pmd']=False
+                if args.fix:
+                    if not status['pmd']:
+                        print "Simulating fetch"
+                        simulateFetch(portal, dbm, sn)
+                    elif not status['head']:
+                        print "Computing head stats"
+                        headStats(dbm,sn,portal.id)
+                    elif not sanity['res_stats']:
+                        print "Simulating fetch"
+                        simulateFetch(portal, dbm, sn)
+                        print "Computing head stats"
+                        headStats(dbm,sn,portal.id)
+                    else:
+                        break
+                
+                    
+            
+                
+        
+        missing = data[portal.id]['missing']
+        t=['pmd', 'fetch', 'head','qa']
+        for tt in t:
+            missing[tt]=[]
+        
+            for k,v in data[portal.id]['snapshots'].items():
+                if tt in v['status'] and not v['status'][tt]:
+                        missing[tt].append(k)
+            
+        t=['fetch_stats','res_stats', 'res_count']
+        sanity = data[portal.id]['sanity']
+        for tt in t:
+            sanity[tt]=[]
+            for k,v in data[portal.id]['snapshots'].items():
+                if tt in v['sanity'] and not v['sanity'][tt]:
+                        sanity[tt].append(k)
+        
+        pprint(missing)
+        pprint(sanity)
             
             
             

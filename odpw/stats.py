@@ -1,5 +1,4 @@
-from odpw.quality.analysers import PortalMetaDataStatusAnalyser, AnalyseEngine,\
-    PortalMetaDataFetchStatsAnalyser, PortalMetaDataResourceStatsAnalyser
+
 __author__ = 'jumbrich'
 
 from util import getSnapshot,getExceptionCode,ErrorHandler as eh
@@ -20,34 +19,36 @@ log = get_logger()
 
 def snapshotStats(dbm, sn):
     
-    ae = AnalyseEngine()
-    
-    #check for the status of the portal for this snapshot
-    ae.add(PortalMetaDataStatusAnalyser())
-    
-    #anaylse the fetch stats
-    ae.add(PortalMetaDataFetchStatsAnalyser())
-    
-    #anaylse the resource stats
-    ae.add(PortalMetaDataResourceStatsAnalyser())
-    #anaylse the quality assessment stats
-    #ae.add(PortalMetaDataQAStatsAnalyser())
-    
-    portals = dbm.getPortalMetaDatas(snapshot=sn)
-    ae.process_all(PortalMetaData.iter(portals))
-    
-    print "Portal Status codes"
-    p_status=ae.getAnalyser(PortalMetaDataStatusAnalyser).getResult() 
-    pprint(p_status)
-    
-    print "Fetch status"
-    pmdfs = ae.getAnalyser(PortalMetaDataFetchStatsAnalyser)
-    pprint(pmdfs.getResult())
-    
-    print "Resource/Head status"
-    pmdfs = ae.getAnalyser(PortalMetaDataResourceStatsAnalyser)
-    pprint(pmdfs.getResult())
-    
+    #===========================================================================
+    # ae = AnalyseEngine()
+    # 
+    # #check for the status of the portal for this snapshot
+    # ae.add(PortalMetaDataStatusAnalyser())
+    # 
+    # #anaylse the fetch stats
+    # ae.add(PortalMetaDataFetchStatsAnalyser())
+    # 
+    # #anaylse the resource stats
+    # ae.add(PortalMetaDataResourceStatsAnalyser())
+    # #anaylse the quality assessment stats
+    # #ae.add(PortalMetaDataQAStatsAnalyser())
+    # 
+    # portals = dbm.getPortalMetaDatas(snapshot=sn)
+    # ae.process_all(PortalMetaData.iter(portals))
+    # 
+    # print "Portal Status codes"
+    # p_status=ae.getAnalyser(PortalMetaDataStatusAnalyser).getResult() 
+    # pprint(p_status)
+    # 
+    # print "Fetch status"
+    # pmdfs = ae.getAnalyser(PortalMetaDataFetchStatsAnalyser)
+    # pprint(pmdfs.getResult())
+    # 
+    # print "Resource/Head status"
+    # pmdfs = ae.getAnalyser(PortalMetaDataResourceStatsAnalyser)
+    # pprint(pmdfs.getResult())
+    #===========================================================================
+    pass
     
     
 

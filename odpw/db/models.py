@@ -192,13 +192,14 @@ class PortalMetaData(object):
             for key in stats['general_stats'].keys():
                 self.general_stats[key]=stats['general_stats'][key]
         
-        
         if 'res_stats' in stats:
             if not self.res_stats:
                 self.res_stats={}
-            self.res_stats['respCodes']=stats['res_stats']['respCodes']
-            self.res_stats['total']=stats['res_stats']['total']
-            self.res_stats['unique']=len(stats['res_stats']['resList'])
+            
+            for k in stats['res_stats']:
+                self.res_stats[k] = stats['res_stats'][k]
+            
+            
         
         if 'datasets' in stats:
             self.datasets=stats['datasets']

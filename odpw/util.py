@@ -488,8 +488,10 @@ def timer(delta):
 
 def progressINdicator(processed, total,bar_width=20,elapsed=None, interim=None):
     
-    
-    percent = float(processed) / total
+    if total!=0:
+        percent = float(processed) / total
+    else:
+        percent =1.0
     hashes = '#' * int(round(percent * bar_width))
     spaces = ' ' * (bar_width - len(hashes))
     
