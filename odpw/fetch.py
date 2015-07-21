@@ -69,7 +69,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
     #process remaining datasets which were not available in the fullMetaData list    
     for entity in package_list:
         #WAIT between two consecutive GET requests
-        time.sleep(randint(1, 2))
+        time.sleep(randint(.5, 1.5))
         try:
             log.debug("GET MetaData", pid=Portal.id, did=entity)
 
@@ -85,10 +85,10 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
                     resp = api.action.package_show(id=entity)
                     data = resp
                     util.extras_to_dict(data)
-                    props=analyseDataset(data, entity, stats, dbm, sn,resp.status_code)
+                    props=analyseDataset(data, entity, stats, dbm, sn, 200)
                     
                 except Exception as e:
-                    eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
+                    eh.handleError(log,'FetchDataset', exception=e,pid=stats['portal'].id,
                                    apiurl=stats['portal'].apiurl,
                                    exc_info=True)
                     props['status']=util.getExceptionCode(e)
@@ -400,11 +400,11 @@ def cli(args,dbm):
         headProcess.shutdown()        
         headProcess.join()
         
-        print "Restart head lookups"
+        log.info("RestartHeadLookups")
         headProcess = HeadProcess(dbm, sn)
         headProcess.start()
         headProcess.shutdown()
         headProcess.join()
         
     except Exception as e:
-        eh.handleError(log, "Processing fetch", exception=e, exc_info=True)
+        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True)

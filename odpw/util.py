@@ -1,6 +1,6 @@
-import ckanapi
 __author__ = 'jumbrich'
 
+import ckanapi
 import urlparse
 import urlnorm
 from datetime import datetime

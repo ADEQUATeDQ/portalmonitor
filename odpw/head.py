@@ -6,10 +6,9 @@ __author__ = 'jumbrich'
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 
 import odpw.util as util
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.util import getSnapshot, ErrorHandler as eh
 
 from odpw.timer import Timer
-import argparse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ def head (dbm, sn, resource):
         try:
             props=util.head(resource.url)
         except Exception as e:
-            eh.handleError(log, "HEAD_LOOKUP", exception=e, url=resource.url, snapshot=sn,exc_info=True)
+            eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
             props['status']=util.getExceptionCode(e)
             props['exception']=str(type(e))+":"+str(e.message)
         
@@ -43,7 +42,7 @@ def head (dbm, sn, resource):
         dbm.updateResource(resource)
         
     except Exception as e:
-        eh.handleError(log, "HEAD_FUNCTION", exception=e, url=resource.url, snapshot=sn,exc_info=True)
+        eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
 
 def getResources(dbm, snapshot):
@@ -54,7 +53,7 @@ def getResources(dbm, snapshot):
             R = Resource.fromResult(dict(res))
             resources.append(R)    
         except Exception as e:
-            log.debug('Drop head lookup', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
+            log.debug('DropHeadLookup', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
     return resources
         
 class HeadProcess(Process):
@@ -74,7 +73,7 @@ class HeadProcess(Process):
         checks=0
         while not self.exit.is_set() or len(resources) != 0:
 
-            log.debug("Starting head lookups", count=len(resources), cores=self.processors)
+            log.debug("StartHeadLookups", count=len(resources), cores=self.processors)
     
             pool = ThreadPool(processes=self.processors,) 
     
@@ -90,11 +89,8 @@ class HeadProcess(Process):
             if checks % 15==0:
                 log.info("HeadLookupCheck", count=len(resources), cores=self.processors) 
             
-            
-            
-            
     def shutdown(self):
-        print "Shutdown initiated"
+        log.info("ShutdownInit")
         self.exit.set()
     def setProcessors(self, processors):
         self.processors=processors

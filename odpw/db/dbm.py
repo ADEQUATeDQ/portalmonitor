@@ -520,11 +520,11 @@ class PostgressDBM:
         with Timer(key="getResourceWithoutHead") as t:
             s=select([self.resources]).\
                 where(self.resources.c.snapshot==snapshot).\
-                where(self.resources.c.header == "null")
-            if status:
-                s= s.where(self.resources.c.status == status)
-            if not status:
-                s= s.where(self.resources.c.status == None)
+                where(self.resources.c.status == -1)
+            #if status:
+            #    s= s.where(self.resources.c.status == status)
+            #if not status:
+            #    s= s.where(self.resources.c.status == None)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             
@@ -628,9 +628,11 @@ if __name__ == '__main__':
     p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
     
     
-    for r in p.getResourceWithoutHead(snapshot="2015-29", status=None):
+    for r in p.getResourceWithoutHead(snapshot="2015-30", status=None):
         print r
-        break
+    print "end loop"
+        
+    exit
     #===========================================================================
     # c=0
     # for res in p.getResources(snapshot='2015-28'):

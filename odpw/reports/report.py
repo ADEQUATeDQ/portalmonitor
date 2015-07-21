@@ -7,7 +7,7 @@ Created on Jul 9, 2015
 from odpw.db.models import Portal, PortalMetaData
 from collections import defaultdict
 from matplotlib.pyplot import plot
-from csvkit.table import Table
+
 
 from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
     PortalStatusAnalyser, PortalMetaDataStatusAnalyser,\
@@ -15,11 +15,9 @@ from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
 from odpw.db.dbm import PostgressDBM
 from odpw.reports import PortalStatusReporter, PortalMetaDataStatusReporter
 
-import pandas as pd
+
 
 from odpw.timer import Timer
-import vincent
-import random
 import json
 
 from pprint import pprint 

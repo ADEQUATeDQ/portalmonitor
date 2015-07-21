@@ -4,6 +4,7 @@ __author__ = 'jumbrich'
 import time
 #import numpy
 import faststat
+import pprint
 
 class Timer(object):
 
@@ -24,15 +25,15 @@ class Timer(object):
         if self.verbose:
             print '(%s) elapsed time: %f ms' % (self.key,self.msecs)
         if self.key:
-            if self.key not in Timer.measures:
-                Timer.measures[self.key]=faststat.Stats()
-            Timer.measures[self.key].add(self.msecs)
+            if self.key not in self.__class__.measures:
+                self.__class__.measures[self.key]=faststat.Stats()
+            self.__class__.measures[self.key].add(self.msecs)
+            print self.__class__.measures.keys()
 
     @classmethod
     def printStats(cls):
         print "\n -------------------------"
         print "  Timing stats:" 
-        import pprint
         pprint.pprint(cls.getStats())
         print "\n -------------------------"
 
@@ -40,7 +41,8 @@ class Timer(object):
     @classmethod
     def getStats(cls):
         stats={}
-        for m in Timer.measures:
-            stats[m]={'avg':Timer.measures[m].mean, 'calls':Timer.measures[m].n, 'min':Timer.measures[m].min, 'max':Timer.measures[m].max}
+        print cls.measures.keys()
+        for m in cls.measures:
+            stats[m]={'avg':cls.measures[m].mean, 'calls':cls.measures[m].n, 'min':cls.measures[m].min, 'max':cls.measures[m].max}
         return stats
 

@@ -4,7 +4,7 @@ __author__ = 'jumbrich'
 import argparse
 
 import logging.config
-from timer import Timer
+from odpw.timer import Timer
 import time
 
 from odpw.db.dbm import PostgressDBM
