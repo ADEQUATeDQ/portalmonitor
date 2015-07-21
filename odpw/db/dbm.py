@@ -151,7 +151,15 @@ class PostgressDBM:
 
     def initTables(self):  
         self.metadata.create_all(self.engine)    
+           
+           
+    def getSnapshots(self):
+        with Timer(key="getSnapshots") as t:
+            s = select([self.pmd.c.snapshot]).distinct()
             
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute().fetchall()
+         
     def insertPortal(self, Portal):
         with Timer(key="insertPortal") as t:
             ins = self.portals.insert().values(
@@ -582,18 +590,27 @@ class PostgressDBM:
     ##############
     # STATS
     ##############
-    def datasetsPerSnapshot(self, portalID=None):
+    def datasetsPerSnapshot(self, portalID=None, snapshot=None):
         with Timer(key="datasetsPerSnapshot") as t:
             s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.dataset).label('datasets')]).\
-            where(self.datasets.c.portal==portalID).group_by(self.datasets.c.snapshot)
+            where(self.datasets.c.portal==portalID)
+            if snapshot:
+                s=s.where(self.datasets.c.snapshot==snapshot)
+            
+            s=s.group_by(self.datasets.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)
-    def resourcesPerSnapshot(self,portalID=None):
+    def resourcesPerSnapshot(self,portalID=None, snapshot=None):
         with Timer(key="resourcesPerSnapshot") as t:
             s=select( [self.resources.c.snapshot, func.count(self.resources.c.url).label('resources')]).\
-            where(self.resources.c.origin[portalID]!=None).group_by(self.resources.c.snapshot)
+            where(self.resources.c.origin[portalID]!=None)
+            if snapshot:
+                s=s.where(self.resources.c.snapshot==snapshot)
+            
+            s=s.group_by(self.resources.c.snapshot)
+            
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()

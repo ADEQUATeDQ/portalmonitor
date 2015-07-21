@@ -24,7 +24,7 @@ log = get_logger()
 
 import requests 
 
-from random import randint
+import random
 import time
 
 
@@ -69,7 +69,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
     #process remaining datasets which were not available in the fullMetaData list    
     for entity in package_list:
         #WAIT between two consecutive GET requests
-        time.sleep(randint(.5, 1.5))
+        time.sleep(random.uniform(0.5, 2))
         try:
             log.debug("GET MetaData", pid=Portal.id, did=entity)
 

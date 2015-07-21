@@ -28,7 +28,7 @@ class Timer(object):
             if self.key not in self.__class__.measures:
                 self.__class__.measures[self.key]=faststat.Stats()
             self.__class__.measures[self.key].add(self.msecs)
-            print self.__class__.measures.keys()
+            
 
     @classmethod
     def printStats(cls):
@@ -41,7 +41,7 @@ class Timer(object):
     @classmethod
     def getStats(cls):
         stats={}
-        print cls.measures.keys()
+        
         for m in cls.measures:
             stats[m]={'avg':cls.measures[m].mean, 'calls':cls.measures[m].n, 'min':cls.measures[m].min, 'max':cls.measures[m].max}
         return stats

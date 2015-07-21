@@ -73,7 +73,7 @@ class HeadProcess(Process):
         checks=0
         while not self.exit.is_set() or len(resources) != 0:
 
-            log.debug("StartHeadLookups", count=len(resources), cores=self.processors)
+            log.info("StartHeadLookups", count=len(resources), cores=self.processors)
     
             pool = ThreadPool(processes=self.processors,) 
     
