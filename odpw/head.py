@@ -35,7 +35,7 @@ def head (dbm, sn, resource):
         try:
             props=util.head(resource.url)
         except Exception as e:
-            eh.handleError(log, "HEAD", exception=e, url=resource.url, snapshot=sn,exc_info=True)
+            eh.handleError(log, "HEAD_LOOKUP", exception=e, url=resource.url, snapshot=sn,exc_info=True)
             props['status']=util.getExceptionCode(e)
             props['exception']=str(type(e))+":"+str(e.message)
         
@@ -43,7 +43,7 @@ def head (dbm, sn, resource):
         dbm.updateResource(resource)
         
     except Exception as e:
-        eh.handleError(log, "head function", exception=e, url=resource.url, snapshot=sn,exc_info=True)
+        eh.handleError(log, "HEAD_FUNCTION", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
 
 def getResources(dbm, snapshot):
@@ -88,7 +88,7 @@ class HeadProcess(Process):
             checks+=1
             sleep(60)
             if checks % 15==0:
-                log.info("Head lookup check", count=len(resources), cores=self.processors) 
+                log.info("HeadLookupCheck", count=len(resources), cores=self.processors) 
             
             
             

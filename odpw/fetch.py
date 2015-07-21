@@ -83,7 +83,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
                         }
                 try:
                     resp = api.action.package_show(id=entity)
-                    data = resp.json()
+                    data = resp
                     util.extras_to_dict(data)
                     props=analyseDataset(data, entity, stats, dbm, sn,resp.status_code)
                     
@@ -338,8 +338,8 @@ def cli(args,dbm):
             }
         )
     else:
-        #for portalRes in dbm.getPortals():
-        for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
+        for portalRes in dbm.getPortals():
+        #for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
             p = Portal.fromResult(dict(portalRes))
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
             jobs.append(

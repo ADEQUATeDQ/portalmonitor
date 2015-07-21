@@ -516,7 +516,7 @@ def head(url, redirects=0, props=None):
         props['exception']=None
     
     
-    headResp = requests.head(url=url,timeout=(2, 30.0))#con, read -timeout
+    headResp = requests.head(url=url,timeout=(2, 30.0), allow_redirects=True)#con, read -timeout
 
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
     
