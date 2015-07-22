@@ -10,7 +10,7 @@ import vincent
 
 from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
     PortalCountryDistAnalyser
-from odpw.reports import PortalStatusReporter
+
 from odpw.db.models import Portal
 
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     ae = AnalyseEngine()
     
     ae.add(PortalSoftwareDistAnalyser())
-    ae.add(PortalStatusReporter())
+    
     ae.add(PortalCountryDistAnalyser())
     
     ae.process_all( Portal.iter(dbm.getPortals()) )
@@ -44,11 +44,11 @@ if __name__ == '__main__':
     
     
     #######--------------------######
-    psr = ae.getAnalyser(PortalStatusReporter)
     
-    dfa = psr.getDataFrame().copy()
-    dfa=dfa.set_index('label')
-    print dfa
+    
+    #dfa = psr.getDataFrame().copy()
+    #dfa=dfa.set_index('label')
+    #print dfa
     
     dfa= dfa.drop(['total'])
     pie = vincent.Pie(dfa, inner_radius=30, columns=['count'])

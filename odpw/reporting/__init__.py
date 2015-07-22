@@ -32,6 +32,7 @@ class VegaDataCreator:
 class PlotCreator:
     def plot(self):
         pass
+
 class TableCreator:
     def table(self):
         pass        

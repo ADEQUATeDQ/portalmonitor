@@ -634,6 +634,13 @@ class PostgressDBM:
             s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
+    
+    def getPortalStatusDist(self):
+        with Timer(key="getPortalStatusDist") as t:
+            s=  select([self.portals.c.status, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.status)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
+    
 def name():
     return 'DB'
 
