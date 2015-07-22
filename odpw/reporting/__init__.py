@@ -1,5 +1,5 @@
 from odpw.db.models import Portal
-from odpw.quality.analysers import AnalyseEngine, PortalStatusAnalyser
+from odpw.analysers import AnalyseEngine, PortalStatusAnalyser
 
 from isoweek import Week
 import matplotlib.pyplot as plt

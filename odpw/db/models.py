@@ -1,3 +1,4 @@
+from sqlalchemy.engine.result import RowProxy
 __author__ = 'jumbrich'
 
 
@@ -26,6 +27,9 @@ class Portal(object):
         
     @classmethod
     def fromResult(cls, result):
+        
+        if isinstance(result, RowProxy):
+            result = dict(result)
         
         url=result['url']
         apiurl=result['apiurl']

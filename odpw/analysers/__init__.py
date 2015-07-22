@@ -21,18 +21,33 @@ class Analyser:
 
 
 
+def getSoftware(portal):
+    return portal.software
 
 
-class CountAnalser(object):
+class CountAnalser(Analyser):
     """
     Analyser which provides a count per distinct element
     """
-    def __init__(self):
+    def __init__(self, funct):
         self.dist=defaultdict(int)
+        self.funct=funct
+    
+    def analyse(self, portal):
+        self.add(self.funct(portal))
+    
     def add(self, value, count=1): 
         self.dist[value]+=count
+    
     def getDist(self):
         return dict(self.dist)
+    
+    def getResult(self):
+        return self.getDist()
+    
+    def getDataFrame(self, columns=None):
+        return pandas.DataFrame([[col1,col2] for col1,col2 in self.getDist().items()], columns=columns)
+
     
 
 class StatusCodeAnalyser(CountAnalser):
@@ -164,8 +179,10 @@ class ResourceDistAnalyserPMD(Analyser):
         return {'total':self.total, 'processed':self.processed}
 
 class AnalyseEngine(object):
-    def __init__(self):
+    
+    def __init__(self, convert):
         self.analysers = {}
+        self.convert = convert
         
     def add(self, analyser):
         self.analysers[analyser.name()] = analyser
@@ -183,12 +200,13 @@ class AnalyseEngine(object):
     
     def process_all(self, iterable):
         self.start= time.time()
-        for c in iterable:
-            self.analyse(c)
+        for e in iterable:
+            c=self.convert(e)
+            if c:
+                self.analyse(c)
         self.done()
             
     def getAnalyser(self, analyser):
-        
         if isinstance(analyser, (types.TypeType, types.ClassType)) and  issubclass(analyser, Analyser):
             return self.analysers[analyser.name()]
         elif isinstance(analyser, analyser):

@@ -232,9 +232,8 @@ class PostgressDBM:
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
             res = s.execute().fetchone()
-            
             if res:
-                return Portal.fromResult(dict( res))
+                return Portal.fromResult(dict(res))
             return None
     
     def getPortals(self,maxDS=None, maxRes=None, software=None, status=None):
