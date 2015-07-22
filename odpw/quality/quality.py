@@ -41,59 +41,64 @@ from odpw.quality.analysers.opquast import OPQuastAnalyser
 #    dbm.storeDatasetMetrics(dataset_metrics)
 
 
-def packageQuality(portal, snapshot, dbm):
-    """
-    """
-    global logger
-    logger = logging.getLogger(__name__)
-    logger.info("(%s) Getting meta data statistics for the packages", portal.url)
-
-    # retrieve the PMD object and reset all its values
-    PMD = dbm.getPortalMetaData(portal.url, snapshot)
-    PMD.reset()
-
-    c = 0
-
-    analysers = [
-        KeyAnalyser(),
-        RetrievabilityAnalyser(dbm, portal.id, snapshot),
-        CompletenessAnalyser(),
-        ContactabilityAnalyser(),
-        OpennessAnalyser(),
-        OPQuastAnalyser()
-    ]
-
-    datasets = []
-    #if items['time'] == snapshot)
-    for dataset in dbm.getPackages(portal, snapshot=snapshot):
-        datasets.append(dataset)
-
-        for analyser in analysers:
-            try:
-                analyser.visit(dataset)
-            except Exception as e:
-                logger.exception('Exception during quality analyser:')
-                logger.exception(e)
-
-        #snapshot_metrics(PMD, portal, Package(dict_string=dataset), snapshot, dbm)
-        c += 1
-
-    uA = UsageAnalyser(analysers[0])
-    for ds in datasets:
-        uA.visit(ds)
-
-    #add UA to analyser array
-    analysers.append(uA)
-
-    logger.info("(%s) stored dataset metrics", portal.url)
-
-    for analyser in analysers:
-        analyser.computeSummary()
-        analyser.update(PMD)
-
-    dbm.storePortalMetaData(PMD)
-    dbm.storePortal(portal)
-    logger.info("(%s) analysed %s packages", portal.url, c)
+#===============================================================================
+# packageQuality
+#===============================================================================
+#===============================================================================
+# def packageQuality(portal, snapshot, dbm):
+#     """
+#     """
+#     global logger
+#     logger = logging.getLogger(__name__)
+#     logger.info("(%s) Getting meta data statistics for the packages", portal.url)
+# 
+#     # retrieve the PMD object and reset all its values
+#     PMD = dbm.getPortalMetaData(portal.url, snapshot)
+#     PMD.reset()
+# 
+#     c = 0
+# 
+#     analysers = [
+#         KeyAnalyser(),
+#         RetrievabilityAnalyser(dbm, portal.id, snapshot),
+#         CompletenessAnalyser(),
+#         ContactabilityAnalyser(),
+#         OpennessAnalyser(),
+#         OPQuastAnalyser()
+#     ]
+# 
+#     datasets = []
+#     #if items['time'] == snapshot)
+#     for dataset in dbm.getPackages(portal, snapshot=snapshot):
+#         datasets.append(dataset)
+# 
+#         for analyser in analysers:
+#             try:
+#                 analyser.visit(dataset)
+#             except Exception as e:
+#                 logger.exception('Exception during quality analyser:')
+#                 logger.exception(e)
+# 
+#         #snapshot_metrics(PMD, portal, Package(dict_string=dataset), snapshot, dbm)
+#         c += 1
+# 
+#     uA = UsageAnalyser(analysers[0])
+#     for ds in datasets:
+#         uA.visit(ds)
+# 
+#     #add UA to analyser array
+#     analysers.append(uA)
+# 
+#     logger.info("(%s) stored dataset metrics", portal.url)
+# 
+#     for analyser in analysers:
+#         analyser.computeSummary()
+#         analyser.update(PMD)
+# 
+#     dbm.storePortalMetaData(PMD)
+#     dbm.storePortal(portal)
+#     logger.info("(%s) analysed %s packages", portal.url, c)
+#===============================================================================
 
 
 def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
@@ -123,17 +128,19 @@ def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
         steps=1
     
     for ds in dbm.getDatasets(portalID= pmd.portal, snapshot=pmd.snapshot):
-        c+=1
         dataset = Dataset.fromResult(dict(ds))
+        c+=1
         for analyser in analysers:
             try:
                 analyser.visit(dataset)
             except Exception as e:
-                logger.exception('Exception during quality analyser:')
-                logger.exception(e)
+                eh.handleError(log, 'QAException('+analyser.__class__.__name__+")", exception=e, pid=portal.id,dataset=ds.dataset,exc_info=True)
+                
         if c%steps == 0:
             util.progressINdicator(c, total)
-    
+            
+        dbm.updateDataset(dataset)
+        
     for analyser in analysers:
         analyser.computeSummary()
         analyser.update(pmd)

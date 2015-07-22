@@ -6,6 +6,8 @@ from odpw.quality import interpret_meta_field
 
 class ContactabilityAnalyser:
 
+    id='Qa'
+
     def __init__(self):
           #retrieval stats
         self.quality= {'email': { 'total':0, 'author':0, 'maintainer':0},
@@ -21,6 +23,12 @@ class ContactabilityAnalyser:
 
 
     def visit(self, dataset):
+
+        quality= {'email': { 'total':0, 'author':0, 'maintainer':0},
+                       'url': { 'total':0, 'author':0, 'maintainer':0},
+                       'total': { 'total':0, 'author':0, 'maintainer':0}
+                       }
+        
         # taking the top level metadata fields of the dataset into account
         data = dataset.data
 
@@ -47,23 +55,28 @@ class ContactabilityAnalyser:
                 m[1] =  ('url' in type and 'http' in type)
 
         #count where an email appeared
-        self.stats['email']['total'] = np.append( self.stats['email']['total'], 1 if (a[0] or m[0]) else 0)
-        self.stats['email']['author'] = np.append(self.stats['email']['author'], 1 if a[0] else 0)
-        self.stats['email']['maintainer'] = np.append(self.stats['email']['maintainer'],1 if m[0] else 0)
+        quality['email']['total']= 1 if (a[0] or m[0]) else 0
+        quality['email']['author'] =  1 if a[0] else 0
+        quality['email']['maintainer'] =1 if m[0] else 0
         #count where an http url appeared
-        self.stats['url']['total'] = np.append(self.stats['url']['total'], 1 if (a[1] or m[1]) else 0)
-        self.stats['url']['author'] = np.append(self.stats['url']['author'], 1 if (a[1]) else 0)
-        self.stats['url']['maintainer'] = np.append(self.stats['url']['maintainer'], 1 if (m[1]) else 0)
+        quality['url']['total'] =  1 if (a[1] or m[1]) else 0
+        quality['url']['author'] = 1 if (a[1]) else 0
+        quality['url']['maintainer'] =  1 if (m[1]) else 0
 
-        self.stats['total']['total'] = np.append(self.stats['total']['total'], 1 if (a[0] or m[0] or a[1] or m[1]) else 0)
-        self.stats['total']['author'] = np.append(self.stats['total']['author'], 1 if (a[1] or a[0]) else 0)
-        self.stats['total']['maintainer'] = np.append(self.stats['total']['maintainer'], 1 if (m[0] or m[1]) else 0)
+        quality['total']['total'] =  1 if (a[0] or m[0] or a[1] or m[1]) else 0
+        quality['total']['author'] =  1 if (a[1] or a[0]) else 0
+        quality['total']['maintainer'] =  1 if (m[0] or m[1]) else 0
 
         #print self.stats
 
+        for key, value in quality.items():
+            for key1, value1 in value.items():
+                self.stats[key][key1] = np.append(self.stats[key][key1],quality[key][key1])
+
+        dataset.updateQA({'qa':{ContactabilityAnalyser.id:quality}})
 
     def update(self, PMD):
-        stats={'qa_stats':{'Qa': self.quality}}
+        stats={'qa_stats':{ContactabilityAnalyser.id: self.quality}}
         PMD.updateStats(stats)
         
 

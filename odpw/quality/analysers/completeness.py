@@ -5,6 +5,8 @@ from odpw.quality.interpret_meta_field import is_empty
 
 class CompletenessAnalyser:
 
+    id='Qc'
+
     def __init__(self):
           #retrieval stats
         self.quality= {'total':0,
@@ -23,6 +25,8 @@ class CompletenessAnalyser:
         # taking the top level metadata fields of the dataset into account
         #print dataset
         data = dataset.data
+
+        qa={'total':0,'core':0,'extra':0,'res':0}
 
         # if no dict, return (e.g. access denied)
         if not isinstance(data, dict):
@@ -46,9 +50,8 @@ class CompletenessAnalyser:
             if cnt['c'] != 0.0:
                 compl = cnt['cne']/cnt['c']
 
-        #print "core:",cnt['cne'],"/",cnt['c'], " = ",cnt['cne']/cnt['c']
-        self.compl['core'] = np.append(self.compl['core'], compl )
-
+        qa['core']=compl
+        
         # taking the extra fields of the dataset into account
         extra_fields_comp = 0
         if 'extras' in data:
@@ -59,18 +62,12 @@ class CompletenessAnalyser:
                          cnt['ene'] += 1.0
                 if cnt['e']  != 0.0:
                     extra_fields_comp =  cnt['ene']/ cnt['e']
-
-        #print "extra:",cnt['ene'],"/",cnt['e'], " = ",cnt['ene']/cnt['e']
-        self.compl['extra'] = np.append(self.compl['extra'], extra_fields_comp )
+        qa['extra'] = extra_fields_comp
 
         # taking all resource fields of the dataset into account
-        non_empty_fields = 0.0
-        fields = 0.0
-        c =0
+        rescomp=0
         if isinstance(data, dict):
-            rescomp = 0
             if 'resources' in data:
-
                 #store for each key if it has a value or not for each resource
                 res = {}
                 resources = data['resources']
@@ -78,7 +75,6 @@ class CompletenessAnalyser:
                     for key in resource:
                         if key not in res:
                             res[key] = np.array([])
-
                         if not is_empty(resource[key]):
                             res[key] = np.append(res[key], 1)
                         else:
@@ -88,22 +84,21 @@ class CompletenessAnalyser:
                     #print "res:",key," = ", res[key]
                     cnt['r'] += 1.0
                     cnt['rne'] += res[key].mean()
-
-                #print "res:",cnt['rne'],"/",cnt['r'], " = ",cnt['rne']/cnt['r']
                 if cnt['r'] != 0.0:
                     rescomp = cnt['rne']/ cnt['r']
-            self.compl['res'] = np.append(self.compl['res'], rescomp )
+        qa['res'] = rescomp
 
         #total
         cnt['t']= cnt['c']+cnt['e']+cnt['r']
         cnt['tne']= cnt['cne']+cnt['ene']+cnt['rne']
-        if cnt['t'] != 0.0:
-            self.compl['total'] = np.append(self.compl['total'], cnt['tne']/ cnt['t'] )
-        else:
-            self.compl['total'] = np.append(self.compl['total'], 0 )
+        qa['total'] = cnt['tne']/ cnt['t'] if cnt['t'] != 0.0 else 0 
+        
+        for key in qa.keys():
+            self.compl[key] = np.append(self.compl[key], qa[key] )
+        dataset.updateQA({'qa':{CompletenessAnalyser.id:qa}})
 
     def update(self, PMD):
-        stats={'qa_stats':{'Qc': self.quality}}
+        stats={'qa_stats':{CompletenessAnalyser.id: self.quality}}
         PMD.updateStats(stats)
 
     def computeSummary(self):

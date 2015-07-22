@@ -323,6 +323,8 @@ DS = 'ds'
 
 
 class OPQuastAnalyser:
+    
+    id='opquast'
     def __init__(self):
     #no of datasets as reported by the API
         self.package_count = 0
@@ -348,15 +350,11 @@ class OPQuastAnalyser:
 
 
     def update(self, PMD):
-        stats={'qa_stats':{'opquast': self.quality}}
+        stats={'qa_stats':{OPQuastAnalyser.id: self.quality}}
         PMD.updateStats(stats)
 
     def visit(self, dataset):
         #update package count
-
-
-
-
         self.package_count += 1
 
         data = dataset.data
@@ -366,10 +364,13 @@ class OPQuastAnalyser:
 
         # count only opened packages
         self.size[DS] += 1
-
+        quality={}
         for q in opquast:
-            self.stats[q].append(opquast[q](data))
-
+            quality[q]=opquast[q](data)
+            self.stats[q].append(quality[q])
+            
+        
+        dataset.updateQA({'qa':{OPQuastAnalyser.id:quality}})
 
     def computeSummary(self):
         for q in opquast:

@@ -4,6 +4,8 @@ DS = 'ds'
 RES = 'res'
 
 class RetrievabilityAnalyser:
+    
+    id='Qr'
 
     def __init__(self, dbm, portal_id, snapshot):
           #retrieval stats
@@ -20,9 +22,7 @@ class RetrievabilityAnalyser:
 
     def visit(self, dataset):
         #update the fetch statistics
-        self.updateFetchStats(self.fetch_stats[DS], str(dataset['respCode']))
-
-
+        self.updateFetchStats(self.fetch_stats[DS], dataset.status)
 
     def update(self, PMD):
         PMD.__dict__['fetch_stats'] = self.fetch_stats

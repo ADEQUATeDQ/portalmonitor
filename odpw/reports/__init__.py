@@ -1,6 +1,5 @@
 from odpw.db.models import Portal
-from odpw.quality.analysers import AnalyseEngine, PortalStatusAnalyser,\
-    PortalMetaDataStatusAnalyser
+from odpw.quality.analysers import AnalyseEngine, PortalStatusAnalyser
 
 from isoweek import Week
 import matplotlib.pyplot as plt
@@ -45,19 +44,6 @@ def tofirstdayinisoweek(year, week):
     return ret
 
 
-class PortalMetaDataStatusReporter(PortalMetaDataStatusAnalyser, VegaDataCreator):
-
-    def getVegaData(self):
-        data=[]
-        for snapshot, statusDist in self.getDist().items():
-            for status , val in statusDist.items():
-                if status!='total':
-                    year = snapshot.split("-")[0]
-                    week=  snapshot.split("-")[1]
-                    date =str(tofirstdayinisoweek(int(year), int(week)))
-                    
-                    data.append({'idx':date, "col":val['label'],"col1":status, 'val': val['count']})
-        return data
         
 class PortalStatusReporter(PortalStatusAnalyser, PlotCreator, TableCreator):
     

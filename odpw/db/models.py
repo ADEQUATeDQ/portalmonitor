@@ -120,9 +120,15 @@ class Dataset(object):
             if isinstance(result[i], unicode ):
                 result[i] = json.loads(result[i])
 
-        return cls(portal=portal,
+        return cls(dataset=dataset,portal=portal,
                    snapshot=snapshot,**result)      
     
+    def updateQA(self, stats):
+        self.qa_time=datetime.now().isoformat()
+        if not self.qa:
+            self.qa={}
+        for key in stats['qa'].keys():
+            self.qa[key]=stats['qa'][key]
 
 class PortalMetaData(object):
 

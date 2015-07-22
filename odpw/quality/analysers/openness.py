@@ -18,10 +18,14 @@ OPEN_FORMATS = ['csv', 'html', 'latex', 'dvi',
                 'ods', 'ttf', 'otf'
                               'svg', 'gif', 'png']
 
+MACHINE_FORMATS=[]
+
 # what about
 #svg geotiff otf xls
 
 class OpennessAnalyser:
+    
+    id='Qo'
     def __init__(self):
         # license rating
         self.license_rating = licenses_openness_rating.LicensesOpennessRating()
@@ -46,10 +50,26 @@ class OpennessAnalyser:
         # if no dict, return (e.g. access denied)
         if not isinstance(data, dict):
             return
+        
+        quality = {'format':0, 'license':0, 'total':0}
 
-        self._format_openess(data)
-        self._license_openess(data)
+        open = self._format_openess(data)
+        self.openformats = np.append(self.openformats, open)
+        self.opentotal = np.append(self.opentotal, open)
+        
+        quality['format']=open
+        quality['total']+=open
+        
+        open = self._license_openess(data)
+        self.openlicenses = np.append(self.openlicenses,open)
+        self.opentotal = np.append(self.opentotal, open)
+        quality['license']=open
+        quality['total']+=open
+        
+        
+        quality['total']=quality['total']/2
 
+        dataset.updateQA({'qa':{OpennessAnalyser.id:quality}})
 
     def update(self, PMD):
         stats={'qa_stats':{'Qo': self.quality}}
@@ -75,8 +95,8 @@ class OpennessAnalyser:
                     #else:
                     #   print format
 
-        self.openformats = np.append(self.openformats, 1 if open else 0)
-        self.opentotal = np.append(self.opentotal, 1 if open else 0)
+        return 1 if open else 0
+        
 
     def _license_openess(self, data):
         license_title = data.get('license', str(None))
@@ -85,9 +105,8 @@ class OpennessAnalyser:
 
         open = self.license_rating.is_open_license(license_title, license_id, license_url)
 
-        self.openlicenses = np.append(self.openlicenses, 1 if open else 0)
-        self.opentotal = np.append(self.opentotal, 1 if open else 0)
-
+        return 1 if open else 0
+        
 
 ## NOT WORKING!!!!!!!
 def _is_open_license(title, lid, url):

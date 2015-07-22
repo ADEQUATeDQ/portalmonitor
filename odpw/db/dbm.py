@@ -17,10 +17,7 @@ log = get_logger()
 import sys
 import datetime
 from odpw.timer import Timer
-from odpw.db.models import Portal
-from odpw.db.models import PortalMetaData
-from odpw.db.models import Resource
-from odpw.db.models import Dataset
+from odpw.db.models import Portal,PortalMetaData,Resource,Dataset
 
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, VARCHAR, Boolean, SmallInteger,TIMESTAMP,BigInteger
@@ -449,9 +446,6 @@ class PostgressDBM:
                                                    self.datasets.c.dataset == Dataset.dataset
                                                    )).\
                 values(
-                       dataset=Dataset.dataset, 
-                       portal=Dataset.portal,
-                       snapshot=Dataset.snapshot,
                        data=data,
                        status=Dataset.status,
                        exception=Dataset.exception,
@@ -460,12 +454,11 @@ class PostgressDBM:
                        fetch_time=Dataset.fetch_time,
                        qa=qa,
                        qa_time=Dataset.qa_time)
-                                                
-                                               
             self.log.debug(query=up.compile(), params=up.compile().params)
             up.execute()
+                
             #self.conn.execute(up)
-        self.log.info("insertDatasetFetch INTO datasets", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
+        self.log.info("updateDataset", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
 
 
     def insertResource(self, Resource):
@@ -630,6 +623,17 @@ class PostgressDBM:
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
              
+             
+             
+    #####################
+    #
+    ########
+    
+    def getSoftwareDist(self):
+        with Timer(key="getSoftwareDist") as t:
+            s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
 def name():
     return 'DB'
 
@@ -660,11 +664,21 @@ if __name__ == '__main__':
     p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
     
     
-    for r in p.getResourceWithoutHead(snapshot="2015-30", status=None):
-        print r
-    print "end loop"
-        
-    exit
+    
+    d=p.getDataset(datasetID="all_organizations", snapshot="2014-51", portal="data.wu.ac.at")
+    print d
+    print d.dataset
+    
+    d.updateQA({'qa':{'test':10}})
+    p.updateDataset(d)
+    
+    #===========================================================================
+    # for r in p.getResourceWithoutHead(snapshot="2015-30", status=None):
+    #     print r
+    # print "end loop"
+    #     
+    # exit
+    #===========================================================================
     #===========================================================================
     # c=0
     # for res in p.getResources(snapshot='2015-28'):
@@ -689,11 +703,13 @@ if __name__ == '__main__':
     #===========================================================================
         
     
-    r = Resource.newInstance(url="http://data.wu.ac.at/dataset/169e2d7c-41f6-493b-b229-88fac2a0321a/resource/5150029d-d4c9-472f-8d8a-4e28f456ae41/download/allcoursesandevents01s.csv", snapshot='2015-29')
-    res = p.getResource(r)
-    print r.url
-    
-    print res
+    #===========================================================================
+    # r = Resource.newInstance(url="http://data.wu.ac.at/dataset/169e2d7c-41f6-493b-b229-88fac2a0321a/resource/5150029d-d4c9-472f-8d8a-4e28f456ae41/download/allcoursesandevents01s.csv", snapshot='2015-29')
+    # res = p.getResource(r)
+    # print r.url
+    # 
+    # print res
+    #===========================================================================
     
     
     #print p.getPortal(url='http://www.test.com/')

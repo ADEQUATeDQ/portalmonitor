@@ -178,8 +178,8 @@ class AnalyseEngine(object):
     def done(self):
         for c in self.analysers.itervalues():
             c.done()
-        self.end=time.time()
-        print 'AnalyseEngine elapsed time: %s (%f ms)' % (timer(self.end-self.start),(self.end-self.start)*1000)
+        #self.end=time.time()
+        #print 'AnalyseEngine elapsed time: %s (%f ms)' % (timer(self.end-self.start),(self.end-self.start)*1000)
     
     def process_all(self, iterable):
         self.start= time.time()
