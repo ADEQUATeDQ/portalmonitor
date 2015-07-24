@@ -1,49 +1,9 @@
-@import 'chosen.css';
-@import 'reset.css';
-body {
-  width: 100%;
-  *zoom: 1;
-}
-body:before,
-body:after {
-  content: "";
-  display: table;
-}
-body:after {
-  clear: both;
-}
-* {
-  margin: 0;
-  padding: 0;
-}
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   font-family: 'Muli', sans-serif;
   font-family: 'Open Sans', sans-serif;
   font-family: 'Sorts Mill Goudy', serif;
   font-family: 'Raleway', sans-serif;
-  width: 100%;
-  margin: auto;
-  height: 100%;
-}
-html,
-body {
-  height: 100%;
-}
-a {
-  color: #00b7ff;
-}
-h3 {
-  font-family: 'Julius Sans One', sans-serif;
-  font-family: 'Muli', sans-serif;
-  font-family: 'Open Sans Condensed', sans-serif;
-  font-family: 'Sorts Mill Goudy', serif;
-  color: #646464;
-}
-.border {
-  border: 1px solid #dedede;
-  border-radius: 4px;
-  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.055);
 }
 header h1 {
   height: 110px;
@@ -135,7 +95,7 @@ aside {
   float: left;
   width: 100px;
   background: #dcdcdc;
-    position: fixed;
+    
 }
 nav.side ul {
   margin: 40px 0px 0px 0px;
@@ -185,9 +145,6 @@ nav.side ul li a {
   margin-top: 20px;
   margin-right: 20px;
   margin-left: 103px;
-/*  float: left;*/
-/*  width: 90%;*/
-/*  display: block;*/
   border-radius: 3px;
   background: #fff;
   box-shadow: 0 0 5px rgba(0,0,0,0.75);
@@ -199,7 +156,7 @@ nav.side ul li a {
   line-height: 20px;
   font-family: 'Julius Sans One', sans-serif;
   font-family: 'Raleway', sans-serif;
-    font-variant: small-caps;
+  font-variant: small-caps;
   border-bottom: 1px solid rgba(30,30,30,0.9);
 }
 
@@ -348,6 +305,15 @@ height: 160px;
 #portalList li:hover {
   background: #bebebe;
 }
+
+.data_table{
+	padding: 5px;
+}
+.data_table table{
+    margin: 5px;
+}
+
+
 
 @media only screen and (max-width: 767px) {
     .mobile-hide{

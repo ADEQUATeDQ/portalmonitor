@@ -112,6 +112,10 @@ class Dataset(object):
     
     @classmethod
     def fromResult(cls, result):
+        if isinstance(result, RowProxy):
+            result = dict(result)
+        
+        
         snapshot=result['snapshot']
         portal=result['portal']
         dataset=result['dataset']

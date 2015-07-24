@@ -55,6 +55,7 @@ def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
                         package_list.remove(datasetID)
                     if datasetJSON['id'] in package_list:
                         package_list.remove(datasetJSON['id'])
+                        
                     d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=datasetID, **props)
                     dbm.insertDatasetFetch(d)
         
@@ -122,8 +123,6 @@ def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
 
         if status == requests.codes.ok:
             data = entityJSON
-            
-            
             
             d = json.dumps(data, sort_keys=True, ensure_ascii=True)
             data_md5 = hashlib.md5(d).hexdigest()
@@ -213,16 +212,14 @@ def fetching(obj):
     pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
     if not pmd:
         pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
+        pmd.fetchstart()
         dbm.insertPortalMetaData(pmd)
     else:
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
-    
     try:
         if fullfetch:
             #fetch the dataset descriptions
-            
-            
                 package_list, status = util.getPackageList(stats['portal'].apiurl)
                 stats['status']=status
                 Portal.status=status

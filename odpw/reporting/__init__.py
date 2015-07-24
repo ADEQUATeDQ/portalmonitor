@@ -29,6 +29,7 @@ class Reporter:
 class VegaDataCreator:
     def getVegaData(self):
         pass
+    
 class PlotCreator:
     def plot(self):
         pass

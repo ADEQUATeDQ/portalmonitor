@@ -4,13 +4,16 @@
         <nav id="main_menu" class="navbar fullwidth tab">
             <ul>
                 <li>
-                    <a href="/" {% if index%} class="cur" {% endif %}>Overview</a>
+                    <a href="/" {% if index%} class="cur" {% endif %}>
+                        <i class="fa fa-laptop fa-fw"></i>
+                        System
+                    </a>
                 </li>
                 <li>
-                    <a href="/portal_details" {% if portals%} class="cur" {% endif %}>Portal Stats</a>
+                    <a href="/portal_details" {% if portals%} class="cur" {% endif %}>Portal(s) Stats</a>
                 </li>
                 <li>
-                    <a href="#">Data</a>
+                    <a href="#" {% if data%} class="cur" {% endif %}>Data</a>
                 </li>
                 <li>
                     <a href="#">Metrics</a>

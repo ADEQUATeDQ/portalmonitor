@@ -24,35 +24,92 @@
 
                 <div class="unit-20 card">
                     <div class="header"><h3>Portals in system</h3></div>
-                    
                     <div class="cnt">
-                        <div id="donut"></div>
+                        <div class="chart">
+                        
+                        </div>
+                        <div class="data_table">
+                            <table id="softdist" >
+                                <thead>
+                                    <tr><td>Software</td><td>#portals</td></tr>
+                                </thead>
+                                <tbody>
+                                    {% for val in data.softdist %}
+                                    <tr>
+                                        <td>{{val.software}}</td>
+                                        <td>{{val.count}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="footer">footer</div>
+                    <div class="footer">
+                        <button class="btn btn-smaller btn-outline btn_show_chart"><i class="fa fa-pie-chart" ></i></button>
+                        <button class="btn btn-smaller btn-outline btn_show_data"><i class="fa fa-table" ></i></button>
+                    </div>
                 </div>
                 
                 <div class="unit-50 card">
                     <div class="header"><h3>Portal map</h3></div>
                     
                     <div class="cnt">
-                        <div id="map"></div>
+                        <div class="chart">
+                        
+                        </div>
+                        <div class="data_table">
+                         <table id="countrydist">
+                                <thead>
+                                    <tr><td>Country</td><td>tld</td><td>#portals</td><td>%</td></tr>
+                                </thead>
+                                <tbody>
+                                    {% for val in data.countrydist %}
+                                    <tr>
+                                        <td>{{val.country}}</td>
+                                        <td>{{val.tld}}</td>
+                                        <td>{{val.count}}</td>
+                                        <td>{{ '{0:0.2f}'.format(val.perc)}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            </div>
                     </div>
-                    <div class="footer">footer</div>
-                </div>
-                
-                <div class="unit-20 card">
-                    <div class="header"><h3>Portal by country code</h3></div>
-                    
-                    <div class="cnt">
-                        <div id="topCountries"></div>
+                    <div class="footer">
+                        <button class="btn btn-smaller btn-outline btn_show_chart"><i class="fa fa-pie-chart" ></i></button>
+                        <button class="btn btn-smaller btn-outline btn_show_data"><i class="fa fa-table" ></i></button>
                     </div>
-                    <div class="footer">footer</div>
                 </div>
-                
             </div>
             <div class="units-row panel">
                 <div class="unit-100 card">
-                <div id="vis"></div>
+                    <div class="header"><h3>System evolution</h3></div>
+                    <div class="chart">
+                        
+                        </div>
+                        <div class="data_table">
+                    
+                        <table id="snapshotsstatus">
+                                <thead>
+                                    <tr><td>Snapshot</td><td>Status</td><td>#portals</td></tr>
+                                </thead>
+                                <tbody>
+                                    {% for val in data.pmdStatus %}
+                                    <tr>
+                                        <td>{{val.snapshot}}</td>
+                                        <td>{{val.status}}</td>
+                                        <td>{{val.count}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                
+                    </div>
+                    
+                    <div class="footer">
+                        <button class="btn btn-smaller btn-outline btn_show_chart"><i class="fa fa-pie-chart" ></i></button>
+                        <button class="btn btn-smaller btn-outline btn_show_data"><i class="fa fa-table" ></i></button>
+                    </div>
                 </div>
             </div>           
     </section>
@@ -61,116 +118,52 @@
 {% block pageScripts %}
  <script>
  
-  function parse(spec, panel ) {
-	  vg.parse.spec(spec, function(chart) { chart({el:panel}).update(); });
-	}
-	parse("{{ static_url('data/software_pie.json') }}", "#vis");
-    
-
-
+ $('#countrydist').DataTable({
+     "scrollY":        "200px",
+     "scrollCollapse": true,
+     "paging":         false
+ } );
  
- function test_func(data) {
-     console.log(data);
- }
- //test_func({{ data|safe }})
- 
-    function dict2keyvalue(sn){
-            var data = []
-            for( var k in sn)
-                data.push({key:k,value:sn[k]})
-            return data;
-        }
-        
-//      var data = dict2keyvalue(!{JSON.stringify(view.data.insystem.software)})
-        //data=[  {key:'CKAN', value:90},
-        //        {key:'KAN', value:90}]
-                
-        portalSoftware({{ data|safe }}.softwaredist,"#donut")
+ var table = $('#snapshotsstatus').DataTable({
+     "columnDefs": [
+         { "visible": false, "targets": 0 }
+     ],
+     "order": [[ 0, 'asc' ]],
+     "displayLength": 25,
+     "drawCallback": function ( settings ) {
+         var api = this.api();
+         var rows = api.rows( {page:'current'} ).nodes();
+         var last=null;
 
-//      var countries=!{JSON.stringify(view.data.active.country)}
-        mapPlot({{ data|safe }}.countrydist,"#map")
-    
-        function sortDict(data){
-            var tuples = [];
-            for (var key in data) tuples.push([key, data[key]]);
+         api.column(0, {page:'current'} ).data().each( function ( group, i ) {
+             if ( last !== group ) {
+                 $(rows).eq( i ).before(
+                     '<tr class="group"><td colspan="2">'+group+'</td></tr>'
+                 );
 
-            tuples.sort(function(a, b) {
-                a = a[1];
-                b = b[1];
-                return b-a;
-            });
-            return tuples
-        }
-        
-        console.log({{ data|safe }}.tlddist)
-        var s=sortDict({{ data|safe }}.tlddist)
-        
-        display(s,5)
-        function display(data,topk){
-        	console.log(data)
-            ul = d3.select("#topCountries").append("ul")
-            for (var i=0; i <topk;i++){
-            	console.log(data[i])
-            	li = ul.append('li')
-                li.append("span").text('.'+data[i][0])
-                li.append("span").text(data[i][1]) 
-            }
-        }
-        
-
-            
-        progressRing(0.33, '#dsContact')        
-        progressRing(0.33, '#dsOpen')
-        progressRing(0.83, '#resUnique')
-        
-        function progressRing(value, el){
-            var     width = 130,
-                height = 170,
-                twoPi = 2 * Math.PI; 
-            formatPercent = d3.format(".0%");
-            
-            var arc = d3.svg.arc()
-                .innerRadius(40)
-                .outerRadius(50)
-                .startAngle(0);
+                 last = group;
+             }
+         } );
+     }
+ } );
  
-            var svg = d3.select(el).append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
-
-            var meter = svg.append("g")
-                .attr("class", "season-progress");
  
-            var background = meter.append("path")
-                .datum({endAngle: twoPi})
-                .style("fill", "#ddd")
-                .attr("d", arc);
- 
-            var foreground = meter.append("path")
-                .datum({endAngle:0})
-                .style("fill", "orange")
-                .attr("class", "foreground")
-                .attr("d", arc);
- 
-            foreground.transition()
-                .duration(1000)
-                .ease("linear")
-                .attrTween("d", function(d) {
-                           var interpolate = d3.interpolate(d.endAngle, twoPi * value)
-                           return function(t) {
-                              d.endAngle = interpolate(t);
-                              return arc(d);
-                           }  
-                        });
-
-              var text =  meter.append("text")
-                .attr("text-anchor", "middle")
-                .attr("dy", ".35em")
-                .attr("font-size", "24")
-                .text(formatPercent(value));
-            
-        }
-    </script>
+ $('.btn_show_chart').click(function() {
+	 var $this = $(this)
+     var parent= $this.parent()
+     parent.siblings().find(".chart").show()
+     parent.siblings().find(".data_table").hide()
+     console.log($this.siblings(".btn_show_data"))
+     $this.siblings(".btn_show_data").show()
+     $this.hide()
+    });
+ $('.btn_show_data').click(function() {
+     var $this = $(this)
+     var parent= $this.parent()
+     parent.siblings().find(".chart").hide()
+     parent.siblings().find(".data_table").show()
+     $this.siblings(".btn_show_chart").show()
+     $this.hide()
+    });
+ </script>
 {% endblock %}

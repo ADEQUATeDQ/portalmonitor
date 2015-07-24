@@ -11,6 +11,8 @@ from collections import defaultdict
 from urlparse import urlparse 
 import json
 from odpw.db.dbm import nested_json, date_handler
+from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol
+
 
 class BaseHandler(RequestHandler):
     @property
@@ -48,11 +50,24 @@ class NoDestinationHandler(RequestHandler):
         raise HTTPError(503)
 
 class PortalHandler(BaseHandler):
-    def get(self):
-        portals=[]
-        for pRes in self.db.getPortals():
-            portals.append(dict(pRes))
-        self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
+    def get(self, **params):
+        print params
+        if not bool(params):
+            self.render('portal_detail_empty.jinja',portals=True)
+        elif params['portal']:
+            if len(params['portal'].split(",")) ==1:
+                pid=params['portal']
+                print 'get '
+                #r = PortalOverviewReporter(self.db, portalID=pid)
+                
+                
+                self.render('portal_detail.jinja',portals=True)
+            else:
+                self.render('portals_detail.jinja',portals=True)
+            
+                
+        
+        
 class PortalList(BaseHandler):
     def get(self):
         
@@ -65,36 +80,24 @@ class PortalList(BaseHandler):
 class IndexHandler(BaseHandler):
     def get(self):
         
-        software=defaultdict(int)
-        countryDist=defaultdict(int)
-        tldDist=defaultdict(int)
+        d = DBAnalyser(self.db.getSoftwareDist)
+        d.analyse()
+        softdist=DFtoListDict(d.getDataFrame())
         
-        res=0
-        ds=0
+        print softdist
         
-        for pRes in self.db.getPortals():
-            p = Portal.fromResult(dict(pRes))
+        d = DBAnalyser(self.db.getCountryDist)
+        d.analyse()
+        countrydist=DFtoListDict(addPercentageCol(d.getDataFrame()))
         
         
-            if p.datasets !=-1:
-                ds+=p.datasets
-            if p.resources != -1:
-                res+=p.resources
-
-            url_elements = urlparse(p.url).netloc.split(".")
-            tld = ".".join(url_elements[-1:])
-            tldDist[tld]+=1
-            countryDist[p.country]+=1
-            software[p.__dict__['software']]+=1
+        d = DBAnalyser(self.db.getPMDStatusDist)
+        d.analyse()
+        pmdStatus=DFtoListDict((d.getDataFrame()))
         
-        data={
-              'tlddist':dict(tldDist),
-              'softwaredist':[{'key':k,'value':v} for k, v in software.iteritems()],
-              'countrydist':dict(countryDist),
-              'resources':res,
-              'datasets':ds
-              }
-        self.render('index.html',index=True, data=json.dumps(data))
+        data={'softdist':softdist,'countrydist':countrydist,'pmdStatus':pmdStatus}
+            
+        self.render('index.html',index=True, data=data)
         
         
 class DataHandler(RequestHandler):

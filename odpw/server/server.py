@@ -28,7 +28,8 @@ class Application(tornado.web.Application):
         handlers = [
             (r'/', IndexHandler),
             (r'/list/portals', PortalList),
-            (r'/portal/', PortalHandler),
+            (r'/portal_details/?', PortalHandler),
+            (r'/portal_details/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
             (r'/static/(.*)', StaticFileHandler),
             (r'/data/(.*)/(.*)', DataHandler),
             (r'/.*$', NoDestinationHandler)

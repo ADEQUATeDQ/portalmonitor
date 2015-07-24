@@ -1,6 +1,9 @@
 from __future__ import generators
 
 from _collections import defaultdict
+import pandas
+from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
+    dftopk
 
 
 
@@ -639,6 +642,20 @@ class PostgressDBM:
             s=  select([self.portals.c.status, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.status)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
+        
+    def getCountryDist(self):
+        with Timer(key="getCountryDist") as t:
+            s= select([ self.portals.c.country, func.count(self.portals.c.id).label('count'),func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ).label('tld')]).\
+            group_by(self.portals.c.country, func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ))
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
+        
+    def getPMDStatusDist(self):
+        with Timer(key="getPMDStatusDist") as t:
+            s = select([ self.pmd.c.snapshot, self.pmd.c.fetch_stats['portal_status'].label('status'),func.count(self.pmd.c.portal).label('count')]).group_by(self.pmd.c.snapshot,self.pmd.c.fetch_stats['portal_status'])
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
+            
     
 def name():
     return 'DB'
@@ -669,14 +686,25 @@ if __name__ == '__main__':
     logging.basicConfig()
     p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
     
+    d = DBAnalyser(p.getPMDStatusDist)
+    d.analyse()
+    
+    df= d.getDataFrame()
+    print df
+    
+    print dftopk(df, column="count", k=3)
+    
+    print dftopk(df, column="count", k=3, otherrow=True)
     
     
-    d=p.getDataset(datasetID="all_organizations", snapshot="2014-51", portal="data.wu.ac.at")
-    print d
-    print d.dataset
+    print dftopk(df, column="count", k=3, otherrow=True, percentage=True)
+    print DFtoListDict(dftopk(df, column="count", k=3, otherrow=True, percentage=True))
     
-    d.updateQA({'qa':{'test':10}})
-    p.updateDataset(d)
+    #print top10pp.append(top10pp.sum(numeric_only=True), ignore_index=True)
+    #print DFtoListDict(df)
+    #print res.keys()
+    
+    
     
     #===========================================================================
     # for r in p.getResourceWithoutHead(snapshot="2015-30", status=None):
