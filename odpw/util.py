@@ -1,3 +1,6 @@
+import json
+from ast import literal_eval
+
 __author__ = 'jumbrich'
 
 import ckanapi
@@ -37,11 +40,37 @@ class ErrorHandler():
         print "\n -------------------------"
 
 
+def getPackage(api, apiurl, id):
+    ex =None
+    package = None
+    try:
+        package = api.action.package_show(id=id)
+    except Exception as e:
+        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True)
+        ex = e
+
+    ex1=None
+    try:
+        url = urlparse.urljoin(apiurl, "/api/2/rest/dataset/" + id)
+        resp = requests.get(url)
+        if resp.status_code == requests.codes.ok:
+            package = resp.json()
+
+    except Exception as e:
+        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)
+        ex1=e
+
+    if ex and ex1:
+        raise ex1
+    else:
+        return package
+
+
 def getPackageList(apiurl):
     """ Try api 3 and api 2 to get the full package list"""
     ex =None
     
-    status=0
+    status=200
     package_list=set([])
     try:
         api = ckanapi.RemoteCKAN(apiurl, get_only=True)
@@ -76,14 +105,14 @@ def getPackageList(apiurl):
     except Exception as e:
         ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)
         ex1=e
+    
+    if len(package_list) == 0:
+        if ex1:
+            raise ex1
+        if ex:
+            raise ex
+    return package_list, status
 
-    
-    if ex and ex1:
-        raise ex1
-    else:
-        return package_list, 200
-         
-    
 
 def extras_to_dicts(datasets):
     for dataset in datasets:
@@ -92,12 +121,14 @@ def extras_to_dicts(datasets):
 
 def extras_to_dict(dataset):
     extras_dict = {}
-    for extra in dataset.get("extras", []):
-        key = extra["key"]
-        value = extra["value"]
-        assert key not in extras_dict
-        extras_dict[key] = value
-    dataset["extras"] = extras_dict
+    extras = dataset.get("extras", [])
+    if isinstance(extras, list):
+        for extra in extras:
+            key = extra["key"]
+            value = extra["value"]
+            assert key not in extras_dict
+            extras_dict[key] = value
+        dataset["extras"] = extras_dict
 
 def computeID(url):
     try:
@@ -434,7 +465,11 @@ def getExceptionCode(e):
         if isinstance(e,requests.exceptions.Timeout):
             return 707
         if isinstance(e,ckanapi.errors.CKANAPIError):
-            return 708
+            try:
+                err = literal_eval(e.extra_msg)
+                return err[1]
+            except Exception:
+                return 708
         
         #if isinstance(e,requests.exceptions.RetryError):
         #    return 708
@@ -456,6 +491,19 @@ def getExceptionCode(e):
         log.error("Get Exception code", exctype=type(e), excmsg=e.message,exc_info=True)
         return 601
 
+def getExceptionString(e):
+    try:
+        if isinstance(e,ckanapi.errors.CKANAPIError):
+            try:
+                err = literal_eval(e.extra_msg)
+                return str(type(e))+":"+str(err[2])
+            except Exception:
+                return str(type(e))+":"+str(e.extra_msg)
+        else:
+            return str(type(e))+":"+str(e.message)
+    except Exception as e:
+        log.error("Get Exception string", exctype=type(e), excmsg=e.message,exc_info=True)
+        return 601
 
 
 def getSnapshot(args):

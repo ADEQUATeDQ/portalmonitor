@@ -47,32 +47,35 @@ class CKAN(PortalProcessor):
         rows=1000000
 
         processed=set([])
+        try:
+            while True:
+                response = api.action.package_search(rows=10, start=0)
+                #print Portal.apiurl, start, rows, len(processed)
+                datasets = response["results"] if response else None
+                if datasets:
+                    rows = len(datasets) if start==0 else rows
+                    start+=rows
+                    for datasetJSON in datasets:
+                        datasetID = datasetJSON['name']
 
-        while True:
-            response = api.action.package_search(rows=rows, start=start)
-            #print Portal.apiurl, start, rows, len(processed)
-            datasets = response["results"] if response else None
-            if datasets:
-                rows = len(datasets) if start==0 else rows
-                start+=rows
-                for datasetJSON in datasets:
-                    datasetID = datasetJSON['name']
+                        if datasetID not in processed:
+                            data = datasetJSON
 
-                    if datasetID not in processed:
-                        data = datasetJSON
+                            d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
+                            d.status=200
 
-                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
-                        d.status=200
+                            processed.add(datasetID)
 
-                        processed.add(datasetID)
+                            if len(processed) % 1000 == 0:
+                                log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
 
-                        if len(processed) % 1000 == 0:
-                            log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                            yield d
 
-                        yield d
+                else:
+                    break
+        except Exception as e:
+            pass
 
-            else:
-                break
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
             total=len(package_list)
@@ -91,7 +94,7 @@ class CKAN(PortalProcessor):
                                'exception':None
                                }
                         try:
-                            resp = api.action.package_show(id=entity)
+                            resp = util.getPackage(api=api, apiurl=Portal.apiurl, id=entity)
                             data = resp
                             util.extras_to_dict(data)
                             props['data']=data
@@ -100,7 +103,7 @@ class CKAN(PortalProcessor):
                             eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)
                             props['status']=util.getExceptionCode(e)
-                            props['exception']=str(type(e))+":"+str(e.message)
+                            props['exception']=util.getExceptionString(e)
 
                         d = Dataset(snapshot=sn,portal=Portal.id, dataset=entity, **props)
                         processed.add(d.dataset)
