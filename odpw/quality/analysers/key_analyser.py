@@ -311,7 +311,7 @@ class KeyAnalyser:
 
 
 
-    def computeTypes(self, dict):
+    def __computeTypes(self, dict):
         types = {}
         for key in dict:
             type = str(interpret_meta_field.get_type(key))
@@ -342,7 +342,7 @@ class KeyAnalyser:
         else:
             return 0
 
-    def calc_availability(self, field_entry, count):
+    def __calc_availability(self, field_entry, count):
         if count > 0:
             return float(field_entry['count'] + field_entry['mis']) / float(count)
         else:
@@ -368,13 +368,13 @@ class KeyAnalyser:
             }
 
 
-            types = self.computeTypes(counts[field])
+            types = self.__computeTypes(counts[field])
             stats[field]['types'] = types
 
             # completeness
             stats[field]['compl'] = self.calc_completeness(stats[field])
             # availability
-            stats[field]['usage'] = self.calc_availability(stats[field], self.size[DS])
+            stats[field]['usage'] = self.__calc_availability(stats[field], self.size[DS])
 
     def aggregateResKeys(self, counts, stats):
         # core fields
@@ -392,11 +392,11 @@ class KeyAnalyser:
             # completeness
             stats[field]['compl'] = self.calc_completeness(stats[field])
             # availability
-            stats[field]['usage'] = self.calc_availability(stats[field], self.size[DS])
+            stats[field]['usage'] = self.__calc_availability(stats[field], self.size[DS])
 
         for field in counts:
             distinct = np.unique(counts[field])
-            types = self.computeTypes(counts[field])
+            types = self.__computeTypes(counts[field])
 
             stats[field]['res'] = {
                 'count': len( np.where( counts[field] != 'NA')[0] ),
@@ -407,4 +407,4 @@ class KeyAnalyser:
             # completeness
             stats[field]['res']['compl'] = self.calc_completeness(stats[field]['res'])
             # availability
-            stats[field]['res']['usage'] = self.calc_availability(stats[field]['res'], self.size[RES])
+            stats[field]['res']['usage'] = self.__calc_availability(stats[field]['res'], self.size[RES])

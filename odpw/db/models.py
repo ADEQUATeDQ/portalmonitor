@@ -224,7 +224,6 @@ class PortalMetaData(Model):
                     self.res_stats = {}
                 self.resources = a.getResult()['count']
                 self.res_stats['total'] = a.getResult()['count']
-                print a.getResult()
                 self.res_stats['unique'] = a.getResult()['distinct']
             #===================================================================  
             # if isinstance(a, DatasetCount):

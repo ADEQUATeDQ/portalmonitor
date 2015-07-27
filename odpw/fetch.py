@@ -21,7 +21,6 @@ import odpw.util as util
 from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
 from odpw.timer import Timer
-import math
 import argparse
 
 import logging
@@ -31,14 +30,10 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
-import requests 
 
 import random
 import time
 
-
-import json
-import hashlib
 
 def generateFetchDatasetIter(Portal, sn):
     
@@ -122,10 +117,11 @@ def fetching(obj):
     fullfetch=obj['fullfetch']
 
     dbm.engine.dispose()
+    
+    
     try:
         
         log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
-
 
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
         if not pmd:
@@ -162,11 +158,10 @@ def fetching(obj):
         main.process_all(iter)
     
         for ae in main.getAnalysers():
-            updatePMDwithAnalyserResults(pmd, ae)
-            pmd.update(ae)
+            for analyser in ae:
+                analyser.update(pmd)
+                analyser.update(Portal)
        
-        #pmd.update(ae)
-    
         dbm.updatePortalMetaData(pmd)
 
         

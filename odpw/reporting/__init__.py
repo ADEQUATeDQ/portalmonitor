@@ -1,5 +1,5 @@
 from odpw.db.models import Portal
-from odpw.analysers import AnalyseEngine, PortalStatusAnalyser
+from odpw.analysers import AnalyseEngine
 
 from isoweek import Week
 import matplotlib.pyplot as plt
@@ -47,13 +47,3 @@ def tofirstdayinisoweek(year, week):
 
 
         
-class PortalStatusReporter(PortalStatusAnalyser, PlotCreator, TableCreator):
-    
-    def plot(self):
-        df=self.getDataFrame()
-        
-        plt.pie(df['count'], labels=df.lable)
-        
-        plt.show()    
-    
-
