@@ -47,6 +47,7 @@ def getPackage(api, apiurl, id):
     package = None
     try:
         package = api.action.package_show(id=id)
+        return package
     except Exception as e:
         ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True)
         ex = e
@@ -57,6 +58,7 @@ def getPackage(api, apiurl, id):
         resp = requests.get(url)
         if resp.status_code == requests.codes.ok:
             package = resp.json()
+            return package
 
     except Exception as e:
         ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)

@@ -4,7 +4,7 @@ files = ["resources/*"]
 setup(
     name='odpw',
     version='0.1',
-    packages=['odpw', 'odpw.db','odpw.quality','odpw.quality.analysers','odpw.reporting','odpw.server','odpw.server.handler', 'odpw.utils' ],
+    packages=['odpw', 'odpw.db','odpw.analysers','odpw.analysers.quality.analysers','odpw.analysers.quality','odpw.reporting','odpw.server','odpw.server.handler', 'odpw.utils' ],
     url='',
     license='',
     author='jumbrich',

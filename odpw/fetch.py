@@ -1,12 +1,12 @@
 from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
     CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchUpdater
+    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchUpdater, DatasetFetchInserter
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
 from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
-from odpw.portal_processor import CKAN, Socrata
+from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 __author__ = 'jumbrich'
 
@@ -45,7 +45,7 @@ def fetching(obj):
     dbm.engine.dispose()
     
     try:
-        log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
+        log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
         if not pmd:
             pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
@@ -53,8 +53,9 @@ def fetching(obj):
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
-        main = AnalyseEngine()
+
         if Portal.software == 'CKAN':
+
             ae = AnalyseEngine()
 
             ae.add(MD5DatasetAnalyser())
@@ -67,43 +68,47 @@ def fetching(obj):
             ae.add(CKANKeyAnalyser())
             ae.add(CKANFormatCount())
 
-            qae = QualityAnalyseEngine()
-            qae.add(CompletenessAnalyser())
-            qae.add(ContactabilityAnalyser())
-            qae.add(OpennessAnalyser())
-            qae.add(OPQuastAnalyser())
+            ae.add(CompletenessAnalyser())
+            ae.add(ContactabilityAnalyser())
+            ae.add(OpennessAnalyser())
+            ae.add(OPQuastAnalyser())
 
-            main.add(ae)
-            main.add(qae)
+            ae.add(DatasetFetchInserter(dbm))
 
-            processor = CKAN(main)
+            processor = CKAN(ae)
         elif Portal.software == 'Socrata':
             ae = AnalyseEngine()
-            qae = QualityAnalyseEngine()
-            main.add(ae)
-            main.add(qae)
-            processor = Socrata(main)
+            ae.add(DatasetCount())
+            ae.add(MD5DatasetAnalyser())
+            ae.add(DatasetFetchInserter(dbm))
+
+            processor = Socrata(ae)
+        elif Portal.software == 'OpenDataSoft':
+            ae = AnalyseEngine()
+            ae.add(DatasetCount())
+            ae.add(MD5DatasetAnalyser())
+            ae.add(DatasetFetchInserter(dbm))
+
+            processor = OpenDataSoft(ae)
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
 
         processor.fetching(Portal, sn)
 
-        for ae in main.getAnalysers():
-            for analyser in ae:
-                analyser.update(pmd)
-                analyser.update(Portal)
+        pmd.fetchend()
+
+        ae.update(pmd)
+        ae.update(Portal)
 
         dbm.updatePortalMetaData(pmd)
 
-        Portal.datasets= ae.getAnalyser('ds').getResult()['count']
-        Portal.resources= ae.getAnalyser('res').getResult()['count']
     except Exception as exc:
+        eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn,exc_info=True)
         Portal.status=getExceptionCode(exc)
-
         Portal.exception=str(type(exc))+":"+str(exc.message)
 
     dbm.updatePortal(Portal)
-    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
+    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, datasets=Portal.datasets)
 
 
 
@@ -120,7 +125,7 @@ def checkProcesses(processes, pidFile):
             rem.append(portalID) # Removed finished items from the dictionary
             try:
                 if status ==0:
-                    log.info("FIN", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start, exitcode=process.exitcode)
+                    log.info("FIN", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start.isoformat(), exitcode=process.exitcode)
                     pidFile.write("FIN\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, portalID, apiurl))
                 else:
                     log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start, exitcode=process.exitcode)
@@ -148,6 +153,7 @@ def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
+    pa.add_argument("-o","--pidfile", type=argparse.FileType('w'), dest="outfile")
 
 def cli(args,dbm):
 

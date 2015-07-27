@@ -8,7 +8,7 @@ from odpw.db.models import Dataset
 import urllib2
 import json
 from odpw.timer import Timer
-from odpw.util import ErrorHandler as eh
+from odpw.util import ErrorHandler as eh, progressIndicator
 
 from odpw.analysers import AnalyseEngine
 
@@ -46,8 +46,17 @@ class CKAN(PortalProcessor):
         start=0
         rows=1000000
 
+        p_count=0
+        p_steps=1
+        total=0
         processed=set([])
         try:
+
+            response = api.action.package_search(rows=0)
+            total = response["count"]
+            p_steps=total/10
+            if p_steps ==0:
+                p_steps=1
             while True:
                 response = api.action.package_search(rows=rows, start=start)
                 #print Portal.apiurl, start, rows, len(processed)
@@ -69,18 +78,27 @@ class CKAN(PortalProcessor):
                             if len(processed) % 1000 == 0:
                                 log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
 
-                            break
-
+                            p_count+=1
+                            if p_count%p_steps ==0:
+                                progressIndicator(p_count, total)
                             yield d
 
                 else:
                     break
+            progressIndicator(p_count, total)
+            #if len(processed) == total:
+            #    #assuming that package_search['count']
+            #    return
         except Exception as e:
             pass
 
+
+
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
-            total=len(package_list)
+            if total >0 and len(package_list) !=total:
+                log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
+            #len(package_list)
 
             for entity in package_list:
                 #WAIT between two consecutive GET requests
@@ -112,8 +130,6 @@ class CKAN(PortalProcessor):
 
                         if len(processed) % 1000 == 0:
                             log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
-
-                        break
 
                         yield d
 

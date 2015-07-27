@@ -62,7 +62,7 @@ class Portal(Model):
                    apiurl=apiurl, **result)
 
     @classmethod
-    def newInstance(cls, url=None, apiurl=None, software='CKAN'):
+    def newInstance(cls, url, apiurl, software):
         props = {
             'datasets':-1,
             'status':-1,
@@ -71,16 +71,6 @@ class Portal(Model):
             'resources':-1,
             'changefeed':False
         }
-        try:
-            package_list, status = util.getPackageList(apiurl)
-            
-            props['status'] = status
-            props['datasets'] = len(package_list)
-            log.info('Received packages', apiurl=apiurl, status=status, count=props['datasets'])
-        except Exception as e:
-            eh.handleError(log, 'fetching dataset information', exception=e, apiurl=apiurl, exc_info=True)
-            props['status'] = util.getExceptionCode(e)
-            props['exception'] = str(type(e)) + ":" + str(e.message)
 
         # TODO detect changefeed
         p = cls(url,
