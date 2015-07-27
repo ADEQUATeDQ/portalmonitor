@@ -49,7 +49,7 @@ class CKAN(PortalProcessor):
         processed=set([])
         try:
             while True:
-                response = api.action.package_search(rows=10, start=0)
+                response = api.action.package_search(rows=rows, start=start)
                 #print Portal.apiurl, start, rows, len(processed)
                 datasets = response["results"] if response else None
                 if datasets:
@@ -68,6 +68,8 @@ class CKAN(PortalProcessor):
 
                             if len(processed) % 1000 == 0:
                                 log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+
+                            break
 
                             yield d
 
@@ -110,6 +112,8 @@ class CKAN(PortalProcessor):
 
                         if len(processed) % 1000 == 0:
                             log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+
+                        break
 
                         yield d
 
