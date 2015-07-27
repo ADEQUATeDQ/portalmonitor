@@ -1,6 +1,6 @@
 import os
 import string
-from odpw.quality.analysers import licenses_openness_rating
+from odpw.analysers.quality.analysers import licenses_openness_rating
 from odpw.analysers import Analyser
 
 __author__ = 'jumbrich'
@@ -46,7 +46,7 @@ class OpennessAnalyser(Analyser):
         #open licenses for at least one resource for a dataset
         self.openlicenses = np.array([])
 
-    def visit(self, dataset):
+    def analyse_Dataset(self, dataset):
         data = dataset.data
         # if no dict, return (e.g. access denied)
         if not isinstance(data, dict):
@@ -70,13 +70,18 @@ class OpennessAnalyser(Analyser):
         
         quality['total']=quality['total']/2
 
-        dataset.updateQA({'qa':{OpennessAnalyser.id:quality}})
+        if not dataset.qa:
+            dataset.qa={}
+        dataset.qa[OpennessAnalyser.id] = quality
+        
 
     def getResult(self):
-        return {'Qo': self.quality}
+        return {OpennessAnalyser.id: self.quality}
         
-        
-        
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[OpennessAnalyser.id] = self.quality
 
     def done(self):
 

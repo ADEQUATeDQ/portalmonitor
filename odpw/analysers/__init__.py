@@ -5,7 +5,7 @@ from odpw.timer import Timer
 from odpw.util import timer
 import types
 from abc import abstractmethod
-
+from collections import OrderedDict
 
 __author__ = 'jumbrich'
 
@@ -73,7 +73,7 @@ class Analyser(object):
 class AnalyseEngine(Analyser):
     
     def __init__(self, convert=None):
-        self.analysers = {}
+        self.analysers = OrderedDict()
         self.convert = convert
         
     def add(self, analyser):
@@ -83,7 +83,14 @@ class AnalyseEngine(Analyser):
     def analyse(self, element):
         with Timer(key="analyse") as t:
             for c in self.analysers.itervalues():
+                print type(c)
                 c.analyse(element)
+    
+    def update(self, element):
+        with Timer(key="update") as t:
+            for c in self.analysers.itervalues():
+                c.update(element)
+    
     
     def done(self):
         for c in self.analysers.itervalues():

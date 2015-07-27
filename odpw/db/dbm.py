@@ -388,6 +388,43 @@ class PostgressDBM:
             ins.execute()
         self.log.info("insertDatasetFetch INTO datasets", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
 
+    def updateDatasetFetch(self, Dataset):
+        with Timer(key="insertDatasetFetch") as t:
+            change=2
+            
+            s=select([self.datasets.c.md5]).where(
+                                                  and_(
+                                                       self.datasets.c.dataset==Dataset.dataset, 
+                                                       self.datasets.c.portal==Dataset.portal,
+                                                       self.datasets.c.snapshot!=Dataset.snapshot)
+                                                   ).order_by(self.datasets.c.snapshot.desc()).limit(1)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            result=s.execute()
+            if result:
+                for res in result:
+                    if Dataset.md5 == res['md5'] :
+                        change=0
+            else: change=1
+            
+            #data=json.dumps(nested_json(Dataset.data),default=date_handler)
+        
+            ins = self.datasets.update().values(
+                                                data=Dataset.data,
+                                                status=Dataset.status,
+                                                exception=Dataset.exception,
+                                                md5=Dataset.md5,
+                                                change=change,
+                                                fetch_time=datetime.datetime.now()
+                                               ).where(and_(self.datasets.c.dataset==Dataset.dataset, 
+                                                       self.datasets.c.portal==Dataset.portal,
+                                                       self.datasets.c.snapshot!=Dataset.snapshot
+                                                ))
+            self.log.debug(query=ins.compile(), params=ins.compile().params)
+            #self.conn.execute(ins)
+            ins.execute()
+        self.log.info("insertDatasetFetch INTO datasets", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
+
+    
     def getDatasets(self,portalID=None, snapshot=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])

@@ -213,46 +213,7 @@ class PortalMetaData(Model):
             self.fetch_stats = {'fetch_end':datetime.now().isoformat()}
         
         
-    def update(self, analyseEngine): 
-        
-        for a in analyseEngine.getAnalysers():
-            print a.name()
-            print '\t', a.getResult()
-            
-            if isinstance(a, ResourceInDS):
-                if not self.res_stats:
-                    self.res_stats = {}
-                self.resources = a.getResult()['count']
-                self.res_stats['total'] = a.getResult()['count']
-                self.res_stats['unique'] = a.getResult()['distinct']
-            #===================================================================  
-            # if isinstance(a, DatasetCount):
-            #     if not self.fetch_stats:
-            #         self.fetch_stats = {}
-            #     self.datasets = a.getResult()['count']
-            #     self.fetch_stats['datasets'] = a.getResult()['count']
-            #  
-            # if isinstance(a, DatasetStatusCount):
-            #     if not self.fetch_stats:
-            #         self.fetch_stats = {}
-            #     self.fetch_stats['respCodes'] = a.getResult()
-            #  
-            # if isinstance(a, DatasetAge):
-            #     if not self.general_stats:
-            #         self.general_stats = {}
-            #     self.general_stats['dsage'] = a.getResult()
-            #  
-            # if isinstance(a, ResourceInDSAge):
-            #     if not self.general_stats:
-            #         self.general_stats = {}
-            #     self.general_stats['resage'] = a.getResult()
-            #  
-            # if isinstance(a, FormatCount):
-            #     if not self.general_stats:
-            #         self.general_stats = {}
-            #     self.general_stats['formats'] = a.getResult()
-            #===================================================================
-     
+   
             
     def updateStats(self, stats):
         if 'fetch_stats' in stats:

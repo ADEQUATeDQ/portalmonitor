@@ -2,7 +2,7 @@ from odpw.analysers import Analyser
 __author__ = 'jumbrich'
 
 import numpy as np
-from odpw.quality.interpret_meta_field import is_empty
+from odpw.analysers.quality.interpret_meta_field import is_empty
 
 class CompletenessAnalyser(Analyser):
 
@@ -21,7 +21,7 @@ class CompletenessAnalyser(Analyser):
                        'res':np.array([])}
 
 
-    def analyse(self, dataset):
+    def analyse_Dataset(self, dataset):
         #print "____________________"
         # taking the top level metadata fields of the dataset into account
         #print dataset
@@ -96,11 +96,16 @@ class CompletenessAnalyser(Analyser):
         
         for key in qa.keys():
             self.compl[key] = np.append(self.compl[key], qa[key] )
-        dataset.updateQA({'qa':{CompletenessAnalyser.id:qa}})
+            
+        if not dataset.qa:
+            dataset.qa={}
+        dataset.qa[CompletenessAnalyser.id] = qa
+        
 
-    def update(self, PMD):
-        stats={'qa_stats':{CompletenessAnalyser.id: self.quality}}
-        PMD.updateStats(stats)
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[CompletenessAnalyser.id] = self.quality
 
     def done(self):
         print 'done'

@@ -12,10 +12,9 @@ from odpw.analysers import Analyser
 __author__ = 'jumbrich'
 
 import string
-from pprint import  pprint
-import analyze_resource_format
-from odpw.quality.interpret_meta_field import is_empty
-from odpw.quality import interpret_meta_field
+from odpw.analysers.quality.analysers import  analyze_resource_format
+from odpw.analysers.quality.interpret_meta_field import is_empty
+from odpw.analysers.quality import interpret_meta_field
 #no sure
 def m1_22_personrole(data):
     ''' The identity and role of the person responsible for each dataset is specified
@@ -354,7 +353,7 @@ class OPQuastAnalyser(Analyser):
         return {OPQuastAnalyser.id: self.quality}
         
 
-    def analyse(self, dataset):
+    def analyse_Dataset(self, dataset):
         #update package count
         self.package_count += 1
 
@@ -371,9 +370,12 @@ class OPQuastAnalyser(Analyser):
             self.stats[q].append(quality[q])
             
         
-        dataset.updateQA({'qa':{OPQuastAnalyser.id:quality}})
+        if not dataset.qa:
+            dataset.qa={}
+        dataset.qa[OPQuastAnalyser.id] = quality
+        
 
-    def computeSummary(self):
+    def done(self):
         for q in opquast:
             #print q, opquast[q]
             if len(self.stats[q]) > 0:
@@ -385,3 +387,8 @@ class OPQuastAnalyser(Analyser):
         for q in self.quality:
             c += self.quality[q]
         self.quality['total'] = c / float(len(self.quality))
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[OPQuastAnalyser.id] = self.quality

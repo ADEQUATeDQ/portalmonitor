@@ -1,18 +1,20 @@
+from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
+from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
+    ResourceInDS, ResourceInserter, DatasetStatusCount, ResourceInDSAge,\
+    DatasetAge, KeyAnalyser, FormatCount
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+__author__ = 'jumbrich'
+
+
 from datetime import datetime
 from multiprocessing.process import Process
 from time import sleep
 from odpw.head import HeadProcess
 from urlparse import urlparse
-from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
-from odpw.quality.analysers.key_analyser import KeyAnalyser
-from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
-    ResourceInDS, ResourceInserter, DatasetStatusCount, ResourceInDSAge,\
-    DatasetAge, FormatCount
-from odpw.quality.analysers.completeness import CompletenessAnalyser
-from odpw.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.quality.analysers.openness import OpennessAnalyser
-from odpw.quality.analysers.opquast import OPQuastAnalyser
-__author__ = 'jumbrich'
+
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 

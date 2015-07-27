@@ -2,8 +2,8 @@ from odpw.analysers import Analyser
 __author__ = 'jumbrich'
 
 import numpy as np
-from odpw.quality.interpret_meta_field import is_empty
-from odpw.quality import interpret_meta_field
+from odpw.analysers.quality.interpret_meta_field import is_empty
+from odpw.analysers.quality import interpret_meta_field
 
 class ContactabilityAnalyser(Analyser):
 
@@ -23,7 +23,7 @@ class ContactabilityAnalyser(Analyser):
                     }
 
 
-    def analyse(self, dataset):
+    def analyse_Dataset(self, dataset):
 
         quality= {'email': { 'total':0, 'author':0, 'maintainer':0},
                        'url': { 'total':0, 'author':0, 'maintainer':0},
@@ -74,7 +74,10 @@ class ContactabilityAnalyser(Analyser):
             for key1, value1 in value.items():
                 self.stats[key][key1] = np.append(self.stats[key][key1],quality[key][key1])
 
-        dataset.updateQA({'qa':{ContactabilityAnalyser.id:quality}})
+        if not dataset.qa:
+            dataset.qa={}
+        dataset.qa[ContactabilityAnalyser.id] = quality
+        
 
     
     def getResult(self):
@@ -93,5 +96,10 @@ class ContactabilityAnalyser(Analyser):
         self.quality['total']['total'] = self.stats['total']['total'].mean()
         self.quality['total']['author'] = self.stats['total']['author'].mean()
         self.quality['total']['maintainer'] = self.stats['total']['maintainer'].mean()
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[ContactabilityAnalyser.id] = self.quality
 
 
