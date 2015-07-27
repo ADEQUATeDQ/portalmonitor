@@ -61,8 +61,7 @@ class KeyAnalyser:
         }
 
         self.reskey= {}
-        self.dsages = {'created':[],'modified':[]}
-        self.resages = {'created':[],'modified':[]}
+        
 
     def getKeys(self):
 
@@ -183,51 +182,10 @@ class KeyAnalyser:
             else:
                 res[field] = np.append(a, 1)
 
-    def updateExtras(self, extras):
-        for f in extras:
-            field = f
-            if isinstance(extras, dict):
-                fv = extras.get(field, str(None))
-            else:
-                fv = field
-            if fv is None or fv == "":
-                fv = 'NA'
-            if isinstance(fv, dict):
-                if len(fv) == 0:
-                    fv = 'NA'
-                else:
-                    if 'key' in fv and 'value' in fv:
-                        field = fv['key']
-                        fv = fv['value']
-                    else:
-                        fv = 'dict'
-            if isinstance(fv, list):
-                if len(fv) == 0:
-                    fv = 'NA'
-                else:
-                    fv = 'list'
-            if field not in self.freq[E]:
-                self.freq[E][field] = np.array([], dtype=object)
-
-            a = self.freq[E][field]
-            self.freq[E][field] = np.append(a, fv)
+    
 
 
-    def update_dataset_timeliness(self, data):
-        if 'metadata_created' in data and data['metadata_created'] is not None:
-            try:
-                created = datetime.datetime.strptime(data['metadata_created'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                self.dsages['created'].append(created)
-            except Exception as e:
-                pass
-
-        if 'metadata_modified' in data and data['metadata_modified'] is not None:
-            try:
-                modified = datetime.datetime.strptime(data['metadata_modified'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                self.dsages['modified'].append(modified)
-            except Exception as e:
-                pass
-
+    
     def update_resource_timeliness(self, resource):
         if 'created' in resource and resource['created'] is not None:
             try:

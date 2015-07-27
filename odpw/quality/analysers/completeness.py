@@ -1,9 +1,10 @@
+from odpw.analysers import Analyser
 __author__ = 'jumbrich'
 
 import numpy as np
 from odpw.quality.interpret_meta_field import is_empty
 
-class CompletenessAnalyser:
+class CompletenessAnalyser(Analyser):
 
     id='Qc'
 
@@ -20,7 +21,7 @@ class CompletenessAnalyser:
                        'res':np.array([])}
 
 
-    def visit(self, dataset):
+    def analyse(self, dataset):
         #print "____________________"
         # taking the top level metadata fields of the dataset into account
         #print dataset
@@ -101,9 +102,12 @@ class CompletenessAnalyser:
         stats={'qa_stats':{CompletenessAnalyser.id: self.quality}}
         PMD.updateStats(stats)
 
-    def computeSummary(self):
+    def done(self):
+        print 'done'
         self.quality['total'] =  self.compl['total'].mean()
         self.quality['core'] =  self.compl['core'].mean()
         self.quality['extra'] =  self.compl['extra'].mean()
         self.quality['res'] =  self.compl['res'].mean()
-
+        
+    def getResult(self):
+        return {CompletenessAnalyser.id: self.quality}

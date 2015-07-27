@@ -1,13 +1,14 @@
-from sqlalchemy.engine.result import RowProxy
+
 __author__ = 'jumbrich'
 
-
+from sqlalchemy.engine.result import RowProxy
 
 import urlnorm
 import odpw.util as util
 from odpw.util import ErrorHandler as eh
 
 from datetime import datetime
+
 import logging
 from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
@@ -15,7 +16,26 @@ configure(logger_factory=LoggerFactory())
 log = get_logger()
 import json
 
-class Portal(object):
+from pprint import pformat
+
+class Model(object):
+    
+    def __init__(self, **kwargs):
+        self.__hash= hash(pformat(kwargs)) 
+    
+    def __eq__(self, other):
+        if isinstance(other, Model):
+            return (self.__hash == other.__hash )
+        else:
+            return False
+    
+    def __ne__(self, other):
+        return (not self.__eq__(other))
+    
+    def __hash__(self, *args, **kwargs):
+        return self.__hash
+
+class Portal(Model):
 
 
     @classmethod
@@ -30,18 +50,20 @@ class Portal(object):
         
         if isinstance(result, RowProxy):
             result = dict(result)
+        if not isinstance(result, dict):
+            return None
         
-        url=result['url']
-        apiurl=result['apiurl']
+        url = result['url']
+        apiurl = result['apiurl']
         del result['url']
         del result['apiurl']
 
         return cls(url=url,
-                   apiurl=apiurl,**result)
+                   apiurl=apiurl, **result)
 
     @classmethod
-    def newInstance(cls,url=None, apiurl=None, software='CKAN'):
-        props={
+    def newInstance(cls, url=None, apiurl=None, software='CKAN'):
+        props = {
             'datasets':-1,
             'status':-1,
             'exception':None,
@@ -50,61 +72,69 @@ class Portal(object):
             'changefeed':False
         }
         try:
-            
-            
             package_list, status = util.getPackageList(apiurl)
             
-            props['status']=status
-            props['datasets']=len(package_list)
-            log.info('Received packages', apiurl=apiurl, status=status,count=props['datasets'])
+            props['status'] = status
+            props['datasets'] = len(package_list)
+            log.info('Received packages', apiurl=apiurl, status=status, count=props['datasets'])
         except Exception as e:
-            eh.handleError(log, 'fetching dataset information', exception=e,apiurl=apiurl,exc_info=True)
-            props['status']=util.getExceptionCode(e)
-            props['exception']=str(type(e))+":"+str(e.message)
+            eh.handleError(log, 'fetching dataset information', exception=e, apiurl=apiurl, exc_info=True)
+            props['status'] = util.getExceptionCode(e)
+            props['exception'] = str(type(e)) + ":" + str(e.message)
 
-        #TODO detect changefeed
-        p=cls(url=url,
-                   apiurl=apiurl,
+        # TODO detect changefeed
+        p = cls(url,
+                   apiurl,
                    country=util.getCountry(url),
                    **props
 
 
         )
-        log.info("new portal instance",pid=p.id, apiurl=p.apiurl)
+        log.info("new portal instance", pid=p.id, apiurl=p.apiurl)
         return p
 
 
-    def __init__(self, url=None, apiurl=None, **kwargs):
-        self.id=util.computeID(url)
-        self.url=url
-        self.latest_snapshot=None
-        self.apiurl=apiurl
-        self.software=None
-        self.datasets=-1
-        self.status=-1
-        self.exception=None
-        self.resources=-1
-        self.changefeed=False
+    def __init__(self, url, apiurl, **kwargs):
+        super(Portal,self).__init__(**{'url':url,'apiurl':apiurl})
+        
+        self.id = util.computeID(url)
+        self.url = url
+        self.latest_snapshot = None
+        self.apiurl = apiurl
+        self.software = None
+        self.datasets = -1
+        self.status = -1
+        self.exception = None
+        self.resources = -1
+        self.changefeed = False
         
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-
-
-class Dataset(object):
-    def __init__(self, snapshot=None, portal=None, dataset=None,**kwargs):
-        self.snapshot=snapshot
-        self.portal=portal
-        self.dataset=dataset
+class Dataset(Model):
+    
+    @classmethod
+    def iter(cls, iterable):
+        for i in iterable:
+            r = Dataset.fromResult(dict(i))
+            yield r
+        return
+    
+    def __init__(self, snapshot, portal, dataset, data=None, **kwargs):
+        super(Dataset,self).__init__(**{'snapshot':snapshot,'portal':portal,'dataset':dataset})
         
-        self.data=None
-        self.status=None
-        self.exception=None
-        self.md5=None
-        self.change=None
-        self.fetch_time=None
-        self.qa=None
-        self.qa_time=None
+        self.snapshot = snapshot
+        self.portal = portal
+        self.dataset = dataset
+        
+        self.data = data
+        self.status = None
+        self.exception = None
+        self.md5 = None
+        self.change = None
+        self.fetch_time = None
+        self.qa = None
+        self.qa_time = None
         
         
         for key, value in kwargs.items():
@@ -116,29 +146,22 @@ class Dataset(object):
             result = dict(result)
         
         
-        snapshot=result['snapshot']
-        portal=result['portal']
-        dataset=result['dataset']
+        snapshot = result['snapshot']
+        portal = result['portal']
+        dataset = result['dataset']
         
         del result['portal']
         del result['dataset']
         del result['snapshot']
 
-        for i in ['data','qa']:
-            if isinstance(result[i], unicode ):
+        for i in ['data', 'qa']:
+            if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
-        return cls(dataset=dataset,portal=portal,
-                   snapshot=snapshot,**result)      
-    
-    def updateQA(self, stats):
-        self.qa_time=datetime.now().isoformat()
-        if not self.qa:
-            self.qa={}
-        for key in stats['qa'].keys():
-            self.qa[key]=stats['qa'][key]
-
-class PortalMetaData(object):
+        return cls(dataset=dataset, portal=portal,
+                   snapshot=snapshot, **result)      
+        
+class PortalMetaData(Model):
 
     @classmethod
     def iter(cls, iterable):
@@ -149,66 +172,115 @@ class PortalMetaData(object):
 
     @classmethod
     def fromResult(cls, result):
-        portal=result['portal']
-        snapshot=result['snapshot']
+        portal = result['portal']
+        snapshot = result['snapshot']
         del result['portal']
         del result['snapshot']
 
 
-        for i in ['res_stats','qa_stats','general_stats','fetch_stats']:
-            if isinstance(result[i], unicode ):
+        for i in ['res_stats', 'qa_stats', 'general_stats', 'fetch_stats']:
+            if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
         return cls(portal=portal,
-                   snapshot=snapshot,**result)
+                   snapshot=snapshot, **result)
 
     def __init__(self, portal=None, snapshot=None, **kwargs):
-        self.snapshot=snapshot
-        self.portal=portal
-        self.res_stats=None
-        self.qa_stats=None
-        self.general_stats=None
-        self.exception=None
-        self.resources=-1
-        self.datasets=-1
-        self.fetch_stats=None
+        super(PortalMetaData,self).__init__(**{'snapshot':snapshot,'portal':portal})
+        self.snapshot = snapshot
+        self.portal = portal
+        self.res_stats = None
+        self.qa_stats = None
+        self.general_stats = None
+        self.exception = None
+        self.resources = -1
+        self.datasets = -1
+        self.fetch_stats = None
         
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def fetchstart(self):
         if self.fetch_stats:
-            self.fetch_stats['fetch_start']=datetime.now().isoformat()
+            self.fetch_stats['fetch_start'] = datetime.now().isoformat()
         else:
-            self.fetch_stats={'fetch_start':datetime.now().isoformat()}
+            self.fetch_stats = {'fetch_start':datetime.now().isoformat()}
+    
+    def fetchend(self):
+        if self.fetch_stats:
+            self.fetch_stats['fetch_end'] = datetime.now().isoformat()
+        else:
+            self.fetch_stats = {'fetch_end':datetime.now().isoformat()}
         
         
+    def update(self, analyseEngine): 
+        
+        for a in analyseEngine.getAnalysers():
+            print a.name()
+            print '\t', a.getResult()
+            
+            if isinstance(a, ResourceInDS):
+                if not self.res_stats:
+                    self.res_stats = {}
+                self.resources = a.getResult()['count']
+                self.res_stats['total'] = a.getResult()['count']
+                print a.getResult()
+                self.res_stats['unique'] = a.getResult()['distinct']
+            #===================================================================  
+            # if isinstance(a, DatasetCount):
+            #     if not self.fetch_stats:
+            #         self.fetch_stats = {}
+            #     self.datasets = a.getResult()['count']
+            #     self.fetch_stats['datasets'] = a.getResult()['count']
+            #  
+            # if isinstance(a, DatasetStatusCount):
+            #     if not self.fetch_stats:
+            #         self.fetch_stats = {}
+            #     self.fetch_stats['respCodes'] = a.getResult()
+            #  
+            # if isinstance(a, DatasetAge):
+            #     if not self.general_stats:
+            #         self.general_stats = {}
+            #     self.general_stats['dsage'] = a.getResult()
+            #  
+            # if isinstance(a, ResourceInDSAge):
+            #     if not self.general_stats:
+            #         self.general_stats = {}
+            #     self.general_stats['resage'] = a.getResult()
+            #  
+            # if isinstance(a, FormatCount):
+            #     if not self.general_stats:
+            #         self.general_stats = {}
+            #     self.general_stats['formats'] = a.getResult()
+            #===================================================================
+     
+            
     def updateStats(self, stats):
         if 'fetch_stats' in stats:
             if not self.fetch_stats:
-                self.fetch_stats={}
-            self.fetch_stats['fetch_end']=datetime.now().isoformat()
-            self.fetch_stats['fullfetch']=stats['fetch_stats']['fullfetch']
-            self.fetch_stats['respCodes']=stats['fetch_stats']['respCodes']
-            self.fetch_stats['datasets']=stats['datasets']
-            self.fetch_stats['portal_status']=stats['status']
+                self.fetch_stats = {}
+            self.fetch_stats['fetch_end'] = datetime.now().isoformat()
+            self.fetch_stats['fullfetch'] = stats['fetch_stats']['fullfetch']
+            self.fetch_stats['respCodes'] = stats['fetch_stats']['respCodes']
+            self.fetch_stats['datasets'] = stats['datasets']
+            self.fetch_stats['portal_status'] = stats['status']
 
         if 'qa_stats' in stats:
             if not self.qa_stats:
-                self.qa_stats={}
+                self.qa_stats = {}
             for key in stats['qa_stats'].keys():
-                self.qa_stats[key]=stats['qa_stats'][key]
+                self.qa_stats[key] = stats['qa_stats'][key]
         
 
         if 'general_stats' in stats:
             if not self.general_stats:
-                self.general_stats={}
+                self.general_stats = {}
             for key in stats['general_stats'].keys():
-                self.general_stats[key]=stats['general_stats'][key]
+                self.general_stats[key] = stats['general_stats'][key]
         
         if 'res_stats' in stats:
             if not self.res_stats:
-                self.res_stats={}
+                self.res_stats = {}
             
             for k in stats['res_stats']:
                 self.res_stats[k] = stats['res_stats'][k]
@@ -216,46 +288,47 @@ class PortalMetaData(object):
             
         
         if 'datasets' in stats:
-            self.datasets=stats['datasets']
+            self.datasets = stats['datasets']
         if 'resources' in stats:
-            self.resources=stats['resources']  
+            self.resources = stats['resources']  
     
       
-class Resource(object):
+class Resource(Model):
     @classmethod
     def newInstance(cls, url=None, snapshot=None):
-        props={}
+        props = {}
         try:
-            url=urlnorm.norm(url)
-            #props=util.head(url)
+            url = urlnorm.norm(url)
+            # props=util.head(url)
         except Exception as e:
-            log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot,exc_info=True)
-            props['status']=util.getExceptionCode(e)
-            props['exception']=str(type(e))+":"+str(e.message)
+            log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot, exc_info=True)
+            props['status'] = util.getExceptionCode(e)
+            props['exception'] = str(type(e)) + ":" + str(e.message)
 
-        r = cls(url=url, snapshot=snapshot,**props)
-        log.info("new portal instance",url=r.url, snapshot=r.snapshot)
+        r = cls(url=url, snapshot=snapshot, **props)
+        log.info("new portal instance", url=r.url, snapshot=r.snapshot)
         return r
 
     def __init__(self, url=None, snapshot=None, **kwargs):
-        self.snapshot=snapshot
-        self.url=url
-        self.timestamp=datetime.now()
-        self.status=-1
-        self.origin=None
-        self.exception=None
-        self.header=None
-        self.mime=None
-        self.redirects=None
-        self.size=None
+        super(Resource,self).__init__(**{'snapshot':snapshot,'url':url})
+        self.snapshot = snapshot
+        self.url = url
+        self.timestamp = datetime.now()
+        self.status = -1
+        self.origin = None
+        self.exception = None
+        self.header = None
+        self.mime = None
+        self.redirects = None
+        self.size = None
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def updateOrigin(self,pid=None, did=None):
+    def updateOrigin(self, pid=None, did=None):
         if not self.origin:
-            self.origin={}
+            self.origin = {}
         if pid not in self.origin:
-            self.origin[pid]=[]
+            self.origin[pid] = []
         if did not in self.origin[pid]: 
             self.origin[pid].append(did)
 
@@ -265,27 +338,32 @@ class Resource(object):
 
     @classmethod
     def fromResult(cls, result):
-        url=result['url']
-        snapshot=result['snapshot']
+        url = result['url']
+        snapshot = result['snapshot']
         del result['url']
         del result['snapshot']
         
-        for i in ['header','origin','redirects']:
-            if isinstance(result[i], unicode ):
+        for i in ['header', 'origin', 'redirects']:
+            if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
         return cls(url=url,
-                   snapshot=snapshot,**result)
+                   snapshot=snapshot, **result)
 
 if __name__ == '__main__':
     logging.basicConfig()
-    #http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1
-    #r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
-    #print r.__dict__
+    # http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1
+    # r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
+    # print r.__dict__
     
+    p1 = Portal("http",'1')
+    p2 = Portal("http",'1')
+    p3 = Portal("http",'2')
     
-    
-
+    print p1.__hash__()
+    print p2.__hash__()
+    print p3.__hash__()
+    print p1 == p3
 
 
 

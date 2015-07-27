@@ -1,8 +1,10 @@
-from odpw.db.models import Portal, PortalMetaData
+from odpw.db.models import *
+
 import pandas
 from odpw.timer import Timer
 from odpw.util import timer
 import types
+from abc import abstractmethod
 
 
 __author__ = 'jumbrich'
@@ -11,13 +13,33 @@ from _collections import defaultdict
 import time
 import numpy as np
 
-class Analyser:
-    def analyse(self, element): pass
-    def getResult(self): pass
-    def getDataFrame(self): pass
+
+### converter functions
+
+def toPortal(e):
+    try:
+        return Portal.fromResult(dict(e))
+    except Exception as ex:
+        return None
+
+
+
+
+class Analyser(object):
+    
+    
     @classmethod
     def name(cls): return cls.__name__
+    
+    @abstractmethod
+    def analyse(self, element): pass
+    @abstractmethod
+    def getResult(self): pass
+    def getDataFrame(self): pass
+    
     def done(self): pass
+
+
 
 
 
@@ -75,7 +97,7 @@ class StatusCodeAnalyser(CountAnalser):
             d[k]={'count':v, 'label': self.__class__.dist[k]}
         return d
 
-class PortalSoftwareDistAnalyser(Analyser,CountAnalser):
+class PortalSoftwareDistAnalyser(CountAnalser):
     def analyse(self, portal):
         #if not isinstance(portal, Portal):
         #    return
@@ -88,7 +110,7 @@ class PortalSoftwareDistAnalyser(Analyser,CountAnalser):
 
 
 
-class PortalCountryDistAnalyser(Analyser,CountAnalser):
+class PortalCountryDistAnalyser(CountAnalser):
     def analyse(self, portal):
         if not isinstance(portal, Portal):
             return
@@ -178,13 +200,16 @@ class ResourceDistAnalyserPMD(Analyser):
     def getResult(self):
         return {'total':self.total, 'processed':self.processed}
 
-class AnalyseEngine(object):
+
+
+class AnalyseEngine(Analyser):
     
-    def __init__(self, convert):
+    def __init__(self, convert=None):
         self.analysers = {}
         self.convert = convert
         
     def add(self, analyser):
+        print "ADDED",analyser
         self.analysers[analyser.name()] = analyser
 
     def analyse(self, element):
@@ -194,6 +219,7 @@ class AnalyseEngine(object):
     
     def done(self):
         for c in self.analysers.itervalues():
+            print "DONE", c
             c.done()
         #self.end=time.time()
         #print 'AnalyseEngine elapsed time: %s (%f ms)' % (timer(self.end-self.start),(self.end-self.start)*1000)
@@ -201,7 +227,9 @@ class AnalyseEngine(object):
     def process_all(self, iterable):
         self.start= time.time()
         for e in iterable:
-            c=self.convert(e)
+            c=e
+            if self.convert:
+                c=self.convert(e)
             if c:
                 self.analyse(c)
         self.done()
@@ -209,5 +237,11 @@ class AnalyseEngine(object):
     def getAnalyser(self, analyser):
         if isinstance(analyser, (types.TypeType, types.ClassType)) and  issubclass(analyser, Analyser):
             return self.analysers[analyser.name()]
-        elif isinstance(analyser, analyser):
+        elif isinstance(analyser, Analyser):
             return self.analysers[analyser.name()]
+        
+    def getAnalysers(self):
+        return self.analysers.values()
+    
+class QualityAnalyseEngine(AnalyseEngine):
+    pass

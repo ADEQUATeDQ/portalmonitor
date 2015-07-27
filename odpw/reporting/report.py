@@ -9,7 +9,7 @@ from collections import defaultdict
 from matplotlib.pyplot import plot
 
 
-from odpw.quality.analysers import AnalyseEngine, StatusAnalyserPMD, DatasetDistAnalyserPMD,\
+from odpw.analysers import AnalyseEngine, StatusAnalyserPMD, DatasetDistAnalyserPMD,\
     ResourceDistAnalyserPMD
 from odpw.db.dbm import PostgressDBM
 

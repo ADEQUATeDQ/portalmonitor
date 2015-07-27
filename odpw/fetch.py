@@ -3,6 +3,15 @@ from multiprocessing.process import Process
 from time import sleep
 from odpw.head import HeadProcess
 from urlparse import urlparse
+from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
+from odpw.quality.analysers.key_analyser import KeyAnalyser
+from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
+    ResourceInDS, ResourceInserter, DatasetStatusCount, ResourceInDSAge,\
+    DatasetAge, FormatCount
+from odpw.quality.analysers.completeness import CompletenessAnalyser
+from odpw.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.quality.analysers.openness import OpennessAnalyser
+from odpw.quality.analysers.opquast import OPQuastAnalyser
 __author__ = 'jumbrich'
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
@@ -31,161 +40,80 @@ import time
 import json
 import hashlib
 
-
-def fetchAllDatasets(package_list, stats, dbm, sn, fullfetch):
-    stats['res']=[]
-    Portal = stats['portal']
-    c=0
-    try:
-        # get all meta data as json 
-        api = ckanapi.RemoteCKAN(stats['portal'].apiurl, get_only=True)
-        response = api.action.package_search(rows=1000000)
+def generateFetchDatasetIter(Portal, sn):
     
-        if response:
-            datasets= response["results"]
-            util.extras_to_dicts(datasets)
+    api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
+    start=0
+    rows=1000000
+    
+    processed=set([])
+    
+    while True:
+        response = api.action.package_search(rows=rows, start=start)
+        #print Portal.apiurl, start, rows, len(processed)
+        datasets = response["results"] if response else None
+        if datasets:
+            rows = len(datasets) if start==0 else rows
+            start+=rows
             for datasetJSON in datasets:
                 datasetID = datasetJSON['name']
-                data = datasetJSON
-                try:
-                    props= analyseDataset(data, datasetID,stats, dbm, sn, 200)
-
-                    #remove dataset form package_list
-                    if datasetID in package_list:
-                        package_list.remove(datasetID)
-                    if datasetJSON['id'] in package_list:
-                        package_list.remove(datasetJSON['id'])
-                        
-                    d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=datasetID, **props)
-                    dbm.insertDatasetFetch(d)
-        
-                    c = c + 1
-                    if (c > 0) and (math.fmod(c, 100) == 0):
-                        log.info('process status', pid=Portal.id, done=c, total=Portal.datasets)
-                except Exception as e:
-                    eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,  did=datasetID,exc_info=True)
-    except Exception as e:
-        eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,exc_info=True)
-                    
-    #process remaining datasets which were not available in the fullMetaData list    
-    for entity in package_list:
-        #WAIT between two consecutive GET requests
-        time.sleep(random.uniform(0.5, 2))
-        try:
-            log.debug("GET MetaData", pid=Portal.id, did=entity)
-
-            with Timer(key="fetchDS("+Portal.id+")") as t, Timer(key="fetchDS") as t1:
-                #fetchDataset(entity, stats, dbm, sn)
-                props={
-                        'status':-1,
-                        'md5':None,
-                        'data':None,
-                        'exception':None
-                        }
-                try:
-                    resp = api.action.package_show(id=entity)
-                    data = resp
-                    util.extras_to_dict(data)
-                    props=analyseDataset(data, entity, stats, dbm, sn, 200)
-                    
-                except Exception as e:
-                    eh.handleError(log,'FetchDataset', exception=e,pid=stats['portal'].id,
-                                   apiurl=stats['portal'].apiurl,
-                                   exc_info=True)
-                    props['status']=util.getExceptionCode(e)
-                    props['exception']=str(type(e))+":"+str(e.message)
                 
-                d = Dataset(snapshot=sn,portal=stats['portal'].id, dataset=entity, **props)
-                dbm.insertDatasetFetch(d)
-            c = c + 1
-            if (c > 0) and (math.fmod(c, 100) == 0):
-                log.info('process status', pid=Portal.id, done=c, total=Portal.datasets)
-
-        except Exception as e:
-            eh.handleError(log, "GET MetaData", exception=e, pid=Portal.id,  did=entity,exc_info=True)
-            
-    log.info("Fetched Meta data", pid=Portal.id, done=c, total=len(package_list))
-
-def analyseDataset(entityJSON, datasetID,  stats, dbm, sn, status,first=False):
-    props={
-        'status':-1,
-        'md5':None,
-        'data':None,
-        'exception':None
-        }
-    try:
-        #resp = ckanclient.package_entity(stats['portal'].apiurl, entity)
-
-        props['status']=status
-
-        cnt= stats['fetch_stats']['respCodes'].get(status,0)
-        stats['fetch_stats']['respCodes'][status]= (cnt+1)
-
-        if status == requests.codes.ok:
-            data = entityJSON
-            
-            d = json.dumps(data, sort_keys=True, ensure_ascii=True)
-            data_md5 = hashlib.md5(d).hexdigest()
-            props['md5']=data_md5
-            
-            props['data']=data
-
-            stats=extract_keys(data, stats)
-
-            
-            if 'resources' in data:
-                stats['res'].append(len(data['resources']))
-                lastDomain=None
-                for resJson in data['resources']:
-                    stats['res_stats']['total']+=1
-
-                    tR =  Resource.newInstance(url=resJson['url'], snapshot=sn)
-                    R = dbm.getResource(tR)
-                    if not R:
-                        #do the lookup
-                        with Timer(key="newRes") as t:
-                            R = Resource.newInstance(url=resJson['url'], snapshot=sn)
-                            dbm.insertResource(R)
+                if datasetID not in processed:
+                    data = datasetJSON
+                    
+                    d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
+                    d.status=200
+                    
+                    processed.add(datasetID)
                         
-                    R.updateOrigin(pid=stats['portal'].id, did=datasetID)
-                    dbm.updateResource(R)
+                    if len(processed) % 1000 == 0:
+                        log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                    
+                    yield d
+                
+        else:
+            break
+    try:
+        package_list, status = util.getPackageList(Portal.apiurl)
+        total=len(package_list)
+    
+        for entity in package_list:
+            #WAIT between two consecutive GET requests
+            if entity not in processed:
+                processed.add(d.dataset)
+                 
+                time.sleep(random.uniform(0.5, 1))
+                log.debug("GETMetaData", pid=Portal.id, did=entity)
+                with Timer(key="fetchDS("+Portal.id+")") as t, Timer(key="fetchDS") as t1:
+                    #fetchDataset(entity, stats, dbm, sn)
+                    props={
+                           'status':-1,
+                           'data':None,
+                           'exception':None
+                           }
+                    try:
+                        resp = api.action.package_show(id=entity)
+                        data = resp
+                        util.extras_to_dict(data)
+                        props['data']=data
+                        props['status']=200
+                    except Exception as e:
+                        eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
+                           exc_info=True)
+                        props['status']=util.getExceptionCode(e)
+                        props['exception']=str(type(e))+":"+str(e.message)
+                 
+                    d = Dataset(snapshot=sn,portal=Portal.id, dataset=entity, **props)
+                    processed.add(d.dataset)
+                         
+                    if len(processed) % 1000 == 0:
+                        log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                     
+                    yield d
                     
     except Exception as e:
-        print e
-        eh.handleError(log,'fetching dataset information', exception=e,pid=stats['portal'].id,
-                  apiurl=stats['portal'].apiurl,
-                  exc_info=True)
-        props['status']=util.getExceptionCode(e)
-        props['exception']=str(type(e))+":"+str(e.message)
-
-    return props
-
-def extract_keys(data, stats):
-
-    core=stats['general_stats']['keys']['core']
-    extra=stats['general_stats']['keys']['extra']
-    res=stats['general_stats']['keys']['res']
-
-    if not data:
-        return stats
-    for key in data.keys():
-        if key == 'resources':
-            for r in data['resources']:
-                for k in r.keys():
-                    if k not in res:
-                        res.append(k)
-        elif key == 'extras' and isinstance(data['extras'],dict):
-            for k in data['extras'].keys():
-                if k not in extra:
-                    extra.append(k)
-        else:
-            if key not in core:
-                core.append(key)
-
-    return stats
-
-def fetchingDummy(obj):
-    sleep(10)
+        if len(processed)==0:
+            raise e
 
 def fetching(obj):
     Portal = obj['portal']
@@ -194,67 +122,68 @@ def fetching(obj):
     fullfetch=obj['fullfetch']
 
     dbm.engine.dispose()
+    try:
+        
+        log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
 
-    log.info("Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
 
-    stats={
-        'portal':Portal,
-        'datasets':-1, 'resources':-1,
-        'status':-1,
-        'fetch_stats':{'respCodes':{}, 'fullfetch':fullfetch},
-        'general_stats':{
-            'datasets':0,
-            'keys':{'core':[],'extra':[],'res':[]}
-        },
-        'res_stats':{'respCodes':{},'total':0, 'resList':[]}
-    }
+        pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
+        if not pmd:
+            pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
+            dbm.insertPortalMetaData(pmd)
+        pmd.fetchstart()
+        dbm.updatePortalMetaData(pmd)
+
+        ae = AnalyseEngine()
     
-    pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
-    if not pmd:
-        pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
-        pmd.fetchstart()
-        dbm.insertPortalMetaData(pmd)
-    else:
-        pmd.fetchstart()
+        ae.add(MD5DatasetAnalyser())
+        ae.add(DatasetCount())
+        ae.add(ResourceInDS(withDistinct=True))
+        ae.add(ResourceInserter(dbm))
+        ae.add(DatasetStatusCount())
+        ae.add(ResourceInDSAge())
+        ae.add(DatasetAge())
+        ae.add(KeyAnalyser())
+        ae.add(FormatCount())
+    
+        qae = QualityAnalyseEngine()
+        qae.add(CompletenessAnalyser())
+        qae.add(ContactabilityAnalyser())
+        qae.add(OpennessAnalyser())
+        qae.add(OPQuastAnalyser())
+    
+        main = AnalyseEngine()
+        main.add(ae)
+        main.add(qae)
+        
+        Portal.latest_snapshot=sn
+    
+        iter = generateFetchDatasetIter(Portal, sn)
+        main.process_all(iter)
+    
+        for ae in main.getAnalysers():
+            updatePMDwithAnalyserResults(pmd, ae)
+            pmd.update(ae)
+       
+        #pmd.update(ae)
+    
         dbm.updatePortalMetaData(pmd)
-    try:
-        if fullfetch:
-            #fetch the dataset descriptions
-                package_list, status = util.getPackageList(stats['portal'].apiurl)
-                stats['status']=status
-                Portal.status=status
-                
-                Portal.datasets=len(package_list)
 
-                log.info('Received packages', apiurl=Portal.apiurl, status=status, count=Portal.datasets)
+        
+        Portal.datasets= ae.getAnalyser('ds').getResult()['count']
+        Portal.resources= ae.getAnalyser('res').getResult()['count']
+    except Exception as exc:
+        Portal.status=getExceptionCode(exc)
+        Portal.exception=str(type(exc))+":"+str(exc.message)
+        
+    dbm.updatePortal(Portal)
+    
+    
 
-                stats['datasets']=Portal.datasets
 
-                fetchAllDatasets(package_list, stats, dbm, sn, fullfetch)
+    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
 
-                Portal.resources=sum(stats['res'])
-                Portal.latest_snapshot=sn
-                stats['resources']=Portal.resources
 
-                
-    except Exception as e:
-        eh.handleError(log,"fetching dataset information", exception=e, apiurl=Portal.apiurl,exc_info=True)
-        #log.exception('fetching dataset information', apiurl=Portal.apiurl,  exc_info=True)
-        Portal.status=getExceptionCode(e)
-        Portal.exception=str(type(e))+":"+str(e.message)
-    try:
-        pmd.updateStats(stats)
-        ##UPDATE
-        #General portal information (ds, res)
-        dbm.updatePortal(Portal)
-        #Portal Meta Data
-        #   ds-fetch statistics
-        dbm.updatePortalMetaData(pmd)
-    except Exception as e:
-        eh.handleError(log,'Updating DB',exception=e,pid=Portal.id, exc_info=True)
-        log.critical('Updating DB', pid=Portal.id, exctype=type(e), excmsg=e.message,exc_info=True)
-
-    return stats
 
 
 def checkProcesses(processes, pidFile):
@@ -282,6 +211,7 @@ def checkProcesses(processes, pidFile):
     for pID in rem:
         del processes[pID]
     assert p-len(processes) == len(rem) 
+    return len(rem)
 
 def name():
     return 'Fetch'
@@ -358,6 +288,7 @@ def cli(args,dbm):
         fetch_processors = args.processors
         
         checks=0
+        p_done=0
         with args.outfile as pidFile:
             pidFile.write("STATUS\t PID \t ds \t start \t p_id \t p_url\n")
             pidFile.flush()
@@ -377,10 +308,10 @@ def cli(args,dbm):
                 pidFile.flush()
                 
                 while len(processes) >= fetch_processors:
-                    checkProcesses(processes, pidFile)
+                    p_done+=checkProcesses(processes, pidFile)
                     checks+=1
                     sleep(10)
-                    if checks % 900==0:
+                    if checks % 90==0:
                         print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
                 
                 util.progressINdicator(c, total)
@@ -389,7 +320,7 @@ def cli(args,dbm):
                 checkProcesses(processes,pidFile)
                 checks+=1
                 sleep(10)
-                if checks % 900==0:
+                if checks % 90==0:
                     print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
             
             util.progressINdicator(c, total)
@@ -404,4 +335,4 @@ def cli(args,dbm):
         headProcess.join()
         
     except Exception as e:
-        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True)
+        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True) 

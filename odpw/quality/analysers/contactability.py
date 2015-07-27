@@ -1,10 +1,11 @@
+from odpw.analysers import Analyser
 __author__ = 'jumbrich'
 
 import numpy as np
 from odpw.quality.interpret_meta_field import is_empty
 from odpw.quality import interpret_meta_field
 
-class ContactabilityAnalyser:
+class ContactabilityAnalyser(Analyser):
 
     id='Qa'
 
@@ -22,7 +23,7 @@ class ContactabilityAnalyser:
                     }
 
 
-    def visit(self, dataset):
+    def analyse(self, dataset):
 
         quality= {'email': { 'total':0, 'author':0, 'maintainer':0},
                        'url': { 'total':0, 'author':0, 'maintainer':0},
@@ -75,12 +76,11 @@ class ContactabilityAnalyser:
 
         dataset.updateQA({'qa':{ContactabilityAnalyser.id:quality}})
 
-    def update(self, PMD):
-        stats={'qa_stats':{ContactabilityAnalyser.id: self.quality}}
-        PMD.updateStats(stats)
-        
+    
+    def getResult(self):
+        return  {ContactabilityAnalyser.id: self.quality}
 
-    def computeSummary(self):
+    def done(self):
         self.quality['email']['total'] =  self.stats['email']['total'].mean()
         self.quality['email']['author'] = self.stats['email']['author'].mean()
         self.quality['email']['maintainer'] = self.stats['email']['maintainer'].mean()

@@ -8,7 +8,7 @@ from odpw.db.dbm import PostgressDBM
 import pandas as pd
 import vincent
 
-from odpw.quality.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
+from odpw.analysers import AnalyseEngine, PortalSoftwareDistAnalyser,\
     PortalCountryDistAnalyser
 
 from odpw.db.models import Portal

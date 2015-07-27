@@ -21,7 +21,6 @@ def setupCLI(pa):
 
 def cli(args,dbm):
     if args.plist:
-        
         if args.insert or args.update:
             ok=0
             fail=0
@@ -47,10 +46,11 @@ def cli(args,dbm):
                                 dbm.updatePortal(p)
                             else:
                                 dbm.insertPortal(pn)
+                        log.info("")
                     else:
                         log.info("Skipping line",line=l )
                 except Exception as e:
                     eh.handleError(log, "Insert new Portal", exception=e, line=l,exc_info=True)
                     #log.error("Insert new Portal", line=l, exctype=type(e), excmsg=e.message,exc_info=True)
                     fail+=1
-            log.info("Initialised portals", total=(ok+fail), ok=ok, failed=fail)
+            log.info("InitPortals DONE", total=(ok+fail), ok=ok, failed=fail)

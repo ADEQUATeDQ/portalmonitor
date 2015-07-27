@@ -7,6 +7,7 @@ The following questions will be analysed
         24
 
 '''
+from odpw.analysers import Analyser
 
 __author__ = 'jumbrich'
 
@@ -322,7 +323,7 @@ opquast = {
 DS = 'ds'
 
 
-class OPQuastAnalyser:
+class OPQuastAnalyser(Analyser):
     
     id='opquast'
     def __init__(self):
@@ -349,11 +350,11 @@ class OPQuastAnalyser:
         return self.freq
 
 
-    def update(self, PMD):
-        stats={'qa_stats':{OPQuastAnalyser.id: self.quality}}
-        PMD.updateStats(stats)
+    def getResult(self):
+        return {OPQuastAnalyser.id: self.quality}
+        
 
-    def visit(self, dataset):
+    def analyse(self, dataset):
         #update package count
         self.package_count += 1
 

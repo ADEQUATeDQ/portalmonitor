@@ -8,11 +8,7 @@ from odpw.reporting.reporters import DBAnalyser
 __author__ = 'jumbrich'
 
 
-def toPortal(e):
-    try:
-        return Portal.fromResult(dict(e))
-    except Exception as ex:
-        return None
+
         
 
 def scan(dbm):

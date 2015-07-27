@@ -1,6 +1,7 @@
 import os
 import string
 from odpw.quality.analysers import licenses_openness_rating
+from odpw.analysers import Analyser
 
 __author__ = 'jumbrich'
 
@@ -23,7 +24,7 @@ MACHINE_FORMATS=[]
 # what about
 #svg geotiff otf xls
 
-class OpennessAnalyser:
+class OpennessAnalyser(Analyser):
     
     id='Qo'
     def __init__(self):
@@ -71,13 +72,13 @@ class OpennessAnalyser:
 
         dataset.updateQA({'qa':{OpennessAnalyser.id:quality}})
 
-    def update(self, PMD):
-        stats={'qa_stats':{'Qo': self.quality}}
-        PMD.updateStats(stats)
+    def getResult(self):
+        return {'Qo': self.quality}
+        
         
         
 
-    def computeSummary(self):
+    def done(self):
 
         self.quality['format'] = self.openformats.mean()
         self.quality['license'] = self.openlicenses.mean()

@@ -10,6 +10,7 @@ import exceptions
 import math
 from collections import defaultdict
 
+
 import logging
 log = logging.getLogger(__name__)
 from structlog import get_logger, configure
@@ -17,16 +18,50 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
+class ErrorHandler():
+
+    exceptions=defaultdict(long)
+    
+    @classmethod
+    def handleError(cls, log, msg=None, exception=None, **kwargs):
+        name=type(exception).__name__
+        cls.exceptions[name] +=1
+        log.error(msg,exctype=type(exception), excmsg=exception.message,**kwargs)
+    
+    @classmethod
+    def printStats(cls):
+        print "\n -------------------------"
+        print "  Numbers of Exceptions:"
+        for exc, count in cls.exceptions.iteritems():
+            print " ",exc, count
+        print "\n -------------------------"
 
 
 def getPackageList(apiurl):
+    """ Try api 3 and api 2 to get the full package list"""
     ex =None
+    
+    status=0
+    package_list=set([])
     try:
         api = ckanapi.RemoteCKAN(apiurl, get_only=True)
-        package_list = api.action.package_list()
         
-        return package_list, 200
+        start=0
+        steps=100000
+        while True:
+            p_l = api.action.package_list(limit=steps, offset=start)
+            if p_l:
+                c=len(package_list)
+                steps= c if start==0 else steps
+                package_list.update(p_l)
+                if c == len(package_list):
+                    #no new packages
+                    break
+                start+=steps
+            else:
+                break
     except Exception as e:
+        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True)
         ex = e
     
     ex1=None
@@ -34,19 +69,19 @@ def getPackageList(apiurl):
         url = urlparse.urljoin(apiurl, "/api/2/rest/dataset")
         resp = requests.get(url)
         if resp.status_code == requests.codes.ok:
-            package_list = resp.json()
-            return package_list,200
+            p_l = resp.json()
+            package_list.update(p_l)
         else:
-            return [],  resp.status_code   
+            status = resp.status_code
     except Exception as e:
+        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)
         ex1=e
+
     
-    if ex:
-        raise ex
-    elif ex1:
+    if ex and ex1:
         raise ex1
     else:
-        return [], 888
+        return package_list, 200
          
     
 
@@ -380,23 +415,7 @@ def getCountry(url):
         return 'error'
 
 
-class ErrorHandler():
 
-    exceptions=defaultdict(long)
-    
-    @classmethod
-    def handleError(cls, log, msg=None, exception=None, **kwargs):
-        name=type(exception).__name__
-        cls.exceptions[name] +=1
-        log.error(msg,exctype=type(exception), excmsg=exception.message,**kwargs)
-    
-    @classmethod
-    def printStats(cls):
-        print "\n -------------------------"
-        print "  Numbers of Exceptions:"
-        for exc, count in cls.exceptions.iteritems():
-            print " ",exc, count
-        print "\n -------------------------"
 
 def getExceptionCode(e):
     #connection erorrs

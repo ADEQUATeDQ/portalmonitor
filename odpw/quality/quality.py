@@ -140,7 +140,7 @@ def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
             util.progressINdicator(c, total)
             
         dbm.updateDataset(dataset)
-        
+    
     for analyser in analysers:
         analyser.computeSummary()
         analyser.update(pmd)
