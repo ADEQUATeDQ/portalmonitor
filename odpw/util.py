@@ -1,3 +1,4 @@
+import time
 __author__ = 'jumbrich'
 
 import ckanapi
@@ -505,7 +506,19 @@ def timer(delta):
     minutes, seconds = divmod(rem, 60)
     return ("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
 
-def progressINdicator(processed, total,bar_width=20,elapsed=None, interim=None):
+
+def progressIterator(iterable, total, steps):
+    c=0
+    start= time.time()
+    for element in iterable:
+        c+=1
+        if c%steps ==0:
+            elapsed = (time.time() - start)
+            progressIndicator(c, total, elapsed=elapsed)
+        
+        yield element
+
+def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None):
     
     if total!=0:
         percent = float(processed) / total

@@ -17,7 +17,7 @@ import odpw.stats as statscli
 import odpw.datamonitor as dmcli
 import odpw.extractcsv as extractcli
 import odpw.head as headcli
-import odpw.quality.quality as qualitycli
+import odpw.analysers.quality.quality as qualitycli
 import odpw.sanity as statuscli
 from odpw.server import server as servercli
 import odpw.head_stats as headStatscli

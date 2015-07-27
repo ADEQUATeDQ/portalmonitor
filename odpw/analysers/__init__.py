@@ -66,14 +66,17 @@ class AnalyseEngine(Analyser):
     def __init__(self, convert=None):
         self.analysers = OrderedDict()
         self.convert = convert
+        self.count=0
         
     def add(self, analyser):
         self.analysers[analyser.name()] = analyser
 
     def analyse(self, element):
+        self.count+=1
         with Timer(key="analyse") as t:
             for c in self.analysers.itervalues():
                 c.analyse(element)
+        
     
     def update(self, element):
         with Timer(key="update") as t:
@@ -84,6 +87,7 @@ class AnalyseEngine(Analyser):
     def done(self):
         for c in self.analysers.itervalues():
             c.done()
+        log.info("DONE Analysis", count=self.count)
 
     def process_all(self, iterable):
         self.start= time.time()

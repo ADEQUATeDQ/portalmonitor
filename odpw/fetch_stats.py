@@ -1,13 +1,19 @@
 
 import time
 import odpw.util as util
+from odpw.analysers import AnalyseEngine
+from odpw.analysers.fetching import *
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 __author__ = 'jumbrich'
 
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
-import odpw.fetch as fetch
+from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
+    progressIterator
 
-from odpw.db.models import Portal,  PortalMetaData, Dataset, Resource
-from pprint import  pprint
+
+from odpw.db.models import Portal,  PortalMetaData, Dataset
 
 import logging
 log = logging.getLogger(__name__)
@@ -16,98 +22,65 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
-
-def simulateFetch(portal, dbm, snapshot):
-    log.info("Simulate Fetching", pid=portal.id, sn=snapshot)
-
-    stats={
-        'portal':portal,
-        'datasets':-1, 'resources':-1,
-        'status':-1,
-        'fetch_stats':{'respCodes':{}, 'fullfetch':True},
-        'general_stats':{
-            'datasets':0,
-            'keys':{'core':[],'extra':[],'res':[]}
-        },
-        'res_stats':{'respCodes':{},'total':0, 'resList':[]}
-    }
+def simulateFetching(dbm, Portal, sn):
     
-    pmd = dbm.getPortalMetaData(portalID=portal.id, snapshot=snapshot)
+    log.info("START Simulated Fetch", pid=Portal.id, snapshot=sn)
+    dbm.engine.dispose()
+    
+    pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
     if not pmd:
-        pmd = PortalMetaData(portal=portal.id, snapshot=snapshot)
+        pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
         dbm.insertPortalMetaData(pmd)
-    else:
-        pmd.fetchstart()
-        dbm.updatePortalMetaData(pmd)
-    
-    try:
-        stats['res']=[]
-        
-        total=0
-        for res in dbm.countDatasets(portalID=portal.id, snapshot=snapshot):
-            total=res[0]
-        
-        print "Analysing ", total, "datasets"
-        c=0
-        steps=total/10
-        if steps ==0:
-            steps=1
-        for ds in dbm.getDatasets(portalID=portal.id, snapshot=snapshot):
-            c+=1
-            stats['status']=200
-            dataset = Dataset.fromResult(dict(ds))
-            try:
-                cnt= stats['fetch_stats']['respCodes'].get(dataset.status,0)
-                stats['fetch_stats']['respCodes'][dataset.status]= (cnt+1)
-
-                data =dataset.data
-                if data:
-                    
-                    stats=fetch.extract_keys(data, stats)
-
-                    if 'resources' in data:
-                        stats['res'].append(len(data['resources']))
-                        for resJson in data['resources']:
-                            stats['res_stats']['total']+=1
-                        
-                            tR =  Resource.newInstance(url=resJson['url'], snapshot=snapshot)
-                            R = dbm.getResource(tR)
-                            if not R:
-                                #do the lookup
-                                R = Resource.newInstance(url=resJson['url'], snapshot=snapshot)
-                                try:
-                                    dbm.insertResource(R)
-                                except Exception as e:
-                                    print e, resJson['url'],'-',snapshot
-
-                            R.updateOrigin(pid=portal.id, did=dataset.dataset)
-                            dbm.updateResource(R)
-
-                dbm.updateDataset(dataset)
-            except Exception as e:
-                eh.handleError(log,"fetching dataset information", exception=e, apiurl=portal.apiurl,exc_info=True, dataset=dataset.dataset)
-            if c%steps == 0:
-                util.progressINdicator(c, total)
-            
-            stats['resources']=sum(stats['res'])
-        stats['datasets']=c
-    except Exception as e:
-        eh.handleError(log,"fetching dataset information", exception=e, apiurl=portal.apiurl,exc_info=True)
-    try:
-        pmd.updateStats(stats)
-        ##UPDATE
-        #General portal information (ds, res)
-        #Portal Meta Data
-        #   ds-fetch statistics
-        print pmd.res_stats
-        dbm.updatePortalMetaData(pmd)
-    except Exception as e:
-        eh.handleError(log,'Updating DB',exception=e,pid=portal.id, exc_info=True)
-        log.critical('Updating DB', pid=portal.id, exctype=type(e), excmsg=e.message,exc_info=True)
+     
+    pmd.fetchstart()
+    dbm.updatePortalMetaData(pmd)
 
     
+    ae = AnalyseEngine()
+    ae.add(MD5DatasetAnalyser())
+    ae.add(DatasetCount())
+    ae.add(CKANResourceInDS(withDistinct=True))
 
+    ae.add(DatasetStatusCount())
+    ae.add(CKANResourceInDSAge())
+    ae.add(CKANDatasetAge())
+    ae.add(CKANKeyAnalyser())
+    ae.add(CKANFormatCount())
+    ae.add(CKANResourceInserter(dbm))
 
+    ae.add(CompletenessAnalyser())
+    ae.add(ContactabilityAnalyser())
+    ae.add(OpennessAnalyser())
+    ae.add(OPQuastAnalyser())
+
+    ae.add(DatasetFetchUpdater(dbm))
+    
+    
+    total=0
+    for res in dbm.countDatasets(portalID=Portal.id, snapshot=sn):
+        total=res[0]
+    steps=total/10
+    if steps ==0:
+        steps=1
+    
+    
+    iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
+    ae.process_all(progressIterator(iter, total, steps))
+    
+    for analyser in ae.getAnalysers():
+        analyser.update(pmd)
+        analyser.update(Portal)
+        #print analyser.name()
+        #print analyser.getResult()
+    
+    
+    #pmd.update(ae)
+    #from pprint import pprint
+    #pprint(pmd.__dict__)
+    dbm.updatePortalMetaData(pmd)
+    dbm.updatePortal(Portal)
+
+    log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
 
 def name():
     return 'FetchStats'
@@ -132,8 +105,7 @@ def cli(args,dbm):
             portals.append(p)
     
     for p in portals:
-        
-        simulateFetch(p, dbm,sn)
+        simulateFetching(dbm,p,sn)
     
     
     

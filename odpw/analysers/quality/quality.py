@@ -16,6 +16,14 @@ import argparse
 import logging
 import pprint
 import odpw.util as util
+from odpw.analysers import AnalyseEngine
+
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+from odpw.analysers.quality.analysers.usage import UsageAnalyser
+from odpw.analysers.quality.analysers.retrievability import RetrievabilityAnalyser
 logger = logging.getLogger(__name__)
 from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
@@ -24,82 +32,6 @@ log = get_logger()
 
 
 
-from odpw.quality.analysers.key_analyser import KeyAnalyser
-from odpw.quality.analysers.retrievability import RetrievabilityAnalyser
-from odpw.quality.analysers.completeness import CompletenessAnalyser
-from odpw.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.quality.analysers.usage import UsageAnalyser
-from odpw.quality.analysers.openness import OpennessAnalyser
-from odpw.quality.analysers.opquast import OPQuastAnalyser
-
-
-
-#def snapshot_metrics(pmd, portal, package, snapshot, dbm):
-#    dataset_metrics = dbm.getSingleDatasetMetrics(portal, package, snapshot)
-#    if dataset_metrics is None:
-#        dataset_metrics = DatasetMetrics(pmd=pmd, package=package)
-#    dbm.storeDatasetMetrics(dataset_metrics)
-
-
-#===============================================================================
-# packageQuality
-#===============================================================================
-#===============================================================================
-# def packageQuality(portal, snapshot, dbm):
-#     """
-#     """
-#     global logger
-#     logger = logging.getLogger(__name__)
-#     logger.info("(%s) Getting meta data statistics for the packages", portal.url)
-# 
-#     # retrieve the PMD object and reset all its values
-#     PMD = dbm.getPortalMetaData(portal.url, snapshot)
-#     PMD.reset()
-# 
-#     c = 0
-# 
-#     analysers = [
-#         KeyAnalyser(),
-#         RetrievabilityAnalyser(dbm, portal.id, snapshot),
-#         CompletenessAnalyser(),
-#         ContactabilityAnalyser(),
-#         OpennessAnalyser(),
-#         OPQuastAnalyser()
-#     ]
-# 
-#     datasets = []
-#     #if items['time'] == snapshot)
-#     for dataset in dbm.getPackages(portal, snapshot=snapshot):
-#         datasets.append(dataset)
-# 
-#         for analyser in analysers:
-#             try:
-#                 analyser.visit(dataset)
-#             except Exception as e:
-#                 logger.exception('Exception during quality analyser:')
-#                 logger.exception(e)
-# 
-#         #snapshot_metrics(PMD, portal, Package(dict_string=dataset), snapshot, dbm)
-#         c += 1
-# 
-#     uA = UsageAnalyser(analysers[0])
-#     for ds in datasets:
-#         uA.visit(ds)
-# 
-#     #add UA to analyser array
-#     analysers.append(uA)
-# 
-#     logger.info("(%s) stored dataset metrics", portal.url)
-# 
-#     for analyser in analysers:
-#         analyser.computeSummary()
-#         analyser.update(PMD)
-# 
-#     dbm.storePortalMetaData(PMD)
-#     dbm.storePortal(portal)
-#     logger.info("(%s) analysed %s packages", portal.url, c)
-#===============================================================================
-
 
 def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
     
@@ -107,17 +39,17 @@ def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
     if not pmd:
         print "no pmd for", portal.id, "and", snapshot
     
-    analysers=[]
+    ae = AnalyseEngine
     if datasets:
-        analysers.append(KeyAnalyser())
-        analysers.append(CompletenessAnalyser())
-        analysers.append(ContactabilityAnalyser())
-        analysers.append(OpennessAnalyser())
-        analysers.append(OPQuastAnalyser())
-        analysers.append(UsageAnalyser(pmd.general_stats['keys']))
+        
+        ae.add(CompletenessAnalyser())
+        ae.add(ContactabilityAnalyser())
+        ae.add(OpennessAnalyser())
+        ae.add(OPQuastAnalyser())
+        ae.add(UsageAnalyser(pmd.general_stats['keys']))
                          
     if resources:
-        analysers.append(RetrievabilityAnalyser(dbm, pmd.portal, pmd.snapshot))
+        ae.add(RetrievabilityAnalyser(dbm, pmd.portal, pmd.snapshot))
     
     total=0
     for res in dbm.countDatasets(portalID=portal.id, snapshot=snapshot):
@@ -127,28 +59,22 @@ def analyseQuality(portal,snapshot, dbm, datasets=False, resources=False):
     if steps ==0:
         steps=1
     
-    for ds in dbm.getDatasets(portalID= pmd.portal, snapshot=pmd.snapshot):
-        dataset = Dataset.fromResult(dict(ds))
-        c+=1
-        for analyser in analysers:
-            try:
-                analyser.visit(dataset)
-            except Exception as e:
-                eh.handleError(log, 'QAException('+analyser.__class__.__name__+")", exception=e, pid=portal.id,dataset=ds.dataset,exc_info=True)
-                
-        if c%steps == 0:
-            util.progressINdicator(c, total)
-            
-        dbm.updateDataset(dataset)
     
-    for analyser in analysers:
-        analyser.computeSummary()
-        analyser.update(pmd)
-
-    import pprint 
-    pprint.pprint(pmd.qa_stats)
+    iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=snapshot))
+    for ds in iter:
+        c+=1
+        ae.analyse(ds)
+        if c%steps == 0:
+            util.progressIndicator(c, total)
+        
+    
+    for ae in ae.getAnalysers():
+        ae.update(pmd)
+        ae.update(Portal)
+    
     dbm.updatePortalMetaData(pmd)
-
+    dbm.updatePortal(Portal)
+    
                 
 def name():
     return 'Quality'

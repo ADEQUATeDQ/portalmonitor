@@ -84,19 +84,13 @@ class ContactabilityAnalyser(Analyser):
         return  {ContactabilityAnalyser.id: self.quality}
 
     def done(self):
-        self.quality['email']['total'] =  self.stats['email']['total'].mean()
-        self.quality['email']['author'] = self.stats['email']['author'].mean()
-        self.quality['email']['maintainer'] = self.stats['email']['maintainer'].mean()
-
-
-        self.quality['url']['total'] = self.stats['url']['total'].mean()
-        self.quality['url']['author'] = self.stats['url']['author'].mean()
-        self.quality['url']['maintainer'] = self.stats['url']['maintainer'].mean()
-
-        self.quality['total']['total'] = self.stats['total']['total'].mean()
-        self.quality['total']['author'] = self.stats['total']['author'].mean()
-        self.quality['total']['maintainer'] = self.stats['total']['maintainer'].mean()
-
+        roots =['email', 'url', 'total']
+        childs =['total', 'author', 'maintainer']
+        
+        for r in roots:
+            for c in childs:
+                self.quality[r][c] =  self.stats[r][c].mean() if len(self.stats[r][c])!=0 else None
+       
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}

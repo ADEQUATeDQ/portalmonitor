@@ -37,6 +37,9 @@ def headStats(dbm, sn, portalID):
     start = time.time()
     interim = time.time()
     
+    if portalID:
+        portalStats[portalID]= {'res_stats':{'respCodes':{}, 'unique':0}}
+    
     for res in dbm.getProcessedResources(snapshot=sn, portalID=portalID):
         c+=1
         if not res['origin']:
@@ -57,20 +60,23 @@ def headStats(dbm, sn, portalID):
         if c%steps == 0:
             elapsed = (time.time() - start)
             interim = (time.time() - interim)
-            util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+            util.progressIndicator(c, total, elapsed=elapsed, interim=interim)
             interim = time.time()
 
     
     elapsed = (time.time() - start)
     interim = (time.time() - interim)
-    util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+    util.progressIndicator(c, total, elapsed=elapsed, interim=interim)
     for pid in portalStats.keys():
         pmd = dbm.getPortalMetaData(snapshot=sn, portalID=pid)
         
         stats = portalStats[pid]
+        if not pmd.res_stats:
+            pmd.res_stats = {}
+            
+        for k in stats['res_stats']:
+            pmd.res_stats[k] = stats['res_stats'][k]
         
-        
-        pmd.updateStats(stats)
         
         ##UPDATE
         dbm.updatePortalMetaData(pmd)

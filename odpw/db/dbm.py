@@ -182,8 +182,6 @@ class PostgressDBM:
                                                )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
-            #self.conn.execute(ins)
-        self.log.info("INSERT INTO portals", pid=Portal.id)
     
     def updatePortal(self, Portal):
         with Timer(key="updatePortal") as t:
@@ -204,7 +202,6 @@ class PostgressDBM:
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
             #self.conn.execute(ins)
-        self.log.info("UPDATE INTO portals", pid=Portal.id)
     
     
     def getUnprocessedPortals(self,snapshot=None):
@@ -347,7 +344,7 @@ class PostgressDBM:
                                                resources=PortalMetaData.resources,
                                                datasets=PortalMetaData.datasets
                                                )
-            self.log.error("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
+            self.log.debug("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
             ins.execute()
             #self.conn.execute(ins) 
         
@@ -386,7 +383,6 @@ class PostgressDBM:
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             #self.conn.execute(ins)
             ins.execute()
-        self.log.info("insertDatasetFetch INTO datasets", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
 
     def updateDatasetFetch(self, Dataset):
         with Timer(key="insertDatasetFetch") as t:
@@ -422,8 +418,7 @@ class PostgressDBM:
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             #self.conn.execute(ins)
             ins.execute()
-        self.log.info("insertDatasetFetch INTO datasets", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
-
+        
     
     def getDatasets(self,portalID=None, snapshot=None):
         with Timer(key="getDatasets") as t:
@@ -497,7 +492,6 @@ class PostgressDBM:
             up.execute()
                 
             #self.conn.execute(up)
-        self.log.info("updateDataset", sn=Dataset.snapshot, did=Dataset.dataset, pid=Dataset.portal)
 
 
     def insertResource(self, Resource):
@@ -530,8 +524,7 @@ class PostgressDBM:
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             #self.conn.execute(ins)
             ins.execute() 
-        self.log.info("UPSERT INTO resources", sn=Resource.snapshot, url=Resource.url)
-
+  
     def countProcessedResources(self, snapshot=None,portalID=None):
         with Timer(key="countProcessedResources") as t:
             s = select([func.count(self.resources.c.url)],\
@@ -631,7 +624,6 @@ class PostgressDBM:
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
             #self.conn.execute(ins) 
-        self.log.info("UPSERT INTO resources", sn=Resource.snapshot, url=Resource.url)
           
           
     ##############

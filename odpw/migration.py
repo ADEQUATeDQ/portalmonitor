@@ -274,7 +274,7 @@ def fetching(obj):
                 if c%steps == 0:
                     elapsed = (time.time() - start)
                     interim = (time.time() - interim)
-                    util.progressINdicator(c, total, elapsed=elapsed, interim=interim)
+                    util.progressIndicator(c, total, elapsed=elapsed, interim=interim)
                     interim = time.time()
 
                 

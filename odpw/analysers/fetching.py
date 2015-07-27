@@ -51,13 +51,13 @@ class DatasetCount(ElementCount):
     
 
 class CKANResourceInDS(ElementCount):
-    def __init__(self,withDistinct=False):
+    def __init__(self,withDistinct=None):
         super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
         
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for res in dataset.data['resources']:
-                super(CKANResourceInDS,self).analyse( res)
+                super(CKANResourceInDS,self).analyse(res['url'])
 
     def update_PortalMetaData(self,pmd):
         if not pmd.res_stats:
@@ -129,7 +129,6 @@ class CKANDatasetAge(Analyser):
                     pass
 
     def done(self):
-        print "DONE"
         dsc = np.array(self.ages['created'],dtype='datetime64[us]')
         dsm = np.array(self.ages['modified'],dtype='datetime64[us]')
         if dsc.size != 0:

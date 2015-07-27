@@ -1,7 +1,7 @@
 from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
     CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount
+    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchUpdater
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
@@ -17,7 +17,7 @@ from time import sleep
 from odpw.head import HeadProcess
 
 
-from odpw.db.models import Portal, PortalMetaData
+from odpw.db.models import Portal, PortalMetaData, Dataset
 
 import odpw.util as util
 from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
@@ -30,6 +30,9 @@ from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
+
+
+
 
 
 
@@ -141,10 +144,6 @@ def setupCLI(pa):
     gfilter.add_argument('-s','--software',choices=['CKAN'], dest='software')
     gfilter.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
 
-    getportals = pa.add_argument_group('Portal info', 'information about portals')
-    getportals.add_argument('-o','--out_file',type=argparse.FileType('w'), dest='outfile', help='store portal list')
-    getportals.add_argument('-p','--portals',action='store_true', dest='getPortals')
-    
     pa.add_argument("--force", action='store_true', help='force a full fetch, otherwise use update',dest='fetch')
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
@@ -154,18 +153,6 @@ def cli(args,dbm):
 
     sn = getSnapshot(args)
     if not sn:
-        return
-
-    if args.getPortals:
-        if not args.outfile:
-            log.warning("No outputfile defined")
-            return
-        
-        with args.outfile as file:
-            for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
-                p = Portal.fromResult(dict(portalRes))
-                file.write(p.apiurl+" "+p.id+"\n")
-        
         return
     
     jobs=[]
@@ -232,7 +219,7 @@ def cli(args,dbm):
                     if checks % 90==0:
                         print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
                 
-                util.progressINdicator(c, total)
+                util.progressIndicator(c, total)
             
             while len(processes) >0 :
                 checkProcesses(processes,pidFile)
@@ -241,7 +228,7 @@ def cli(args,dbm):
                 if checks % 90==0:
                     print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
             
-            util.progressINdicator(c, total)
+            util.progressIndicator(c, total)
         
         headProcess.shutdown()        
         headProcess.join()

@@ -108,11 +108,10 @@ class CompletenessAnalyser(Analyser):
         pmd.qa_stats[CompletenessAnalyser.id] = self.quality
 
     def done(self):
-        print 'done'
-        self.quality['total'] =  self.compl['total'].mean()
-        self.quality['core'] =  self.compl['core'].mean()
-        self.quality['extra'] =  self.compl['extra'].mean()
-        self.quality['res'] =  self.compl['res'].mean()
+        roots=['total', 'core', 'extra', 'res']
+        for r in roots:
+            self.quality[r] =  self.compl[r].mean() if len(self.compl[r])!=0 else None 
+        
         
     def getResult(self):
         return {CompletenessAnalyser.id: self.quality}

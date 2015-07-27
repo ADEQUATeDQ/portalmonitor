@@ -85,9 +85,10 @@ class OpennessAnalyser(Analyser):
 
     def done(self):
 
-        self.quality['format'] = self.openformats.mean()
-        self.quality['license'] = self.openlicenses.mean()
-        self.quality['total'] = self.opentotal.mean()
+
+        self.quality['format'] = self.openformats.mean() if len(self.openformats) else None
+        self.quality['license'] = self.openlicenses.mean()if len(self.openlicenses) else None
+        self.quality['total'] = self.opentotal.mean()if len(self.opentotal) else None
 
     def _format_openess(self, data):
         open = False

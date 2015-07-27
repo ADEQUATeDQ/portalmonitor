@@ -266,7 +266,6 @@ class Resource(Model):
             props['exception'] = str(type(e)) + ":" + str(e.message)
 
         r = cls(url=url, snapshot=snapshot, **props)
-        log.info("new portal instance", url=r.url, snapshot=r.snapshot)
         return r
 
     def __init__(self, url=None, snapshot=None, **kwargs):

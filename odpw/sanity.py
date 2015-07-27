@@ -1,5 +1,5 @@
 from odpw.head_stats import headStats
-from odpw.fetch_stats import simulateFetch
+from odpw.fetch_stats import simulateFetching
 
 __author__ = 'jumbrich'
 
@@ -68,16 +68,29 @@ def cli(args,dbm):
                 pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
                 if pmd:
                     status['pmd']=True 
+                    
+                    
                     status['fetch']=True if pmd.fetch_stats and 'fetch_end' in pmd.fetch_stats else False
-                    status['head']=True if pmd.res_stats and (bool(pmd.res_stats['respCodes']) or pmd.res_stats['total']==0) else False
-                    status['qa']=True if pmd.qa_stats else False
-            
                     ds=0
                     for res in dbm.datasetsPerSnapshot(portalID=portal.id,snapshot=sn):
                         ds=res['datasets']
-                
                     sanity['fetch_stats']= True if pmd.fetch_stats and pmd.fetch_stats['datasets'] == ds else False
             
+                    
+                    if pmd.res_stats:
+                        status['head']=True if 'respCodes' in pmd.res_stats and (bool(pmd.res_stats['respCodes']) or pmd.res_stats['total']==0) else False
+                        if 'total'in pmd.res_stats and 'unique' in pmd.res_stats:
+                            if pmd.res_stats['total'] == 0 and pmd.res_stats['unique'] ==0: 
+                                sanity['fetch_stats_head']= True
+                            elif pmd.res_stats['total'] < pmd.res_stats['unique'] ==0 or pmd.res_stats['unique'] ==0: 
+                                sanity['fetch_stats_head']= False
+                            else:
+                                sanity['fetch_stats_head']= True
+                        else:
+                            sanity['fetch_stats_head']=False
+                    status['qa']=True if pmd.qa_stats else False
+            
+                    
                     res=0
                     for result in dbm.resourcesPerSnapshot(portalID=portal.id,snapshot=sn):
                         res=result['resources']
@@ -91,21 +104,24 @@ def cli(args,dbm):
                     status['pmd']=False
                 if args.fix:
                     if not status['pmd']:
-                        print "Simulating fetch"
-                        simulateFetch(portal, dbm, sn)
+                        print "Simulating fetch because of missing PMD"
+                        simulateFetching(dbm,portal,  sn)
+                    elif not sanity['fetch_stats_head']:
+                        print "Simulating fetch because of inconsistent total/unqiue"
+                        simulateFetching(dbm,portal,  sn)
+                    
                     elif not status['head']:
                         print "Computing head stats"
                         headStats(dbm,sn,portal.id)
                     elif not sanity['res_stats']:
                         print "Simulating fetch"
-                        simulateFetch(portal, dbm, sn)
+                        simulateFetching( dbm,portal, sn)
                         print "Computing head stats"
                         headStats(dbm,sn,portal.id)
                     else:
                         break
-                
-                    
-            
+                else:
+                    break
                 
         
         missing = data[portal.id]['missing']
@@ -117,7 +133,7 @@ def cli(args,dbm):
                 if tt in v['status'] and not v['status'][tt]:
                         missing[tt].append(k)
             
-        t=['fetch_stats','res_stats', 'res_count']
+        t=['fetch_stats','fetch_stats_head','res_stats', 'res_count']
         sanity = data[portal.id]['sanity']
         for tt in t:
             sanity[tt]=[]
@@ -129,6 +145,8 @@ def cli(args,dbm):
         pprint(sanity)
             
             
+    
+    
             
 #===============================================================================
 #     

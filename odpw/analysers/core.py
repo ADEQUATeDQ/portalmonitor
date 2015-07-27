@@ -58,7 +58,7 @@ class StatusCodeAnalyser(CountAnalyser):
         return d
     
 class ElementCount(Analyser):
-    def __init__(self, withDistinct=False):
+    def __init__(self, withDistinct=None):
         super(ElementCount, self).__init__()
         self.count=0
         self.set=None
@@ -67,8 +67,9 @@ class ElementCount(Analyser):
     
     def analyse_generic(self, element):
         self.count+=1
+        
         #TODO prob datastrucutre for distinct
-        if self.set and self.set is not None and element not in self.set:
+        if self.set is not None and element not in self.set:
             self.set.add(element)
             
     def getResult(self):
