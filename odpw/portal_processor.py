@@ -80,7 +80,6 @@ class CKAN(PortalProcessor):
             for entity in package_list:
                 #WAIT between two consecutive GET requests
                 if entity not in processed:
-                    processed.add(d.dataset)
 
                     time.sleep(random.uniform(0.5, 1))
                     log.debug("GETMetaData", pid=Portal.id, did=entity)
@@ -120,7 +119,8 @@ class Socrata(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, sn):
         api = urlparse.urljoin(Portal.url, '/api')
         page = 1
-        count = 0
+        processed=set([])
+
         while True:
             resp = urllib2.urlopen(urlparse.urljoin(api, '/views?page=' + str(page)))
             # returns a list of datasets
@@ -129,13 +129,13 @@ class Socrata(PortalProcessor):
                 break
             for datasetJSON in res:
                 datasetID = datasetJSON['id']
-                d = Dataset(snapshot=sn, portal=Portal.id, dataset=datasetID, data=datasetJSON)
-                d.status = 200
-                count += 1
-                if count % 1000 == 0:
-                    log.info("ProgressDSFetch", pid=Portal.id, processed=count)
-                yield d
-
+                if datasetID not in processed:
+                    processed.add(datasetID)
+                    d = Dataset(snapshot=sn, portal=Portal.id, dataset=datasetID, data=datasetJSON)
+                    d.status = 200
+                    if len(processed) % 1000 == 0:
+                        log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                    yield d
             page += 1
 
 
@@ -143,23 +143,39 @@ class OpenDataSoft(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, sn):
         start=0
         rows=1000000
+        processed=set([])
 
         while True:
             query = '/api/datasets/1.0/search?rows=' + str(rows) + '&start=' + str(start)
             resp = urllib2.urlopen(urlparse.urljoin(Portal.url, query))
-            datasets = None
+            res = json.load(resp)
+            datasets = res['datasets']
             if datasets:
-                pass
+                rows = len(datasets) if start==0 else rows
+                start+=rows
+                for datasetJSON in datasets:
+                    datasetID = datasetJSON['datasetid']
+
+                    if datasetID not in processed:
+                        data = datasetJSON
+                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
+                        d.status=200
+                        processed.add(datasetID)
+
+                        if len(processed) % 1000 == 0:
+                            log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                        yield d
             else:
                 break
 
 
 if __name__ == '__main__':
+    # TESTING
     ae = AnalyseEngine()
     # TODO all analysers
 
-    p = Socrata(analyse_engine=ae)
-    p.fetching(models.Portal('https://data.cdc.gov', 'https://data.cdc.gov/api'), '1')
+    p = OpenDataSoft(analyse_engine=ae)
+    p.fetching(models.Portal('http://public.opendatasoft.com', 'http://public.opendatasoft.com'), '1')
 
     for a in ae.getAnalysers():
         #updatePMDwithAnalyserResults(pmd, ae)
