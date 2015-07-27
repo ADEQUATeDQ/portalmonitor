@@ -191,8 +191,8 @@ def cli(args,dbm):
     try:
         log.info("Start processing", portals=len(jobs), processors=args.processors)
         
-        headProcess = HeadProcess(dbm, sn)
-        headProcess.start()
+        #headProcess = HeadProcess(dbm, sn)
+        #headProcess.start()
         
         processes={}
         
@@ -236,14 +236,14 @@ def cli(args,dbm):
             
             util.progressIndicator(c, total)
         
-        headProcess.shutdown()        
-        headProcess.join()
+        #headProcess.shutdown()        
+        #headProcess.join()
         
-        log.info("RestartHeadLookups")
-        headProcess = HeadProcess(dbm, sn)
-        headProcess.start()
-        headProcess.shutdown()
-        headProcess.join()
+        #log.info("RestartHeadLookups")
+        #headProcess = HeadProcess(dbm, sn)
+        #headProcess.start()
+        #headProcess.shutdown()
+        #headProcess.join()
         
     except Exception as e:
         eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True) 
