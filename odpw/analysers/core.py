@@ -61,18 +61,18 @@ class ElementCount(Analyser):
     def __init__(self, withDistinct=False):
         super(ElementCount, self).__init__()
         self.count=0
-        self.list=None
+        self.set=None
         if withDistinct:
-            self.list=set([])
+            self.set=set([])
     
     def analyse_generic(self, element):
         self.count+=1
         #TODO prob datastrucutre for distinct
-        if self.list and self.list is not None and element not in self.list:
-            self.list.add(element)
+        if self.set and self.set is not None and element not in self.set:
+            self.set.add(element)
             
     def getResult(self):
         res= {'count':self.count}
-        if self.list is not None:
-            res['distinct']=len(self.list)
+        if self.set is not None:
+            res['distinct']=len(self.set)
         return res

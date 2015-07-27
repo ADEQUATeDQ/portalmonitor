@@ -14,17 +14,6 @@ import time
 import numpy as np
 
 
-### converter functions
-
-def toPortal(e):
-    try:
-        return Portal.fromResult(dict(e))
-    except Exception as ex:
-        return None
-
-
-
-
 class Analyser(object):
     
     @classmethod
@@ -63,8 +52,10 @@ class Analyser(object):
     
     @abstractmethod
     def getResult(self): pass
+
     def getDataFrame(self): pass
-    
+
+    @abstractmethod
     def done(self): pass
 
 
@@ -77,13 +68,11 @@ class AnalyseEngine(Analyser):
         self.convert = convert
         
     def add(self, analyser):
-        print "ADDED",analyser
         self.analysers[analyser.name()] = analyser
 
     def analyse(self, element):
         with Timer(key="analyse") as t:
             for c in self.analysers.itervalues():
-                print type(c)
                 c.analyse(element)
     
     def update(self, element):
@@ -94,11 +83,8 @@ class AnalyseEngine(Analyser):
     
     def done(self):
         for c in self.analysers.itervalues():
-            print "DONE", c
             c.done()
-        #self.end=time.time()
-        #print 'AnalyseEngine elapsed time: %s (%f ms)' % (timer(self.end-self.start),(self.end-self.start)*1000)
-    
+
     def process_all(self, iterable):
         self.start= time.time()
         for e in iterable:

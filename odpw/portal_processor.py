@@ -33,8 +33,11 @@ class PortalProcessor:
 
     def fetching(self, Portal, sn):
         Portal.latest_snapshot=sn
+
         iter = self.generateFetchDatasetIter(Portal, sn)
         self.analyse_engine.process_all(iter)
+
+
 
 
 class CKAN(PortalProcessor):
@@ -134,6 +137,40 @@ class Socrata(PortalProcessor):
                 yield d
 
             page += 1
+
+
+class OpenDataSoft(PortalProcessor):
+    def generateFetchDatasetIter(self, Portal, sn):
+        start=0
+        rows=1000000
+
+        processed=set([])
+
+        while True:
+            query = '/api/datasets/1.0/search?rows=' + str(rows) + '&start=' + str(start)
+            resp = urllib2.urlopen(urlparse.urljoin(Portal.url, query))
+            #print Portal.apiurl, start, rows, len(processed)
+            datasets = response["results"] if response else None
+            if datasets:
+                rows = len(datasets) if start==0 else rows
+                start+=rows
+                for datasetJSON in datasets:
+                    datasetID = datasetJSON['name']
+
+                    if datasetID not in processed:
+                        data = datasetJSON
+
+                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
+                        d.status=200
+
+                        processed.add(datasetID)
+
+                        if len(processed) % 1000 == 0:
+                            log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+
+                        yield d
+            else:
+                break
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
 from odpw.db.dbm import PostgressDBM
 from odpw.analysers import AnalyseEngine, QualityAnalyseEngine, Analyser
 
-from odpw.analysers.fetching import MD5DatasetAnalyser,  ResourceInDS,\
-    DatasetCount, ResourceInserter, DatasetStatusCount, DatasetAge,\
-    ResourceInDSAge, KeyAnalyser, FormatCount, DatasetFetchInserter,\
+from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDS,\
+    DatasetCount, CKANResourceInserter, DatasetStatusCount, CKANDatasetAge,\
+    CKANResourceInDSAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter,\
     DatasetFetchUpdater
 import ckanapi
 import odpw.util as util
@@ -36,35 +36,28 @@ def scan(dbm, Portal, sn):
     ae = AnalyseEngine()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
-    ae.add(ResourceInDS(withDistinct=True))
-    ae.add(ResourceInserter(dbm))
+    ae.add(CKANResourceInDS(withDistinct=True))
+
     ae.add(DatasetStatusCount())
-    ae.add(ResourceInDSAge())
-    ae.add(DatasetAge())
-    ae.add(KeyAnalyser())
-    ae.add(FormatCount())
-    
-    qae = QualityAnalyseEngine()
-    qae.add(CompletenessAnalyser())
-    qae.add(ContactabilityAnalyser())
-    qae.add(OpennessAnalyser())
-    qae.add(OPQuastAnalyser())
-    
-    
-    
-    
-    main = AnalyseEngine()
-    main.add(ae)
-    main.add(qae)
-    main.add(DatasetFetchUpdater(dbm))
+    ae.add(CKANResourceInDSAge())
+    ae.add(CKANDatasetAge())
+    ae.add(CKANKeyAnalyser())
+    ae.add(CKANFormatCount())
+    ae.add(CKANResourceInserter(dbm))
+
+    ae.add(CompletenessAnalyser())
+    ae.add(ContactabilityAnalyser())
+    ae.add(OpennessAnalyser())
+    ae.add(OPQuastAnalyser())
+
+    ae.add(DatasetFetchUpdater(dbm))
     
     iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
-    main.process_all(iter)
+    ae.process_all(iter)
     
-    for ae in main.getAnalysers():
+    for ae in ae.getAnalysers():
         ae.update(pmd)
         ae.update(Portal)
-       
     
     #pmd.update(ae)
     pprint.pprint(pmd.__dict__)
@@ -87,13 +80,13 @@ def fetching(dbm, Portal , sn):
     
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
-    ae.add(ResourceInDS(withDistinct=True))
-    ae.add(ResourceInserter(dbm))
+    ae.add(CKANResourceInDS(withDistinct=True))
+    ae.add(CKANResourceInserter(dbm))
     ae.add(DatasetStatusCount())
-    ae.add(ResourceInDSAge())
-    ae.add(DatasetAge())
-    ae.add(KeyAnalyser())
-    ae.add(FormatCount())
+    ae.add(CKANResourceInDSAge())
+    ae.add(CKANDatasetAge())
+    ae.add(CKANKeyAnalyser())
+    ae.add(CKANFormatCount())
     ae.add(DatasetFetchInserter(dbm))
 
     try:
@@ -111,7 +104,7 @@ def fetching(dbm, Portal , sn):
         print exc.response.stat_code
         
     Portal.datasets= ae.getAnalyser(DatasetCount).getResult()['count']
-    Portal.resources= ae.getAnalyser(ResourceInDS).getResult()['count']
+    Portal.resources= ae.getAnalyser(CKANResourceInDS).getResult()['count']
         
     pmd.fetchend()
     pmd.update(ae)

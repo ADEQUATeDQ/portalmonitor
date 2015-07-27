@@ -1,7 +1,7 @@
 from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
-    ResourceInDS, ResourceInserter, DatasetStatusCount, ResourceInDSAge,\
-    DatasetAge, KeyAnalyser, FormatCount
+    CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
+    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
@@ -56,13 +56,13 @@ def fetching(obj):
 
             ae.add(MD5DatasetAnalyser())
             ae.add(DatasetCount())
-            ae.add(ResourceInDS(withDistinct=True))
-            ae.add(ResourceInserter(dbm))
+            ae.add(CKANResourceInDS(withDistinct=True))
+            ae.add(CKANResourceInserter(dbm))
             ae.add(DatasetStatusCount())
-            ae.add(ResourceInDSAge())
-            ae.add(DatasetAge())
-            ae.add(KeyAnalyser())
-            ae.add(FormatCount())
+            ae.add(CKANResourceInDSAge())
+            ae.add(CKANDatasetAge())
+            ae.add(CKANKeyAnalyser())
+            ae.add(CKANFormatCount())
 
             qae = QualityAnalyseEngine()
             qae.add(CompletenessAnalyser())
@@ -96,6 +96,7 @@ def fetching(obj):
         Portal.resources= ae.getAnalyser('res').getResult()['count']
     except Exception as exc:
         Portal.status=getExceptionCode(exc)
+
         Portal.exception=str(type(exc))+":"+str(exc.message)
 
     dbm.updatePortal(Portal)

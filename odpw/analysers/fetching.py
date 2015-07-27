@@ -50,14 +50,14 @@ class DatasetCount(ElementCount):
         portal.dataset=self.getResult()['count'] 
     
 
-class ResourceInDS(ElementCount):
+class CKANResourceInDS(ElementCount):
     def __init__(self,withDistinct=False):
-        super(ResourceInDS, self).__init__(withDistinct=withDistinct)
+        super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
         
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for res in dataset.data['resources']:
-                super(ResourceInDS,self).analyse( res)
+                super(CKANResourceInDS,self).analyse( res)
 
     def update_PortalMetaData(self,pmd):
         if not pmd.res_stats:
@@ -86,7 +86,7 @@ class DatasetFetchUpdater(Analyser):
 
 
 
-class ResourceInserter(Analyser):
+class CKANResourceInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
     def analyse_Dataset(self, dataset):
@@ -106,7 +106,7 @@ class ResourceInserter(Analyser):
 
 
 
-class DatasetAge(Analyser):
+class CKANDatasetAge(Analyser):
     
     def __init__(self):
         self.ages = {'created':[],'modified':[]}
@@ -159,7 +159,7 @@ class DatasetAge(Analyser):
             pmd.general_stats = {}
         pmd.general_stats['dsage'] = self.getResult()
     
-class ResourceInDSAge(DatasetAge):
+class CKANResourceInDSAge(CKANDatasetAge):
 
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
@@ -183,7 +183,7 @@ class ResourceInDSAge(DatasetAge):
             pmd.general_stats = {}
         pmd.general_stats['resage'] = self.getResult()
 
-class KeyAnalyser(Analyser):
+class CKANKeyAnalyser(Analyser):
     
     
     def __init__(self):
@@ -428,7 +428,7 @@ class KeyAnalyser(Analyser):
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
     
-class FormatCount(CountAnalyser):
+class CKANFormatCount(CountAnalyser):
     
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
