@@ -144,31 +144,12 @@ class OpenDataSoft(PortalProcessor):
         start=0
         rows=1000000
 
-        processed=set([])
-
         while True:
             query = '/api/datasets/1.0/search?rows=' + str(rows) + '&start=' + str(start)
             resp = urllib2.urlopen(urlparse.urljoin(Portal.url, query))
-            #print Portal.apiurl, start, rows, len(processed)
-            datasets = response["results"] if response else None
+            datasets = None
             if datasets:
-                rows = len(datasets) if start==0 else rows
-                start+=rows
-                for datasetJSON in datasets:
-                    datasetID = datasetJSON['name']
-
-                    if datasetID not in processed:
-                        data = datasetJSON
-
-                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
-                        d.status=200
-
-                        processed.add(datasetID)
-
-                        if len(processed) % 1000 == 0:
-                            log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
-
-                        yield d
+                pass
             else:
                 break
 
