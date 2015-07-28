@@ -15,7 +15,7 @@ from datetime import datetime
 from multiprocessing.process import Process
 from time import sleep
 from odpw.head import HeadProcess
-
+import time
 
 from odpw.db.models import Portal, PortalMetaData, Dataset
 
@@ -53,16 +53,14 @@ def fetching(obj):
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
+        ae = AnalyseEngine()
+        ae.add(MD5DatasetAnalyser())
+        ae.add(DatasetCount())
+        ae.add(DatasetStatusCount())
 
         if Portal.software == 'CKAN':
-
-            ae = AnalyseEngine()
-
-            ae.add(MD5DatasetAnalyser())
-            ae.add(DatasetCount())
             ae.add(CKANResourceInDS(withDistinct=True))
             ae.add(CKANResourceInserter(dbm))
-            ae.add(DatasetStatusCount())
             ae.add(CKANResourceInDSAge())
             ae.add(CKANDatasetAge())
             ae.add(CKANKeyAnalyser())
@@ -77,18 +75,10 @@ def fetching(obj):
 
             processor = CKAN(ae)
         elif Portal.software == 'Socrata':
-            ae = AnalyseEngine()
-            ae.add(DatasetCount())
-            ae.add(MD5DatasetAnalyser())
             ae.add(DatasetFetchInserter(dbm))
-
             processor = Socrata(ae)
         elif Portal.software == 'OpenDataSoft':
-            ae = AnalyseEngine()
-            ae.add(DatasetCount())
-            ae.add(MD5DatasetAnalyser())
             ae.add(DatasetFetchInserter(dbm))
-
             processor = OpenDataSoft(ae)
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
@@ -206,6 +196,7 @@ def cli(args,dbm):
             
             total=len(jobs)
             c=0
+            start = time.time()
             for job in jobs:
                 p = Process(target=fetching, args=((job,)))
                 p.start()
@@ -224,8 +215,9 @@ def cli(args,dbm):
                     sleep(10)
                     if checks % 90==0:
                         print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
-                
-                util.progressIndicator(c, total)
+
+                elapsed= ( time.time() -start)
+                util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
             
             while len(processes) >0 :
                 checkProcesses(processes,pidFile)
@@ -233,8 +225,9 @@ def cli(args,dbm):
                 sleep(10)
                 if checks % 90==0:
                     print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
-            
-            util.progressIndicator(c, total)
+            elapsed= ( time.time() -start)
+            elapsed= ( time.time() -start)
+            util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
         
         #headProcess.shutdown()        
         #headProcess.join()

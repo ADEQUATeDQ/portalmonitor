@@ -80,12 +80,12 @@ class CKAN(PortalProcessor):
 
                             p_count+=1
                             if p_count%p_steps ==0:
-                                progressIndicator(p_count, total)
+                                progressIndicator(p_count, total, label=Portal.id)
                             yield d
 
                 else:
                     break
-            progressIndicator(p_count, total)
+            progressIndicator(p_count, total, label=Portal.id)
             #if len(processed) == total:
             #    #assuming that package_search['count']
             #    return

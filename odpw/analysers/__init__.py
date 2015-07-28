@@ -53,10 +53,9 @@ class Analyser(object):
     @abstractmethod
     def getResult(self): pass
 
-    def getDataFrame(self): pass
-
     @abstractmethod
     def done(self): pass
+
 
 
 
@@ -109,4 +108,7 @@ class AnalyseEngine(Analyser):
         return self.analysers.values()
     
 class QualityAnalyseEngine(AnalyseEngine):
+    pass
+
+class AnalyserSet(AnalyseEngine):
     pass

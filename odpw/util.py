@@ -569,7 +569,7 @@ def progressIterator(iterable, total, steps):
         
         yield element
 
-def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None):
+def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None, label=None):
     
     if total!=0:
         percent = float(processed) / total
@@ -586,8 +586,9 @@ def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None):
     if interim:
         it_str="interim: "+timer(interim)
         #str(timedelta(seconds=interim))
-    
-    sys.stdout.write("\rProgress: {1}% [{0}] ({2}/{3}) {4} {5}".format(hashes + spaces, int(round(percent * 100)), processed, total, el_str,it_str))
+
+    l= label if label else 'Progress'
+    sys.stdout.write("\r{6}: {1}% [{0}] ({2}/{3}) {4} {5}".format(hashes + spaces, int(round(percent * 100)), processed, total, el_str,it_str, l))
     sys.stdout.flush()
 
 def head(url, redirects=0, props=None):
