@@ -9,3 +9,4 @@ http://pod.opendatasoft.com
 http://dataratp.opendatasoft.com
 http://public.opendatasoft.com
 http://parisdata.opendatasoft.com
+http://opendata.brussels.be

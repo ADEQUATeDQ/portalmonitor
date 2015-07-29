@@ -26,7 +26,7 @@ class MD5DatasetAnalyser(Analyser):
 
 
   
-class DatasetStatusCount(StatusCodeAnalyser):
+class DatasetStatusCount(CountAnalyser):
     
     def analyse_Dataset(self, dataset):
         self.add(dataset.status)

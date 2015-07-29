@@ -38,8 +38,6 @@ class PortalProcessor:
         self.analyse_engine.process_all(iter)
 
 
-
-
 class CKAN(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, sn):
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
@@ -80,12 +78,12 @@ class CKAN(PortalProcessor):
 
                             p_count+=1
                             if p_count%p_steps ==0:
-                                progressIndicator(p_count, total)
+                                progressIndicator(p_count, total, label=Portal.id)
                             yield d
 
                 else:
                     break
-            progressIndicator(p_count, total)
+            progressIndicator(p_count, total, label=Portal.id)
             #if len(processed) == total:
             #    #assuming that package_search['count']
             #    return
@@ -139,8 +137,9 @@ class CKAN(PortalProcessor):
 
 
 class Socrata(PortalProcessor):
-    def generateFetchDatasetIter(self, Portal, sn):
-        api = urlparse.urljoin(Portal.url, '/api')
+    def generateFetchDatasetIter(self, Portal, sn, dcat=False):
+
+        api = urlparse.urljoin(Portal.url, '/api/')
         page = 1
         processed=set([])
 
@@ -156,10 +155,27 @@ class Socrata(PortalProcessor):
                     processed.add(datasetID)
                     d = Dataset(snapshot=sn, portal=Portal.id, dataset=datasetID, data=datasetJSON)
                     d.status = 200
+                    if dcat:
+                        try:
+                            dcat_data = self._dcat(datasetID, api)
+                        except Exception as e:
+                            dcat_data = None
+                        d.dcat = dcat_data
+
                     if len(processed) % 1000 == 0:
                         log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
                     yield d
             page += 1
+
+    def _dcat(self, id, api):
+        url = urlparse.urljoin(api, 'dcat.json/' + id)
+        resp = urllib2.urlopen(url)
+        if resp.code == 200:
+            # returns a list of datasets
+            res = json.load(resp)
+            return res
+        return None
+
 
 
 class OpenDataSoft(PortalProcessor):
@@ -197,8 +213,8 @@ if __name__ == '__main__':
     ae = AnalyseEngine()
     # TODO all analysers
 
-    p = OpenDataSoft(analyse_engine=ae)
-    p.fetching(models.Portal('http://public.opendatasoft.com', 'http://public.opendatasoft.com'), '1')
+    p = Socrata(analyse_engine=ae)
+    p.fetching(models.Portal('https://berkeley.demo.socrata.com', 'https://berkeley.demo.socrata.com'), '1')
 
     for a in ae.getAnalysers():
         #updatePMDwithAnalyserResults(pmd, ae)

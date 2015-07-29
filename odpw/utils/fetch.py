@@ -15,8 +15,10 @@ __author__ = 'jumbrich'
 from datetime import datetime
 from multiprocessing.process import Process
 from time import sleep
+
 from odpw.utils.head import HeadProcess
 
+import time
 
 from odpw.db.models import Portal, PortalMetaData, Dataset
 
@@ -47,6 +49,8 @@ def fetching(obj):
     
     try:
         log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
+        
+        ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
         if not pmd:
             pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
@@ -54,16 +58,14 @@ def fetching(obj):
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
+        ae = AnalyseEngine()
+        ae.add(MD5DatasetAnalyser())
+        ae.add(DatasetCount())
+        ae.add(DatasetStatusCount())
 
         if Portal.software == 'CKAN':
-
-            ae = AnalyseEngine()
-
-            ae.add(MD5DatasetAnalyser())
-            ae.add(DatasetCount())
             ae.add(CKANResourceInDS(withDistinct=True))
             ae.add(CKANResourceInserter(dbm))
-            ae.add(DatasetStatusCount())
             ae.add(CKANResourceInDSAge())
             ae.add(CKANDatasetAge())
             ae.add(CKANKeyAnalyser())
@@ -78,18 +80,10 @@ def fetching(obj):
 
             processor = CKAN(ae)
         elif Portal.software == 'Socrata':
-            ae = AnalyseEngine()
-            ae.add(DatasetCount())
-            ae.add(MD5DatasetAnalyser())
             ae.add(DatasetFetchInserter(dbm))
-
             processor = Socrata(ae)
         elif Portal.software == 'OpenDataSoft':
-            ae = AnalyseEngine()
-            ae.add(DatasetCount())
-            ae.add(MD5DatasetAnalyser())
             ae.add(DatasetFetchInserter(dbm))
-
             processor = OpenDataSoft(ae)
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
@@ -104,7 +98,7 @@ def fetching(obj):
         dbm.updatePortalMetaData(pmd)
 
     except Exception as exc:
-        eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn,exc_info=True)
+        eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
         Portal.status=getExceptionCode(exc)
         Portal.exception=str(type(exc))+":"+str(exc.message)
 
@@ -115,7 +109,7 @@ def fetching(obj):
 
 def checkProcesses(processes, pidFile):
     rem=[]
-    p= len(processes)
+    p = len(processes)
     for portalID in processes.keys():
         (pid, process, start,apiurl) = processes[portalID]
         if not process.is_alive():
@@ -194,6 +188,7 @@ def cli(args,dbm):
             
             total=len(jobs)
             c=0
+            start = time.time()
             for job in jobs:
                 p = Process(target=fetching, args=((job,)))
                 p.start()
@@ -213,17 +208,16 @@ def cli(args,dbm):
                         log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
                     sleep(10)
                 
-                util.progressIndicator(c, total)
+                util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
+        while len(processes)>0:
+            p_done += checkProcesses(processes, pidFile)
+            checks+=1
+            if checks % 90==0:
+                log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
+            sleep(10)
             
-            while len(processes) >0 :
-                checkProcesses(processes,pidFile)
-                checks+=1
-                sleep(10)
-                if checks % 90==0:
-                    print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
-            
-            util.progressIndicator(c, total)
-        
+            util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
+
         #headProcess.shutdown()        
         #headProcess.join()
         
@@ -232,6 +226,5 @@ def cli(args,dbm):
         #headProcess.start()
         #headProcess.shutdown()
         #headProcess.join()
-        
     except Exception as e:
         eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True) 
