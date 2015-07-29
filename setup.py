@@ -23,6 +23,9 @@ setup(
         'numpy',
         'enum',
         'rarfile',
+        'jinja2',
+        'tornado',
+        'pyyaml'
         
     ],
 

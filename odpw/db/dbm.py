@@ -146,13 +146,7 @@ class PostgressDBM:
                                                url=Portal.url,
                                                apiurl= Portal.apiurl,
                                                software=Portal.software,
-                    country=Portal.country,
-                    changefeed=Portal.changefeed,
-                    status=Portal.status,
-                    exception=Portal.exception,
-                    datasets=Portal.datasets,
-                    resources=Portal.resources,
-                    latest_snapshot=Portal.latest_snapshot
+                                               iso3=Portal.iso3,
                                                )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
@@ -165,12 +159,7 @@ class PostgressDBM:
                        url=Portal.url,
                        apiurl= Portal.apiurl,
                        software=Portal.software,
-                       changefeed=Portal.changefeed,
-                       status=Portal.status,
-                       exception=Portal.exception,
-                       datasets=Portal.datasets,
-                       resources=Portal.resources,
-                       latest_snapshot=Portal.latest_snapshot
+                       iso3=Portal.iso3
                        )
             
             self.log.debug(query=ins.compile(), params=ins.compile().params)

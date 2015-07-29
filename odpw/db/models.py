@@ -1,3 +1,4 @@
+from odpw.resources.portals_to_json import _calc_id
 
 __author__ = 'jumbrich'
 
@@ -60,44 +61,20 @@ class Portal(Model):
                    apiurl=apiurl, **result)
 
     @classmethod
-    def newInstance(cls, url, apiurl, software):
-        props = {
-            'datasets':-1,
-            'status':-1,
-            'exception':None,
-            'software':software,
-            'resources':-1,
-            'changefeed':False
-        }
-
-        # TODO detect changefeed
-        p = cls(url,
-                   apiurl,
-                   country=util.getCountry(url),
-                   **props
-
-
-        )
-        log.info("new portal instance", pid=p.id, apiurl=p.apiurl)
+    def newInstance(cls, id, url, apiurl, software, iso3):
+        p = cls( id,url, apiurl, software, iso3 )
+        log.info("new portal instance", pid=p.id, apiurl=p.apiurl, software=software, iso3=iso3)
         return p
 
 
-    def __init__(self, url, apiurl, **kwargs):
+    def __init__(self, id,url, apiurl, software, iso3):
         super(Portal,self).__init__(**{'url':url,'apiurl':apiurl})
         
-        self.id = util.computeID(url)
+        self.id = id
         self.url = url
-        self.latest_snapshot = None
         self.apiurl = apiurl
-        self.software = None
-        self.datasets = -1
-        self.status = -1
-        self.exception = None
-        self.resources = -1
-        self.changefeed = False
-        
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+        self.software = software
+        self.iso3 = iso3
 
 class Dataset(Model):
     

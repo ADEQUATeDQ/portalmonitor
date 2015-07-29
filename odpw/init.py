@@ -1,3 +1,4 @@
+import json
 __author__ = 'jumbrich'
 
 
@@ -18,45 +19,44 @@ def setupCLI(pa):
     pa.add_argument('-p','--portals',type=file, dest='plist')
     pa.add_argument('-i','--insert',action='store_true', dest='insert')
     pa.add_argument('-u','--update',action='store_true', dest='update')
-    pa.add_argument('-s','--software', dest='software', default='CKAN')
+    #pa.add_argument('-s','--software', dest='software', default='CKAN')
 
 def cli(args,dbm):
     if args.plist:
         if args.insert or args.update:
             ok=0
             fail=0
-            for l in args.plist:
+            
+            data = json.load(args.plist)
+            
+            for l in data:
+                
+                id = l
+                url = data[l]['url']
+                apiurl = data[l]['api'] if len(data[l]['api'].strip())>0 else url
+                software = data[l]['software']
+                iso3 = data[l]['countryCode'] 
                 try:
-                    if args.software == 'CKAN':
-                        if len(l.split(","))==2 and len(l.split(",")[1].strip())>0:
-                            url = l.split(",")[0].strip()
-                            apiurl=l.split(",")[1].strip()
-                        else:
-
-                            log.info("Skipping line",line=l )
-                            continue
-                    else:
-                        url = l.split(",")[0].strip()
-                        apiurl=url
-
-
                     if args.insert:
-                        p = dbm.getPortal(url=url, apiurl=apiurl)
+                        p = dbm.getPortal(id=id)
                         if p:
                             print "Portal", p.url, "exists"
+                            fail+=1
                         else:
-                            p = Portal.newInstance(url=url, apiurl=apiurl,software=args.software)
+                            p = Portal.newInstance(id=id,url=url, apiurl=apiurl,software=software, iso3=iso3)
                             dbm.insertPortal(p)
                             ok+=1
-                    if args.update:
-                        p = dbm.getPortal(url=l.split(",")[0].strip())
-                        pn= Portal.newInstance(url=url, apiurl=apiurl,software=args.software)
-                        if p:
-                            p.apiurl=pn.apiurl
-                            p.exception = pn.exception
-                            dbm.updatePortal(p)
-                        else:
-                            dbm.insertPortal(pn)
+                
+                    #elif args.update:
+                    #    p = dbm.getPortal(url=url)
+                    #    pn= Portal.newInstance(url=url, apiurl=apiurl,software=software, iso3=iso3)
+                    #    if p:
+                    #        p.apiurl=pn.apiurl
+                    #        p.exception = pn.exception
+                    #        dbm.updatePortal(p)
+                    #    else:
+                    #        dbm.insertPortal(pn)
+
 
 
                 except Exception as e:
