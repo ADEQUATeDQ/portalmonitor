@@ -1,0 +1,105 @@
+{
+  "axes": [],
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {
+          "col": "count",
+          "idx": "CKAN",
+          "val": 143
+        }
+      ]
+    }
+  ],
+  "height": 200,
+  "width": 250,
+  "legends": [
+    {
+      "fill": "color",
+      "offset": 0,
+      "properties": {},
+      "title": "Portal software"
+    }
+  ],
+  "marks": [
+    {
+      "from": {
+        "data": "table",
+        "transform": [
+          {
+            "type": "pie",
+            "value": "data.val"
+          }
+        ]
+      },
+      "properties": {
+        "enter": {
+          "endAngle": {
+            "field": "endAngle"
+          },
+          "fill": {
+            "field": "data.idx",
+            "scale": "color"
+          },
+          "innerRadius": {
+            "value": 20
+          },
+          "outerRadius": {
+            "value": 250
+          },
+          "startAngle": {
+            "field": "startAngle"
+          },
+          "stroke": {
+            "value": "white"
+          },
+          "x": {
+            "group": "width",
+            "mult": 0.5
+          },
+          "y": {
+            "group": "height",
+            "mult": 0.5
+          }
+        }
+      },
+      "type": "arc"
+    },
+     {
+      "from": {
+        "data": "table",
+        "transform": [
+          {
+            "type": "pie",
+            "value": "data.val"
+          }
+        ]
+      },
+      "properties": {
+        "enter": {
+          "x": {"group": "width", "mult": 0.5},
+          "y": {"group": "height", "mult": 0.5},
+          "fill": {"value": "#000"},
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "text": {"field": "data"}
+        }
+      },
+      "type": "text"
+    }
+  ],
+  "padding": "auto",
+  "scales": [
+    {
+      "domain": {
+        "data": "table",
+        "field": "data.idx"
+      },
+      "name": "color",
+      "range": "category10",
+      "type": "ordinal"
+    }
+  ]
+  
+}

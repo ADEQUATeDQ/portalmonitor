@@ -1,29 +1,24 @@
-from odpw.analysers import AnalyseEngine, QualityAnalyseEngine
-from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
-    CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchUpdater, DatasetFetchInserter
-from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
-from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.quality.analysers.openness import OpennessAnalyser
-from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
-from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
-import time
-
 __author__ = 'jumbrich'
 
 
 from datetime import datetime
 from multiprocessing.process import Process
-from time import sleep
+import time 
 
-from odpw.utils.head import HeadProcess
-
-import time
-
-from odpw.db.models import Portal, PortalMetaData, Dataset
-
+#from odpw.utils.head import HeadProcess
+from odpw.db.models import Portal, PortalMetaData
 import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+
+from odpw.analysers import AnalyseEngine
+from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
+    CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
+    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
 
@@ -95,14 +90,12 @@ def fetching(obj):
         ae.update(pmd)
         ae.update(Portal)
 
-        dbm.updatePortalMetaData(pmd)
-
+        dbm.updatePortal(Portal)
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
         Portal.status=getExceptionCode(exc)
         Portal.exception=str(type(exc))+":"+str(exc.message)
-
-    dbm.updatePortal(Portal)
+    
     log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, datasets=Portal.datasets)
 
 
@@ -206,7 +199,7 @@ def cli(args,dbm):
                     checks+=1
                     if checks % 90==0:
                         log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
-                    sleep(10)
+                    time.sleep(10)
                 
                 util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
         while len(processes)>0:
@@ -214,7 +207,7 @@ def cli(args,dbm):
             checks+=1
             if checks % 90==0:
                 log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
-            sleep(10)
+            time.sleep(10)
             
             util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
 

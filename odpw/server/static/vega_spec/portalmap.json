@@ -1,0 +1,98 @@
+{
+  "height": 200, 
+  "width": 260, 
+  "axes": [],
+  "data": [
+    {
+      "name": "table",
+      "values": []
+    },
+    {
+      "format": {
+        "feature": "world-countries",
+        "type": "topojson"
+      },
+      "name": "countries",
+      "transform": [
+        {
+          "as": "value",
+          "default": "noval",
+          "key": "id",
+          "type": "zip",
+          "with": "table",
+          "withKey": "iso3"
+        },
+        {
+          "test": "datum.path!='noval' && datum.value!='noval'",
+          "type": "filter"
+        },
+        {
+          "projection": "mercator",
+          "scale": 50,
+          "translate": [
+            0,
+            0
+          ],
+          "type": "geopath",
+          "value": "data"
+        }
+      ],
+      "url": "static/data/world-countries.topo.json"
+    }
+  ],
+  
+  "legends": [],
+  "marks": [
+    {
+      "from": {
+        "data": "countries"
+      },
+      "properties": {
+        "enter": {
+          "path": {
+            "field": "layout_path"
+          },
+          "stroke": {
+            "value": "#000000"
+          },
+          "strokeOpacity": {
+            "value": 0.25
+          }
+        },
+        "update": {
+          "fill": {
+            "field": "value.count",
+            "scale": "color"
+          }
+        }
+      },
+      "type": "path"
+    }
+  ],
+  "padding": "auto",
+  "scales": [
+    {
+            "domain": {
+                "data": "table",
+                "field": "count"
+            },
+            "name": "color1",
+            "range": "category10",
+            "type": "ordinal"
+    },
+    {
+      "domain": [
+        0.0,
+        10.0
+      ],
+      "name": "color",
+      "range": [
+        "#cdcdcd",
+        "#f4f4f4",
+        "#000"
+      ],
+      
+      "type": "quantize"
+    }
+  ]
+}

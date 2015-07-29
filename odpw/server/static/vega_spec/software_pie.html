@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <title>Vega Scaffold</title>
+    <script src="http://vega.github.io/vega-editor/vendor/d3.min.js"></script>
+    <script src="http://vega.github.io/vega-editor/vendor/d3.geo.projection.min.js"></script>
+    <script src="http://vega.github.io/vega-editor/vendor/topojson.js"></script>
+    <script src="http://vega.github.io/vega/vega.min.js"></script>
+  </head>
+  <body>
+    <div id="vis"></div>
+      <a href="#" onclick="load_data(values, 0);">1. load original data, 0ms duration</a>
+  </body>
+<script type="text/javascript">
+    
+var vega;
+var values=[{"count": 143, "perc": 53.558052434456926, "software": "CKAN"}, {"count": 11, "perc": 4.119850187265918, "software": "OpenDataSoft"}, {"count": 113, "perc": 42.32209737827716, "software": "Socrata"}]
+    
+var spec="softwaredist.json";
+    vg.parse.spec(spec, function(chart) {
+    console.log("loading")
+  vega = chart({el:"#vis", renderer: "canvas"});
+    console.log(vega)
+    //vis.data("table").remove(function(d) { return true; }); // Remove all current values in "table"
+    //vis.data("table").insert(values); 
+    vega.update();
+});
+    
+console.log('vega')
+console.log(vega)
+function load_data(values, duration) {
+    console.log(values)
+    console.log(vega)
+vega.data("table").remove(function(d) { return true; }); // Remove all current values in "table"
+vega.data("table").insert(values); 
+  //vis.data(data);
+  vega.update({duration: duration});
+    vega.render();
+}
+
+//load_data(values,100);   
+    
+    
+
+
+</script>
+</html>
