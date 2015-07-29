@@ -14,7 +14,8 @@ setup(
     install_requires=[
         "requests",
         'structlog',
-        'urlnorm'
+        'urlnorm',
+        'sqlalchemy'
     ],
 
 )
