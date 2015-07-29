@@ -40,4 +40,3 @@ https://data.ci.newark.nj.us
 https://dati.lombardia.it
 http://data.cms.hhs.gov
 https://www.strategicplanning.aspe.hhs.gov
-http://data.cityofdeleon.org

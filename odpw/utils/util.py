@@ -55,7 +55,7 @@ def getPackage(api, apiurl, id):
     ex1=None
     try:
         url = urlparse.urljoin(apiurl, "/api/2/rest/dataset/" + id)
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)
         if resp.status_code == requests.codes.ok:
             package = resp.json()
             return package
@@ -100,7 +100,7 @@ def getPackageList(apiurl):
     ex1=None
     try:
         url = urlparse.urljoin(apiurl, "/api/2/rest/dataset")
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)
         if resp.status_code == requests.codes.ok:
             p_l = resp.json()
             package_list.update(p_l)

@@ -1,3 +1,4 @@
+from ast import literal_eval
 import random
 import urlparse
 import ckanapi
@@ -5,8 +6,7 @@ import time
 from odpw.utils import util
 from odpw.db import models
 from odpw.db.models import Dataset
-import urllib2
-import json
+import requests
 from odpw.utils.timer import Timer
 from odpw.utils.util import ErrorHandler as eh, progressIndicator
 
@@ -38,8 +38,15 @@ class PortalProcessor:
         self.analyse_engine.process_all(iter)
 
 
+
 class CKAN(PortalProcessor):
-    def generateFetchDatasetIter(self, Portal, sn):
+    def _waiting_time(self, attempt):
+        if attempt == 1:
+            return 3
+        else:
+            return attempt*attempt*5
+
+    def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5):
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
         rows=1000000
@@ -56,7 +63,20 @@ class CKAN(PortalProcessor):
             if p_steps ==0:
                 p_steps=1
             while True:
-                response = api.action.package_search(rows=rows, start=start)
+
+                for attempt in xrange(timeout_attempts):
+                    time.sleep(self._waiting_time(attempt))
+                    try:
+                        response = api.action.package_search(rows=rows, start=start)
+                        break
+                    except ckanapi.errors.CKANAPIError as e:
+                        err = literal_eval(e.extra_msg)
+                        if 500 <= err[1] < 600:
+                            log.warn("CKANPackageSearchFetch", pid=Portal.id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt)
+                        else:
+                            raise e
+                    print 'SHOULD NOT HAPPEN'
+
                 #print Portal.apiurl, start, rows, len(processed)
                 datasets = response["results"] if response else None
                 if datasets:
@@ -144,9 +164,13 @@ class Socrata(PortalProcessor):
         processed=set([])
 
         while True:
-            resp = urllib2.urlopen(urlparse.urljoin(api, '/views?page=' + str(page)))
+            resp = requests.get(urlparse.urljoin(api, '/views?page=' + str(page)), verify=False)
+            if resp.status_code != requests.codes.ok:
+                # TODO wait? appropriate message
+                pass
+
+            res = resp.json()
             # returns a list of datasets
-            res = json.load(resp)
             if not res:
                 break
             for datasetJSON in res:
@@ -169,10 +193,10 @@ class Socrata(PortalProcessor):
 
     def _dcat(self, id, api):
         url = urlparse.urljoin(api, 'dcat.json/' + id)
-        resp = urllib2.urlopen(url)
-        if resp.code == 200:
+        resp = requests.get(url, verify=False)
+        if resp.status_code == 200:
             # returns a list of datasets
-            res = json.load(resp)
+            res = resp.json()
             return res
         return None
 
@@ -186,8 +210,8 @@ class OpenDataSoft(PortalProcessor):
 
         while True:
             query = '/api/datasets/1.0/search?rows=' + str(rows) + '&start=' + str(start)
-            resp = urllib2.urlopen(urlparse.urljoin(Portal.url, query))
-            res = json.load(resp)
+            resp = requests.get(urlparse.urljoin(Portal.url, query), verify=False)
+            res = resp.json()
             datasets = res['datasets']
             if datasets:
                 rows = len(datasets) if start==0 else rows
@@ -213,8 +237,8 @@ if __name__ == '__main__':
     ae = AnalyseEngine()
     # TODO all analysers
 
-    p = Socrata(analyse_engine=ae)
-    p.fetching(models.Portal('https://berkeley.demo.socrata.com', 'https://berkeley.demo.socrata.com'), '1')
+    p = CKAN(analyse_engine=ae)
+    p.fetching(models.Portal('http://datahub.io/', 'http://datahub.io/'), '1')
 
     for a in ae.getAnalysers():
         #updatePMDwithAnalyserResults(pmd, ae)
