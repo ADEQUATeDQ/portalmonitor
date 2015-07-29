@@ -77,7 +77,7 @@ class PostgressDBM:
             
             ##TABLES
             self.portals = Table('portals',self.metadata,
-                                 Column('id', String(50), primary_key=True, index=True,unique=True),
+                                 Column('id', String(70), primary_key=True, index=True,unique=True),
                                  
                                  Column('url', String),
                                  Column('apiurl', String),
@@ -87,7 +87,7 @@ class PostgressDBM:
             
             self.pmd = Table('pmd',self.metadata,
                              Column('snapshot', SmallInteger,primary_key=True,index=True),
-                             Column('portal_id', String(50),primary_key=True,index=True),
+                             Column('portal_id', String(70),primary_key=True,index=True),
                              
                              Column('fetch_stats', JSONB),
                              Column('res_stats', JSONB),
@@ -100,7 +100,7 @@ class PostgressDBM:
             self.datasets = Table('datasets',self.metadata,
                             Column('id', String,primary_key=True),
                             Column('snapshot', SmallInteger,primary_key=True,index=True),
-                            Column('portal_id', String(50),primary_key=True,index=True),
+                            Column('portal_id', String(70),primary_key=True,index=True),
                             
                             Column('data', JSONB),
                             Column('status', SmallInteger),
@@ -124,6 +124,7 @@ class PostgressDBM:
                              )
 
     def initTables(self):  
+        self.metadata.drop_all(self.engine)
         self.metadata.create_all(self.engine)    
            
            

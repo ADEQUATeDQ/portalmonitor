@@ -31,19 +31,19 @@ def cli(args,dbm):
             
             for l in data:
                 
-                id = l
+                pid = l
                 url = data[l]['url']
                 apiurl = data[l]['api'] if len(data[l]['api'].strip())>0 else url
                 software = data[l]['software']
                 iso3 = data[l]['countryCode'] 
                 try:
                     if args.insert:
-                        p = dbm.getPortal(id=id)
+                        p = dbm.getPortal(portalID=pid)
                         if p:
                             print "Portal", p.url, "exists"
                             fail+=1
                         else:
-                            p = Portal.newInstance(id=id,url=url, apiurl=apiurl,software=software, iso3=iso3)
+                            p = Portal.newInstance(id=pid,url=url, apiurl=apiurl,software=software, iso3=iso3)
                             dbm.insertPortal(p)
                             ok+=1
                 
@@ -60,6 +60,7 @@ def cli(args,dbm):
 
 
                 except Exception as e:
+                    print e
                     eh.handleError(log, "Insert new Portal", exception=e, line=l,exc_info=True)
                     #log.error("Insert new Portal", line=l, exctype=type(e), excmsg=e.message,exc_info=True)
                     fail+=1

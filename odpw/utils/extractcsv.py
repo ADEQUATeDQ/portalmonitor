@@ -4,7 +4,7 @@ from odpw.db.models import Portal, Resource
 
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
-from odpw.db.POSTGRESManager import PostGRESManager
+
 from odpw.utils.timer import Timer
 import math
 import argparse
