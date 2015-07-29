@@ -4,7 +4,8 @@ files = ["resources/*"]
 setup(
     name='odpw',
     version='0.1',
-    packages=['odpw', 'odpw.db','odpw.analysers','odpw.analysers.quality.analysers','odpw.analysers.quality','odpw.reporting','odpw.server','odpw.server.handler', 'odpw.utils' ],
+    packages=['odpw', 'odpw.db','odpw.analysers','odpw.analysers.quality.analysers','odpw.analysers.quality','odpw.reporting','odpw.server','odpw.server.handler', 'odpw.utils','odpw.resources' ],
+    package_data={'odpw.resources':['*']},
     url='',
     license='',
     author='jumbrich',
@@ -13,10 +14,16 @@ setup(
     scripts = ["bin/odpw"],
     install_requires=[
         "requests",
-        "faststat",
-        'psycopg2',
         'structlog',
-        'urlnorm'
+        'urlnorm',
+        'sqlalchemy',
+        'faststat',
+        'ckanapi',
+        'pandas',
+        'numpy',
+        'enum',
+        'rarfile',
+        
     ],
 
 )

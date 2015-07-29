@@ -1,11 +1,11 @@
+
+
+__author__ = 'jumbrich'
+
 from sys import exc_info
 from sqlalchemy.exc import OperationalError
 import os
 import odpw
-
-__author__ = 'jumbrich'
-
-
 import argparse
 
 import logging.config
@@ -21,7 +21,7 @@ import odpw.db.dbm as dbcli
 import odpw.init as initcli
 import odpw.utils.fetch as fetchcli
 import odpw.utils.stats as statscli
-import odpw.utils.datamonitor as dmcli
+#import odpw.utils.datamonitor as dmcli
 import odpw.utils.extractcsv as extractcli
 import odpw.utils.head as headcli
 import odpw.analysers.quality.quality as qualitycli
@@ -30,7 +30,7 @@ import odpw.server.server as servercli
 import odpw.utils.head_stats as headStatscli
 import odpw.utils.fetch_stats as fetchStatscli
 
-submodules=[dbcli, initcli, fetchcli,statscli, dmcli, extractcli, headcli,  statuscli, qualitycli,servercli,headStatscli,fetchStatscli]
+submodules=[dbcli, initcli, fetchcli,statscli, extractcli, headcli,  statuscli, qualitycli,servercli,headStatscli,fetchStatscli]
 
 
 import yaml

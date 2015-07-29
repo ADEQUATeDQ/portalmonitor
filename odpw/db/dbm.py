@@ -71,68 +71,57 @@ class PostgressDBM:
             
             self.engine = create_engine(conn_string, pool_size=20)
             self.engine.connect()
-            #self.conn = self.engine.connect()
             
             self.metadata = MetaData(bind=self.engine)
-            #psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
+            
             
             ##TABLES
             self.portals = Table('portals',self.metadata,
-                                 Column('id', String(50), primary_key=True, index=True),
+                                 Column('id', String(50), primary_key=True, index=True,unique=True),
+                                 
                                  Column('url', String),
                                  Column('apiurl', String),
                                  Column('software', String),
-                                 Column('country', String),
-                                 Column('status', SmallInteger),
-                                 Column('exception', String),
-                                 Column('datasets', Integer),
-                                 Column('resources', Integer),
-                                 Column('latest_snapshot', String(7)),
-                                 Column('updated', TIMESTAMP, onupdate=datetime.datetime.now, default=datetime.datetime.now)
+                                 Column('iso3', String(3))
                                  )
             
-            self.pmd = Table('portal_meta_data',self.metadata,
-                             Column('snapshot', String(7),primary_key=True),
-                             Column('portal', String(50),primary_key=True),
+            self.pmd = Table('pmd',self.metadata,
+                             Column('snapshot', SmallInteger,primary_key=True,index=True),
+                             Column('portal_id', String(50),primary_key=True,index=True),
+                             
                              Column('fetch_stats', JSONB),
                              Column('res_stats', JSONB),
                              Column('qa_stats', JSONB),
                              Column('general_stats', JSONB),
                              Column('resources', Integer),
-                             Column('datasets', Integer),
+                             Column('datasets', Integer)
                              )
             
-            
             self.datasets = Table('datasets',self.metadata,
-                            Column('dataset', String,primary_key=True),
-                            Column('snapshot', String(7),primary_key=True),
-                            Column('portal', String,primary_key=True),
+                            Column('id', String,primary_key=True),
+                            Column('snapshot', SmallInteger,primary_key=True,index=True),
+                            Column('portal_id', String(50),primary_key=True,index=True),
+                            
                             Column('data', JSONB),
                             Column('status', SmallInteger),
                             Column('exception', String),
                             Column('md5', String),
                             Column('change', SmallInteger),
-                            Column('fetch_time', TIMESTAMP),
-                            Column('qa', JSONB),
-                            Column('qa_time', TIMESTAMP)
-                             )
-            
+                            Column('qa_stats', JSONB)
+                            )
             
             self.resources = Table('resources',self.metadata,
-                            Column('url', String,primary_key=True),
-                             Column('snapshot', String(7),primary_key=True),
-                             Column('status', SmallInteger),
+                             Column('url', String,primary_key=True,index=True),
+                             Column('snapshot', SmallInteger,primary_key=True,index=True),
+                             
+                             Column('timestamp', TIMESTAMP),
+                             Column('status', SmallInteger,index=True),
                              Column('exception', String),
                              Column('header', JSONB),
-                             Column('mime', String),
+                             Column('mime', String,index=True),
                              Column('size', BigInteger),
-                             Column('redirects', JSONB),
-                             Column('origin', JSONB),
-                             Column('timestamp', TIMESTAMP)
-                             
-                             
+                             Column('origin', JSONB)
                              )
-        
 
     def initTables(self):  
         self.metadata.create_all(self.engine)    
