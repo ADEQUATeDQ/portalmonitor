@@ -46,6 +46,18 @@ class CKAN(PortalProcessor):
         else:
             return attempt*attempt*5
 
+    def _get_datasets(self, api, timeout_attempts, rows, start, portal_id):
+        for attempt in xrange(timeout_attempts):
+            time.sleep(self._waiting_time(attempt))
+            try:
+                response = api.action.package_search(rows=rows, start=start)
+                return response
+            except ckanapi.errors.CKANAPIError as e:
+                err = literal_eval(e.extra_msg)
+                if 500 <= err[1] < 600:
+                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt)
+        raise e
+
     def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5):
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
@@ -56,26 +68,13 @@ class CKAN(PortalProcessor):
         total=0
         processed=set([])
         try:
-
             response = api.action.package_search(rows=0)
             total = response["count"]
             p_steps=total/10
             if p_steps ==0:
                 p_steps=1
             while True:
-
-                for attempt in xrange(timeout_attempts):
-                    time.sleep(self._waiting_time(attempt))
-                    try:
-                        response = api.action.package_search(rows=rows, start=start)
-                        break
-                    except ckanapi.errors.CKANAPIError as e:
-                        err = literal_eval(e.extra_msg)
-                        if 500 <= err[1] < 600:
-                            log.warn("CKANPackageSearchFetch", pid=Portal.id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt)
-                        else:
-                            raise e
-                    print 'SHOULD NOT HAPPEN'
+                response = self._get_datasets(api, timeout_attempts, rows, start, Portal.id)
 
                 #print Portal.apiurl, start, rows, len(processed)
                 datasets = response["results"] if response else None
@@ -238,7 +237,7 @@ if __name__ == '__main__':
     # TODO all analysers
 
     p = CKAN(analyse_engine=ae)
-    p.fetching(models.Portal('http://datahub.io/', 'http://datahub.io/'), '1')
+    p.fetching(models.Portal('http://data.gov/', 'http://catalog.data.gov/'), '1')
 
     for a in ae.getAnalysers():
         #updatePMDwithAnalyserResults(pmd, ae)

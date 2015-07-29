@@ -3,18 +3,14 @@ http://opendata.aragon.es/,http://opendata.aragon.es/catalogo/,CKAN,ESP
 http://annuario.comune.fi.it,http://annuario.comune.fi.it/,CKAN,ITA
 http://bermuda.io/,,CKAN,IOT
 http://beta.avoindata.fi/,https://beta.avoindata.fi/data/fi/,CKAN,FIN
-http://br.ckan.net,http://br.ckan.net/,CKAN,USA
 http://catalogue.datalocale.fr,http://catalogue.datalocale.fr/,CKAN,FRA
-http://cities.opendatahub.gr,http://cities.opendatahub.gr/,CKAN,GRC
 http://ckan.gsi.go.jp/,,CKAN,JPN
-http://cz.ckan.net,http://cz.ckan.net/,CKAN,USA
 http://dados.gov.br,http://dados.gov.br/,CKAN,BRA
-http://dados.novohamburgo.rs.gov.br,https://dados.novohamburgo.rs.gov.br/,CKAN,BRA
 http://dados.recife.pe.gov.br/,,CKAN,BRA
 http://dados.rs.gov.br/,,CKAN,BRA
 http://dadosabertos.senado.gov.br/,,CKAN,BRA
 http://dartportal.leeds.ac.uk/,,CKAN,GBR
-http://data.bris.ac.uk/data,http://data.bris.ac.uk/data/,CKAN,GBR
+https://data.bris.ac.uk/data/,,CKAN,GBR
 http://data.buenosaires.gob.ar/,,CKAN,ARG
 http://data.cityofsantacruz.com/,,CKAN,USA
 http://data.edostate.gov.ng/,,CKAN,NGA
@@ -28,7 +24,7 @@ http://data.gov/,http://catalog.data.gov/,CKAN,USA
 http://data.graz.gv.at/,http://ckan.data.graz.gv.at/,CKAN,AUT
 http://data.grcity.us,http://data.grcity.us/,CKAN,USA
 http://data.gv.at,http://www.data.gv.at/katalog/,CKAN,AUT
-http://data.hdx.rwlabs.org,http://data.hdx.rwlabs.org/,CKAN,LUX
+https://data.hdx.rwlabs.org/,,CKAN,LUX
 http://data.kk.dk/,,CKAN,DNK
 http://data.ktn.gv.at/,http://ckan.data.ktn.gv.at/,CKAN,AUT
 http://data.lexingtonky.gov/,,CKAN,USA
@@ -37,7 +33,7 @@ http://data.london.gov.uk/,,CKAN,GBR
 http://data.nhm.ac.uk/,,CKAN,GBR
 http://data.nsw.gov.au/,http://data.nsw.gov.au/data/,CKAN,AUS
 http://data.ohouston.org/,,CKAN,USA
-http://data.opencolorado.org,http://data.opencolorado.org/,CKAN,USA
+http://data.opencolorado.org/,,CKAN,USA
 http://data.openpolice.ru,http://data.openpolice.ru/,CKAN,RUS
 http://data.openva.com/,,CKAN,USA
 http://data.ottawa.ca/,,CKAN,CAN
@@ -63,7 +59,7 @@ http://datos.codeandomexico.org/,,CKAN,USA
 http://datos.gob.mx/,http://catalogo.datos.gob.mx/,CKAN,MEX
 http://datosabiertos.ec,http://datosabiertos.ec/,CKAN,ECU
 http://datosabiertos.malaga.eu/,,CKAN,ESP
-http://datospublicos.gob.ar/,http://datospublicos.gob.ar/data/,CKAN,ARG
+http://datos.argentina.gob.ar/,,CKAN,ARG
 http://datospublicos.org,http://datospublicos.org/,CKAN,USA
 http://donnees.ville.montreal.qc.ca/,,CKAN,CAN
 http://donnees.ville.sherbrooke.qc.ca,http://donnees.ville.sherbrooke.qc.ca/,CKAN,CAN
@@ -73,8 +69,6 @@ http://gisdata.mn.gov,http://gisdata.mn.gov/,CKAN,USA
 http://govdata.de,https://www.govdata.de/ckan/,CKAN,DEU
 http://hubofdata.ru/,,CKAN,RUS
 http://iatiregistry.org,http://iatiregistry.org/,CKAN,USA
-http://ie.ckan.net,http://ie.ckan.net/,CKAN,USA
-http://it.ckan.net,http://it.ckan.net/,CKAN,USA
 http://leedsdatamill.org/,,CKAN,GBR
 http://linkeddatacatalog.dws.informatik.uni-mannheim.de/,,CKAN,DEU
 http://offenedaten.de/,https://offenedaten.de/,CKAN,DEU
@@ -87,7 +81,6 @@ http://opendata.aragon.es/,http://opendata.aragon.es/catalogo/,CKAN,ESP
 http://opendata.awt.be/,,CKAN,BEL
 http://opendata.ayto-caceres.es/,,CKAN,ESP
 http://opendata.caceres.es/,,CKAN,ESP
-http://opendata.cmt.es/,,CKAN,ESP
 http://opendata.comune.bari.it/,,CKAN,ITA
 http://opendata.hu/,,CKAN,HUN
 http://opendata.lisra.jp,http://opendata.lisra.jp/,CKAN,JPN
@@ -119,14 +112,13 @@ http://www.offene-daten.me,http://www.offene-daten.me/,CKAN,MNE
 http://www.opendata-hro.de/,,CKAN,DEU
 http://www.opendata.provincia.roma.it/,,CKAN,ITA
 http://www.opendataforum.info/,http://data.opendataforum.info/,CKAN,BEL
-http://www.opendatahub.it/,,CKAN,ITA
 http://www.rotterdamopendata.nl/,http://rotterdamopendata.nl/,CKAN,NLD
 http://www.yorkopendata.org/,http://data.yorkopendata.org/,CKAN,GBR
 https://catalogodatos.gub.uy/,,CKAN,URY
 https://data.gov.hk/en/,https://data.gov.hk/en-data/,CKAN,HKG
 https://data.noaa.gov/dataset,https://data.noaa.gov/,CKAN,USA
 https://data.overheid.nl/,https://data.overheid.nl/data/,CKAN,NLD
-https://data.sa.gov.au/,,CKAN,AUS
+https://data.sa.gov.au/,https://data.sa.gov.au/data/,CKAN,AUS
 https://dati.lazio.it/,http://dati.lazio.it/catalog/it/,CKAN,ITA
 https://edx.netl.doe.gov/,,CKAN,USA
 https://opendata.bayern.de/,,CKAN,DEU
@@ -168,7 +160,6 @@ https://data.baltimorecity.gov,,Socrata,USA
 https://data.weatherfordtx.gov,,Socrata,USA
 https://data.cityofnewyork.us,,Socrata,USA
 https://data.illinois.gov/champaign,,Socrata,USA
-https://data.snostat.org,,Socrata,USA
 http://data.eindhoven.nl,,Socrata,NLD
 http://data.cityoftacoma.org,,Socrata,USA
 http://health.data.ny.gov,,Socrata,USA
@@ -191,7 +182,6 @@ http://performance.chattanooga.gov,,Socrata,USA
 https://data.austintexas.gov,,Socrata,USA
 https://data.act.gov.au,,Socrata,AUS
 https://data.ct.gov,,Socrata,USA
-https://data.eae.alberta.ca,,Socrata,CAN
 http://data.atf.gov,,Socrata,USA
 http://data.undp.org,,Socrata,USA
 http://hdr.undp.org/en/countries,,Socrata,USA
@@ -213,7 +203,6 @@ https://data.ny.gov,,Socrata,USA
 https://data.montgomerycountymd.gov,,Socrata,USA
 https://performance.smcgov.org,,Socrata,USA
 http://data.nj.gov,,Socrata,USA
-https://data.ci.newark.nj.us,,Socrata,USA
 https://health.data.ny.gov,,Socrata,USA
 http://performance.westsussex.gov.uk,,Socrata,GBR
 https://reportcard.santamonicayouth.net,,Socrata,USA
@@ -226,7 +215,6 @@ http://irs.demo.socrata.com,,Socrata,USA
 http://data.cms.hhs.gov,,Socrata,USA
 http://www.usaid.gov/results-and-data/progress-data/data/dca,,Socrata,AUT
 http://data.hartford.gov,,Socrata,USA
-https://www.strategicplanning.aspe.hhs.gov,,Socrata,
 https://controllerdata.lacity.org,,Socrata,USA
 http://opendata.go.ke,,Socrata,KEN
 http://healthmeasures.aspe.hhs.gov,,Socrata,USA
