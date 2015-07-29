@@ -1,11 +1,11 @@
+
+
+__author__ = 'jumbrich'
+
 from sys import exc_info
 from sqlalchemy.exc import OperationalError
 import os
 import odpw
-
-__author__ = 'jumbrich'
-
-
 import argparse
 
 import logging.config

@@ -23,7 +23,7 @@ setup(
         'numpy',
         'enum',
         'rarfile',
-        'psycopg2.extras'
+        
     ],
 
 )
