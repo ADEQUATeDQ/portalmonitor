@@ -18,7 +18,12 @@ setup(
         'urlnorm',
         'sqlalchemy',
         'faststat',
-        'ckanapi'
+        'ckanapi',
+        'pandas',
+        'numpy',
+        'enum',
+        'rarfile',
+        'psycopg2.extras'
     ],
 
 )
