@@ -226,7 +226,7 @@ class Resource(Model):
             url = urlnorm.norm(url)
             # props=util.head(url)
         except Exception as e:
-            log.error('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot, exc_info=True)
+            log.debug('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot, exc_info=True)
             props['status'] = util.getExceptionCode(e)
             props['exception'] = str(type(e)) + ":" + str(e.message)
 

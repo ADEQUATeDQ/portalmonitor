@@ -141,7 +141,7 @@ class CKAN(PortalProcessor):
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
-                        d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
+                        d = Dataset(snapshot=sn,portalID=Portal.id, did=entity, data=data,status=200)
                         processed.add(d.dataset)
 
                         if len(processed) % 1000 == 0:
@@ -172,6 +172,9 @@ class Socrata(PortalProcessor):
             if not res:
                 break
             for datasetJSON in res:
+                if 'id' not in datasetJSON:
+                    continue
+                
                 datasetID = datasetJSON['id']
                 if datasetID not in processed:
                     processed.add(datasetID)
@@ -215,6 +218,8 @@ class OpenDataSoft(PortalProcessor):
                 rows = len(datasets) if start==0 else rows
                 start+=rows
                 for datasetJSON in datasets:
+                    if 'datasetid' not in datasetJSON:
+                        continue
                     datasetID = datasetJSON['datasetid']
 
                     if datasetID not in processed:
