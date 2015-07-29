@@ -1,4 +1,3 @@
-from odpw.resources.portals_to_json import _calc_id
 
 __author__ = 'jumbrich'
 
