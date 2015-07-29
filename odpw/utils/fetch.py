@@ -8,7 +8,8 @@ import time
 #from odpw.utils.head import HeadProcess
 from odpw.db.models import Portal, PortalMetaData
 import odpw.utils.util as util
-from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
+    getExceptionString
 
 from odpw.analysers import AnalyseEngine
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
@@ -23,11 +24,11 @@ from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 import argparse
 
 import logging
-logger = logging.getLogger(__name__)
 from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
+
 
 
 
@@ -41,18 +42,22 @@ def fetching(obj):
     fullfetch=obj['fullfetch']
 
     dbm.engine.dispose()
+    log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
     
     try:
-        log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
-        
         ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
         if not pmd:
-            pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
+            pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
             dbm.insertPortalMetaData(pmd)
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
+    except Exception as exc:
+        eh.handleError(log, "GET PMD", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
+        return
+
+    try: 
         ae = AnalyseEngine()
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
@@ -90,18 +95,21 @@ def fetching(obj):
         ae.update(pmd)
         ae.update(Portal)
 
-        dbm.updatePortalMetaData(pmd)
-
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
-        Portal.status=getExceptionCode(exc)
-        Portal.exception=str(type(exc))+":"+str(exc.message)
+        if pmd:
+            pmd.fetch_stats['status'] = getExceptionCode(exc)
+            pmd.fetch_stats['exception'] = getExceptionString(exc)
+        
+    try:
+        dbm.updatePortalMetaData(pmd)
+        dbm.updatePortal(Portal)
+        
+    except Exception as exc:
+        eh.handleError(log, "UPDATE DB", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
 
-    dbm.updatePortal(Portal)
-    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, datasets=Portal.datasets)
-
-
-
+    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
+    
 def checkProcesses(processes, pidFile):
     rem=[]
     p = len(processes)
@@ -157,13 +165,13 @@ def cli(args,dbm):
         fetch=True
     
     if args.url:
-        p = dbm.getPortal(apiurl=args.url)
-        log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
+        p = dbm.getPortal( apiurl=args.url)
+        log.info("Queuing", pid=p.id,apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
         for portalRes in dbm.getPortals():
             p = Portal.fromResult(dict(portalRes))
-            log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
+            log.info("Queuing", pid=p.id)
             jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )        
     try:
         log.info("Start processing", portals=len(jobs), processors=args.processors, start = time.time())
@@ -189,11 +197,11 @@ def cli(args,dbm):
                 p.start()
                 c+=1
             
-                start = datetime.now()
-                processes[job['portal'].id] = (p.pid, p, start, job['portal'].apiurl)
+                p_start = datetime.now()
+                processes[job['portal'].id] = (p.pid, p, p_start, job['portal'].apiurl)
                 
-                log.info("START", processID= p.pid, pid=job['portal'].id, apiurl=job['portal'].apiurl, start=start)
-                pidFile.write("START\t %s  \t %s \t %s (%s)\n"%(p.pid, start, job['portal'].id, job['portal'].apiurl))
+                log.info("START", processID= p.pid, pid=job['portal'].id, apiurl=job['portal'].apiurl, start=p_start)
+                pidFile.write("START\t %s  \t %s \t %s (%s)\n"%(p.pid, p_start, job['portal'].id, job['portal'].apiurl))
                 pidFile.flush()
                 
                 while len(processes) >= fetch_processors:
@@ -202,8 +210,8 @@ def cli(args,dbm):
                     if checks % 90==0:
                         log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
                     time.sleep(10)
-                
-                util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
+                elapsed = (time.time() - start)
+                util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
         while len(processes)>0:
             p_done += checkProcesses(processes, pidFile)
             checks+=1
@@ -211,7 +219,8 @@ def cli(args,dbm):
                 log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
             time.sleep(10)
             
-            util.progressIndicator(p_done, total, elapsed=( time.time() -start),lable='Portals')
+            elapsed = (time.time() - start)
+            util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
 
         #headProcess.shutdown()        
         #headProcess.join()

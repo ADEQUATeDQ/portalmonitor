@@ -370,9 +370,9 @@ class OPQuastAnalyser(Analyser):
             self.stats[q].append(quality[q])
             
         
-        if not dataset.qa:
-            dataset.qa={}
-        dataset.qa[OPQuastAnalyser.id] = quality
+        if not dataset.qa_stats:
+            dataset.qa_stats={}
+        dataset.qa_stats[OPQuastAnalyser.id] = quality
         
 
     def done(self):

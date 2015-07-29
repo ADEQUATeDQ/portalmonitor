@@ -6,7 +6,7 @@ Created on Jul 24, 2015
 import hashlib
 
 
-from odpw.analysers.core import CountAnalyser, StatusCodeAnalyser, ElementCount
+from odpw.analysers.core import CountAnalyser, ElementCount
 from odpw.analysers import Analyser
 import json
 from odpw.db.models import Resource
@@ -42,10 +42,6 @@ class DatasetCount(ElementCount):
             pmd.fetch_stats = {}
         pmd.datasets = self.getResult()['count']
         pmd.fetch_stats['datasets'] = self.getResult()['count']
-        
-    def update_Portal(self, portal):
-        portal.dataset=self.getResult()['count'] 
-    
 
 class CKANResourceInDS(ElementCount):
     def __init__(self,withDistinct=None):
@@ -54,7 +50,10 @@ class CKANResourceInDS(ElementCount):
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for res in dataset.data['resources']:
-                super(CKANResourceInDS,self).analyse(res['url'])
+                if 'url' in res:
+                    super(CKANResourceInDS,self).analyse(res['url'])
+                else:
+                    super(CKANResourceInDS,self).analyse('NA')
 
     def update_PortalMetaData(self,pmd):
         if not pmd.res_stats:
@@ -62,10 +61,6 @@ class CKANResourceInDS(ElementCount):
         pmd.resources = self.getResult()['count']
         pmd.res_stats['total'] = self.getResult()['count']
         pmd.res_stats['unique'] = self.getResult()['distinct']
-
-    def update_Portal(self, portal):
-        portal.resources=self.getResult()['count'] 
-    
 
 class DatasetFetchInserter(Analyser):
     def __init__(self, dbm):
@@ -89,16 +84,16 @@ class CKANResourceInserter(Analyser):
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for res in dataset.data['resources']:
+                if 'url' in res:
                     tR =  Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
                     R = self.dbm.getResource(tR)
                     if not R:
-                        #do the lookup
-                        with Timer(key="newRes") as t:
-                            R = Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
-                            self.dbm.insertResource(R)
-                        
-                    R.updateOrigin(pid=dataset.portal, did=dataset.dataset)
-                    self.dbm.updateResource(R) 
+                        #R = Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
+                        tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
+                        self.dbm.insertResource(tR)
+                    else:
+                        R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
+                        self.dbm.updateResource(R) 
 
 
 

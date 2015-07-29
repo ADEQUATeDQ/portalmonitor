@@ -537,7 +537,7 @@ def getSnapshot(args):
         now = datetime.now()
         y=now.isocalendar()[0]
         w=now.isocalendar()[1]
-        sn=str(y)+'-'+str(w)
+        sn=str(y)[2:]+'{:02}'.format(w)
         if not args.ignore:
             while True:
                 choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
@@ -547,7 +547,7 @@ def getSnapshot(args):
                     return None
                 else:
                     sys.stdout.write("Please respond with 'y' or 'n' \n")
-        return sn
+        return int(sn)
 
 
 

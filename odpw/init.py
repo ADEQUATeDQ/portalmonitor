@@ -5,12 +5,13 @@ __author__ = 'jumbrich'
 from odpw.db.models import Portal
 from odpw.utils.util import ErrorHandler as eh
 
+
 import logging
-log = logging.getLogger(__name__)
 from structlog import get_logger, configure
 from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
+
 
 def name():
     return 'Init'

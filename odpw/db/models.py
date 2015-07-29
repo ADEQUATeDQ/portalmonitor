@@ -53,23 +53,23 @@ class Portal(Model):
         
         url = result['url']
         apiurl = result['apiurl']
-        del result['url']
-        del result['apiurl']
+        iso3 = result['iso3']
+        pid = result['id']
+        software =result['software']
 
-        return cls(url=url,
-                   apiurl=apiurl, **result)
+        return cls(pid, url, apiurl, software, iso3)
 
     @classmethod
-    def newInstance(cls, id, url, apiurl, software, iso3):
-        p = cls( id,url, apiurl, software, iso3 )
+    def newInstance(cls, pid, url, apiurl, software, iso3):
+        p = cls( pid,url, apiurl, software, iso3 )
         log.info("new portal instance", pid=p.id, apiurl=p.apiurl, software=software, iso3=iso3)
         return p
 
 
-    def __init__(self, id,url, apiurl, software, iso3):
+    def __init__(self, pid, url, apiurl, software, iso3):
         super(Portal,self).__init__(**{'url':url,'apiurl':apiurl})
         
-        self.id = id
+        self.id = pid
         self.url = url
         self.apiurl = apiurl
         self.software = software
@@ -84,22 +84,20 @@ class Dataset(Model):
             yield r
         return
     
-    def __init__(self, snapshot, portal, dataset, data=None, **kwargs):
-        super(Dataset,self).__init__(**{'snapshot':snapshot,'portal':portal,'dataset':dataset})
+    
+    def __init__(self, snapshot, portalID, did, data=None, **kwargs):
+        super(Dataset,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
         
         self.snapshot = snapshot
-        self.portal = portal
-        self.dataset = dataset
+        self.portal_id = portalID
+        self.id = did
         
         self.data = data
         self.status = None
         self.exception = None
         self.md5 = None
         self.change = None
-        self.fetch_time = None
-        self.qa = None
-        self.qa_time = None
-        
+        self.qa_stats = None
         
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -111,19 +109,19 @@ class Dataset(Model):
         
         
         snapshot = result['snapshot']
-        portal = result['portal']
-        dataset = result['dataset']
+        portal_id = result['portal_id']
+        did = result['id']
         
-        del result['portal']
-        del result['dataset']
+        del result['portal_id']
+        del result['id']
         del result['snapshot']
 
-        for i in ['data', 'qa']:
+        for i in ['data', 'qa_stats']:
             if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
-        return cls(dataset=dataset, portal=portal,
-                   snapshot=snapshot, **result)      
+        return cls(snapshot=snapshot, portalID=portal_id, id=did,
+                    **result)      
         
 class PortalMetaData(Model):
 
@@ -134,11 +132,20 @@ class PortalMetaData(Model):
             yield r
         return
 
+                             
+                             
+
+
     @classmethod
     def fromResult(cls, result):
-        portal = result['portal']
+        if isinstance(result, RowProxy):
+            result = dict(result)
+        if not isinstance(result, dict):
+            return None
+        
+        portal = result['portal_id']
         snapshot = result['snapshot']
-        del result['portal']
+        del result['portal_id']
         del result['snapshot']
 
 
@@ -149,36 +156,30 @@ class PortalMetaData(Model):
         return cls(portal=portal,
                    snapshot=snapshot, **result)
 
-    def __init__(self, portal=None, snapshot=None, **kwargs):
-        super(PortalMetaData,self).__init__(**{'snapshot':snapshot,'portal':portal})
+    def __init__(self, portalID=None, snapshot=None, **kwargs):
+        super(PortalMetaData,self).__init__(**{'snapshot':snapshot,'portal_id':portalID})
         self.snapshot = snapshot
-        self.portal = portal
+        self.portal_id = portalID
         self.res_stats = None
         self.qa_stats = None
+        self.fetch_stats = None
         self.general_stats = None
-        self.exception = None
         self.resources = -1
         self.datasets = -1
-        self.fetch_stats = None
         
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def fetchstart(self):
-        if self.fetch_stats:
-            self.fetch_stats['fetch_start'] = datetime.now().isoformat()
-        else:
-            self.fetch_stats = {'fetch_start':datetime.now().isoformat()}
-    
+        if not self.fetch_stats:
+            self.fetch_stats={}
+        self.fetch_stats['fetch_start'] = datetime.now().isoformat()
+        
     def fetchend(self):
         if self.fetch_stats:
-            self.fetch_stats['fetch_end'] = datetime.now().isoformat()
-        else:
-            self.fetch_stats = {'fetch_end':datetime.now().isoformat()}
+            self.fetch_stats={}
+        self.fetch_stats['fetch_end'] = datetime.now().isoformat()
         
-        
-   
-            
     def updateStats(self, stats):
         if 'fetch_stats' in stats:
             if not self.fetch_stats:
@@ -242,7 +243,6 @@ class Resource(Model):
         self.exception = None
         self.header = None
         self.mime = None
-        self.redirects = None
         self.size = None
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -266,7 +266,7 @@ class Resource(Model):
         del result['url']
         del result['snapshot']
         
-        for i in ['header', 'origin', 'redirects']:
+        for i in ['header', 'origin']:
             if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 

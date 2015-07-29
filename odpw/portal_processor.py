@@ -32,8 +32,7 @@ class PortalProcessor:
         raise NotImplementedError("Should have implemented this")
 
     def fetching(self, Portal, sn):
-        Portal.latest_snapshot=sn
-
+        
         iter = self.generateFetchDatasetIter(Portal, sn)
         self.analyse_engine.process_all(iter)
 
@@ -87,8 +86,8 @@ class CKAN(PortalProcessor):
                         if datasetID not in processed:
                             data = datasetJSON
 
-                            d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
-                            d.status=200
+                            d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
+                            
 
                             processed.add(datasetID)
 
@@ -142,7 +141,7 @@ class CKAN(PortalProcessor):
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
-                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=entity, **props)
+                        d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
                         processed.add(d.dataset)
 
                         if len(processed) % 1000 == 0:
@@ -176,8 +175,8 @@ class Socrata(PortalProcessor):
                 datasetID = datasetJSON['id']
                 if datasetID not in processed:
                     processed.add(datasetID)
-                    d = Dataset(snapshot=sn, portal=Portal.id, dataset=datasetID, data=datasetJSON)
-                    d.status = 200
+                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=datasetJSON,status=200)
+                    
                     if dcat:
                         try:
                             dcat_data = self._dcat(datasetID, api)
@@ -220,8 +219,8 @@ class OpenDataSoft(PortalProcessor):
 
                     if datasetID not in processed:
                         data = datasetJSON
-                        d = Dataset(snapshot=sn,portal=Portal.id, dataset=datasetID, data=data)
-                        d.status=200
+                        d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
+                        
                         processed.add(datasetID)
 
                         if len(processed) % 1000 == 0:

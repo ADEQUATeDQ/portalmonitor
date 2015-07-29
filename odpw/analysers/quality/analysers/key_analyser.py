@@ -4,7 +4,7 @@ __author__ = 'jumbrich'
 
 import datetime
 import numpy as np
-from odpw.quality import interpret_meta_field
+from odpw.analysers.quality import interpret_meta_field
 
 
 DS = 'ds'

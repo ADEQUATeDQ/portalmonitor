@@ -97,9 +97,9 @@ class CompletenessAnalyser(Analyser):
         for key in qa.keys():
             self.compl[key] = np.append(self.compl[key], qa[key] )
             
-        if not dataset.qa:
-            dataset.qa={}
-        dataset.qa[CompletenessAnalyser.id] = qa
+        if not dataset.qa_stats:
+            dataset.qa_stats={}
+        dataset.qa_stats[CompletenessAnalyser.id] = qa
         
 
     def update_PortalMetaData(self, pmd):

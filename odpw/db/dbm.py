@@ -223,7 +223,7 @@ class PostgressDBM:
             s = select([self.pmd])
         
             if portalID:
-                s= s.where(self.pmd.c.portal == portalID)
+                s= s.where(self.pmd.c.portal_id == portalID)
             if snapshot:
                 s= s.where(self.pmd.c.snapshot == snapshot)
             
@@ -242,7 +242,7 @@ class PostgressDBM:
             if snapshot:
                 s=s.where(self.pmd.c.snapshot == snapshot)
             if portalID:
-                s= s.where(self.pmd.c.portal == portalID)
+                s= s.where(self.pmd.c.portal_id == portalID)
                 
             self.log.debug(query=s.compile(), params=s.compile().params)
                
@@ -269,7 +269,7 @@ class PostgressDBM:
                 
             ins = self.pmd.insert().values(
                                                snapshot=PortalMetaData.snapshot,
-                                               portal=PortalMetaData.portal,
+                                               portal_id=PortalMetaData.portal_id,
                                                fetch_stats=fetch_stats,
                                                res_stats=res_stats,
                                                qa_stats=qa_stats,
@@ -300,7 +300,7 @@ class PostgressDBM:
                 res_stats=PortalMetaData.res_stats
                 #json.dumps(nested_json(PortalMetaData.res_stats),default=date_handler
                 
-            ins = self.pmd.update().where((self.pmd.c.snapshot==PortalMetaData.snapshot) & (self.pmd.c.portal== PortalMetaData.portal)).values(
+            ins = self.pmd.update().where((self.pmd.c.snapshot==PortalMetaData.snapshot) & (self.pmd.c.portal_id== PortalMetaData.portal_id)).values(
                                                fetch_stats=fetch_stats,
                                                res_stats=res_stats,
                                                qa_stats=qa_stats,
@@ -314,13 +314,15 @@ class PostgressDBM:
         
     def insertDatasetFetch(self, Dataset):
         with Timer(key="insertDatasetFetch") as t:
+            #assuming we have a change
             change=2
             
+            #TODO optimise query, get first the latest snapshot and check then for md5
             s=select([self.datasets.c.md5]).where(
                                                   and_(
-                                                       self.datasets.c.dataset==Dataset.dataset, 
-                                                       self.datasets.c.portal==Dataset.portal,
-                                                       self.datasets.c.snapshot!=Dataset.snapshot)
+                                                       self.datasets.c.id==Dataset.id, 
+                                                       self.datasets.c.portal_id==Dataset.portal_id,
+                                                       self.datasets.c.snapshot != Dataset.snapshot)
                                                    ).order_by(self.datasets.c.snapshot.desc()).limit(1)
             self.log.debug(query=s.compile(), params=s.compile().params)
             result=s.execute()
@@ -328,22 +330,20 @@ class PostgressDBM:
                 for res in result:
                     if Dataset.md5 == res['md5'] :
                         change=0
-            else: change=1
+            else: 
+                change=1
             
-            #data=json.dumps(nested_json(Dataset.data),default=date_handler)
-        
+            
             ins = self.datasets.insert().values(
-                                                dataset=Dataset.dataset, 
-                                                portal=Dataset.portal,
+                                                id=Dataset.id, 
+                                                portal_id=Dataset.portal_id,
                                                 snapshot=Dataset.snapshot,
                                                 data=Dataset.data,
                                                 status=Dataset.status,
                                                 exception=Dataset.exception,
                                                 md5=Dataset.md5,
                                                 change=change,
-                                                fetch_time=datetime.datetime.now()
-                                                
-                                               )
+                                              )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             #self.conn.execute(ins)
             ins.execute()
@@ -468,11 +468,7 @@ class PostgressDBM:
             if Resource.header:
                 header=Resource.header
                 #json.dumps(nested_json(Resource.header),default=date_handler)
-            redirects=None
-            if Resource.redirects:
-                redirects=Resource.redirects
-                #json.dumps(nested_json(Resource.redirects),default=date_handler)
-
+            
             ins = self.resources.insert().values(
                                                status=Resource.status,
                                                url = Resource.url,
@@ -482,7 +478,6 @@ class PostgressDBM:
                                                mime=Resource.mime,
                                                size=Resource.size,
                                                timestamp=Resource.timestamp,
-                                               redirects=redirects,
                                                exception=Resource.exception
                                                )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
@@ -570,11 +565,7 @@ class PostgressDBM:
             if Resource.header:
                 header=Resource.header
                 #json.dumps(nested_json(Resource.header),default=date_handler)
-            redirects=None
-            if Resource.redirects:
-                redirects=Resource.redirects
-                #json.dumps(nested_json(Resource.redirects),default=date_handler)
-
+            
             ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
                                                status=Resource.status,
                                                origin=origin,
@@ -582,7 +573,6 @@ class PostgressDBM:
                                                mime=Resource.mime,
                                                size=Resource.size,
                                                timestamp=Resource.timestamp,
-                                               redirects=redirects,
                                                exception=Resource.exception
                                                )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
@@ -675,23 +665,23 @@ def cli(args,dbm):
                 sys.stdout.write("Please respond with 'y' or 'n' \n")                
                 
                 
-if __name__ == '__main__':
-    logging.basicConfig()
-    p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
+#if __name__ == '__main__':
+#    logging.basicConfig()
+ #   p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
+#    
+ #   d = DBAnalyser(p.getPMDStatusDist)
+ #   d.analyse()
     
-    d = DBAnalyser(p.getPMDStatusDist)
-    d.analyse()
+  #  df= d.getDataFrame()
+   # print df
     
-    df= d.getDataFrame()
-    print df
+    #print dftopk(df, column="count", k=3)
     
-    print dftopk(df, column="count", k=3)
-    
-    print dftopk(df, column="count", k=3, otherrow=True)
+    #print dftopk(df, column="count", k=3, otherrow=True)
     
     
-    print dftopk(df, column="count", k=3, otherrow=True, percentage=True)
-    print DFtoListDict(dftopk(df, column="count", k=3, otherrow=True, percentage=True))
+    #print dftopk(df, column="count", k=3, otherrow=True, percentage=True)
+    #print DFtoListDict(dftopk(df, column="count", k=3, otherrow=True, percentage=True))
     
     #print top10pp.append(top10pp.sum(numeric_only=True), ignore_index=True)
     #print DFtoListDict(df)
