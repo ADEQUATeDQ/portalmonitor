@@ -176,7 +176,7 @@ class PortalMetaData(Model):
         self.fetch_stats['fetch_start'] = datetime.now().isoformat()
         
     def fetchend(self):
-        if self.fetch_stats:
+        if not self.fetch_stats:
             self.fetch_stats={}
         self.fetch_stats['fetch_end'] = datetime.now().isoformat()
         

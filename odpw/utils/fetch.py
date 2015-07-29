@@ -95,6 +95,10 @@ def fetching(obj):
         ae.update(pmd)
         ae.update(Portal)
 
+        pmd.fetch_stats['status'] = 200
+        pmd.fetch_stats['exception'] = None
+        
+
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
         if pmd:
@@ -211,7 +215,7 @@ def cli(args,dbm):
                         log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
                     time.sleep(10)
                 elapsed = (time.time() - start)
-                util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
+                util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
         while len(processes)>0:
             p_done += checkProcesses(processes, pidFile)
             checks+=1
@@ -220,7 +224,7 @@ def cli(args,dbm):
             time.sleep(10)
             
             elapsed = (time.time() - start)
-            util.progressIndicator(p_done, total, elapsed=elapsed,lable='Portals')
+            util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
 
         #headProcess.shutdown()        
         #headProcess.join()
