@@ -41,6 +41,3 @@ https://dati.lombardia.it
 http://data.cms.hhs.gov
 https://www.strategicplanning.aspe.hhs.gov
 http://data.cityofdeleon.org
-http://info.samhsa.gov
-https://www.halifaxopendata.ca
-http://grandnancy.opendatasoft.com

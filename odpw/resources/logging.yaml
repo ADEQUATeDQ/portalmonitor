@@ -30,7 +30,7 @@ handlers:
       level: !!python/name:logging.NOTSET
     console:
       class: logging.StreamHandler
-      stream: ext://sys.stdout
+      stream: ext://sys.stderr
       formatter: simpleFormatter
       level: !!python/name:logging.NOTSET
 formatters:

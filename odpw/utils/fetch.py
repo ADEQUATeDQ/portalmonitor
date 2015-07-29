@@ -90,12 +90,14 @@ def fetching(obj):
         ae.update(pmd)
         ae.update(Portal)
 
-        dbm.updatePortal(Portal)
+        dbm.updatePortalMetaData(pmd)
+
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
         Portal.status=getExceptionCode(exc)
         Portal.exception=str(type(exc))+":"+str(exc.message)
-    
+
+    dbm.updatePortal(Portal)
     log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, datasets=Portal.datasets)
 
 
