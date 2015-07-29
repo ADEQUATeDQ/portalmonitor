@@ -1,19 +1,23 @@
-        <div class="navigation-toggle" data-tools="navigation-toggle" data-target="#main_menu">
+        <div class="units-row end" id="nav">
+        <div class="navigation-toggle" data-tools="navigation-toggle" data-target="#nav_main">
             <span>Menu</span>
         </div>
-        <nav id="main_menu" class="navbar fullwidth tab">
+
+        <nav id="nav-main" class="nav-tabs fullwidth end">
             <ul>
-                <li>
-                    <a href="/" {% if index%} class="cur" {% endif %}>
-                        <i class="fa fa-laptop fa-fw"></i>
-                        System
+                <li {% if index%} class="active" {% endif %}>
+                    <a href="/">
+                        <i class="fa fa-laptop"></i> System
                     </a>
                 </li>
                 <li>
-                    <a href="/portal_details" {% if portals%} class="cur" {% endif %}>Portal(s) Stats</a>
+                    <a href="/portal_details">
+                        <i class="fa fa-server fa-fw"></i>
+                        Portal(s) Stats
+                    </a>
                 </li>
                 <li>
-                    <a href="#" {% if data%} class="cur" {% endif %}>Data</a>
+                    <a href="#" class="cur">Data</a>
                 </li>
                 <li>
                     <a href="#">Metrics</a>
@@ -23,3 +27,4 @@
                 </li>
             </ul>
         </nav>
+    </div>

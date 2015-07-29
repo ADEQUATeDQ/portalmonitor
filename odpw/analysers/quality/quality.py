@@ -8,14 +8,14 @@ TODO: consider content for keys with dictionary values ( e.g., organisation)
 """
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 
-from odpw.util import getSnapshot, getExceptionCode,ErrorHandler as eh
+from odpw.utils.util import getSnapshot, getExceptionCode,ErrorHandler as eh
 
-from odpw.timer import Timer
+from odpw.utils.timer import Timer
 import argparse
 
 import logging
 import pprint
-import odpw.util as util
+import odpw.utils.util as util
 from odpw.analysers import AnalyseEngine
 
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser

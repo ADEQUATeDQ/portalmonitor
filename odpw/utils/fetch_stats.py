@@ -1,6 +1,6 @@
 
 import time
-import odpw.util as util
+import odpw.utils.util as util
 from odpw.analysers import AnalyseEngine
 from odpw.analysers.fetching import *
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
@@ -9,7 +9,7 @@ from odpw.analysers.quality.analysers.openness import OpennessAnalyser
 from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 __author__ = 'jumbrich'
 
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
+from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     progressIterator
 
 

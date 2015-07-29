@@ -1,9 +1,9 @@
 
 import time
-import odpw.util as util
+import odpw.utils.util as util
 __author__ = 'jumbrich'
 
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
 
 from odpw.db.models import Portal,  PortalMetaData, Dataset, Resource

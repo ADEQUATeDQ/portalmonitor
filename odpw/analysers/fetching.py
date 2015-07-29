@@ -10,7 +10,7 @@ from odpw.analysers.core import CountAnalyser, StatusCodeAnalyser, ElementCount
 from odpw.analysers import Analyser
 import json
 from odpw.db.models import Resource
-from odpw.timer import Timer
+from odpw.utils.timer import Timer
 import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field

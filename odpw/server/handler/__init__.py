@@ -6,7 +6,7 @@ from jinja2.exceptions import TemplateNotFound
 from tornado.escape import json_encode
 
 from odpw.db.models import Portal
-from odpw  import util
+from odpw.utils  import util
 from collections import defaultdict
 from urlparse import urlparse 
 import json
@@ -82,22 +82,35 @@ class IndexHandler(BaseHandler):
         
         d = DBAnalyser(self.db.getSoftwareDist)
         d.analyse()
-        softdist=DFtoListDict(d.getDataFrame())
+        softdist=DFtoListDict(addPercentageCol(d.getDataFrame()))
         
-        print softdist
+        print json.dumps(softdist, default=date_handler)
         
         d = DBAnalyser(self.db.getCountryDist)
         d.analyse()
-        countrydist=DFtoListDict(addPercentageCol(d.getDataFrame()))
+        df=d.getDataFrame()
+        countrydist=DFtoListDict(addPercentageCol(df))
+        
+        #print df
+        countryMap=[]
+        df.set_index("tld")
+        for tld, iso3 in util.tld2iso3.items():
+            c=0
+            if any(df['tld'] == tld):
+                d= df[df['tld'] == tld]
+                c= df['count'].iloc[d.index.tolist()[0]]
+            countryMap.append({'iso3':iso3,'count':c})
         
         
         d = DBAnalyser(self.db.getPMDStatusDist)
         d.analyse()
         pmdStatus=DFtoListDict((d.getDataFrame()))
         
-        data={'softdist':softdist,'countrydist':countrydist,'pmdStatus':pmdStatus}
+        data={'softdist':softdist,'countrydist':countrydist,'pmdStatus':pmdStatus,'countryMap':countryMap}
+        
+        print json.dumps(countryMap, default=date_handler)
             
-        self.render('index.html',index=True, data=data)
+        self.render('index.html',index=True, json=json.dumps(data, default=date_handler))
         
         
 class DataHandler(RequestHandler):

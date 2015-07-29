@@ -7,6 +7,7 @@ from odpw.analysers.quality.analysers.contactability import ContactabilityAnalys
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
 from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
+import time
 
 __author__ = 'jumbrich'
 
@@ -14,13 +15,13 @@ __author__ = 'jumbrich'
 from datetime import datetime
 from multiprocessing.process import Process
 from time import sleep
-from odpw.head import HeadProcess
+from odpw.utils.head import HeadProcess
 
 
 from odpw.db.models import Portal, PortalMetaData, Dataset
 
-import odpw.util as util
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+import odpw.utils.util as util
+from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 
 import argparse
 
@@ -165,31 +166,18 @@ def cli(args,dbm):
     fetch=True
     if args.fetch:
         fetch=True
+    
     if args.url:
-        p= dbm.getPortal(apiurl=args.url)
+        p = dbm.getPortal(apiurl=args.url)
         log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
-        jobs.append(
-            {   'portal':p,
-                'sn':sn,
-                'dbm':dbm,
-                'fullfetch':fetch
-            }
-        )
+        jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
         for portalRes in dbm.getPortals():
-        #for portalRes in dbm.getUnprocessedPortals(snapshot=sn):
             p = Portal.fromResult(dict(portalRes))
             log.info("Queuing", pid=p.id, datasets=p.datasets, resources=p.resources)
-            jobs.append(
-                {   'portal':p,
-                    'sn':sn,
-                    'dbm':dbm,
-                    'fullfetch': fetch
-                }
-            )
-        
+            jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )        
     try:
-        log.info("Start processing", portals=len(jobs), processors=args.processors)
+        log.info("Start processing", portals=len(jobs), processors=args.processors, start = time.time())
         
         #headProcess = HeadProcess(dbm, sn)
         #headProcess.start()
@@ -201,7 +189,7 @@ def cli(args,dbm):
         checks=0
         p_done=0
         with args.outfile as pidFile:
-            pidFile.write("STATUS\t PID \t ds \t start \t p_id \t p_url\n")
+            pidFile.write("STATUS\t PID \t start \t p_id \t p_url\n")
             pidFile.flush()
             
             total=len(jobs)
@@ -212,18 +200,18 @@ def cli(args,dbm):
                 c+=1
             
                 start = datetime.now()
-                processes[job['portal'].id]=(p.pid, p, start, job['portal'].apiurl)
+                processes[job['portal'].id] = (p.pid, p, start, job['portal'].apiurl)
                 
-                log.info("START", PID= p.pid, portalID=job['portal'].id, apiurl=job['portal'].apiurl, start=start, datasets=job['portal'].datasets)
-                pidFile.write("START\t %s \t %s \t %s \t %s (%s)\n"%(p.pid, job['portal'].datasets,start, job['portal'].id, job['portal'].apiurl))
+                log.info("START", processID= p.pid, pid=job['portal'].id, apiurl=job['portal'].apiurl, start=start)
+                pidFile.write("START\t %s  \t %s \t %s (%s)\n"%(p.pid, start, job['portal'].id, job['portal'].apiurl))
                 pidFile.flush()
                 
                 while len(processes) >= fetch_processors:
-                    p_done+=checkProcesses(processes, pidFile)
+                    p_done += checkProcesses(processes, pidFile)
                     checks+=1
-                    sleep(10)
                     if checks % 90==0:
-                        print "Status(",checks,"): cur:",len(processes),"pids, done:", (c-len(processes))
+                        log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
+                    sleep(10)
                 
                 util.progressIndicator(c, total)
             

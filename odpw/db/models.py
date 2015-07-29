@@ -4,8 +4,8 @@ __author__ = 'jumbrich'
 from sqlalchemy.engine.result import RowProxy
 
 import urlnorm
-import odpw.util as util
-from odpw.util import ErrorHandler as eh
+import odpw.utils.util as util
+from odpw.utils.util import ErrorHandler as eh
 
 from datetime import datetime
 
@@ -37,7 +37,6 @@ class Model(object):
 
 class Portal(Model):
 
-
     @classmethod
     def iter(cls, iterable):
         for i in iterable:
@@ -47,7 +46,6 @@ class Portal(Model):
         
     @classmethod
     def fromResult(cls, result):
-        
         if isinstance(result, RowProxy):
             result = dict(result)
         if not isinstance(result, dict):

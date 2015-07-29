@@ -5,10 +5,10 @@ __author__ = 'jumbrich'
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 
-import odpw.util as util
-from odpw.util import getSnapshot, ErrorHandler as eh
+import odpw.utils.util as util
+from odpw.utils.util import getSnapshot, ErrorHandler as eh
 
-from odpw.timer import Timer
+from odpw.utils.timer import Timer
 
 import logging
 logger = logging.getLogger(__name__)
@@ -31,15 +31,16 @@ def head (dbm, sn, resource):
         props['redirects']=None
         props['status']=None
         props['header']=None
-        try:
-            props=util.head(resource.url)
-        except Exception as e:
-            eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
-            props['status']=util.getExceptionCode(e)
-            props['exception']=str(type(e))+":"+str(e.message)
+        with Timer("headLookupProcessing") as t:
+            try:
+                props=util.head(resource.url)
+            except Exception as e:
+                eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
+                props['status']=util.getExceptionCode(e)
+                props['exception']=str(type(e))+":"+str(e.message)
         
-        resource.updateStats(props)
-        dbm.updateResource(resource)
+            resource.updateStats(props)
+            dbm.updateResource(resource)
         
     except Exception as e:
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
@@ -111,7 +112,7 @@ def cli(args,dbm):
         return
 
     resources=[]
-    for res in dbm.getResourceWithoutHead(snapshot=sn, status=600):
+    for res in dbm.getResourceWithoutHead(snapshot=sn):
         try:
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))

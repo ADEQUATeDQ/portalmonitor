@@ -2,7 +2,7 @@ __author__ = 'jumbrich'
 
 
 from odpw.db.models import Portal
-from odpw.util import ErrorHandler as eh
+from odpw.utils.util import ErrorHandler as eh
 
 import logging
 log = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def cli(args,dbm):
                             ok+=1
                     if args.update:
                         p = dbm.getPortal(url=l.split(",")[0].strip())
-                        pn= Portal.newInstance(url=url, apiurl=apiurl)
+                        pn= Portal.newInstance(url=url, apiurl=apiurl,software=args.software)
                         if p:
                             p.apiurl=pn.apiurl
                             p.exception = pn.exception

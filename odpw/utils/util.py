@@ -141,6 +141,26 @@ def computeID(url):
     except Exception as e:
         return None
 
+tld2iso3={}
+iso3list=[]
+import os
+import os, odpw
+template = os.path.join(odpw.__path__[0], 'resources', 'initial_data.json')
+with open(template) as f:
+    countries = json.load(f)
+    for c in countries:
+        data = c['fields']
+        tld = data['tld'].replace(".","") if data['tld'] else data['tld'] 
+        iso3list.append(data['iso3'])
+        tld2iso3[tld] = data['iso3']
+        
+    print tld2iso3
+
+def getISO3(tld):
+    iso3= tld2iso3[tld]
+    if not iso3:
+        return ""
+    
 # The mappings
 nameorgs = {
     # New top level domains as described by ICANN

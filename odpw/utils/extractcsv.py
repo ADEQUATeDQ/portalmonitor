@@ -3,9 +3,9 @@ __author__ = 'jumbrich'
 from odpw.db.models import Portal, Resource
 
 
-from odpw.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
 from odpw.db.POSTGRESManager import PostGRESManager
-from odpw.timer import Timer
+from odpw.utils.timer import Timer
 import math
 import argparse
 import os

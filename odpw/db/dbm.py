@@ -1,12 +1,5 @@
 from __future__ import generators
 
-from _collections import defaultdict
-import pandas
-from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
-    dftopk
-
-
-
 __author__ = 'jumbrich'
 
 
@@ -19,7 +12,7 @@ log = get_logger()
 
 import sys
 import datetime
-from odpw.timer import Timer
+from odpw.utils.timer import Timer
 from odpw.db.models import Portal,PortalMetaData,Resource,Dataset
 
 from sqlalchemy import create_engine
@@ -32,10 +25,6 @@ from sqlalchemy import and_, func
 import math
 import json
 
-#import psycopg2.extras
-#psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-#psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-#psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
 
 from datetime import date
 from collections import Mapping, Sequence
@@ -65,7 +54,7 @@ def nested_json(o):
 
 class PostgressDBM:
     def __init__(self, db='portalwatch', host="localhost", port=5433, password='0pwu', user='opwu'):
-        try:
+        
             #Define our connection string
             self.log = log.new()
             
@@ -81,6 +70,7 @@ class PostgressDBM:
             conn_string += "/"+db
             
             self.engine = create_engine(conn_string, pool_size=20)
+            self.engine.connect()
             #self.conn = self.engine.connect()
             
             self.metadata = MetaData(bind=self.engine)
@@ -88,12 +78,11 @@ class PostgressDBM:
             
             ##TABLES
             self.portals = Table('portals',self.metadata,
-                                 Column('id', String(50), primary_key=True),
+                                 Column('id', String(50), primary_key=True, index=True),
                                  Column('url', String),
                                  Column('apiurl', String),
                                  Column('software', String),
                                  Column('country', String),
-                                 Column('changefeed', Boolean),
                                  Column('status', SmallInteger),
                                  Column('exception', String),
                                  Column('datasets', Integer),
@@ -143,11 +132,7 @@ class PostgressDBM:
                              
                              
                              )
-        except Exception as e:
-            print "Unable to conntect to db(host=%s, db=%s)", host,db
-            print e
-            logger.critical("Unable to conntect to db(host=%s, db=%s)", host,db,exc_info=True)
-    
+        
 
     def initTables(self):  
         self.metadata.create_all(self.engine)    

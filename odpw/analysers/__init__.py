@@ -1,8 +1,8 @@
 from odpw.db.models import *
 
 import pandas
-from odpw.timer import Timer
-from odpw.util import timer
+from odpw.utils.timer import Timer
+
 import types
 from abc import abstractmethod
 from collections import OrderedDict

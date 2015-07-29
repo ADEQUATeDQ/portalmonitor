@@ -2,13 +2,13 @@ import random
 import urlparse
 import ckanapi
 import time
-from odpw import util
+from odpw.utils import util
 from odpw.db import models
 from odpw.db.models import Dataset
 import urllib2
 import json
-from odpw.timer import Timer
-from odpw.util import ErrorHandler as eh, progressIndicator
+from odpw.utils.timer import Timer
+from odpw.utils.util import ErrorHandler as eh, progressIndicator
 
 from odpw.analysers import AnalyseEngine
 
