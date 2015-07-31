@@ -1,27 +1,22 @@
-from odpw.utils.head_stats import headStats
-from odpw.utils.fetch_stats import simulateFetching
 
 __author__ = 'jumbrich'
 
-
-
-from pprint import pprint
-from odpw.db.models import Portal,  PortalMetaData, Dataset, Resource
-from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh
+from odpw.db.models import Portal
+from odpw.utils.util import getSnapshot
 import pandas as pd
 
+from odpw.utils.head_stats import headStats
+from odpw.utils.fetch_stats import simulateFetching
 
-import logging
-log = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+
+import structlog
+log =structlog.get_logger()
 
 
 def name():
     return 'Sanity'
-
+def help():
+    return "Check the sanity of the system"
 def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
@@ -135,10 +130,7 @@ def cli(args,dbm):
                              
                     
                     
-                    if pmd.snapshot == portal.latest_snapshot:
-                        ## check if the portal info
-                        stats['portal_ds'] =  stats['indexed_ds'] == portal.datasets
-                        stats['portal_res'] =  stats['indexed_res'] == portal.resources
+                    
                 else:
                     stats['pmd']=False     
                                             

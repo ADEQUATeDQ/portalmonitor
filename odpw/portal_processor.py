@@ -3,22 +3,16 @@ import random
 import urlparse
 import ckanapi
 import time
-from odpw.utils import util
-from odpw.db import models
-from odpw.db.models import Dataset
 import requests
+
+from odpw.utils import util
+from odpw.db.models import Dataset, Portal
 from odpw.utils.timer import Timer
 from odpw.utils.util import ErrorHandler as eh, progressIndicator
-
 from odpw.analysers import AnalyseEngine
 
-import logging
-logger = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
-
+import structlog
+log = structlog.get_logger()
 
 class PortalProcessor:
     """
@@ -87,9 +81,7 @@ class CKAN(PortalProcessor):
                             data = datasetJSON
 
                             d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
-                            
-
-                            processed.add(datasetID)
+                            processed.add(d.id)
 
                             if len(processed) % 1000 == 0:
                                 log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
@@ -142,7 +134,7 @@ class CKAN(PortalProcessor):
                             props['exception']=util.getExceptionString(e)
 
                         d = Dataset(snapshot=sn,portalID=Portal.id, did=entity, data=data,status=200)
-                        processed.add(d.dataset)
+                        processed.add(d.id)
 
                         if len(processed) % 1000 == 0:
                             log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
@@ -241,7 +233,7 @@ if __name__ == '__main__':
     # TODO all analysers
 
     p = CKAN(analyse_engine=ae)
-    p.fetching(models.Portal('http://data.gov/', 'http://catalog.data.gov/'), '1')
+    p.fetching(Portal('http://data.gov/', 'http://catalog.data.gov/'), '1')
 
     for a in ae.getAnalysers():
         #updatePMDwithAnalyserResults(pmd, ae)

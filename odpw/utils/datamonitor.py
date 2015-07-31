@@ -1,10 +1,11 @@
+from odpw.db.dbm import DMManager
 __author__ = 'jumbrich'
 
 
 import sys
 from odpw.db.models import Portal
-from odpw.db.POSTGRESManager import PostGRESManager
-from odpw.utils.util import ErrorHandler as eh, getSnapshot
+
+from odpw.utils.util import ErrorHandler as eh, getSnapshot, progressIndicator
 from datetime import date, datetime, timedelta
 
 import logging
@@ -14,6 +15,9 @@ from structlog.stdlib import LoggerFactory
 configure(logger_factory=LoggerFactory())
 log = get_logger()
 
+
+def help():
+    return "INsert URIs into the datamonitor"
 def name():
     return 'DM'
 
@@ -23,62 +27,56 @@ def setupCLI(pa):
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
 
 def cli(args,dbm):
-    if args.schedule:
+    
         sn = getSnapshot(args)
         if not sn:
             return
         
         today = datetime.now()
-        start = today + timedelta( (6-today.weekday()) % 7 )
-    
-        start= start.replace(hour=0, minute=0, second=0)
-        end=start+timedelta(5)
-        
+        start = today + timedelta((6 - today.weekday()) % 7)
+        start = start.replace(hour=0, minute=0, second=0)
+        end = start + timedelta(5)
         log.info("Scheduling URIs", start=start, end=end)
         
-        experiment='odwu'
+        experiment = 'odwu'
         
-        nextCrawl=start
+        dm_dbm = DMManager(db='datamonitor', host="137.208.51.23", port=5432, password='p0stgres', user='postgres')
         
-        dm_dbm= PostGRESManager(db='datamonitor', host="137.208.51.23", port=5432, password=None, user='postgres')
+        urls={}
+        # get list of URLs for the snapshot 
+        #for res in dbm.getResources(snapshot=sn, status=-1):
+        #    # print str(res['status'])[0]
+        #    urls[res['url']]={'experiment':experiment, 'freq':10800}
         
-        #get list of URLs for the snapshot 
-        for res in dbm.selectQuery("Select * from resources WHERE snapshot='"+sn+"'"):
-            #print str(res['status'])[0]
-            uri=res['url']
+        nct = today - timedelta(1)
+        print nct
+        for resS in dm_dbm.getOldSchedule(nct):
+            urls[ resS['uri'] ]={'experiment':resS['experiment'], 'freq':resS['frequency']}
             
-            if str(res['status'])[0] == '2' or str(res['status'])[0] =='5': 
-                print res['status'],res['url'], nextCrawl, experiment
+        t = len(urls)
+        steps = t/10
+        
+        print t
+        
+        nextCrawl = start
+        c=0
+        for url in urls:
+            c+=1
+            dm_dbm.upsert(url, urls[url]['experiment'], nextCrawl, urls[url]['freq'])
             
-                dm_dbm.insertQuery(
-                           "INSERT INTO schedule (uri,experiment,nextcrawltime, frequency) "
-                           "SELECT %s,%s,%s,%s " 
-                           "WHERE NOT EXISTS (SELECT 1 FROM schedule WHERE uri=%s AND experiment=%s);",
-                           tuple=(uri, experiment, nextCrawl, 10800, uri, experiment)
-                           )
-            
-                nextCrawl +=timedelta(hours=1)
-                if nextCrawl>=end:
-                    nextCrawl=start
+            if c%steps==0:
+                progressIndicator(c, t)
+                
+            nextCrawl += timedelta(hours=1)
+            if nextCrawl >= end:
+                nextCrawl = start
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-       
-     
-    print "Numbers of Exceptions:"
-    for exc, count in eh.exceptions.iteritems():
-        print exc, count
         
 if __name__ == '__main__':
     
+    dm_dbm = DMManager(db='datamonitor', host="137.208.51.23", port=5432, password='p0stgres', user='postgres')
     
+    dm_dbm.upsert('http://example', 'text', '','')
     
 
     def datespan(startDate, endDate, delta=timedelta(days=1)):

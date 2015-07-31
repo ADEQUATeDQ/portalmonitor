@@ -77,3 +77,43 @@ class ElementCount(Analyser):
         if self.set is not None:
             res['distinct']=len(self.set)
         return res
+    
+class DBAnalyser(object):
+    
+    def __init__(self, func, **param):
+        self.func=func
+        self.rows=[]
+        if param:
+            self.param=param
+        else:
+            self.param={}
+        
+        self.columns=None
+        
+    def analyse(self):
+        
+        res = self.func(**self.param)
+        self.columns=res.keys()
+        for r in res:
+            self.rows.append(r)
+    
+    def getResult(self):
+        return {'columns':self.columns, 'rows':self.rows} 
+    
+    
+if __name__ == '__main__':
+    def f1(test=None):
+        print test
+    
+    
+    def calling(func, **param):
+        if param:
+            p=param
+        else:
+            p={}
+        func(**p)
+        
+    d = DBAnalyser(f1)
+    d.analyse()
+        
+    

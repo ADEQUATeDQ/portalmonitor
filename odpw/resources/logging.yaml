@@ -9,7 +9,7 @@ loggers:
     # Controlling logging of 3rd party libs
     sqlalchemy.engine:
       level: !!python/name:logging.WARN
-      handlers: [logfile]
+      handlers: [logfile,console]
       qualname: sqlalchemy.engine
       propagate: false
     sqlalchemy.pool:

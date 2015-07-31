@@ -23,16 +23,8 @@ from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
 
-import logging
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
-
-
-
-
-
+import structlog
+log =structlog.get_logger()
 
 
 def fetching(obj):
@@ -130,11 +122,11 @@ def checkProcesses(processes, pidFile):
                     log.info("FIN", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start.isoformat(), exitcode=process.exitcode)
                     pidFile.write("FIN\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, portalID, apiurl))
                 else:
-                    log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start, exitcode=process.exitcode)
+                    log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start.isoformat(), exitcode=process.exitcode)
                     pidFile.write("ABORT\t %s \t %s \t %s \t %s (%s)\n"%(process.pid,process.exitcode,end, portalID, apiurl))
                 pidFile.flush()
             except Exception as e:
-                print e, e.message()
+                print e
     
     for pID in rem:
         del processes[pID]
@@ -143,6 +135,8 @@ def checkProcesses(processes, pidFile):
 
 def name():
     return 'Fetch'
+def help():
+    return "Fetch portal data"
 
 def setupCLI(pa):
     gfilter = pa.add_argument_group('filters', 'filter option')
@@ -170,7 +164,7 @@ def cli(args,dbm):
     
     if args.url:
         p = dbm.getPortal( apiurl=args.url)
-        log.info("Queuing", pid=p.id,apiurl=args.url)
+        log.info("Queuing", pid=p.id, apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
         for portalRes in dbm.getPortals():

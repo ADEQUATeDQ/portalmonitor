@@ -18,6 +18,12 @@
                             <p>Portals</p>
                         </a>
                     </li>
+                    <li class=" text-centered">
+                        <a href="/activity">
+                            <i class="fa fa-cubes  fa-fw"></i>
+                            <p>Activity</p>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -171,19 +177,16 @@
         showData($(this))
     });
  
-    
     parse(spec_softwaredist,"#softdist_chart",data.softdist)
-    parse(spec_countryMap,"#country_chart",data.countryMap)
-    
- 
+    parse(spec_countryMap,"#country_chart",data.iso3Map)
  
     var t_countrydist=$('#countrydist').DataTable({
         "scrollY":        "200px",
         "scrollCollapse": true,
         "paging":         false
     } );
-    data.countrydist.forEach(function(item){
-        t_countrydist.row.add([item.country, item.count, item.perc]);
+    data.iso3dist.forEach(function(item){
+        t_countrydist.row.add([item.iso3, item.count, item.perc]);
     }); 
      t_countrydist.draw();
      

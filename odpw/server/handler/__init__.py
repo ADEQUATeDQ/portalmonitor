@@ -11,7 +11,10 @@ from collections import defaultdict
 from urlparse import urlparse 
 import json
 from odpw.db.dbm import nested_json, date_handler
-from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol
+from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
+    ReporterEngine, ISO3DistReporter, SoftWareDistReporter,\
+    SystemActivityReporter, SnapshotsPerPortalReporter
+from odpw.utils.timer import Timer
 
 
 class BaseHandler(RequestHandler):
@@ -52,12 +55,20 @@ class NoDestinationHandler(RequestHandler):
 class PortalHandler(BaseHandler):
     def get(self, **params):
         print params
+        
+        
+        
         if not bool(params):
-            self.render('portal_detail_empty.jinja',portals=True)
+            rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+            rep.run()
+            self.render('portal_detail_empty.jinja',portals=True, data=rep.uireport())
         elif params['portal']:
             if len(params['portal'].split(",")) ==1:
                 pid=params['portal']
-                print 'get '
+                
+                rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+                
+                rep.run()
                 #r = PortalOverviewReporter(self.db, portalID=pid)
                 
                 
@@ -70,48 +81,40 @@ class PortalHandler(BaseHandler):
         
 class PortalList(BaseHandler):
     def get(self):
+        #with Timer(verbose=True) as t:
+            try:
+                p={}
+                for por in self.db.getPortals():
+                    p[por['id']]={'iso3':por['iso3'],'software':por['software']}
+                portals=[]
+                for pRes in self.db.getLatestPortalMetaDatas():
+                    rdict= dict(pRes)
+                    if rdict['portal_id'] in p:
+                        rdict['iso3']=p[rdict['portal_id']]['iso3']
+                        rdict['software']=p[rdict['portal_id']]['software'] 
+            
+                    portals.append(rdict)
         
-        portals=[]
-        for pRes in self.db.getPortals():
-            portals.append(dict(pRes))
-        
-        self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
+                self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
+            except Exception as e:print e
 
 class IndexHandler(BaseHandler):
     def get(self):
         
-        d = DBAnalyser(self.db.getSoftwareDist)
-        d.analyse()
-        softdist=DFtoListDict(addPercentageCol(d.getDataFrame()))
-        
-        print json.dumps(softdist, default=date_handler)
-        
-        d = DBAnalyser(self.db.getCountryDist)
-        d.analyse()
-        df=d.getDataFrame()
-        countrydist=DFtoListDict(addPercentageCol(df))
-        
-        #print df
-        countryMap=[]
-        df.set_index("tld")
-        for tld, iso3 in util.tld2iso3.items():
-            c=0
-            if any(df['tld'] == tld):
-                d= df[df['tld'] == tld]
-                c= df['count'].iloc[d.index.tolist()[0]]
-            countryMap.append({'iso3':iso3,'count':c})
-        
-        
-        d = DBAnalyser(self.db.getPMDStatusDist)
-        d.analyse()
-        pmdStatus=DFtoListDict((d.getDataFrame()))
-        
-        data={'softdist':softdist,'countrydist':countrydist,'pmdStatus':pmdStatus,'countryMap':countryMap}
-        
-        print json.dumps(countryMap, default=date_handler)
+        sys_or = ReporterEngine([SoftWareDistReporter(self.db),
+                 ISO3DistReporter(self.db)])
+        sys_or.run()
             
-        self.render('index.html',index=True, json=json.dumps(data, default=date_handler))
+        self.render('index.html',index=True, json=json.dumps(sys_or.uireport(), default=date_handler))
         
+class SystemActivityHandler(BaseHandler):
+    def get(self):
+        
+        sn = util.getCurrentSnapshot()
+        sys_act_rep = ReporterEngine([SystemActivityReporter(self.db,sn)])
+        sys_act_rep.run()
+        self.render('system_activity.jinja',index=True, json=json.dumps(sys_act_rep.uireport(), default=date_handler),snapshot=util.getCurrentSnapshot())
+
         
 class DataHandler(RequestHandler):
     @property

@@ -1,0 +1,175 @@
+<!{% extends "_base.jinja" %}
+
+
+{% block content %}
+    <div id="main" class="units-row end units-split">
+        <aside class="unit-10">
+            <nav id="nav-side" class="nav">
+                <ul>
+                    <li class="active text-centered">
+                        <a href="/"> 
+                            <i class="fa fa-server fa-fw"></i>
+                            <p>System</p>
+                        </a>
+                    </li>
+                    <li class=" text-centered">
+                        <a href="/list/portals"> 
+                            <i class="fa fa-cubes  fa-fw"></i>
+                            <p>Portals</p>
+                        </a>
+                    </li>
+                    <li class=" text-centered">
+                        <a href="/activity">
+                            <i class="fa fa-cubes  fa-fw"></i>
+                            <p>Activity</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+    
+        <section class="unit-90">
+            <div class="units-row">
+                <h2>PortalWatch Activity for snapshot {{ snapshot}}</h2>
+                <div class="unit-33  card">
+                    <div class="header"><h3>Fetch Process</h3></div>
+                    <div class="cnt">
+                        <ul class="fa-ul">
+                            <li class="group">
+                                <i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-green width-40">Processed</span>
+                                <span id="fetch_done" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_fetch_done right">show</button>
+                            </li>
+                            <li class="group">
+                                <i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-blue width-40">Running</span>
+                                <span id="fetch_running" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_fetch_running right ">show</button>
+                            </li>
+                            <li class="group"><i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-red  width-40">Failed</span>
+                                <span id="fetch_failed" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_fetch_failed right ">show</button>
+                            </li>
+                            <li class="group"><i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-red  width-40">Missing</span>
+                                <span id="fetch_failed" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_fetch_missing right ">show</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="unit-33  card">
+                    <div class="header"><h3>Head Lookups</h3></div>
+                    <div class="cnt">
+                         <ul class="fa-ul">
+                            <li class="group">
+                                <i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-green width-40">Processed</span>
+                                <span id="head_done" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_head_done right">show</button>
+                            </li>
+                            <li class="group">
+                                <i class="fa fa-pie-chart fa-fw"></i>
+                                <span class="label label-blue width-40">Missing</span>
+                                <span id="head_missing" class="width-20 text-right"></span>
+                                <button class="btn btn-smaller btn_head_missing right ">show</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                    
+            </div>        
+            <div class="units-row">
+                <div class="unit-100  card">
+                    <div class="header">Portals</div>
+                    
+                    <div class="cnt">
+                        <button class="btn btn-smaller btn_all"><i class="fa fa-pie-chart fa-fw"></i>Show full table</button>
+                        <div class="data_table">
+                            <table id="sysacttable">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th colspan="4">Fetching</th>
+                                        <th colspan="2">Head</th>
+                                        <th>Quality</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Portal</th>
+                                        <th>Running</th>
+                                        <th>Done</th>
+                                        <th>Failed</th>
+                                        <th>Error</th>
+                                        <th>Done</th>
+                                        <th>Missing</th>
+                                        <th>Done</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                        
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+    </div>
+                 
+      
+{% endblock %}
+
+{% block pageScripts %}
+ <script>
+     
+     
+     var data = {{ json | safe }};
+     console.log("SERVER DATA")
+     console.log(data)
+     
+     function resetTable(table){
+         table.search( '' )
+            .columns().search( '' )
+            .draw();
+     }
+     
+     function showRows(table, colID, show){
+         resetTable(table)
+        table.column(colID).search('true').draw()
+        table.columns( ).visible( false );
+        table.columns( show ).visible( true );
+        
+     }
+     
+ $(document).ready(function() {
+     var t_sysacttable=$('#sysacttable').DataTable();
+     data.portalactivitylist.forEach(function(item){
+        t_sysacttable.row.add([item.pid, item.fetch_running, item.fetch_done, item.fetch_failed, item.fetch_error, item.head_done,item.head_missing, item.quality_done]);
+    }); 
+     t_sysacttable.draw();
+     
+    $('.btn_fetch_running').click(function() {
+        showRows(t_sysacttable, 1, [0])
+    });
+     
+      $('.btn_all').click(function() {
+        resetTable(t_sysacttable)
+        t_sysacttable.columns().visible( true );
+      })
+     $('.btn_fetch_failed').click(function() {
+         showRows(t_sysacttable, 3, [0,4])
+    });
+     $('.btn_fetch_done').click(function() {
+         showRows(t_sysacttable, 2, [0])
+    });
+     
+     for( var k in data.summary){
+         $('#'+k).text(data.summary[k])
+     }
+})
+    
+ </script>
+{% endblock %}

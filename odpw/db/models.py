@@ -9,11 +9,8 @@ from odpw.utils.util import ErrorHandler as eh
 
 from datetime import datetime
 
-import logging
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log =structlog.get_logger()
 import json
 
 from pprint import pformat
@@ -143,7 +140,7 @@ class PortalMetaData(Model):
         if not isinstance(result, dict):
             return None
         
-        portal = result['portal_id']
+        portal_id = result['portal_id']
         snapshot = result['snapshot']
         del result['portal_id']
         del result['snapshot']
@@ -153,7 +150,7 @@ class PortalMetaData(Model):
             if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
-        return cls(portal=portal,
+        return cls(portalID=portal_id,
                    snapshot=snapshot, **result)
 
     def __init__(self, portalID=None, snapshot=None, **kwargs):
@@ -272,21 +269,3 @@ class Resource(Model):
 
         return cls(url=url,
                    snapshot=snapshot, **result)
-
-if __name__ == '__main__':
-    logging.basicConfig()
-    # http://services1.arcgis.com/0g8o874l5un2eDgz/arcgis/rest/services/PublicSlipways/FeatureServer/0/query?outFields=*&where=1%3D1
-    # r = Resource.newInstance(url="http://polleres.net/foaf.rdf", snapshot='2015-10')
-    # print r.__dict__
-    
-    p1 = Portal("http",'1')
-    p2 = Portal("http",'1')
-    p3 = Portal("http",'2')
-    
-    print p1.__hash__()
-    print p2.__hash__()
-    print p3.__hash__()
-    print p1 == p3
-
-
-

@@ -216,30 +216,6 @@
     "pk": "AO"
 }, {
     "fields": {
-        "currency_name": null,
-        "languages": null,
-        "name": "Antarctica",
-        "area": "14000000.0",
-        "geonameid": 6697173,
-        "postal_code_regex": null,
-        "tld": ".aq",
-        "neighbours": null,
-        "iso_numeric": 10,
-        "phone": null,
-        "iso3": "ATA",
-        "fips": "AY",
-        "postal_code_format": null,
-        "capital": null,
-        "equivalent_fips_code": null,
-        "currency_symbol": null,
-        "continent": "AN",
-        "currency_code": null,
-        "population": 0
-    },
-    "model": "countries_plus.country",
-    "pk": "AQ"
-}, {
-    "fields": {
         "currency_name": "Peso",
         "languages": "es-AR,en,it,de,fr,gn",
         "name": "Argentina",

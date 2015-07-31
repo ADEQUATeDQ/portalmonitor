@@ -1,21 +1,18 @@
 from multiprocessing.process import Process
 import multiprocessing
 from time import sleep
+import sys
 __author__ = 'jumbrich'
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
 
 import odpw.utils.util as util
-from odpw.utils.util import getSnapshot, ErrorHandler as eh
+from odpw.utils.util import getSnapshot, ErrorHandler as eh, progressIndicator
 
 from odpw.utils.timer import Timer
 
-import logging
-logger = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log = structlog.get_logger()
 
 
 
@@ -31,7 +28,7 @@ def head (dbm, sn, resource):
         props['redirects']=None
         props['status']=None
         props['header']=None
-        with Timer("headLookupProcessing") as t:
+        with Timer(key="headLookupProcessing", verbose=True) as t:
             try:
                 props=util.head(resource.url)
             except Exception as e:
@@ -41,7 +38,6 @@ def head (dbm, sn, resource):
         
             resource.updateStats(props)
             dbm.updateResource(resource)
-        
     except Exception as e:
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
@@ -96,6 +92,8 @@ class HeadProcess(Process):
     def setProcessors(self, processors):
         self.processors=processors
 
+def help():
+    return "perform head lookups"
 def name():
     return 'Head'
 
@@ -112,6 +110,7 @@ def cli(args,dbm):
         return
 
     resources=[]
+    #total = dbm.getResourceWithoutHeadCount(snapshot=sn)
     for res in dbm.getResourceWithoutHead(snapshot=sn):
         try:
             url=urlnorm.norm(res['url'])
@@ -126,8 +125,18 @@ def cli(args,dbm):
     pool = ThreadPool(processes=args.processors,) 
     
     head_star = partial(head, dbm, sn)
-    results = pool.map(head_star, resources)
+    
+    results = pool.imap_unordered(head_star, resources)
     pool.close()
+    
+    c=0
+    total=len(resources)
+    steps=total/100
+    for i, _ in enumerate(results, 1):
+        c+=1
+        if c%steps==0:
+            progressIndicator(c,total)
+        sys.stderr.write('\rdone {0:%}'.format(i/total))
     pool.join()
     
     Timer.printStats()

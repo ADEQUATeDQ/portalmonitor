@@ -16,12 +16,8 @@ import math
 from collections import defaultdict
 
 
-import logging
-log = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log = structlog.get_logger()
 
 class ErrorHandler():
 
@@ -35,11 +31,14 @@ class ErrorHandler():
     
     @classmethod
     def printStats(cls):
-        print "\n -------------------------"
-        print "  Numbers of Exceptions:"
-        for exc, count in cls.exceptions.iteritems():
-            print " ",exc, count
-        print "\n -------------------------"
+        if len(cls.exceptions)==0:
+            print "No exceptions handled"
+        else:
+            print "\n -------------------------"
+            print "  Numbers of Exceptions:"
+            for exc, count in cls.exceptions.iteritems():
+                print " ",exc, count
+            print " -------------------------"
 
 
 def getPackage(api, apiurl, id):
@@ -153,8 +152,6 @@ with open(template) as f:
         tld = data['tld'].replace(".","") if data['tld'] else data['tld'] 
         iso3list.append(data['iso3'])
         tld2iso3[tld] = data['iso3']
-        
-    print tld2iso3
 
 def getISO3(tld):
     iso3= tld2iso3[tld]
@@ -530,14 +527,20 @@ def getExceptionString(e):
         return 601
 
 
+def getCurrentSnapshot():
+    now = datetime.now()
+    y=now.isocalendar()[0]
+    w=now.isocalendar()[1]
+    sn=str(y)[2:]+'{:02}'.format(w)
+        
+    return sn
+
 def getSnapshot(args):
     if args.snapshot:
         return args.snapshot
     else:
-        now = datetime.now()
-        y=now.isocalendar()[0]
-        w=now.isocalendar()[1]
-        sn=str(y)[2:]+'{:02}'.format(w)
+        sn = getCurrentSnapshot()
+        
         if not args.ignore:
             while True:
                 choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
@@ -621,9 +624,7 @@ def head(url, redirects=0, props=None):
         props['header']=None
         props['exception']=None
     
-    
     headResp = requests.head(url=url,timeout=(2, 30.0), allow_redirects=True)#con, read -timeout
-
     header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
     
     if 'content-type' in header_dict:
@@ -633,6 +634,7 @@ def head(url, redirects=0, props=None):
     
     props['status']=headResp.status_code
     props['header']=header_dict
+    
     if headResp.status_code == requests.codes.ok:
         if 'content-length' in header_dict:
             props['size']=header_dict['content-length']
@@ -655,13 +657,3 @@ def head(url, redirects=0, props=None):
     
     return props
 
-if __name__ == '__main__':
-    logging.basicConfig()
-    log = get_logger()
-    
-    try:
-        raise ValueError('A very specific bad thing happened')
-    except Exception as e:
-        ErrorHandler.handleError(log, "test", exception=e, line="line")
-        
-    print ErrorHandler.exceptions

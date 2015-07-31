@@ -1,118 +1,203 @@
-< !{ % extends "_base.jinja" % } { % block scripts % } { { super() } } < script type="text/javascript" src="{{ static_url('js/list.min.js') }}">
-    < /script>
-        < script src="//code.jquery.com/ui/1.11.4/jquery-ui.js">
-            < /script> { % endblock % } { % block content % }
-                < aside>
-                    < nav class="side">
-                        < ul>
-                            < li>
-                                < a href="/">
-                                    < i class="fa fa-server fa-2x">
-                                        < /i>
-                                            < p> System
-                                                < /p>
-                                                    < /a>
-                                                        < /li>
-                                                            < li>
-                                                                < a href="/list/portals/" class="cur">
-                                                                    < i class="fa fa-cubes  fa-2x">
-                                                                        < /i>
-                                                                            < p> Portals
-                                                                                < /p>
-                                                                                    < /a>
-                                                                                        < /li>
-                                                                                            < /ul>
-                                                                                                < /nav>
-                                                                                                    < /aside>
-                                                                                                        < section class="content units-row">
-                                                                                                            < h2> Portal List
-                                                                                                                < /h2>
-                                                                                                                    < div class="panel unit-100">
-                                                                                                                        < div class="unit-100">
-                                                                                                                            < div class="units-row">
-                                                                                                                                < div class="unit-50" id="header">
-                                                                                                                                    < div class="ui-widget">
-                                                                                                                                        < input id="tags" size="50" type="search" placeholder="Filter portal list (allows for multiple tags, separated by whitespace)" />
-                                                                                                                                        < /div>
-                                                                                                                                            < /div>
-                                                                                                                                                < div class="unit-10">
-                                                                                                                                                    < button class="btn mobile-hide" id="btn_list">
-                                                                                                                                                        < i class="fa fa-cube fa-fw">
-                                                                                                                                                            < /i>
-                                                                                                                                                                </button>
-                                                                                                                                                                < /div>
-                                                                                                                                                                    < div class="unit-10">
-                                                                                                                                                                        < button class="btn mobile-hide" id="btn_blocks">
-                                                                                                                                                                            < i class="fa fa-cube fa-fw">
-                                                                                                                                                                                < /i>
-                                                                                                                                                                                    </button>
-                                                                                                                                                                                    < /div>
-                                                                                                                                                                                        < /div>
-                                                                                                                                                                                            < /div>
-                                                                                                                                                                                                < div class="unit-100" id="portalList">
-                                                                                                                                                                                                    < ul class="blocks-mobile-33" id="list"> { % for portal in data % }
-                                                                                                                                                                                                        < li>
-                                                                                                                                                                                                            < div class=" title unit-row end">
-                                                                                                                                                                                                                < div class=" title unit-100">
-                                                                                                                                                                                                                    < h3 class="search"> { { portal.id } }
-                                                                                                                                                                                                                        < /h3>
-                                                                                                                                                                                                                            < /div>
-                                                                                                                                                                                                                                < /div>
-                                                                                                                                                                                                                                    < div class="unit-row end">
-                                                                                                                                                                                                                                        < div class="unit-25 mobile-hide" style="background: red;">
-                                                                                                                                                                                                                                            < p>
-                                                                                                                                                                                                                                                < i class="fa fa-globe fa-fw">
-                                                                                                                                                                                                                                                    < /i>
-                                                                                                                                                                                                                                                        < span class="search"> { { portal.country } }
-                                                                                                                                                                                                                                                            < /span>
-                                                                                                                                                                                                                                                                < /p>
-                                                                                                                                                                                                                                                                    < /div>
-                                                                                                                                                                                                                                                                        < div class="size unit-30 units-mobile-50">
-                                                                                                                                                                                                                                                                            < div class="units-row end">
-                                                                                                                                                                                                                                                                                < div class="unit-100">
-                                                                                                                                                                                                                                                                                    < i class="fa fa-cube fa-fw ">
-                                                                                                                                                                                                                                                                                        < /i>
-                                                                                                                                                                                                                                                                                            < span class="text "> datasets:
-                                                                                                                                                                                                                                                                                                < /span>
-                                                                                                                                                                                                                                                                                                    < span class="value "> { { portal.datasets } }
-                                                                                                                                                                                                                                                                                                        < /span>
-                                                                                                                                                                                                                                                                                                            < /div>
-                                                                                                                                                                                                                                                                                                                < /div>
+<!{% extends "_base.jinja" %}
 
-                                                                                                                                                                                                                                                                                                                    < div>
 
-                                                                                                                                                                                                                                                                                                                        < i class="fa fa-files-o fa-fw ">
-                                                                                                                                                                                                                                                                                                                            < /i>
-                                                                                                                                                                                                                                                                                                                                < span class="text "> resources:
-                                                                                                                                                                                                                                                                                                                                    < /span>
-                                                                                                                                                                                                                                                                                                                                        < span class="value "> { { portal.resources } }
-                                                                                                                                                                                                                                                                                                                                            < /span>
-                                                                                                                                                                                                                                                                                                                                                < /div>
-                                                                                                                                                                                                                                                                                                                                                    < /div>
-                                                                                                                                                                                                                                                                                                                                                        < div class="size ">
-                                                                                                                                                                                                                                                                                                                                                            < div>
-                                                                                                                                                                                                                                                                                                                                                                < i class="fa fa-files-o fa-fw ">
-                                                                                                                                                                                                                                                                                                                                                                    < /i>
-                                                                                                                                                                                                                                                                                                                                                                        < span class="text"> status:
-                                                                                                                                                                                                                                                                                                                                                                            < /span>
-                                                                                                                                                                                                                                                                                                                                                                                < span class="value search"> { { portal.status } }
-                                                                                                                                                                                                                                                                                                                                                                                    < /span>
-                                                                                                                                                                                                                                                                                                                                                                                        < /div>
-                                                                                                                                                                                                                                                                                                                                                                                            < div>
-                                                                                                                                                                                                                                                                                                                                                                                                < span class="text"> latest snapshot:
-                                                                                                                                                                                                                                                                                                                                                                                                    < /span>
-                                                                                                                                                                                                                                                                                                                                                                                                        < span class="value"> { { portal.latest_snapshot } }
-                                                                                                                                                                                                                                                                                                                                                                                                            < /span>
-                                                                                                                                                                                                                                                                                                                                                                                                                < /div>
-                                                                                                                                                                                                                                                                                                                                                                                                                    < /div>
-                                                                                                                                                                                                                                                                                                                                                                                                                        < /div>
+{% block content %}
+<div id="main" class="units-row end units-split">
+    <aside class="unit-10">
+        <nav id="nav-side" class="nav">
+            <ul>
+                <li class="active text-centered">
+                    <a href="/">
+                        <i class="fa fa-server fa-fw"></i>
+                        <p>System</p>
+                    </a>
+                </li>
+                <li class=" text-centered">
+                    <a href="/list/portals">
+                        <i class="fa fa-cubes  fa-fw"></i>
+                        <p>Portals</p>
+                    </a>
+                </li>
+                <li class=" text-centered">
+                    <a href="/activity">
+                        <i class="fa fa-cubes  fa-fw"></i>
+                        <p>Activity</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                            < /li> { % endfor % }
-                                                                                                                                                                                                                                                                                                                                                                                                                                < /ul>
-                                                                                                                                                                                                                                                                                                                                                                                                                                    < /div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                        < /section>
+    <section class="unit-90">
+        <h2>PortalWatch Portal List</h2>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                            < /div> { % endblock % } { % block pageScripts % }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                < script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    var data = { { json | safe } }; $(function () { console.log(data) var availableTags = [] for (var portal in data) { availableTags.push(data[portal].id) availableTags.push(data[portal].country) availableTags.push(data[portal].software) availableTags.push(data[portal].status) } function split(val) { return val.split(/,\s*/); } function extractLast(term) { return split(term).pop(); } $('#tags').keypress(function (event) { console.log(event.which) //if ( event.which != 13 ) { // return //} var filter = $(this).val().toLowerCase().trim(); var filter_tags = filter.split(" "); var filter_tags_length = filter_tags.length; $('#list>li').each(function () { matches = 0; c = 0; var $this = $(this); $this.find(".search").each(function () { var t = $(this); $.each(filter_tags, function (i, a_filter) { if (t.text().toLowerCase().indexOf(a_filter) !== -1) { c++; if (c == filter_tags_length) { matches = 1; } } }); }); (matches == 1) ? $(this).show(): $(this).hide(); }); }); $('#btn_list').click(function () { console.log("removeClass") console.log($('#list')) $('#list').removeClass('blocks-4'); }); $('#btn_blocks').click(function () { $('#list').addClass('blocks-4'); console.log("addClass") console.log($('#list')) }); });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    < /script> { % endblock % }
+        <div class="units-row">
+            <div class="unit-80 unit-push-10">
+                Filter:
+                <input type="search" name="q" placeholder="Search" class="width-50" id="filter" />
+            </div>
+            <div class="unit-10 ">
+                <span class="right">switch to:</span>
+                <button class="btn mobile-hide btn-smaller right" id="btn_list"><i class="fa fa-list"></i>
+                </button>
+                <button class="btn mobile-hide btn-smaller right" id="btn_blocks"><i class="fa fa-th"></i>
+                </button>
+            </div>
+        </div>
+        <div class="units-row">
+            <div class="unit-80 unit-push-10">
+                <button class="btn mobile-hide btn-smaller  btn_sort" id="btn_sort_iso3">by iso3</button>
+                <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_software">by software</button>
+                <button class="btn mobile-hide btn-smaller  btn_sort num" id="btn_sort_datasets">by datasets</button>
+                <button class="btn mobile-hide btn-smaller  btn_sort num" id="btn_sort_resources">by resources</button>
+            </div>
+
+        </div>
+        <div class="units-row">
+            <div class="unit-80">
+                <ul class="blocks-mobile-33" id="portalList">
+                    {% for portal in data %}
+                    <li>
+                        <div class="unit-row end">
+                            <div class="title unit-80">
+                                <h4 class="search">{{ portal.portal_id}}</h4>
+                            </div>
+                            <div class="unit-10">
+                                <i class="fa fa-globe fa-fw"></i>
+                                <span class="search software">{{portal.software}}</span>
+                            </div>
+                            <div class="unit-10">
+                                <i class="fa fa-globe fa-fw"></i>
+                                <span class="search iso3">{{portal.iso3}}</span>
+                            </div>
+                        </div>
+                        <div class="unit-row">
+                            <div class="size unit-33 units-mobile-50">
+                                <i class="fa fa-cube fa-fw "></i>
+                                <span class="text ">datasets:</span>
+                                <span class="value datasets">{{portal.datasets}}</span>
+                            </div>
+                            <div class="size unit-33 units-mobile-50">
+                                <i class="fa fa-files-o fa-fw "></i>
+                                <span class="text ">resources:</span>
+                                <span class="value resources">{{portal.resources}}</span>
+                            </div>
+                            <div class="size unit-33 units-mobile-50">
+                                <span class="text"> latest snapshot:</span>
+                                <span class="value snapshot"> {{portal.snapshot}}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+{% endblock %} {% block pageScripts %}
+<script>
+    var data = {{ json | safe }};
+    console.log("SERVER DATA")
+    console.log(data)
+
+    function split(val) {
+         return val.split(/,\s*/);
+    }
+
+    function extractLast(term) {
+         return split(term).pop();
+    }
+    
+    
+    function sortList(btn,list, element, intValue){
+        var listitems = list.children('li').get();
+        listitems.sort(function(a, b) {
+            
+            var compA = $(a).find(element).text()
+            var compB = $(b).find(element).text()
+            if(intValue){
+                compA=parseInt(compA)
+                compB=parseInt(compB)
+            }
+            
+            if(btn.hasClass("asc"))
+                return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
+            else
+                return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
+            })
+            $.each(listitems, function(idx, itm) { list.append(itm); });
+            if (btn.hasClass("asc")){
+                btn.removeClass("asc")
+                btn.addClass("desc")
+            }else{
+                btn.removeClass("desc")
+                btn.addClass("asc")
+            }
+    }
+    
+    $(document).ready(function () {
+        var mylist = $('#portalList');
+        $('#btn_list').hide()
+        $('#btn_list').click(function () {
+            console.log("Clicked")
+            $('#portalList').removeClass('blocks-4');
+            $(this).hide()
+            $('#btn_blocks').show()
+        });
+        $('#btn_blocks').click(function () {
+            console.log("Clicked")
+            $('#portalList').addClass('blocks-4');
+            $(this).hide()
+            $('#btn_list').show()
+        });
+        $('.btn_sort').click(function(){
+            id=$(this).attr('id')
+            
+            var index = id.lastIndexOf("_");
+            var result = id.substr(index+1);
+            
+            sortList($(this),mylist,'span.'+result,$(this).hasClass("num"))
+        });        
+        
+        
+     $('#filter').keypress(function (event) {
+         console.log(event.which) //if (event.which != 13) { // return //} 
+         var filter = $(this).val().toLowerCase().trim();
+         var filter_tags = filter.split(" ");
+         var filter_tags_length = filter_tags.length;
+         console.log(filter_tags)
+         $('#portalList>li').each(function () {
+             matches = [];
+             c = 0;
+             var $this = $(this);
+             
+             $this.find(".search").each(function () {
+                 var t = $(this);
+                 t.find("mark").each(function(index) {
+                    var text = $(this).text(); //get span content
+                    $(this).replaceWith(text); //replace all span with just content
+                 });
+                 $.each(filter_tags, function (i, a_filter) {
+                     
+                     if (t.text().toLowerCase().indexOf(a_filter) !== -1) {
+                         matches.push(a_filter)
+                         text =t.text()
+                         text =text.replace(new RegExp("("+a_filter+")", "ig") ,"<mark>$1</mark>")
+                         t.html(text)
+                     }
+                 });
+             });
+             m =  $.unique(matches)
+             if(m.length == filter_tags_length){
+                 $(this).show();
+                 
+             }else
+                 $(this).hide();
+         });
+     });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+   })
+</script>
+{% endblock %}

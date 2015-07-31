@@ -1,8 +1,8 @@
 # import Jinja2
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader,Markup
 
 import sys
-
+import json
 
 from tornado.web import Application, StaticFileHandler
 import tornado.httpserver
@@ -10,6 +10,7 @@ import tornado.ioloop
 
 
 from os.path import dirname, join, isfile
+from odpw.server.handler import SystemActivityHandler
 
 
 here = dirname(__file__)
@@ -20,6 +21,10 @@ from handler import IndexHandler, NoDestinationHandler, DataHandler,PortalList,P
 # # List for famous movie rendering
 # movie_list = [[1,"The Hitchhiker's Guide to the Galaxy"],[2,"Back to future"],[3,"Matrix"]]
 
+def tojson_filter(obj, **kwargs):
+    # https://github.com/mitsuhiko/flask/blob/master/flask/json.py
+    return Markup(json.dumps(obj, **kwargs))
+
 class Application(tornado.web.Application):
     def __init__(self, db=None):
         
@@ -27,6 +32,7 @@ class Application(tornado.web.Application):
         template_path = join(here, 'templates')
         handlers = [
             (r'/', IndexHandler),
+            (r'/activity',SystemActivityHandler),
             (r'/list/portals', PortalList),
             (r'/portal_details/?', PortalHandler),
             (r'/portal_details/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
@@ -44,12 +50,15 @@ class Application(tornado.web.Application):
         super(Application, self).__init__(handlers, **settings)
         
         self.env = Environment(loader=FileSystemLoader(template_path))
+        self.env.filters.update( tojson= tojson_filter)
         self.db = db
 
 
 
 def name():
-    return 'Server'
+    return 'Dashboard'
+def help():
+    return "Start the dashboard"
 
 def setupCLI(pa):
     pa.add_argument('-p','--port',type=int, dest='port', default=2340)    

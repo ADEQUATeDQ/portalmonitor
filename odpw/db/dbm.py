@@ -1,14 +1,12 @@
 from __future__ import generators
+from sqlalchemy.sql.expression import join, exists
+from django.template.smartif import Literal
 
 __author__ = 'jumbrich'
 
 
-import logging
-logger = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log =structlog.get_logger()
 
 import sys
 import datetime
@@ -52,7 +50,68 @@ def nested_json(o):
         return o
 
 
-class PostgressDBM:
+class DMManager(object):
+    def __init__(self, db='datamonitor', host="137.208.51.23", port=5432, password=None, user='postgres'):
+        self.log = log.new()
+            
+        conn_string = "postgresql://"
+        if user:
+            conn_string += user
+        if password:
+            conn_string += ":"+password    
+        if host:
+            conn_string += "@"+host
+        if port:
+            conn_string += ":"+str(port)
+        conn_string += "/"+db
+            
+        self.engine = create_engine(conn_string, pool_size=20)
+        self.engine.connect()
+            
+        self.metadata = MetaData(bind=self.engine)
+        
+        ##TABLES
+        self.schedule = Table('schedule',self.metadata,
+                                 Column('uri', String),
+                                 Column('experiment', String),
+                                 Column('nextcrawltime', TIMESTAMP),
+                                 Column('frequency', BigInteger)
+                                 )
+    
+    
+    def upsert(self,uri, experiment, nextcrawltime, frequency):
+        with Timer(key="upsert") as t:
+            
+            sel = select([self.schedule.c.uri,self.schedule.c.experiment]).where(and_(self.schedule.c.uri == uri, self.schedule.c.experiment == experiment ))
+            #print sel.compile(), sel.compile().params
+
+            r= sel.execute().first()
+            if r:
+                up = self.schedule.update().\
+                    where(and_(self.schedule.c.uri == uri, self.schedule.c.experiment == experiment )).\
+                    values(
+                       uri=uri,
+                       experiment= experiment,
+                       nextcrawltime=nextcrawltime,
+                       frequency=frequency
+                       )
+                up.execute()
+            else:
+                ins = self.schedule.insert().\
+                           values(
+                                uri=uri,
+                                experiment= experiment,
+                                nextcrawltime=nextcrawltime,
+                                frequency=frequency
+                                )
+                ins.execute()
+            
+    def getOldSchedule(self, nextCrawltime):
+        
+        sel = select([self.schedule.c.uri,self.schedule.c.experiment, self.schedule.c.frequency]).where(self.schedule.c.nextcrawltime < nextCrawltime)
+        return sel.execute()
+    
+class PostgressDBM(object):
     def __init__(self, db='portalwatch', host="localhost", port=5433, password='0pwu', user='opwu'):
         
             #Define our connection string
@@ -69,6 +128,7 @@ class PostgressDBM:
                 conn_string += ":"+str(port)
             conn_string += "/"+db
             
+            print conn_string
             self.engine = create_engine(conn_string, pool_size=20)
             self.engine.connect()
             
@@ -128,17 +188,20 @@ class PostgressDBM:
         self.metadata.create_all(self.engine)    
            
            
-    def getSnapshots(self, portalID=None):
+    def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
-            s = select([self.pmd.c.snapshot])
+            
+            s = select([self.pmd.c.portal_id,self.pmd.c.snapshot])
             
             if portalID:
-                s= s.where(self.pmd.c.portal==portalID)
+                s= s.where(self.pmd.c.portal_id==portalID)
+            if apiurl:
+                s= s.where(self.pmd.c.apiurl==apiurl)
             
             s=s.distinct()
             
             self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute().fetchall()
+            return s.execute()
          
     def insertPortal(self, Portal):
         with Timer(key="insertPortal") as t:
@@ -499,13 +562,15 @@ class PostgressDBM:
             return s.execute()
         #return  self.conn.execute(s)
       
-    def getResources(self, snapshot=None, portalID=None):
+    def getResources(self, snapshot=None, portalID=None, status =None):
         with Timer(key="getResources") as t:
             s = select([self.resources])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)
             if portalID:
                 s= s.where(self.resources.c.origin[portalID]!=None)
+            if status:
+                s= s.where(self.resources.c.status==status)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)
@@ -523,11 +588,18 @@ class PostgressDBM:
             return s.execute()
             #return self.conn.execute(s)
         
-    def getResourceWithoutHead(self, snapshot=None, status=None):
+    def getResourceWithoutHeadCount(self,snapshot=None, status=-1):
+        with Timer(key="getResourceWithoutHead") as t:
+            s=select([func.count(self.resources.c.url)]).\
+                where(self.resources.c.snapshot==snapshot).\
+                where(self.resources.c.status == status)
+            return s.execute().scalar()
+               
+    def getResourceWithoutHead(self, snapshot=None, status=-1):
         with Timer(key="getResourceWithoutHead") as t:
             s=select([self.resources]).\
                 where(self.resources.c.snapshot==snapshot).\
-                where(self.resources.c.status == -1)
+                where(self.resources.c.status == status)
             #if status:
             #    s= s.where(self.resources.c.status == status)
             #if not status:
@@ -556,7 +628,7 @@ class PostgressDBM:
             return None
         
     def updateResource(self, Resource):
-        with Timer(key="updateResource") as t:
+        with Timer(key="updateResource", verbose=True) as t:
             origin=None
             if Resource.origin:
                 origin=Resource.origin
@@ -585,8 +657,8 @@ class PostgressDBM:
     ##############
     def datasetsPerSnapshot(self, portalID=None, snapshot=None):
         with Timer(key="datasetsPerSnapshot") as t:
-            s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.dataset).label('datasets')]).\
-            where(self.datasets.c.portal==portalID)
+            s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.id).label('datasets')]).\
+            where(self.datasets.c.portal_id==portalID)
             if snapshot:
                 s=s.where(self.datasets.c.snapshot==snapshot)
             
@@ -614,22 +686,39 @@ class PostgressDBM:
     #
     ########
     
+    def getLatestPortalSnapshots(self):
+        latest= select([self.pmd.c.portal_id.label('portal_id'),self.pmd.c.datasets,self.pmd.c.resources,
+                        func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id,self.pmd.c.datasets,self.pmd.c.resources)
+        print latest
+        return latest.execute()
+    
+    def getLatestPortalMetaDatas(self):
+        with Timer(key="getLatestPortalMetaDatas") as t:
+            
+            latest= select([self.pmd.c.portal_id.label('portal_id'), func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id).alias()
+            t1=self.pmd.alias()
+            
+            
+            s=  select([t1]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
+            
+            return s.execute()
+    
     def getSoftwareDist(self):
         with Timer(key="getSoftwareDist") as t:
             s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
     
-    def getPortalStatusDist(self):
-        with Timer(key="getPortalStatusDist") as t:
-            s=  select([self.portals.c.status, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.status)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+    #def getPortalStatusDist(self):
+    #    with Timer(key="getPortalStatusDist") as t:
+    #        s=  select([self.portals.c.status, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.status)
+    #        self.log.debug(query=s.compile(), params=s.compile().params)
+    #        return s.execute()
         
     def getCountryDist(self):
         with Timer(key="getCountryDist") as t:
-            s= select([ self.portals.c.country, func.count(self.portals.c.id).label('count'),func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ).label('tld')]).\
-            group_by(self.portals.c.country, func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ))
+            s= select([ self.portals.c.iso3, func.count(self.portals.c.id).label('count'),func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ).label('tld')]).\
+            group_by(self.portals.c.iso3, func.substring( self.portals.c.url ,'^[^:]*://(?:[^/:]*:[^/@]*@)?(?:[^/:.]*\.)+([^:/]+)' ))
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
         
@@ -642,7 +731,8 @@ class PostgressDBM:
     
 def name():
     return 'DB'
-
+def help():
+    return "DB specific utils"
 def setupCLI(pa):
     #pa.add_argument('--size', help='get table entries',action='store_true')
     pa.add_argument('-i','--init',  action='store_true', dest='dbinit')

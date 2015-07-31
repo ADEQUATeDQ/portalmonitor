@@ -7,103 +7,102 @@
 {% endblock %}
 
 {% block content %}
-    <aside>
-<nav class="side">
-    <ul>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Overview</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Details</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Quality</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Activities</p>
-            </a>
-        </li>
-        <li>
-            <a href="/list/portals/" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
-                <p>Evolution</p>
-            </a>
-        </li>
-    </ul>
-</nav>
-</aside>
-<section class="content">
-    <h2>Portal selection</h2>
-    <div class="unit-100">
-        <h3> Selection</h3>
-    </div>
-    
-    <div class="units-row end">
-        
-        <div class="unit-20">
-            <button class="btn singleportal"><i class="fa fa-cube"></i><br>Single portal</button>
+<div id="main" class="units-row end units-split">
+    <aside class="unit-10">
+        <nav id="nav-side" class="nav">
+            <ul>
+                <li class="active text-centered">
+                    <a href="/">
+                        <i class="fa fa-server fa-fw"></i>
+                        <p>System</p>
+                    </a>
+                </li>
+                <li class=" text-centered">
+                    <a href="/list/portals">
+                        <i class="fa fa-cubes  fa-fw"></i>
+                        <p>Portals</p>
+                    </a>
+                </li>
+                <li class=" text-centered">
+                    <a href="/activity">
+                        <i class="fa fa-cubes  fa-fw"></i>
+                        <p>Activity</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <section class="unit-90">
+        <div class="units-row">
+            <h2>Portal selection</h2>
         </div>
-        <div class="unit-20">
-            <a href="/portal_details/all" class="btn"><i class="fa fa-cubes"></i><br>All portals</a>
+        <div class="units-row end">
+
+            <div class="unit-20">
+                <button class="btn singleportal"><i class="fa fa-cube"></i>
+                    <br>Single portal</button>
+            </div>
+            <div class="unit-20">
+                <a href="/portal_details/all" class="btn"><i class="fa fa-cubes"></i><br>All portals</a>
+            </div>
+            <div class="unit-20">
+                <button class="btn"><i class="fa fa-filter"></i>
+                    <br>Set of portals</button>
+            </div>
         </div>
-        <div class="unit-20">
-            <button class="btn"><i class="fa fa-filter"></i><br>Set of portals</button>
+        <div class="units-row">
+            <div class="unit-push-20 unit-60">
+                <form class="forms forms-inline" action="" method="Get">
+                    <fieldset>
+                        <legend>Select single portal</legend>
+                        <div class="units-row">
+                            <div class="unit-50">
+                                <label>
+                                    Select portal
+                                </label>
+                                <select id="select_portal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                                    {% for portal in data.portalSnapshots %}
+                                    <option value="{{portal}}">{{portal}}</option>
+                                    {% endfor %}
+                                </select>
+                                </div>
+                                <div class="unit-40">
+                                    <label>
+                                    Snapshot
+                                    </label>
+                                    <select data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                                        <option>1531</option>
+                                    </select>
+                                
+                                </div>
+                            <div class="unit-10">
+                                <button class="btn">Normal</button>
+                            </div>
+                        </div>
+                        
+                        
+                    </fieldset>
+                </form>
+
+            </div>
+
         </div>
-    </div> 
-    <div class="units-row">
-        <div class="unit-push-20 unit-60">
-            <form action="" class="forms">
-                <div class="ui-widget">
-                    <label for="tags">Portals: </label>
-                    <input id="tags">
-                </div>
-            </form>
-        </div>
-        
-    </div>
-       
-    
-</section>
-    
+
+
+    </section>
+
 </div>
 {% endblock %}
 
 {% block pageScripts %}
     <script>
-   $(function() {
-    var availableTags = [
-      "ActionScript",
-      "AppleScript",
-      "Asp",
-      "BASIC",
-      "C",
-      "C++",
-      "Clojure",
-      "COBOL",
-      "ColdFusion",
-      "Erlang",
-      "Fortran",
-      "Groovy",
-      "Haskell",
-      "Java",
-      "JavaScript",
-      "Lisp",
-      "Perl",
-      "PHP",
-      "Python",
-      "Ruby",
-      "Scala",
-      "Scheme"
-    ];
-    $( "#tags" ).autocomplete({
-      source: availableTags
-    });
-  });
+        
+    var data = {{ data | tojson|safe }};
+    console.log("SERVER DATA")
+    console.log(data)
+
+        
+
     </script>
 {% endblock %}

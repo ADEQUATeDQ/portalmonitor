@@ -5,16 +5,14 @@ __author__ = 'jumbrich'
 from odpw.db.models import Portal
 from odpw.utils.util import ErrorHandler as eh
 
-
-import logging
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log =structlog.get_logger()
 
 
 def name():
     return 'Init'
+def help():
+    return "Init the system with portals"
 
 def setupCLI(pa):
     pa.add_argument('-p','--portals',type=file, dest='plist')

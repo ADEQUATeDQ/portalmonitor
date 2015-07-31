@@ -1,6 +1,7 @@
-from odpw.quality.analysers import analyze_resource_format
 
 __author__ = 'jumbrich'
+
+from odpw.analysers.quality.analysers import analyze_resource_format
 
 import datetime
 import numpy as np

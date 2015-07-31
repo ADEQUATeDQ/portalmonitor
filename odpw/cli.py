@@ -1,8 +1,14 @@
+import sys
 
 
 __author__ = 'jumbrich'
 
 from sys import exc_info
+
+import structlog
+
+
+
 from sqlalchemy.exc import OperationalError
 import os
 import odpw
@@ -20,28 +26,51 @@ from odpw.utils.util import ErrorHandler as eh
 import odpw.db.dbm as dbcli
 import odpw.init as initcli
 import odpw.utils.fetch as fetchcli
-import odpw.utils.stats as statscli
-#import odpw.utils.datamonitor as dmcli
-import odpw.utils.extractcsv as extractcli
+#import odpw.utils.stats as statscli
+import odpw.utils.datamonitor as dmcli
+#import odpw.utils.extractcsv as extractcli
 import odpw.utils.head as headcli
-import odpw.analysers.quality.quality as qualitycli
+#import odpw.analysers.quality.quality as qualitycli
 import odpw.utils.sanity as statuscli
 import odpw.server.server as servercli
-import odpw.utils.head_stats as headStatscli
-import odpw.utils.fetch_stats as fetchStatscli
+#import odpw.utils.head_stats as headStatscli
+#import odpw.utils.fetch_stats as fetchStatscli
+import odpw.utils.report as reportcli
 
-submodules=[dbcli, initcli, fetchcli,statscli, extractcli, headcli,  statuscli, qualitycli,servercli,headStatscli,fetchStatscli]
+submodules=[dbcli, initcli, fetchcli,  statuscli,servercli,reportcli,dmcli, headcli]
 
 
 import yaml
 
 
 
+def config_logging():
+    
+    
+    
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt='iso'),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.JSONRenderer(sort_keys=True)
+            ],
+            context_class=dict,
+            logger_factory=structlog.stdlib.LoggerFactory(),
+            wrapper_class=structlog.stdlib.BoundLogger,
+            cache_logger_on_first_use=True,
+    )
+
+
 def start ():
     
     start= time.time()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.', prog='odpw')
-
+    
 
     logg=pa.add_argument_group("Logging")
     logg.add_argument(
@@ -64,22 +93,16 @@ def start ():
     dbg.add_argument('--password', help="DB password", dest='dbpwd',default='0pwu')
     
     config=pa.add_argument_group("Config")
-    config.add_argument('-c','--config', help="config file", dest='config',type=file)
+    config.add_argument('-c','--config', help="config file", dest='config')
     
     sp = pa.add_subparsers(title='Modules', description="Available sub modules")
     for sm in submodules:
-        smpa = sp.add_parser(sm.name(), help='a help')
+        smpa = sp.add_parser(sm.name(), help=sm.help())
         sm.setupCLI(smpa)
         smpa.set_defaults(func=sm.cli)
-
+    
     args = pa.parse_args()
     
-    ##load basic logging
-    
-    logconf = os.path.join(odpw.__path__[0], 'resources', 'logging.yaml')
-    with open(logconf) as f:
-        config = yaml.load(f)
-        logging.config.dictConfig(config)
         
     db={
         'host':args.dbhost, 
@@ -90,23 +113,37 @@ def start ():
         }
     
     if args.config:
-        config = yaml.load(args.config)
-        if 'logging' in config:
-            print "setup logging"
-            logging.config.dictConfig(config['logging'])
-        if 'db' in config:
-            for key in db:
-                if key in config['db']:
-                    db[key]=config['db'][key]
-    else:
-        logging.basicConfig(level=args.loglevel,format='%(asctime)s - %(levelname)s - %(name)s:%(lineno)d  - %(message)s',datefmt="%Y-%m-%dT%H:%M:%S")
-
+        print args.config
+        try:
+            with open(args.config) as f_conf:
+                config = yaml.load(f_conf)
+                if 'logging' in config:
+                    print "setup logging"
+                    logging.config.dictConfig(config['logging'])
+                else:
+                    ##load basic logging
+                    logconf = os.path.join(odpw.__path__[0], 'resources', 'logging.yaml')
+                    with open(logconf) as f:
+                        logging.config.dictConfig(yaml.load(f))
     
-    #log = logging.getLogger(__name__)
-    from structlog import get_logger, configure
-    from structlog.stdlib import LoggerFactory
-    configure(logger_factory=LoggerFactory())
-    log = get_logger()
+                if 'db' in config:
+                    for key in db:
+                        if key in config['db']:
+                            db[key]=config['db'][key]
+                    print db
+        except Exception as e:
+            print "Exception during config initialisation",e
+            return
+    else:
+        ##load basic logging
+        logconf = os.path.join(odpw.__path__[0], 'resources', 'logging.yaml')
+        with open(logconf) as f:
+            logging.config.dictConfig(yaml.load(f))
+        logging.basicConfig(level=args.loglevel)
+
+    #config the structlog
+    config_logging()
+    log = structlog.get_logger()
     
     try:
         log.info("CMD ARGS", args=str(args))
