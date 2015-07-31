@@ -1,6 +1,6 @@
 from __future__ import generators
 from sqlalchemy.sql.expression import join, exists
-from django.template.smartif import Literal
+
 
 __author__ = 'jumbrich'
 
