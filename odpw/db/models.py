@@ -172,6 +172,15 @@ class PortalMetaData(Model):
             self.fetch_stats={}
         self.fetch_stats['fetch_start'] = datetime.now().isoformat()
         
+    def headstart(self):
+        if not self.res_stats:
+            self.res_stats={}
+        self.res_stats['head_start'] = datetime.now().isoformat()
+    def headend(self):
+        if not self.res_stats:
+            self.res_stats={}
+        self.res_stats['head_stop'] = datetime.now().isoformat()
+        
     def fetchend(self):
         if not self.fetch_stats:
             self.fetch_stats={}

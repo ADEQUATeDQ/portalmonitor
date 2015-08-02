@@ -58,7 +58,37 @@ class Analyser(object):
 
 
 
+class AnalyserSet(Analyser):
+    
+    def __init__(self, analysers=None):
+        self.analysers = OrderedDict()
+        for a in analysers or []:
+            if isinstance(a, Analyser):
+                self.analysers[a.name()] = a
+                
+    def add(self, analyser):
+        self.analysers[analyser.name()] = analyser
 
+    def analyse(self, element):
+        for c in self.analysers.itervalues():
+            c.analyse(element)
+        
+    def update(self, element):
+        for c in self.analysers.itervalues():
+            c.update(element)
+    
+    def done(self):
+        for c in self.analysers.itervalues():
+            c.done()
+
+    def getAnalyser(self, analyser):
+        if isinstance(analyser, (types.TypeType, types.ClassType)) and  issubclass(analyser, Analyser):
+            return self.analysers[analyser.name()]
+        elif isinstance(analyser, Analyser):
+            return self.analysers[analyser.name()]
+        
+    def getAnalysers(self):
+        return self.analysers.values()
 
 class AnalyseEngine(Analyser):
     
@@ -110,5 +140,8 @@ class AnalyseEngine(Analyser):
 class QualityAnalyseEngine(AnalyseEngine):
     pass
 
-class AnalyserSet(AnalyseEngine):
-    pass
+
+def process( analyser, iterable):
+    for e in iterable:
+        analyser.analyse(e)
+    analyser.done()

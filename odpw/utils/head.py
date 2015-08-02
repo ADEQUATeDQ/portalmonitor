@@ -1,6 +1,6 @@
 from multiprocessing.process import Process
 import multiprocessing
-from time import sleep
+import time
 import sys
 __author__ = 'jumbrich'
 
@@ -20,7 +20,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from functools import partial
 import urlnorm
 
-def head (dbm, sn, resource):
+def head (dbm, sn, seen, resource):
     try:
         props={}
         props['mime']=None
@@ -28,24 +28,38 @@ def head (dbm, sn, resource):
         props['redirects']=None
         props['status']=None
         props['header']=None
-        with Timer(key="headLookupProcessing", verbose=True) as t:
+        with Timer(key="headLookupProcessing") as t:
             try:
                 props=util.head(resource.url)
             except Exception as e:
+                print e
                 eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
                 props['status']=util.getExceptionCode(e)
                 props['exception']=str(type(e))+":"+str(e.message)
         
             resource.updateStats(props)
             dbm.updateResource(resource)
+            
+            for pid in resource.origin:
+                if pid not in seen:
+                        ## get the pmd for this job
+                        pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
+                        if not pmd:
+                            pmd = PortalMetaData(portalID=pid, snapshot=sn)
+                            dbm.insertPortalMetaData(pmd)
+                            pmd.headstart()
+                        pmd.headstart()
+                        dbm.updatePortalMetaData(pmd)
+                        seen[pid]= time.time()
     except Exception as e:
+        print e
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
-
 
 def getResources(dbm, snapshot):
     resources =[]
     for res in dbm.getResourceWithoutHead(snapshot=snapshot):
         try:
+            
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))
             resources.append(R)    
@@ -82,7 +96,7 @@ class HeadProcess(Process):
             
             resources=getResources(self.dbm, self.snapshot)
             checks+=1
-            sleep(60)
+            time.sleep(60)
             if checks % 15==0:
                 log.info("HeadLookupCheck", count=len(resources), cores=self.processors) 
             
@@ -111,7 +125,7 @@ def cli(args,dbm):
 
     resources=[]
     #total = dbm.getResourceWithoutHeadCount(snapshot=sn)
-    for res in dbm.getResourceWithoutHead(snapshot=sn):
+    for res in dbm.getResourceWithoutHead(snapshot=sn, limit=10):
         try:
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))
@@ -119,29 +133,35 @@ def cli(args,dbm):
         except Exception as e:
             log.debug('Drop head lookup', exctype=type(e), excmsg=e.message, url=url, snapshot=sn)
 
-    
     log.info("Starting head lookups", count=len(resources), cores=args.processors)
     
     pool = ThreadPool(processes=args.processors,) 
+    mgr = multiprocessing.Manager()
+    seen = mgr.dict()
     
-    head_star = partial(head, dbm, sn)
+    head_star = partial(head, dbm, sn,seen)
     
+    start = time.time()
     results = pool.imap_unordered(head_star, resources)
     pool.close()
     
     c=0
     total=len(resources)
-    steps=total/100
-    for i, _ in enumerate(results, 1):
+    steps= total/100 if total/100 !=0 else 1
+    
+    for res in results:
         c+=1
         if c%steps==0:
-            progressIndicator(c,total)
-        sys.stderr.write('\rdone {0:%}'.format(i/total))
+            elapsed = (time.time() - start)
+            progressIndicator(c, total, elapsed=elapsed, label="Resources Progress")
+   
+    progressIndicator(c, total, elapsed=elapsed, label="Resources Progress")
     pool.join()
     
-    Timer.printStats()
-    log.info("Timer", stats=Timer.getStats())
-    
-    eh.printStats()
-
-    #dbm.updateTimeInSnapshotStatusTable(sn=sn, key="fetch_end")
+    for p in seen.keys():
+        ## get the pmd for this job
+        pmd = dbm.getPortalMetaData(portalID=p, snapshot=sn)
+        if not pmd:
+            break
+        pmd.headend()
+        dbm.updatePortalMetaData(pmd)

@@ -6,11 +6,31 @@ Created on Jul 27, 2015
 from odpw.analysers import Analyser
 from _collections import defaultdict
 import pandas as pd
+import numpy as np
+
+class HistogramAnalyser(Analyser):
+    
+    def __init__(self, **nphistparams):
+        self.list=[]
+        self.nphistparams=nphistparams
+    def analyse_generic(self, element):
+        if self.funct is not None:
+            self.append(self.funct(element))
+        else:
+            self.append(element)    
+            
+    def getRawResult(self):
+        return np.array(self.list)
+        
+    def getResult(self):
+        
+        hist, bin_edges = np.histogram(np.array(self.list), **self.nphistparams)
+        return {'hist':hist, 'bin_edges':bin_edges}
 
 
-class CountAnalyser(Analyser):
+class ElementCountAnalyser(Analyser):
     """
-    Analyser which provides a count per distinct element
+    Provides a count per distinct element
     """
     def __init__(self, funct=None):
         self.dist=defaultdict(int)
@@ -32,7 +52,7 @@ class CountAnalyser(Analyser):
         return self.getDist()
     
 
-class StatusCodeAnalyser(CountAnalyser):
+class StatusCodeAnalyser(ElementCountAnalyser):
     dist={
                 '2':'ok',
                 '3':'redirect-loop (3xx)',
@@ -57,9 +77,9 @@ class StatusCodeAnalyser(CountAnalyser):
             d[k]={'count':v, 'label': self.__class__.dist[k]}
         return d
     
-class ElementCount(Analyser):
+class DistinctElementCount(Analyser):
     def __init__(self, withDistinct=None):
-        super(ElementCount, self).__init__()
+        super(DistinctElementCount, self).__init__()
         self.count=0
         self.set=None
         if withDistinct:

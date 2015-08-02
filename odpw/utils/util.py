@@ -1,6 +1,7 @@
 import time
 import json
 from ast import literal_eval
+from odpw.utils.timer import Timer
 
 
 __author__ = 'jumbrich'
@@ -615,45 +616,46 @@ def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None, 
     sys.stdout.flush()
 
 def head(url, redirects=0, props=None):
-    if not props:
-        props={}
-        props['mime']=None
-        props['size']=None
-        props['redirects']=None
-        props['status']=None
-        props['header']=None
-        props['exception']=None
-    
-    headResp = requests.head(url=url,timeout=(2, 30.0), allow_redirects=True)#con, read -timeout
-    header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
-    
-    if 'content-type' in header_dict:
-        props['mime']=extractMimeType(header_dict['content-type'])
-    else:
-        props['mime']='missing'
-    
-    props['status']=headResp.status_code
-    props['header']=header_dict
-    
-    if headResp.status_code == requests.codes.ok:
-        if 'content-length' in header_dict:
-            props['size']=header_dict['content-length']
+    with Timer("headLookup") as t:
+        if not props:
+            props={}
+            props['mime']=None
+            props['size']=None
+            props['redirects']=None
+            props['status']=None
+            props['header']=None
+            props['exception']=None
+        
+        headResp = requests.head(url=url,timeout=(2, 30.0), allow_redirects=True)#con, read -timeout
+        header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
+        
+        if 'content-type' in header_dict:
+            props['mime']=extractMimeType(header_dict['content-type'])
         else:
-            props['size']=0
-
-    if headResp.status_code in [ requests.codes.moved, requests.codes.see_other]:
-        moved_url = header_dict['location']
-        if redirects == 0:
-            props['redirects']=[]
-        props['redirects'].append(header_dict)
-        if redirects < 3:
-            redirects += 1
-            if moved_url:
-                return head(url=moved_url, redirects=redirects,props=props)
+            props['mime']='missing'
+        
+        props['status']=headResp.status_code
+        props['header']=header_dict
+        
+        if headResp.status_code == requests.codes.ok:
+            if 'content-length' in header_dict:
+                props['size']=header_dict['content-length']
             else:
-                props['status']=778
-        else:
-            props['status']=777
-    
-    return props
+                props['size']=0
+        
+        if headResp.status_code in [ requests.codes.moved, requests.codes.see_other]:
+            moved_url = header_dict['location']
+            if redirects == 0:
+                props['redirects']=[]
+            props['redirects'].append(header_dict)
+            if redirects < 3:
+                redirects += 1
+                if moved_url:
+                    return head(url=moved_url, redirects=redirects,props=props)
+                else:
+                    props['status']=778
+            else:
+                props['status']=777
+        
+        return props
 

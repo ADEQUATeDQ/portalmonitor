@@ -97,6 +97,7 @@ class CLIReporter(object):
         pass
 
 class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
+    
     def __init__(self, dbm, portalID=None, apiurl=None):
         super(SnapshotsPerPortalReporter,self).__init__(DBAnalyser(dbm.getSnapshots, portalID=portalID,apiurl=None))
         self.portalID= portalID

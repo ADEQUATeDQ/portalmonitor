@@ -595,11 +595,13 @@ class PostgressDBM(object):
                 where(self.resources.c.status == status)
             return s.execute().scalar()
                
-    def getResourceWithoutHead(self, snapshot=None, status=-1):
+    def getResourceWithoutHead(self, snapshot=None, status=-1, limit=None):
         with Timer(key="getResourceWithoutHead") as t:
             s=select([self.resources]).\
                 where(self.resources.c.snapshot==snapshot).\
                 where(self.resources.c.status == status)
+            if limit:
+                s=s.limit(limit)
             #if status:
             #    s= s.where(self.resources.c.status == status)
             #if not status:

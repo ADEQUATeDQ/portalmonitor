@@ -82,6 +82,7 @@ def cli(args,dbm):
     
     if args.pgen:    
         rep = ReporterEngine([SnapshotsPerPortalReporter(dbm,portalID=args.portal_id)])
+        
         rep.run()
         
         output(rep,args)

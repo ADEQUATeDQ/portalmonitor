@@ -4,8 +4,25 @@ Created on Jul 30, 2015
 @author: jumbrich
 '''
 from odpw.analysers import Analyser
+from odpw.analysers.core import HistogramAnalyser
 
 
+
+class PMDDatasetCountAnalyser(HistogramAnalyser):
+    
+    def analyse_PortalMetaData(self, pmd):
+        ds = pmd.datasets
+        if ds <=0:
+            ds=0
+        self.analyse_generic(ds)
+    
+class PMDResourceCountAnalyser(HistogramAnalyser):    
+    
+    def analyse_PortalMetaData(self, pmd):
+        ds = pmd.resources
+        if ds <=0:
+            ds=0
+        self.analyse_generic(ds)
 
 class PMDActivityAnalyser(Analyser):
     

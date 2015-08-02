@@ -6,7 +6,7 @@ Created on Jul 24, 2015
 import hashlib
 
 
-from odpw.analysers.core import CountAnalyser, ElementCount
+from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.analysers import Analyser
 import json
 from odpw.db.models import Resource
@@ -23,7 +23,7 @@ class MD5DatasetAnalyser(Analyser):
             data_md5 = hashlib.md5(d).hexdigest()
             dataset.md5=data_md5
   
-class DatasetStatusCount(CountAnalyser):
+class DatasetStatusCount(ElementCountAnalyser):
     
     def analyse_Dataset(self, dataset):
         self.add(dataset.status)
@@ -33,7 +33,7 @@ class DatasetStatusCount(CountAnalyser):
             pmd.fetch_stats = {}
         pmd.fetch_stats['respCodes'] = self.getResult()
     
-class DatasetCount(ElementCount):
+class DatasetCount(DistinctElementCount):
     def __init__(self):
         super(DatasetCount, self).__init__()
     
@@ -43,7 +43,7 @@ class DatasetCount(ElementCount):
         pmd.datasets = self.getResult()['count']
         pmd.fetch_stats['datasets'] = self.getResult()['count']
 
-class CKANResourceInDS(ElementCount):
+class CKANResourceInDS(DistinctElementCount):
     def __init__(self,withDistinct=None):
         super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
         
@@ -419,7 +419,7 @@ class CKANKeyAnalyser(Analyser):
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
     
-class CKANFormatCount(CountAnalyser):
+class CKANFormatCount(ElementCountAnalyser):
     
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
