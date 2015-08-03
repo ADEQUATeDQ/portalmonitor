@@ -6,10 +6,10 @@
         "url": "http://africaopendata.org/"
     }, 
     "annuario_comune_fi_it": {
-        "api": "http://annuario.comune.fi.it/", 
+        "api": "",
         "countryCode": "ITA", 
         "software": "CKAN", 
-        "url": "http://annuario.comune.fi.it"
+        "url": "http://annuario.comune.fi.it/"
     }, 
     "belohorizonte_azure-eastus-prod_socrata_com": {
         "api": "", 
@@ -72,10 +72,10 @@
         "url": "https://catalogodatos.gub.uy/"
     }, 
     "catalogue_datalocale_fr": {
-        "api": "http://catalogue.datalocale.fr/", 
+        "api": "",
         "countryCode": "FRA", 
         "software": "CKAN", 
-        "url": "http://catalogue.datalocale.fr"
+        "url": "http://catalogue.datalocale.fr/"
     }, 
     "cdph_data_ca_gov": {
         "api": "", 
@@ -184,13 +184,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://data.burlingtonvt.gov"
-    }, 
-    "data_cacs_org": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "https://data.cacs.org"
-    }, 
+    },
     "data_cdc_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -336,16 +330,16 @@
         "url": "http://data.gov.ro/"
     }, 
     "data_gov_sk": {
-        "api": "http://data.gov.sk/", 
+        "api": "",
         "countryCode": "SVK", 
         "software": "CKAN", 
-        "url": "http://data.gov.sk"
+        "url": "http://data.gov.sk/"
     }, 
     "data_gov_uk": {
-        "api": "http://data.gov.uk/", 
+        "api": "",
         "countryCode": "GBR", 
         "software": "CKAN", 
-        "url": "http://data.gov.uk"
+        "url": "http://data.gov.uk/"
     }, 
     "data_graz_gv_at": {
         "api": "http://ckan.data.graz.gv.at/", 
@@ -354,10 +348,10 @@
         "url": "http://data.graz.gv.at/"
     }, 
     "data_grcity_us": {
-        "api": "http://data.grcity.us/", 
+        "api": "",
         "countryCode": "USA", 
         "software": "CKAN", 
-        "url": "http://data.grcity.us"
+        "url": "http://data.grcity.us/"
     }, 
     "data_gv_at": {
         "api": "http://www.data.gv.at/katalog/", 
@@ -564,10 +558,10 @@
         "url": "http://data.opencolorado.org/"
     }, 
     "data_openpolice_ru": {
-        "api": "http://data.openpolice.ru/", 
+        "api": "",
         "countryCode": "RUS", 
         "software": "CKAN", 
-        "url": "http://data.openpolice.ru"
+        "url": "http://data.openpolice.ru/"
     }, 
     "data_openva_com": {
         "api": "", 
@@ -646,13 +640,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://data.sfgov.org"
-    }, 
-    "data_slcgov_com": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "https://data.slcgov.com"
-    }, 
+    },
     "data_somervillema_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -769,7 +757,7 @@
     }, 
     "datahub_io": {
         "api": "", 
-        "countryCode": "IOT", 
+        "countryCode": "USA",
         "software": "CKAN", 
         "url": "http://datahub.io/"
     }, 
@@ -858,10 +846,10 @@
         "url": "http://datos.gob.mx/"
     }, 
     "datosabiertos_ec": {
-        "api": "http://datosabiertos.ec/", 
+        "api": "",
         "countryCode": "ECU", 
         "software": "CKAN", 
-        "url": "http://datosabiertos.ec"
+        "url": "http://datosabiertos.ec/"
     }, 
     "datosabiertos_malaga_eu": {
         "api": "", 
@@ -870,10 +858,10 @@
         "url": "http://datosabiertos.malaga.eu/"
     }, 
     "datospublicos_org": {
-        "api": "http://datospublicos.org/", 
+        "api": "",
         "countryCode": "USA", 
         "software": "CKAN", 
-        "url": "http://datospublicos.org"
+        "url": "http://datospublicos.org/"
     }, 
     "donnees_ville_montreal_qc_ca": {
         "api": "", 
@@ -882,10 +870,10 @@
         "url": "http://donnees.ville.montreal.qc.ca/"
     }, 
     "donnees_ville_sherbrooke_qc_ca": {
-        "api": "http://donnees.ville.sherbrooke.qc.ca/", 
+        "api": "",
         "countryCode": "CAN", 
         "software": "CKAN", 
-        "url": "http://donnees.ville.sherbrooke.qc.ca"
+        "url": "http://donnees.ville.sherbrooke.qc.ca/"
     }, 
     "dot_demo_socrata_com": {
         "api": "", 
@@ -904,25 +892,7 @@
         "countryCode": "USA", 
         "software": "CKAN", 
         "url": "https://edx.netl.doe.gov/"
-    }, 
-    "ethics_data_gov": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://ethics.data.gov"
-    }, 
-    "explore_data_gov": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://explore.data.gov"
-    }, 
-    "explore_data_gov_ethics": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://explore.data.gov/ethics"
-    }, 
+    },
     "exploredata_gov_ro": {
         "api": "", 
         "countryCode": "ROU", 
@@ -964,13 +934,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://hampton.demo.socrata.com"
-    }, 
-    "hdr_undp_org_en_countries": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "http://hdr.undp.org/en/countries"
-    }, 
+    },
     "health_data_ny_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -1030,13 +994,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://nats.demo.socrata.com/login"
-    }, 
-    "nmfs_socrata_com": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "http://nmfs.socrata.com"
-    }, 
+    },
     "nycopendata_socrata_com": {
         "api": "", 
         "countryCode": "USA", 
@@ -1156,13 +1114,7 @@
         "countryCode": "FRA", 
         "software": "OpenDataSoft", 
         "url": "http://opendata.paris.fr.opendatasoft.com"
-    }, 
-    "opendata_provincia_lucca_it": {
-        "api": "http://opendata.provincia.lucca.it/SpodCkanApi/", 
-        "countryCode": "ITA", 
-        "software": "CKAN", 
-        "url": "http://opendata.provincia.lucca.it/"
-    }, 
+    },
     "opendata_rubi_cat": {
         "api": "", 
         "countryCode": "USA", 
@@ -1347,7 +1299,7 @@
         "api": "", 
         "countryCode": "USA", 
         "software": "Socrata", 
-        "url": "http://www.consumerfinance.gov/complaintdatabase"
+        "url": "https://data.consumerfinance.gov"
     }, 
     "www_criminalytics_org": {
         "api": "", 
@@ -1429,7 +1381,7 @@
     }, 
     "www_offene-daten_me": {
         "api": "http://www.offene-daten.me/", 
-        "countryCode": "MNE", 
+        "countryCode": "DEU",
         "software": "CKAN", 
         "url": "http://www.offene-daten.me"
     }, 
@@ -1474,13 +1426,7 @@
         "countryCode": "NLD", 
         "software": "CKAN", 
         "url": "http://www.rotterdamopendata.nl/"
-    }, 
-    "www_usaid_gov_results-and-data_progress-data_data_dca": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://www.usaid.gov/results-and-data/progress-data/data/dca"
-    }, 
+    },
     "www_yorkopendata_org": {
         "api": "http://data.yorkopendata.org/", 
         "countryCode": "GBR", 

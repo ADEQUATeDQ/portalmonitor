@@ -80,35 +80,16 @@ class Dataset(Model):
             r = Dataset.fromResult(dict(i))
             yield r
         return
-    
-    
-    def __init__(self, snapshot, portalID, did, data=None, **kwargs):
-        super(Dataset,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
-        
-        self.snapshot = snapshot
-        self.portal_id = portalID
-        self.id = did
-        
-        self.data = data
-        self.status = None
-        self.exception = None
-        self.md5 = None
-        self.change = None
-        self.qa_stats = None
-        
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-    
+
     @classmethod
     def fromResult(cls, result):
         if isinstance(result, RowProxy):
             result = dict(result)
-        
-        
+
         snapshot = result['snapshot']
         portal_id = result['portal_id']
         did = result['id']
-        
+
         del result['portal_id']
         del result['id']
         del result['snapshot']
@@ -117,9 +98,26 @@ class Dataset(Model):
             if isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
-        return cls(snapshot=snapshot, portalID=portal_id, id=did,
-                    **result)      
-        
+        return cls(snapshot=snapshot, portalID=portal_id, did=did, **result)
+
+    def __init__(self, snapshot, portalID, did, data=None, **kwargs):
+        super(Dataset,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
+
+        self.snapshot = snapshot
+        self.portal_id = portalID
+        self.id = did
+
+        self.data = data
+        self.status = None
+        self.exception = None
+        self.md5 = None
+        self.change = None
+        self.qa_stats = None
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
 class PortalMetaData(Model):
 
     @classmethod
@@ -185,7 +183,12 @@ class PortalMetaData(Model):
         if not self.fetch_stats:
             self.fetch_stats={}
         self.fetch_stats['fetch_end'] = datetime.now().isoformat()
-        
+
+    def fetchTimeout(self, timeout):
+        if not self.fetch_stats:
+            self.fetch_stats={}
+        self.fetch_stats['fetch_timeout'] = timeout
+
     def updateStats(self, stats):
         if 'fetch_stats' in stats:
             if not self.fetch_stats:

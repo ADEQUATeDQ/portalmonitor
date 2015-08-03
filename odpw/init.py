@@ -28,13 +28,13 @@ def cli(args,dbm):
             
             data = json.load(args.plist)
             
-            for l in data:
+            for k,v in data.items():
                 
-                pid = l
-                url = data[l]['url']
-                apiurl = data[l]['api'] if len(data[l]['api'].strip())>0 else url
-                software = data[l]['software']
-                iso3 = data[l]['countryCode'] 
+                pid = k
+                url = v['url']
+                apiurl = v['api'] if len(v['api'].strip())>0 else url
+                software = v['software']
+                iso3 = v['countryCode']
                 try:
                     if args.insert:
                         p = dbm.getPortal(portalID=pid)
