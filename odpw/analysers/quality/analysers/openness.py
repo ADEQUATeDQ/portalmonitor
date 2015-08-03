@@ -2,6 +2,7 @@ import os
 import string
 from odpw.analysers.quality.analysers import licenses_openness_rating
 from odpw.analysers import Analyser
+from odpw.utils.licenses_mapping import LicensesOpennessMapping
 
 __author__ = 'jumbrich'
 
@@ -29,7 +30,7 @@ class OpennessAnalyser(Analyser):
     id='Qo'
     def __init__(self):
         # license rating
-        self.license_rating = licenses_openness_rating.LicensesOpennessRating()
+        self.license_rating = LicensesOpennessMapping()
 
         #retrieval stats
         self.quality = {'format': 0,
@@ -110,9 +111,9 @@ class OpennessAnalyser(Analyser):
         license_id = data.get('license_id', str(None))
         license_url = data.get('license_url', str(None))
 
-        open = self.license_rating.is_open_license(license_title, license_id, license_url)
+        lid, openness = self.license_rating.map_license(license_title, license_id, license_url)
 
-        return 1 if open else 0
+        return 1 if openness == 'approved' else 0
         
 
 ## NOT WORKING!!!!!!!
