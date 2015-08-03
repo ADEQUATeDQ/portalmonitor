@@ -233,9 +233,9 @@ class PostgressDBM(object):
     
     def getUnprocessedPortals(self,snapshot=None):
         with Timer(key="getUnprocessedPortals") as t:
-            pmdid= select([self.pmd.c.portal]).where(and_(
+            pmdid= select([self.pmd.c.portal_id]).where(and_(
                                                  self.pmd.c.snapshot==snapshot,
-                                                 self.portals.c.id== self.pmd.c.portal
+                                                 self.portals.c.id== self.pmd.c.portal_id
                                                  ))
             s = select([self.portals]).where(~self.portals.c.id.in_(pmdid)).order_by(self.portals.c.datasets)
             
@@ -418,7 +418,7 @@ class PostgressDBM(object):
             s=select([self.datasets.c.md5]).where(
                                                   and_(
                                                        self.datasets.c.dataset==Dataset.dataset, 
-                                                       self.datasets.c.portal==Dataset.portal,
+                                                       self.datasets.c.portal_id==Dataset.portal_id,
                                                        self.datasets.c.snapshot!=Dataset.snapshot)
                                                    ).order_by(self.datasets.c.snapshot.desc()).limit(1)
             self.log.debug(query=s.compile(), params=s.compile().params)
@@ -439,7 +439,7 @@ class PostgressDBM(object):
                                                 change=change,
                                                 fetch_time=datetime.datetime.now()
                                                ).where(and_(self.datasets.c.dataset==Dataset.dataset, 
-                                                       self.datasets.c.portal==Dataset.portal,
+                                                       self.datasets.c.portal_id==Dataset.portal_id,
                                                        self.datasets.c.snapshot!=Dataset.snapshot
                                                 ))
             self.log.debug(query=ins.compile(), params=ins.compile().params)
@@ -454,7 +454,7 @@ class PostgressDBM(object):
             if snapshot:
                 s= s.where(self.datasets.c.snapshot == snapshot)
             if portalID:
-                s= s.where(self.datasets.c.portal == portalID)
+                s= s.where(self.datasets.c.portal_id == portalID)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
@@ -466,7 +466,7 @@ class PostgressDBM(object):
             if snapshot:
                 s= s.where(self.datasets.c.snapshot == snapshot)
             if portalID:
-                s= s.where(self.datasets.c.portal == portalID)
+                s= s.where(self.datasets.c.portal_id == portalID)
             
         self.log.debug(query=s.compile(), params=s.compile().params)
         return s.execute()
@@ -481,7 +481,7 @@ class PostgressDBM(object):
             if snapshot:
                 s= s.where(self.datasets.c.snapshot == snapshot)
             if portal:
-                s= s.where(self.datasets.c.portal == portal)
+                s= s.where(self.datasets.c.portal_id == portal)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
@@ -502,7 +502,7 @@ class PostgressDBM(object):
             if Dataset.qa:
                 qa = Dataset.qa
             up = self.datasets.update().where(
-                                              and_(self.datasets.c.portal == Dataset.portal,
+                                              and_(self.datasets.c.portal_id == Dataset.portal,
                                                    self.datasets.c.snapshot == Dataset.snapshot,
                                                    self.datasets.c.dataset == Dataset.dataset
                                                    )).\
@@ -726,7 +726,7 @@ class PostgressDBM(object):
         
     def getPMDStatusDist(self):
         with Timer(key="getPMDStatusDist") as t:
-            s = select([ self.pmd.c.snapshot, self.pmd.c.fetch_stats['portal_status'].label('status'),func.count(self.pmd.c.portal).label('count')]).group_by(self.pmd.c.snapshot,self.pmd.c.fetch_stats['portal_status'])
+            s = select([ self.pmd.c.snapshot, self.pmd.c.fetch_stats['portal_status'].label('status'),func.count(self.pmd.c.portal_id).label('count')]).group_by(self.pmd.c.snapshot,self.pmd.c.fetch_stats['portal_status'])
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             

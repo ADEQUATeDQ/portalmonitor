@@ -10,21 +10,21 @@ import numpy as np
 
 class HistogramAnalyser(Analyser):
     
-    def __init__(self, **nphistparams):
+    def __init__(self, funct=None, **nphistparams):
         self.list=[]
+        self.funct = funct
         self.nphistparams=nphistparams
         
     def analyse_generic(self, element):
         if self.funct is not None:
-            self.append(self.funct(element))
+            self.list.append(self.funct(element))
         else:
-            self.append(element)    
+            self.list.append(element)
             
     def getRawResult(self):
         return np.array(self.list)
         
     def getResult(self):
-        
         hist, bin_edges = np.histogram(np.array(self.list), **self.nphistparams)
         return {'hist':hist, 'bin_edges':bin_edges}
 
