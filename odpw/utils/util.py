@@ -20,6 +20,16 @@ from collections import defaultdict
 import structlog
 log = structlog.get_logger()
 
+
+class TimeoutError(Exception):
+    def __init__(self, message, timeout):
+        # Call the base class constructor with the parameters it needs
+        super(TimeoutError, self).__init__(message)
+
+        # Now for your custom code...
+        self.timeout = timeout
+        print self.timeout
+
 class ErrorHandler():
 
     exceptions=defaultdict(long)
@@ -499,7 +509,8 @@ def getExceptionCode(e):
         #parser errors
         if isinstance(e, exceptions.ValueError):
             return 801
-
+        if isinstance(e , TimeoutError):
+            return 802
         #format errors
         if isinstance(e,urlnorm.InvalidUrl):
             return 901

@@ -1,6 +1,6 @@
 import os
 import string
-from odpw.analysers.quality.analysers import licenses_openness_rating
+
 from odpw.analysers import Analyser
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 

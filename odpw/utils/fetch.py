@@ -9,12 +9,13 @@ import time
 from odpw.db.models import Portal, PortalMetaData
 import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
-    getExceptionString
+    getExceptionString, TimeoutError
 
 from odpw.analysers import AnalyseEngine, AnalyserSet, process_all
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
     CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter
+    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter,\
+    CKANTagsCount, CKANLicenseCount, CKANOrganizationsCount
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
@@ -62,6 +63,9 @@ def fetching(obj):
             ae.add(CKANDatasetAge())
             ae.add(CKANKeyAnalyser())
             ae.add(CKANFormatCount())
+            ae.add(CKANTagsCount())
+            ae.add(CKANLicenseCount())
+            ae.add(CKANOrganizationsCount())
 
             ae.add(CompletenessAnalyser())
             ae.add(ContactabilityAnalyser())
@@ -81,9 +85,10 @@ def fetching(obj):
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)
             process_all( ae, iter)
-        except Exception as e:
+        except TimeoutError, (e):
+            eh.handleError(log, "TimeoutError", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
             ae.done()
-            pmd.fetchTimeout(e.timeout())
+            pmd.fetchTimeout(e.timeout)
 
         pmd.fetchend()
         #processor.fetching(Portal, sn)

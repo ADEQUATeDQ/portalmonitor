@@ -8,7 +8,7 @@ import requests
 from odpw.utils import util
 from odpw.db.models import Dataset, Portal
 from odpw.utils.timer import Timer
-from odpw.utils.util import ErrorHandler as eh, progressIndicator
+from odpw.utils.util import ErrorHandler as eh, progressIndicator, TimeoutError
 from odpw.analysers import AnalyseEngine
 
 import structlog
@@ -37,7 +37,8 @@ class CKAN(PortalProcessor):
                     log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt)
         raise e
 
-    def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5):
+    def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
+        start=time.time()
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
         rows=1000000
@@ -75,6 +76,10 @@ class CKAN(PortalProcessor):
                             p_count+=1
                             if p_count%p_steps ==0:
                                 progressIndicator(p_count, total, label=Portal.id)
+                                
+                            now = time.time()
+                            if now-start>timeout:
+                                raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                             yield d
 
                 else:
@@ -83,6 +88,8 @@ class CKAN(PortalProcessor):
             #if len(processed) == total:
             #    #assuming that package_search['count']
             #    return
+        except TimeoutError as e:
+            raise e
         except Exception as e:
             pass
 
@@ -124,7 +131,9 @@ class CKAN(PortalProcessor):
 
                         if len(processed) % 1000 == 0:
                             log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
-
+                        now = time.time()
+                        if now-start>timeout:
+                            raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                         yield d
 
         except Exception as e:
