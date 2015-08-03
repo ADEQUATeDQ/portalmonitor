@@ -152,7 +152,11 @@ class Socrata(PortalProcessor):
             for datasetJSON in res:
                 if 'id' not in datasetJSON:
                     continue
-                
+
+                # fetch only tabular views
+                if datasetJSON.get('viewType', default='tabular') != 'tabular':
+                    continue
+
                 datasetID = datasetJSON['id']
                 if datasetID not in processed:
                     processed.add(datasetID)
