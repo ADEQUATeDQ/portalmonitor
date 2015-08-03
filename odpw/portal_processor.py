@@ -163,7 +163,7 @@ class Socrata(PortalProcessor):
                     continue
 
                 # fetch only tabular views
-                if datasetJSON.get('viewType', default='tabular') != 'tabular':
+                if datasetJSON.get('viewType', 'tabular') != 'tabular':
                     continue
 
                 datasetID = datasetJSON['id']
