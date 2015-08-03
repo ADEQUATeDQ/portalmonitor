@@ -685,12 +685,12 @@ class PostgressDBM(object):
              
              
     #####################
-    #
+    # Statistics
     ########
     
     def getLatestPortalSnapshots(self):
         latest= select([self.pmd.c.portal_id.label('portal_id'),self.pmd.c.datasets,self.pmd.c.resources,
-                        func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id,self.pmd.c.datasets,self.pmd.c.resources)
+                        func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id)
         print latest
         return latest.execute()
     

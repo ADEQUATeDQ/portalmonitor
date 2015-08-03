@@ -13,6 +13,7 @@ class HistogramAnalyser(Analyser):
     def __init__(self, **nphistparams):
         self.list=[]
         self.nphistparams=nphistparams
+        
     def analyse_generic(self, element):
         if self.funct is not None:
             self.append(self.funct(element))
@@ -110,12 +111,12 @@ class DBAnalyser(object):
         
         self.columns=None
         
-    def analyse(self):
+    def analyse(self, element):
         
-        res = self.func(**self.param)
-        self.columns=res.keys()
-        for r in res:
-            self.rows.append(r)
+        #res = self.func(**self.param)
+        #self.columns=res.keys()
+        #for r in res:
+        self.rows.append(element)
     
     def getResult(self):
         return {'columns':self.columns, 'rows':self.rows} 
