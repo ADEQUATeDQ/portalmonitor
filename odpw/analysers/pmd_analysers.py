@@ -36,7 +36,7 @@ class PMDActivityAnalyser(Analyser):
             self.sum[k]=0
     
     def analyse_PortalMetaData(self, pmd):
-        #print pmd
+        print pmd
         
         stats={ 'pid':pmd.portal_id, 'snapshot':pmd.snapshot,'fetch_error':''}
         for k in self.stats_key:
@@ -72,7 +72,11 @@ class PMDActivityAnalyser(Analyser):
         
     
     def done(self):
+        print 'done'
         pass
         
     def getResult(self):
-        return {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error'],'summary_columns':self.stats_key}
+        print "results"
+        res= {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error'],'summary_columns':self.stats_key}
+        print res
+        return res

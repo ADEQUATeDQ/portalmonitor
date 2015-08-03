@@ -1,4 +1,4 @@
-from odpw.db.models import *
+__author__ = 'jumbrich'
 
 import pandas
 from odpw.utils.timer import Timer
@@ -7,11 +7,32 @@ import types
 from abc import abstractmethod
 from collections import OrderedDict
 
-__author__ = 'jumbrich'
-
 from _collections import defaultdict
 import time
 import numpy as np
+import structlog
+log = structlog.get_logger()
+
+
+_analyserRegistrar={}
+class AnalyserFactory(object):
+    
+    def __new__(cls, class_name, parents, attributes):
+        print "Creating class", class_name
+        # Here we could add some helper methods or attributes to c
+        c = type(class_name, parents, attributes)
+        print class_name
+        if class_name not in _analyserRegistrar:
+            _analyserRegistrar[class_name] = c
+        return c
+
+    @staticmethod
+    def get_class_from_frame_identifier(class_name):
+        return _analyserRegistrar.get(class_name)
+    
+    @staticmethod
+    def createAnalyser(class_name, **kwargs):
+        return _analyserRegistrar.get(class_name)(**kwargs)
 
 
 class Analyser(object):
@@ -145,3 +166,6 @@ def process( analyser, iterable):
     for e in iterable:
         analyser.analyse(e)
     analyser.done()
+    
+    
+

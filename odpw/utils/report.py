@@ -1,5 +1,6 @@
 from odpw.reporting.reporters import SystemActivityReporter, ReporterEngine, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter
+from odpw.analysers.core import DBAnalyser
 
 __author__ = 'jumbrich'
 
@@ -52,6 +53,10 @@ def cli(args,dbm):
         
     
     if args.sysover:
+        
+        (DBAnalyser, dbm.getSoftwareDist)
+        (DBAnalyser, dbm.getCountryDist)
+        
         sys_or = ReporterEngine([SoftWareDistReporter(dbm),
                                  ISO3DistReporter(dbm)])
         sys_or.run()
@@ -71,6 +76,8 @@ def cli(args,dbm):
              
     
     if args.sysactivity:
+        
+        
         sys_act_rep = ReporterEngine([SystemActivityReporter(dbm,sn)])
         sys_act_rep.run()
         

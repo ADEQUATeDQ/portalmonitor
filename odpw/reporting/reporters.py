@@ -211,6 +211,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
     
     def getDataFrame(self):
         if  self.df is None:
+            
             res = self.ae.getAnalyser(PMDActivityAnalyser).getResult()
             
             self.df = pandas.DataFrame(res['rows'])
@@ -220,6 +221,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
     
     def uireport(self):
         res = self.ae.getAnalyser(PMDActivityAnalyser).getResult()['summary']
+        
         return {'portalactivitylist':DFtoListDict(self.getDataFrame()),'summary':res}
     
     def clireport(self):

@@ -14,8 +14,10 @@ from odpw.utils.timer import Timer
 import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
+from odpw.analysers.factory import AnalyserFactory
 
 class MD5DatasetAnalyser(Analyser):
+    __metaclass__ = AnalyserFactory
     
     def analyse_Dataset(self, dataset):
         if dataset.data and bool(dataset.data):
@@ -24,7 +26,7 @@ class MD5DatasetAnalyser(Analyser):
             dataset.md5=data_md5
   
 class DatasetStatusCount(ElementCountAnalyser):
-    
+    __metaclass__ = AnalyserFactory
     def analyse_Dataset(self, dataset):
         self.add(dataset.status)
 

@@ -111,8 +111,10 @@ class SystemActivityHandler(BaseHandler):
     def get(self):
         
         sn = util.getCurrentSnapshot()
+        sn=1531
         sys_act_rep = ReporterEngine([SystemActivityReporter(self.db,sn)])
         sys_act_rep.run()
+        
         self.render('system_activity.jinja',index=True, json=json.dumps(sys_act_rep.uireport(), default=date_handler),snapshot=util.getCurrentSnapshot())
 
         
