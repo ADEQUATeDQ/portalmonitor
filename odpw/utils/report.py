@@ -29,6 +29,7 @@ def setupCLI(pa):
     tasks = pa.add_argument_group("portal reports")
     #tasks.add_argument("--apiurl",  help='Portal apiurl ', dest='apiurl')
     tasks.add_argument("--pid",  help='Portal id ', dest='portal_id')
+    
     tasks.add_argument("--pgen",  help='Portal overview report', dest='pgen', action='store_true')
     tasks.add_argument("--pdetail",  help='Portal detail report', dest='pdetail', action='store_true')
     tasks.add_argument("--pquality",  help='Portal quality report', dest='pquality', action='store_true')
