@@ -1367,12 +1367,6 @@
         "software": "CKAN", 
         "url": "http://www.data.gc.ca/"
     }, 
-    "www_data_gov": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://www.data.gov"
-    }, 
     "www_data_vic_gov_au": {
         "api": "", 
         "countryCode": "AUS", 

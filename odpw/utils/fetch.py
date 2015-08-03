@@ -11,7 +11,7 @@ import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString
 
-from odpw.analysers import AnalyseEngine
+from odpw.analysers import AnalyseEngine, AnalyserSet, process_all
 from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
     CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
     CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter
@@ -50,7 +50,7 @@ def fetching(obj):
         return
 
     try: 
-        ae = AnalyseEngine()
+        ae = AnalyserSet()
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())
@@ -68,19 +68,21 @@ def fetching(obj):
             ae.add(OpennessAnalyser())
             ae.add(OPQuastAnalyser())
 
-            ae.add(DatasetFetchInserter(dbm))
-
-            processor = CKAN(ae)
+            processor = CKAN()
         elif Portal.software == 'Socrata':
-            ae.add(DatasetFetchInserter(dbm))
-            processor = Socrata(ae)
+            processor = Socrata()
         elif Portal.software == 'OpenDataSoft':
-            ae.add(DatasetFetchInserter(dbm))
-            processor = OpenDataSoft(ae)
+            processor = OpenDataSoft()
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
 
-        processor.fetching(Portal, sn)
+        ae.add(DatasetFetchInserter(dbm))
+        
+        
+        iter = processor.generateFetchDatasetIter(Portal, sn)
+        process_all( ae, iter)
+        
+        #processor.fetching(Portal, sn)
 
         pmd.fetchend()
 

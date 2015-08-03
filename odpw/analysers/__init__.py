@@ -88,7 +88,8 @@ class AnalyserSet(Analyser):
                 self.analysers[a.name()] = a
                 
     def add(self, analyser):
-        self.analysers[analyser.name()] = analyser
+        if isinstance(analyser, Analyser) and analyser.name() not in self.analysers: 
+            self.analysers[analyser.name()] = analyser
 
     def analyse(self, element):
         for c in self.analysers.itervalues():
@@ -162,7 +163,7 @@ class QualityAnalyseEngine(AnalyseEngine):
     pass
 
 
-def process( analyser, iterable):
+def process_all( analyser, iterable):
     for e in iterable:
         analyser.analyse(e)
     analyser.done()

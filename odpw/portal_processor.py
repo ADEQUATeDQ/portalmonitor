@@ -15,22 +15,8 @@ import structlog
 log = structlog.get_logger()
 
 class PortalProcessor:
-    """
-    abstract super class for different portal software (e.g., Socrata, CKAN)
-    """
-
-    def __init__(self, analyse_engine):
-        self.analyse_engine = analyse_engine
-
     def generateFetchDatasetIter(self, Portal, sn):
         raise NotImplementedError("Should have implemented this")
-
-    def fetching(self, Portal, sn):
-        
-        iter = self.generateFetchDatasetIter(Portal, sn)
-        self.analyse_engine.process_all(iter)
-
-
 
 class CKAN(PortalProcessor):
     def _waiting_time(self, attempt):
