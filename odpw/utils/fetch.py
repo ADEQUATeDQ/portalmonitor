@@ -78,13 +78,16 @@ def fetching(obj):
 
         ae.add(DatasetFetchInserter(dbm))
         
-        
-        iter = processor.generateFetchDatasetIter(Portal, sn)
-        process_all( ae, iter)
-        
-        #processor.fetching(Portal, sn)
+        try:
+            iter = processor.generateFetchDatasetIter(Portal, sn)
+            process_all( ae, iter)
+        except Exception as e:
+            ae.done()
+            pmd.fetchTimeout(e.timeout())
 
         pmd.fetchend()
+        #processor.fetching(Portal, sn)
+
 
         ae.update(pmd)
         ae.update(Portal)
@@ -116,6 +119,7 @@ def checkProcesses(processes, pidFile):
         if not process.is_alive():
             process.join() # Allow tidyup
             status = process.exitcode
+
             end = datetime.now()
             
             rem.append(portalID) # Removed finished items from the dictionary

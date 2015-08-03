@@ -10,6 +10,7 @@ from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.analysers import Analyser
 import json
 from odpw.db.models import Resource
+from odpw.utils.licenses_mapping import LicensesOpennessMapping
 from odpw.utils.timer import Timer
 import datetime
 import numpy as np
@@ -420,7 +421,8 @@ class CKANKeyAnalyser(Analyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
-    
+
+
 class CKANFormatCount(ElementCountAnalyser):
     
     def analyse_Dataset(self, dataset):
@@ -433,3 +435,44 @@ class CKANFormatCount(ElementCountAnalyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['formats'] = self.getResult()
+
+
+class CKANLicenseCount(ElementCountAnalyser):
+    def __init__(self):
+        super(CKANLicenseCount, self).__init__()
+        self.license_mapping = LicensesOpennessMapping()
+        self.conformance = {}
+
+    def analyse_Dataset(self, dataset):
+        if dataset.data:
+            id = dataset.data.get('license_id')
+            url = dataset.data.get('license_url')
+            title = dataset.data.get('license_title')
+
+            id, od_conformance = self.license_mapping.map_license(title=title, lid=id, url=url)
+            # add id to ElementCountAnalyser
+            self.add(id)
+
+            # store conformance values for IDs
+            self.conformance[id] = od_conformance
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['licenses'] = self.getResult()
+
+
+
+class CKANOrganizationsCount(ElementCountAnalyser):
+
+    def analyse_Dataset(self, dataset):
+        if dataset.data and 'organization' in dataset.data:
+            org = dataset.data['organization']
+            if isinstance(org, dict):
+                if 'name' in org:
+                    self.add(org['name'])
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['organizations'] = self.getResult()
