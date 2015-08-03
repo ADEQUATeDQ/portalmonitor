@@ -476,3 +476,23 @@ class CKANOrganizationsCount(ElementCountAnalyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['organizations'] = self.getResult()
+
+
+class CKANTagsCount(ElementCountAnalyser):
+
+    def analyse_Dataset(self, dataset):
+        if dataset.data and 'tags' in dataset.data:
+            tags = dataset.data['tags']
+            if isinstance(tags, list):
+                for t in tags:
+                    if isinstance(t, dict):
+                        if 'name' in t:
+                            self.add(t['name'])
+                    elif isinstance(t, basestring):
+                        self.add(t)
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        # TODO maybe we don't want to save this??
+        pmd.general_stats['tags'] = self.getResult()

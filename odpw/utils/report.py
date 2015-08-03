@@ -1,5 +1,5 @@
 from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount
+from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount, CKANTagsCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.reporters import SystemActivityReporter, ReporterEngine, SoftWareDistReporter,\
@@ -80,12 +80,13 @@ def cli(args,dbm):
 
         #print ra.getResult()
 
-        ds = dbm.getDatasets(portalID='data_gov', snapshot=args.snapshot)
+        ds = dbm.getDatasets(portalID='data_wu_ac_at', snapshot=args.snapshot)
 
         a = AnalyserSet()
         a.add(CKANFormatCount())
         a.add(CKANLicenseCount())
         a.add(CKANOrganizationsCount())
+        a.add(CKANTagsCount())
 
         process_all(a, Dataset.iter(ds))
 
