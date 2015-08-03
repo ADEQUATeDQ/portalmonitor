@@ -77,15 +77,20 @@ TITLE_MAPPING_TO_OPEN_DEF = {
 
 class LicensesOpennessMapping:
 
+    __licenses_list=None
+
     def __init__(self):
-        resp = requests.get(OPEN_DEFINITION)
-        if resp.status_code != requests.codes.ok:
-            raise Exception("(%s) Cannot get OpenDefinition licenses.", OPEN_DEFINITION)
-        self.licenses_list = resp.json()
+        if not LicensesOpennessMapping.__licenses_list:
+            resp = requests.get(OPEN_DEFINITION)
+            if resp.status_code != requests.codes.ok:
+                raise Exception("(%s) Cannot get OpenDefinition licenses.", OPEN_DEFINITION)
+            self.licenses_list = resp.json()
+            LicensesOpennessMapping.__licenses_list= self.licenses_list
+        else:
+            self.licenses_list = LicensesOpennessMapping.__licenses_list
 
     def map_license(self, title, lid, url):
         res_id = None
-        common_id = None
 
         # at first check if ID is matching
         if lid:
