@@ -135,14 +135,15 @@ def extras_to_dicts(datasets):
 
 def extras_to_dict(dataset):
     extras_dict = {}
-    extras = dataset.get("extras", [])
-    if isinstance(extras, list):
-        for extra in extras:
-            key = extra["key"]
-            value = extra["value"]
-            assert key not in extras_dict
-            extras_dict[key] = value
-        dataset["extras"] = extras_dict
+    if dataset:
+        extras = dataset.get("extras", [])
+        if isinstance(extras, list):
+            for extra in extras:
+                key = extra["key"]
+                value = extra["value"]
+                assert key not in extras_dict
+                extras_dict[key] = value
+            dataset["extras"] = extras_dict
 
 def computeID(url):
     try:
