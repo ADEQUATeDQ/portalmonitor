@@ -85,10 +85,10 @@ def fetching(obj):
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)
             process_all( ae, iter)
-        except TimeoutError, (e):
+        except TimeoutError as exc:
             eh.handleError(log, "TimeoutError", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
             ae.done()
-            pmd.fetchTimeout(e.timeout)
+            pmd.fetchTimeout(exc.timeout)
 
         pmd.fetchend()
         #processor.fetching(Portal, sn)

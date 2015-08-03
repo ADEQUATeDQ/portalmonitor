@@ -42,7 +42,7 @@ def cli(args,dbm):
                             print "Portal", p.url, "exists"
                             fail+=1
                         else:
-                            p = Portal.newInstance(id=pid,url=url, apiurl=apiurl,software=software, iso3=iso3)
+                            p = Portal.newInstance(pid=pid,url=url, apiurl=apiurl,software=software, iso3=iso3)
                             dbm.insertPortal(p)
                             ok+=1
                 
@@ -60,7 +60,7 @@ def cli(args,dbm):
 
                 except Exception as e:
                     print e
-                    eh.handleError(log, "Insert new Portal", exception=e, line=l,exc_info=True)
+                    eh.handleError(log, "Insert new Portal", exception=e, line=k,exc_info=True)
                     #log.error("Insert new Portal", line=l, exctype=type(e), excmsg=e.message,exc_info=True)
                     fail+=1
             log.info("InitPortals DONE", total=(ok+fail), ok=ok, failed=fail)

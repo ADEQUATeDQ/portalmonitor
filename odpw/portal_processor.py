@@ -38,7 +38,7 @@ class CKAN(PortalProcessor):
         raise e
 
     def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
-        start=time.time()
+        starttime=time.time()
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
         rows=1000000
@@ -78,7 +78,7 @@ class CKAN(PortalProcessor):
                                 progressIndicator(p_count, total, label=Portal.id)
                                 
                             now = time.time()
-                            if now-start>timeout:
+                            if now-starttime>timeout:
                                 raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                             yield d
 
@@ -132,7 +132,7 @@ class CKAN(PortalProcessor):
                         if len(processed) % 1000 == 0:
                             log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
                         now = time.time()
-                        if now-start>timeout:
+                        if now-starttime>timeout:
                             raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                         yield d
 
