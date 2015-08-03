@@ -184,13 +184,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://data.burlingtonvt.gov"
-    }, 
-    "data_cacs_org": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "https://data.cacs.org"
-    }, 
+    },
     "data_cdc_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -646,13 +640,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://data.sfgov.org"
-    }, 
-    "data_slcgov_com": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "https://data.slcgov.com"
-    }, 
+    },
     "data_somervillema_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -904,25 +892,7 @@
         "countryCode": "USA", 
         "software": "CKAN", 
         "url": "https://edx.netl.doe.gov/"
-    }, 
-    "ethics_data_gov": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://ethics.data.gov"
-    }, 
-    "explore_data_gov": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://explore.data.gov"
-    }, 
-    "explore_data_gov_ethics": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://explore.data.gov/ethics"
-    }, 
+    },
     "exploredata_gov_ro": {
         "api": "", 
         "countryCode": "ROU", 
@@ -964,13 +934,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://hampton.demo.socrata.com"
-    }, 
-    "hdr_undp_org_en_countries": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "http://hdr.undp.org/en/countries"
-    }, 
+    },
     "health_data_ny_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -1030,13 +994,7 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://nats.demo.socrata.com/login"
-    }, 
-    "nmfs_socrata_com": {
-        "api": "", 
-        "countryCode": "USA", 
-        "software": "Socrata", 
-        "url": "http://nmfs.socrata.com"
-    }, 
+    },
     "nycopendata_socrata_com": {
         "api": "", 
         "countryCode": "USA", 
@@ -1156,13 +1114,7 @@
         "countryCode": "FRA", 
         "software": "OpenDataSoft", 
         "url": "http://opendata.paris.fr.opendatasoft.com"
-    }, 
-    "opendata_provincia_lucca_it": {
-        "api": "http://opendata.provincia.lucca.it/SpodCkanApi/", 
-        "countryCode": "ITA", 
-        "software": "CKAN", 
-        "url": "http://opendata.provincia.lucca.it/"
-    }, 
+    },
     "opendata_rubi_cat": {
         "api": "", 
         "countryCode": "USA", 
@@ -1347,7 +1299,7 @@
         "api": "", 
         "countryCode": "USA", 
         "software": "Socrata", 
-        "url": "http://www.consumerfinance.gov/complaintdatabase"
+        "url": "https://data.consumerfinance.gov"
     }, 
     "www_criminalytics_org": {
         "api": "", 
@@ -1474,13 +1426,7 @@
         "countryCode": "NLD", 
         "software": "CKAN", 
         "url": "http://www.rotterdamopendata.nl/"
-    }, 
-    "www_usaid_gov_results-and-data_progress-data_data_dca": {
-        "api": "", 
-        "countryCode": "AUT", 
-        "software": "Socrata", 
-        "url": "http://www.usaid.gov/results-and-data/progress-data/data/dca"
-    }, 
+    },
     "www_yorkopendata_org": {
         "api": "http://data.yorkopendata.org/", 
         "countryCode": "GBR", 
