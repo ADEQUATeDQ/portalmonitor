@@ -1,6 +1,7 @@
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount, CKANTagsCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser
+from odpw.analysers.socrata_analysers import SocrataKeyAnalyser
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.reporters import SystemActivityReporter, ReporterEngine, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter
@@ -80,13 +81,15 @@ def cli(args,dbm):
 
         #print ra.getResult()
 
-        ds = dbm.getDatasets(portalID='data_wu_ac_at', snapshot=args.snapshot)
+        ds = dbm.getDatasets(portalID='opendata_socrata_com', snapshot=args.snapshot)
 
         a = AnalyserSet()
-        a.add(CKANFormatCount())
-        a.add(CKANLicenseCount())
-        a.add(CKANOrganizationsCount())
-        a.add(CKANTagsCount())
+        #a.add(CKANFormatCount())
+        #a.add(CKANLicenseCount())
+        #a.add(CKANOrganizationsCount())
+        #a.add(CKANTagsCount())
+
+        a.add(SocrataKeyAnalyser())
 
         process_all(a, Dataset.iter(ds))
 
