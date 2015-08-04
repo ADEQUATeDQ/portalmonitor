@@ -7,7 +7,7 @@ from collections import defaultdict
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from odpw.analysers.fetching import CKANLicenseCount, TagsCount
 import odpw.utils.util as util
 import os
@@ -267,19 +267,9 @@ class TagReporter(Reporter, CSVReporter, DataFramePlotReporter):
         return os.path.join(folder, "tagsFrequency.csv")
 
     def plotreport(self):
-        df = self.getDataFrame().copy()
-        p = df.plot()
-        plt.show()
-
-        x=np.linspace(-10,10,201)
-        y,z=np.sin(x),np.cos(x)
-        x,y,z=pd.Series(x),pd.Series(y),pd.Series(z)
-        df=pd.concat([x,y,z],axis=1)
-        df.columns=['x','sin(x)','cos(x)']
-        df=df.set_index('x')
-        df.plot()
-        plt.show()
-
+        #df = self.getDataFrame().copy()
+        #p = df.plot()
+        #plt.show()
         pass
 
 

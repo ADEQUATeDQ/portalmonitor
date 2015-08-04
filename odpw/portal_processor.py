@@ -128,7 +128,7 @@ class CKAN(PortalProcessor):
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
-                        d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, data=props['data'], **props)
+                        d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
                         processed.add(d.id)
 
                         p_count+=1
