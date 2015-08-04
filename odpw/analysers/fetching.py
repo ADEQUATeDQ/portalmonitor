@@ -477,14 +477,20 @@ class CKANLicenseCount(ElementCountAnalyser):
         if pmd.general_stats and 'licenses' in pmd.general_stats:
             licenses = pmd.general_stats['licenses']
             if isinstance(licenses, dict):
-                for f in licenses:
-                    self.add(f, licenses[f])
+                for l in licenses:
+                    self.add(l, licenses[l])
+                    self.conformance[l] = self.license_mapping.get_od_conformance(l)
 
     def analyse_CKANLicenseCount(self, licenses_analyser):
-        licenses = licenses_analyser.getResult()
+        licenses, od_conf = licenses_analyser.getResult()
         if isinstance(licenses, dict):
-            for f in licenses:
-                self.add(f, licenses[f])
+            for l in licenses:
+                self.add(l, licenses[l])
+                self.conformance[l] = od_conf[l] if l in od_conf else 'not found'
+
+    def getResult(self):
+        return self.getDist(), self.conformance
+
 
 
 

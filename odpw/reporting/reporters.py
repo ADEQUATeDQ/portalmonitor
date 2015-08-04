@@ -3,9 +3,11 @@ Created on Jul 22, 2015
 
 @author: jumbrich
 '''
+from collections import defaultdict
 
 import pandas
 import numpy as np
+from odpw.analysers.fetching import CKANLicenseCount, TagsCount
 import odpw.utils.util as util
 import os
 from odpw.analysers.core import DBAnalyser
@@ -14,14 +16,9 @@ from odpw.db.models import PortalMetaData
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 class Reporter(object):
-    def run(self):
-        pass
     
     def getDataFrame(self):
         pass
-    
-   
-    
     
 
 def getTopK(self, df, k=10, column=None):
@@ -69,37 +66,30 @@ class DBReporter(Reporter):
     
     def __init__(self, analyser):
         self.a = analyser
-        self.df=None
-        
-    def run(self):
-        self.a.analyse()
-    
+        self.df = None
+
     def getDataFrame(self):
-        if  self.df is None:
+        if self.df is None:
             res = self.a.getResult()
             self.df = pandas.DataFrame(res['rows'])
             self.df.columns = res['columns']
         return self.df
-    
-    
+
     
 class UIReporter(object):
     def uireport(self):
-        pass    
+        pass
+
     
 class CSVReporter(object):
     def csvreport(self, folder):
         pass
-    
+
+
 class CLIReporter(object):
     
     def clireport(self):
         pass
-
-
-
-
-
 
 
 
@@ -166,11 +156,7 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
 class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
     
     def __init__(self, reporters):
-        self.rs=reporters
-        
-    def run(self):
-        for r in self.rs:
-            r.run()
+        self.rs = reporters
     
     def uireport(self):
         res = {}
@@ -193,9 +179,7 @@ class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
         for r in self.rs:
             if isinstance(r, CLIReporter):
                 r.clireport()
-        
-        
-    
+
 
         
         
@@ -248,3 +232,60 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
         for i in ['done','missing']: 
             print "  ",i,'-',summary['head_'+i]
     
+class TagReporter(Reporter, CSVReporter):
+    def __init__(self, analyser_set):
+        self.analyser = []
+        for a in analyser_set.getAnalysers():
+            if isinstance(a, TagsCount):
+                self.analyser.append(a)
+        self.df = None
+
+    def getDataFrame(self):
+        if self.df is None:
+            data = defaultdict(int)
+            for a in self.analyser:
+                res = a.getResult()
+                for k in res:
+                    data[k] += res[k]
+            self.df = pandas.DataFrame(data.items(), columns=['Tag', 'Count'])
+        return self.df
+
+    def csvreport(self, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        df = self.getDataFrame()
+
+        with open(os.path.join(folder, "tagsFrequency.csv"), "w") as f:
+            df.to_csv(f, index=False)
+        return os.path.join(folder, "tagsFrequency.csv")
+
+
+class LicensesReporter(Reporter, CSVReporter):
+    def __init__(self, analyser_set):
+        self.analyser = []
+        for a in analyser_set.getAnalysers():
+            if isinstance(a, CKANLicenseCount):
+                self.analyser.append(a)
+        self.df = None
+
+    def getDataFrame(self):
+        if self.df is None:
+            data = defaultdict(int)
+            conformance = {}
+            for a in self.analyser:
+                frequ, od_conf = a.getResult()
+                for k in frequ:
+                    data[k] += frequ[k]
+                    conformance[k] = od_conf[k] if k in od_conf else 'not found'
+            self.df = pandas.DataFrame(data.items(), columns=['LicenseID', 'Count'])
+            self.df['OD Conformance'] = self.df['LicenseID'].map(conformance)
+        return self.df
+
+    def csvreport(self, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        df = self.getDataFrame()
+
+        with open(os.path.join(folder, "licensesFrequency.csv"), "w") as f:
+            df.to_csv(f, index=False)
+        return os.path.join(folder, "licensesFrequency.csv")

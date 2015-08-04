@@ -263,15 +263,12 @@ class PostgressDBM(object):
                 return Portal.fromResult(dict(res))
             return None
     
-    def getPortals(self,maxDS=None, maxRes=None, software=None, status=None):
+    def getPortals(self, software=None, status=None):
         with Timer(key="getPortals") as t:
             
             s = select([self.portals])
             if status:
                 s=s.where(self.portals.c.status == status)
-                    
-            if maxDS:
-                s=s.where(self.portals.c.datasets <= maxDS)
                 
             if software:
                 s=s.where(self.portals.c.software == software)
