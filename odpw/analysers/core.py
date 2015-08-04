@@ -121,7 +121,7 @@ class DBAnalyser(object):
     def getResult(self):
         return {'columns':self.columns, 'rows':self.rows} 
     
-    
+
 if __name__ == '__main__':
     def f1(test=None):
         print test

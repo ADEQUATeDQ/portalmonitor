@@ -424,12 +424,24 @@ class CKANKeyAnalyser(Analyser):
 
 
 class CKANFormatCount(ElementCountAnalyser):
-    
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for resource in dataset.data['resources']:
                 format = resource['format'] if 'format' in resource else "mis" 
                 self.add(format)
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'formats' in pmd.general_stats:
+            formats = pmd.general_stats['formats']
+            if isinstance(formats, dict):
+                for f in formats:
+                    self.add(f, formats[f])
+
+    def analyse_CKANFormatCount(self, format_analyser):
+        formats = format_analyser.getResult()
+        if isinstance(formats, dict):
+            for f in formats:
+                self.add(f, formats[f])
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
@@ -453,7 +465,7 @@ class CKANLicenseCount(ElementCountAnalyser):
             # add id to ElementCountAnalyser
             self.add(id)
 
-            # store conformance values for IDs
+            # TODO store conformance values for IDs
             self.conformance[id] = od_conformance
 
     def update_PortalMetaData(self, pmd):
@@ -461,10 +473,22 @@ class CKANLicenseCount(ElementCountAnalyser):
             pmd.general_stats = {}
         pmd.general_stats['licenses'] = self.getResult()
 
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'licenses' in pmd.general_stats:
+            licenses = pmd.general_stats['licenses']
+            if isinstance(licenses, dict):
+                for f in licenses:
+                    self.add(f, licenses[f])
+
+    def analyse_CKANLicenseCount(self, licenses_analyser):
+        licenses = licenses_analyser.getResult()
+        if isinstance(licenses, dict):
+            for f in licenses:
+                self.add(f, licenses[f])
+
 
 
 class CKANOrganizationsCount(ElementCountAnalyser):
-
     def analyse_Dataset(self, dataset):
         if dataset.data and 'organization' in dataset.data:
             org = dataset.data['organization']
@@ -477,9 +501,41 @@ class CKANOrganizationsCount(ElementCountAnalyser):
             pmd.general_stats = {}
         pmd.general_stats['organizations'] = self.getResult()
 
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'licenses' in pmd.general_stats:
+            orgs = pmd.general_stats['licenses']
+            if isinstance(orgs, dict):
+                for o in orgs:
+                    self.add(o, orgs[o])
 
-class CKANTagsCount(ElementCountAnalyser):
+    def analyse_CKANOrganizationsCount(self, org_analyser):
+        orgs = org_analyser.getResult()
+        if isinstance(orgs, dict):
+            for o in orgs:
+                self.add(o, orgs[o])
 
+
+class TagsCount(ElementCountAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'tags' in pmd.general_stats:
+            tags = pmd.general_stats['tags']
+            if isinstance(tags, dict):
+                for t in tags:
+                    self.add(t, tags[t])
+
+    def analyse_TagsCount(self, tag_analyser):
+        tags = tag_analyser.getResult()
+        if isinstance(tags, dict):
+            for t in tags:
+                self.add(t, tags[t])
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['tags'] = self.getResult()
+
+
+class CKANTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
         if dataset.data and 'tags' in dataset.data:
             tags = dataset.data['tags']
@@ -491,8 +547,6 @@ class CKANTagsCount(ElementCountAnalyser):
                     elif isinstance(t, basestring):
                         self.add(t)
 
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        # TODO maybe we don't want to save this??
-        pmd.general_stats['tags'] = self.getResult()
+    def analyse_CKANTagsCount(self, tag_analyser):
+        super(CKANTagsCount, self).analyse_TagsCount(tag_analyser)
+
