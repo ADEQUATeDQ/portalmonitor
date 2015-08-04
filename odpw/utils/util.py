@@ -91,7 +91,7 @@ def getPackageList(apiurl):
         api = ckanapi.RemoteCKAN(apiurl, get_only=True)
         
         start=0
-        steps=100000
+        steps=1000
         while True:
             p_l = api.action.package_list(limit=steps, offset=start)
             if p_l:

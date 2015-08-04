@@ -26,6 +26,8 @@ class CKAN(PortalProcessor):
             return attempt*attempt*5
 
     def _get_datasets(self, api, timeout_attempts, rows, start, portal_id):
+        #using timeout_attempts attempts
+
         for attempt in xrange(timeout_attempts):
             time.sleep(self._waiting_time(attempt))
             try:
@@ -34,14 +36,17 @@ class CKAN(PortalProcessor):
             except ckanapi.errors.CKANAPIError as e:
                 err = literal_eval(e.extra_msg)
                 if 500 <= err[1] < 600:
-                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt, waiting=self._waiting_time(attempt))
+                    rows =rows/3 if rows>=3 else rows
+                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt, waiting=self._waiting_time(attempt), rows=rows)
+                else:
+                    raise e
         raise e
 
     def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
         starttime=time.time()
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
-        rows=1000000
+        rows=1000
 
         p_count=0
         p_steps=1
@@ -60,7 +65,7 @@ class CKAN(PortalProcessor):
                 #print Portal.apiurl, start, rows, len(processed)
                 datasets = response["results"] if response else None
                 if datasets:
-                    rows = len(datasets) if start==0 else rows
+                    rows = len(datasets)
                     start+=rows
                     for datasetJSON in datasets:
                         datasetID = datasetJSON['name']
@@ -81,7 +86,7 @@ class CKAN(PortalProcessor):
                             if now-starttime>timeout:
                                 raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                             yield d
-
+                    rows = min([int(rows*1.2),1000])
                 else:
                     break
             progressIndicator(p_count, total, label=Portal.id+"_batch")
@@ -98,8 +103,8 @@ class CKAN(PortalProcessor):
                 log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
             #len(package_list)
             tt=len(package_list)
-            p_steps=total/10
-            if p_steps ==0:
+            p_steps=tt/100
+            if p_steps == 0:
                 p_steps=1
             p_count=0
             for entity in package_list:
@@ -133,7 +138,7 @@ class CKAN(PortalProcessor):
 
                         p_count+=1
                         if p_count%p_steps ==0:
-                            progressIndicator(p_count, total, label=Portal.id+"_single")
+                            progressIndicator(p_count, tt, label=Portal.id+"_single")
                             log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed))
 
 
