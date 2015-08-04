@@ -25,7 +25,8 @@ setup(
         'rarfile',
         'jinja2',
         'tornado',
-        'pyyaml'
+        'pyyaml',
+        'psycopg2'
         
     ],
 

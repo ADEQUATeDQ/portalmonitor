@@ -59,7 +59,7 @@ def getPackage(api, apiurl, id):
         package = api.action.package_show(id=id)
         return package
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True)
+        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True, api=api, id=id, apiurl=apiurl)
         ex = e
 
     ex1=None
@@ -71,7 +71,7 @@ def getPackage(api, apiurl, id):
             return package
 
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)
+        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True, api=api, id=id, apiurl=apiurl)
         ex1=e
 
     if ex and ex1:

@@ -34,7 +34,7 @@ class CKAN(PortalProcessor):
             except ckanapi.errors.CKANAPIError as e:
                 err = literal_eval(e.extra_msg)
                 if 500 <= err[1] < 600:
-                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt)
+                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt, waiting=self._waiting_time(attempt))
         raise e
 
     def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
@@ -66,7 +66,8 @@ class CKAN(PortalProcessor):
 
                         if datasetID not in processed:
                             data = datasetJSON
-
+                            util.extras_to_dicts(data)
+                            
                             d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
                             processed.add(d.id)
 
