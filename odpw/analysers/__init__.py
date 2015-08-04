@@ -81,7 +81,7 @@ class Analyser(object):
 
 class AnalyserSet(Analyser):
     
-    def __init__(self, analysers=None):
+    def __init__(self, analysers=None, timing=False):
         self.analysers = OrderedDict()
         for a in analysers or []:
             if isinstance(a, Analyser):

@@ -124,8 +124,8 @@ class CKANDatasetAge(Analyser):
                     pass
 
     def done(self):
-        dsc = np.array(self.ages['created'],dtype='datetime64[us]')
-        dsm = np.array(self.ages['modified'],dtype='datetime64[us]')
+        dsc = np.array(self.ages['created'],dtype='datetime64')
+        dsm = np.array(self.ages['modified'],dtype='datetime64')
         if dsc.size != 0:
             delta = np.array(dsc - dsc.min())
 

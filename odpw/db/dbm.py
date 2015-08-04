@@ -405,6 +405,7 @@ class PostgressDBM(object):
                                                 change=change,
                                               )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
+            self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
             #self.conn.execute(ins)
             ins.execute()
 

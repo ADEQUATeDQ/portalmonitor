@@ -51,7 +51,7 @@ def fetching(obj):
         return
 
     try: 
-        ae = AnalyserSet()
+        ae = AnalyserSet(timing=True)
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())
@@ -59,8 +59,8 @@ def fetching(obj):
         if Portal.software == 'CKAN':
             ae.add(CKANResourceInDS(withDistinct=True))
             ae.add(CKANResourceInserter(dbm))
-            ae.add(CKANResourceInDSAge())
-            ae.add(CKANDatasetAge())
+            # ae.add(CKANResourceInDSAge())
+            #ae.add(CKANDatasetAge())
             ae.add(CKANKeyAnalyser())
             ae.add(CKANFormatCount())
             ae.add(CKANTagsCount())

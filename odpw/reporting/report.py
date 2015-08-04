@@ -8,7 +8,7 @@ from odpw.analysers.fetching import CKANTagsCount, CKANLicenseCount, CKANOrganiz
 from odpw.analysers.socrata_analysers import SocrataTagsCount
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset
-from odpw.reporting.reporters import ReporterEngine, dftopk, TagReporter, LicensesReporter
+from odpw.reporting.reporters import Report, dftopk, TagReporter, LicensesReporter
 
 if __name__ == '__main__':
     
@@ -59,8 +59,9 @@ if __name__ == '__main__':
     tags_rep = TagReporter(ta)
     l_rep = LicensesReporter(la)
 
-    re = ReporterEngine([tags_rep, l_rep])
+    re = Report([tags_rep, l_rep])
     re.csvreport('tmp')
+    re.plotreport()
 
     tmp = dftopk(tags_rep.getDataFrame(), 'Count', k=50)
     print tmp

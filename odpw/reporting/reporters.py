@@ -5,8 +5,9 @@ Created on Jul 22, 2015
 '''
 from collections import defaultdict
 
-import pandas
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from odpw.analysers.fetching import CKANLicenseCount, TagsCount
 import odpw.utils.util as util
 import os
@@ -45,9 +46,9 @@ def dftopk(df, column=None, k=10, percentage=False, otherrow=False):
         topn= addPercentageCol(topn)
     return topn
 
-def addPercentageCol(df):
+def addPercentageCol(df, column='count'):
     dfc= df.copy()
-    dfc['perc'] = 100*dfc['count']/dfc['count'].sum()
+    dfc['perc'] = 100*dfc[column]/dfc[column].sum()
     return dfc
 
 def DFtoListDict(df):
@@ -71,7 +72,7 @@ class DBReporter(Reporter):
     def getDataFrame(self):
         if self.df is None:
             res = self.a.getResult()
-            self.df = pandas.DataFrame(res['rows'])
+            self.df = pd.DataFrame(res['rows'])
             self.df.columns = res['columns']
         return self.df
 
@@ -89,6 +90,11 @@ class CSVReporter(object):
 class CLIReporter(object):
     
     def clireport(self):
+        pass
+
+class DataFramePlotReporter(object):
+
+    def plotreport(self):
         pass
 
 
@@ -153,7 +159,7 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
     
     
 
-class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
+class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
     
     def __init__(self, reporters):
         self.rs = reporters
@@ -180,10 +186,11 @@ class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
             if isinstance(r, CLIReporter):
                 r.clireport()
 
+    def plotreport(self):
+        for r in self.rs:
+            if isinstance(r, DataFramePlotReporter):
+                r.plotreport()
 
-        
-        
-    
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
     def __init__(self,dbm,snapshot=None, portalID=None):
@@ -205,7 +212,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
             
             res = self.ae.getAnalyser(PMDActivityAnalyser).getResult()
             
-            self.df = pandas.DataFrame(res['rows'])
+            self.df = pd.DataFrame(res['rows'])
             
             #self.df.columns = res['columns']
         return self.df
@@ -232,7 +239,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
         for i in ['done','missing']: 
             print "  ",i,'-',summary['head_'+i]
     
-class TagReporter(Reporter, CSVReporter):
+class TagReporter(Reporter, CSVReporter, DataFramePlotReporter):
     def __init__(self, analyser_set):
         self.analyser = []
         for a in analyser_set.getAnalysers():
@@ -247,7 +254,7 @@ class TagReporter(Reporter, CSVReporter):
                 res = a.getResult()
                 for k in res:
                     data[k] += res[k]
-            self.df = pandas.DataFrame(data.items(), columns=['Tag', 'Count'])
+            self.df = pd.DataFrame(data.items(), columns=['Tag', 'Count'])
         return self.df
 
     def csvreport(self, folder):
@@ -258,6 +265,22 @@ class TagReporter(Reporter, CSVReporter):
         with open(os.path.join(folder, "tagsFrequency.csv"), "w") as f:
             df.to_csv(f, index=False)
         return os.path.join(folder, "tagsFrequency.csv")
+
+    def plotreport(self):
+        df = self.getDataFrame().copy()
+        p = df.plot()
+        plt.show()
+
+        x=np.linspace(-10,10,201)
+        y,z=np.sin(x),np.cos(x)
+        x,y,z=pd.Series(x),pd.Series(y),pd.Series(z)
+        df=pd.concat([x,y,z],axis=1)
+        df.columns=['x','sin(x)','cos(x)']
+        df=df.set_index('x')
+        df.plot()
+        plt.show()
+
+        pass
 
 
 class LicensesReporter(Reporter, CSVReporter):
@@ -277,7 +300,7 @@ class LicensesReporter(Reporter, CSVReporter):
                 for k in frequ:
                     data[k] += frequ[k]
                     conformance[k] = od_conf[k] if k in od_conf else 'not found'
-            self.df = pandas.DataFrame(data.items(), columns=['LicenseID', 'Count'])
+            self.df = pd.DataFrame(data.items(), columns=['LicenseID', 'Count'])
             self.df['OD Conformance'] = self.df['LicenseID'].map(conformance)
         return self.df
 

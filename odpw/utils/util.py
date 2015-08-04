@@ -38,7 +38,7 @@ class ErrorHandler():
     def handleError(cls, log, msg=None, exception=None, **kwargs):
         name=type(exception).__name__
         cls.exceptions[name] +=1
-        log.error(msg,exctype=type(exception), excmsg=exception.message,**kwargs)
+        log.error(msg, exctype=type(exception), excmsg=exception.message,**kwargs)
     
     @classmethod
     def printStats(cls):
@@ -57,9 +57,8 @@ def getPackage(api, apiurl, id):
     package = None
     try:
         package = api.action.package_show(id=id)
-        return package
+        return package, 200
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True, api=api, id=id, apiurl=apiurl)
         ex = e
 
     ex1=None
@@ -68,13 +67,15 @@ def getPackage(api, apiurl, id):
         resp = requests.get(url, verify=False)
         if resp.status_code == requests.codes.ok:
             package = resp.json()
-            return package
-
+            return package,resp.status_code
+        else:
+            return None, resp.status_code
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True, api=api, id=id, apiurl=apiurl)
         ex1=e
 
+    #we have no package
     if ex and ex1:
+        ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, api=api, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
         raise ex1
     else:
         return package
@@ -139,10 +140,10 @@ def extras_to_dict(dataset):
         extras = dataset.get("extras", [])
         if isinstance(extras, list):
             for extra in extras:
-                key = extra["key"]
-                value = extra["value"]
-                assert key not in extras_dict
-                extras_dict[key] = value
+                if isinstance(extra,dict) and 'key' in extra:
+                    key = extra["key"]
+                    value = extra["value"]
+                    extras_dict[key] = value
             dataset["extras"] = extras_dict
 
 def computeID(url):

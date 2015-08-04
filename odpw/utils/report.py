@@ -3,7 +3,7 @@ from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKA
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser
 from odpw.analysers.socrata_analysers import SocrataKeyAnalyser
 from odpw.db.models import PortalMetaData, Dataset
-from odpw.reporting.reporters import SystemActivityReporter, ReporterEngine, SoftWareDistReporter,\
+from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter
 from odpw.analysers.core import DBAnalyser
 
@@ -63,24 +63,24 @@ def cli(args,dbm):
         (DBAnalyser, dbm.getSoftwareDist)
         (DBAnalyser, dbm.getCountryDist)
         
-        sys_or = ReporterEngine([SoftWareDistReporter(dbm),
+        sys_or = Report([SoftWareDistReporter(dbm),
                                  ISO3DistReporter(dbm)])
         sys_or.run()
     
         output(sys_or,args)
 
     if args.pdetail:
-        #pmds = dbm.getLatestPortalMetaDatas()
+        pmds = dbm.getLatestPortalMetaDatas()
 
-        #a = AnalyserSet()
-        #da = PMDDatasetCountAnalyser(bins=[0,50,100,500,1000,5000,10000,50000,100000])
+        a = AnalyserSet()
+        da = PMDDatasetCountAnalyser(bins=[0,50,100,500,1000,5000,10000,50000,100000])
         #ra = PMDResourceCountAnalyser()
 
-        #a.add(da)
+        a.add(da)
         #a.add(ra)
-        #process_all(a, PortalMetaData.iter(pmds))
+        process_all(a, PortalMetaData.iter(pmds))
 
-        #print ra.getResult()
+        print da.getResult()
 
         ds = dbm.getDatasets(portalID='opendata_socrata_com', snapshot=args.snapshot)
 
@@ -112,7 +112,7 @@ def cli(args,dbm):
     if args.sysactivity:
         
         
-        sys_act_rep = ReporterEngine([SystemActivityReporter(dbm,sn)])
+        sys_act_rep = Report([SystemActivityReporter(dbm,sn)])
         sys_act_rep.run()
         
         output(sys_act_rep,args)
@@ -122,7 +122,7 @@ def cli(args,dbm):
         return 
     
     if args.pgen:    
-        rep = ReporterEngine([SnapshotsPerPortalReporter(dbm,portalID=args.portal_id)])
+        rep = Report([SnapshotsPerPortalReporter(dbm,portalID=args.portal_id)])
         
         rep.run()
         

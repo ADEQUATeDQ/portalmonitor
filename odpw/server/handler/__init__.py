@@ -12,7 +12,7 @@ from urlparse import urlparse
 import json
 from odpw.db.dbm import nested_json, date_handler
 from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
-    ReporterEngine, ISO3DistReporter, SoftWareDistReporter,\
+    Report, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter
 from odpw.utils.timer import Timer
 
@@ -59,14 +59,14 @@ class PortalHandler(BaseHandler):
         
         
         if not bool(params):
-            rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+            rep = Report([SnapshotsPerPortalReporter(self.db)])
             rep.run()
             self.render('portal_detail_empty.jinja',portals=True, data=rep.uireport())
         elif params['portal']:
             if len(params['portal'].split(",")) ==1:
                 pid=params['portal']
                 
-                rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+                rep = Report([SnapshotsPerPortalReporter(self.db)])
                 
                 rep.run()
                 #r = PortalOverviewReporter(self.db, portalID=pid)
@@ -101,7 +101,7 @@ class PortalList(BaseHandler):
 class IndexHandler(BaseHandler):
     def get(self):
         
-        sys_or = ReporterEngine([SoftWareDistReporter(self.db),
+        sys_or = Report([SoftWareDistReporter(self.db),
                  ISO3DistReporter(self.db)])
         sys_or.run()
             
@@ -112,7 +112,7 @@ class SystemActivityHandler(BaseHandler):
         
         sn = util.getCurrentSnapshot()
         sn=1531
-        sys_act_rep = ReporterEngine([SystemActivityReporter(self.db,sn)])
+        sys_act_rep = Report([SystemActivityReporter(self.db,sn)])
         sys_act_rep.run()
         
         self.render('system_activity.jinja',index=True, json=json.dumps(sys_act_rep.uireport(), default=date_handler),snapshot=util.getCurrentSnapshot())
