@@ -136,7 +136,7 @@ def cli(args,dbm):
 
     resources=[]
     #total = dbm.getResourceWithoutHeadCount(snapshot=sn)
-    for res in dbm.getResourceWithoutHead(snapshot=sn, limit=100):
+    for res in dbm.getResourceWithoutHead(snapshot=sn):
         try:
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))
