@@ -4,7 +4,7 @@ from jinja2 import Environment, FileSystemLoader,Markup
 import sys
 import json
 
-from tornado.web import Application, StaticFileHandler
+from tornado.web import  StaticFileHandler
 import tornado.httpserver
 import tornado.ioloop
 
@@ -25,8 +25,8 @@ def tojson_filter(obj, **kwargs):
     # https://github.com/mitsuhiko/flask/blob/master/flask/json.py
     return Markup(json.dumps(obj, **kwargs))
 
-class Application(tornado.web.Application):
-    def __init__(self, db=None):
+class ODPWApplication(tornado.web.Application):
+    def __init__(self, db=None, printHtml=False):
         
         static_path = join(here, 'static')
         template_path = join(here, 'templates')
@@ -47,12 +47,16 @@ class Application(tornado.web.Application):
             'autoreload':True
         }
 
-        super(Application, self).__init__(handlers, **settings)
+        super(ODPWApplication, self).__init__(handlers, **settings)
         
         self.env = Environment(loader=FileSystemLoader(template_path))
         self.env.filters.update( tojson= tojson_filter)
+        
         self.db = db
-
+        
+        if printHtml:
+            self.printHtml = static_path
+        
 
 
 def name():
@@ -64,7 +68,7 @@ def setupCLI(pa):
     pa.add_argument('-p','--port',type=int, dest='port', default=2340)    
 
 def cli(args,dbm):
-    http_server = tornado.httpserver.HTTPServer(Application(db=dbm))
+    http_server = tornado.httpserver.HTTPServer(ODPWApplication(db=dbm, printHtml=True))
     http_server.listen(args.port)
     
     print('Starting Tornado on http://localhost:{}/'.format(args.port))

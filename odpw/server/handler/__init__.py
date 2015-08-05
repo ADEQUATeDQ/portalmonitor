@@ -15,6 +15,12 @@ from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,
     ReporterEngine, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter
 from odpw.utils.timer import Timer
+from odpw.analysers import process_all
+
+import sys
+import traceback
+import os
+from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 
 class BaseHandler(RequestHandler):
@@ -25,8 +31,12 @@ class BaseHandler(RequestHandler):
     @property
     def db(self):
         return self.application.db
+    @property
+    def printHtml(self):
+        return self.application.printHtml
 
     def get_error_html(self, status_code, **kwargs):
+        print "error", status_code, kwargs
         try:
             self.render('error/{}.html'.format(status_code))
         except (TemplateNotFound, HTTPError):
@@ -35,15 +45,19 @@ class BaseHandler(RequestHandler):
             except (TemplateNotFound, HTTPError):
                 self.write("You aren't supposed to see this")
 
-    def render(self, template, **kwargs):
+    def render(self, templateName, **kwargs):
         try:
-            template = self.env.get_template(template)
+            template = self.env.get_template(templateName)
         except TemplateNotFound:
             raise HTTPError(404)
         self.env.globals['static_url'] = self.static_url
+        if self.printHtml:
+            try:
+                with open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), "w") as f:
+                    f.write(template.render(kwargs ))
+            except TemplateNotFound as e:
+                print e
         
-        with open('index_rend.html', "w") as f:
-            f.write(template.render(kwargs ))
         
         self.write(template.render(kwargs))
 
@@ -54,10 +68,7 @@ class NoDestinationHandler(RequestHandler):
 
 class PortalHandler(BaseHandler):
     def get(self, **params):
-        print params
-        
-        
-        
+        print 'kwargs',params
         if not bool(params):
             rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
             rep.run()
@@ -100,22 +111,30 @@ class PortalList(BaseHandler):
 
 class IndexHandler(BaseHandler):
     def get(self):
-        
-        sys_or = ReporterEngine([SoftWareDistReporter(self.db),
-                 ISO3DistReporter(self.db)])
-        sys_or.run()
+            a = process_all(DBAnalyser(),self.db.getSoftwareDist())
+            ab = process_all(DBAnalyser(),self.db.getCountryDist())
+            sys_or = ReporterEngine([SoftWareDistReporter(a),
+                 ISO3DistReporter(ab)])
             
-        self.render('index.html',index=True, json=json.dumps(sys_or.uireport(), default=date_handler))
+            args={'index':True,
+               'data':sys_or.uireport()
+            }    
+            self.render('index.html',**args)
         
 class SystemActivityHandler(BaseHandler):
     def get(self):
         
         sn = util.getCurrentSnapshot()
-        sn=1531
-        sys_act_rep = ReporterEngine([SystemActivityReporter(self.db,sn)])
-        sys_act_rep.run()
+        it =self.dbm.getPortalMetaDatas(snapshot=sn,portalID=None)
+        a = process_all(PMDActivityAnalyser(),it)
         
-        self.render('system_activity.jinja',index=True, json=json.dumps(sys_act_rep.uireport(), default=date_handler),snapshot=util.getCurrentSnapshot())
+        report = ReporterEngine([SystemActivityReporter(a)])
+            
+        args={'index':True,
+               'data':report.uireport(),
+               'snapshot':util.getCurrentSnapshot()
+        }    
+        self.render('system_activity.jinja',args)
 
         
 class DataHandler(RequestHandler):

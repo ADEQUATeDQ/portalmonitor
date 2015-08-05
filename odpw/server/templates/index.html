@@ -117,7 +117,7 @@
      var spec_softwaredist="/static/vega_spec/softwaredist.json";
      var spec_countryMap="/static/vega_spec/portalmap.json";
      
-     var data = {{ json | safe }};
+     var data = {{ data| tojson | safe }};
      console.log("SERVER DATA")
      console.log(data)
      

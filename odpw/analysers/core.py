@@ -99,27 +99,20 @@ class DistinctElementCount(Analyser):
             res['distinct']=len(self.set)
         return res
     
-class DBAnalyser(object):
+class DBAnalyser(Analyser):
     
-    def __init__(self, func, **param):
-        self.func=func
+    def __init__(self):
         self.rows=[]
-        if param:
-            self.param=param
-        else:
-            self.param={}
-        
         self.columns=None
         
-    def analyse(self, element):
         
-        #res = self.func(**self.param)
-        #self.columns=res.keys()
-        #for r in res:
-        self.rows.append(element)
+    def done(self):
+        pass    
+    def analyse_generic(self, element):
+        self.rows.append(dict(element))
     
     def getResult(self):
-        return {'columns':self.columns, 'rows':self.rows} 
+        return {'rows':self.rows} 
     
     
 if __name__ == '__main__':

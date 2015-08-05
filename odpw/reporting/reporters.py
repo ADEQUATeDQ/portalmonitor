@@ -70,15 +70,12 @@ class DBReporter(Reporter):
     def __init__(self, analyser):
         self.a = analyser
         self.df=None
-        
-    def run(self):
-        self.a.analyse()
     
     def getDataFrame(self):
         if  self.df is None:
             res = self.a.getResult()
             self.df = pandas.DataFrame(res['rows'])
-            self.df.columns = res['columns']
+            #self.df.columns = res['columns']
         return self.df
     
     
@@ -126,15 +123,15 @@ class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
         
     
 class SoftWareDistReporter(DBReporter,UIReporter):
-    def __init__(self, dbm):
-        super(SoftWareDistReporter,self).__init__(DBAnalyser(dbm.getSoftwareDist))
+    def __init__(self, analyser):
+        super(SoftWareDistReporter,self).__init__(analyser)
         
     def uireport(self):
         return {'softdist':DFtoListDict(addPercentageCol(self.getDataFrame()))}
 
 class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
-    def __init__(self, dbm):
-        super(ISO3DistReporter,self).__init__(DBAnalyser(dbm.getCountryDist))
+    def __init__(self, analyser):
+        super(ISO3DistReporter,self).__init__(analyser)
     
     def uireport(self):
         df = self.getDataFrame()
@@ -202,17 +199,9 @@ class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
     
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
-    def __init__(self,dbm,snapshot=None, portalID=None):
-        self.dbm = dbm
-        self.snapshot=snapshot
-        self.portalID=portalID
+    def __init__(self,dbm,analyser):
+        self.analyser = analyser
         self.df=None
-        self.ae = AnalyseEngine()
-        self.ae.add(PMDActivityAnalyser())
-        
-    def run(self):
-        iter = self.dbm.getPortalMetaDatas(snapshot=self.snapshot,portalID=self.portalID)
-        self.ae.process_all(PortalMetaData.iter(iter))
         
         
     

@@ -21,7 +21,6 @@ class AnalyserFactory(object):
         print "Creating class", class_name
         # Here we could add some helper methods or attributes to c
         c = type(class_name, parents, attributes)
-        print class_name
         if class_name not in _analyserRegistrar:
             _analyserRegistrar[class_name] = c
         return c
@@ -167,6 +166,8 @@ def process_all( analyser, iterable):
     for e in iterable:
         analyser.analyse(e)
     analyser.done()
+
+    return analyser
     
     
 
