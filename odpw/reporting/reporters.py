@@ -67,6 +67,7 @@ class DBReporter(Reporter):
     
     def __init__(self, analyser):
         self.a = analyser
+        self.df=None
 
     def getDataFrame(self):
         if self.df is None:
@@ -100,11 +101,12 @@ class DataFramePlotReporter(object):
 
 class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
     
-    def __init__(self, dbm, portalID=None, apiurl=None):
-        super(SnapshotsPerPortalReporter,self).__init__(DBAnalyser(dbm.getSnapshots, portalID=portalID,apiurl=None))
+    def __init__(self, analyser, portalID):
+        super(SnapshotsPerPortalReporter,self).__init__(analyser)
         self.portalID= portalID
-    
+        
     def uireport(self):
+        
         df = self.getDataFrame()
         grouped = df.groupby("portal_id")
         results={}

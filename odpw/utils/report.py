@@ -123,9 +123,8 @@ def cli(args,dbm):
         return 
     
     if args.pgen:    
-        rep = Report([SnapshotsPerPortalReporter(dbm,portalID=args.portal_id)])
-        
-        rep.run()
+        a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=args.portal_id,apiurl=None))
+        rep = Report([SnapshotsPerPortalReporter(a,args.portal_id)])
         
         output(rep,args)
         

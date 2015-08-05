@@ -60,6 +60,10 @@ class BaseHandler(RequestHandler):
         
         
         self.write(template.render(kwargs))
+        
+    def _handle_request_exception(self, e):
+        print e
+        traceback.print_exc(file=sys.stdout)
 
 
 class NoDestinationHandler(RequestHandler):
@@ -70,20 +74,18 @@ class PortalHandler(BaseHandler):
     def get(self, **params):
         print 'kwargs',params
         if not bool(params):
-            rep = Report([SnapshotsPerPortalReporter(self.db)])
-            rep.run()
+            a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=None,apiurl=None))
+            rep = Report([SnapshotsPerPortalReporter(a,None)])
+            
             self.render('portal_detail_empty.jinja',portals=True, data=rep.uireport())
         elif params['portal']:
             if len(params['portal'].split(",")) ==1:
                 pid=params['portal']
                 
-                rep = Report([SnapshotsPerPortalReporter(self.db)])
+                a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=pid,apiurl=None))
+                rep = Report([SnapshotsPerPortalReporter(a,pid)])
                 
-                rep.run()
-                #r = PortalOverviewReporter(self.db, portalID=pid)
-                
-                
-                self.render('portal_detail.jinja',portals=True)
+                self.render('portal_detail.jinja',portals=True,data=rep.uireport())
             else:
                 self.render('portals_detail.jinja',portals=True)
             
@@ -113,12 +115,13 @@ class IndexHandler(BaseHandler):
     def get(self):
             a = process_all(DBAnalyser(),self.db.getSoftwareDist())
             ab = process_all(DBAnalyser(),self.db.getCountryDist())
-            sys_or = Report([SoftWareDistReporter(a),
+            r = Report([SoftWareDistReporter(a),
                  ISO3DistReporter(ab)])
-            args={'index':True,
-               'data':sys_or.uireport()
+            args={
+                  'index':True,
+                  'data':r.uireport()
             }    
-            self.render('index.html',**args)
+            self.render('index.jinja',**args)
         
 class SystemActivityHandler(BaseHandler):
     def get(self):
