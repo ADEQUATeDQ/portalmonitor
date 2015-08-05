@@ -11,7 +11,7 @@ import numpy as np
 from odpw.analysers.fetching import CKANLicenseCount, TagsCount
 import odpw.utils.util as util
 import os
-from odpw.analysers.core import DBAnalyser
+from odpw.analysers.core import DBAnalyser, HistogramAnalyser
 from odpw.analysers import AnalyseEngine
 from odpw.db.models import PortalMetaData
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
@@ -296,3 +296,4 @@ class LicensesReporter(Reporter, CSVReporter):
         with open(os.path.join(folder, "licensesFrequency.csv"), "w") as f:
             df.to_csv(f, index=False)
         return os.path.join(folder, "licensesFrequency.csv")
+

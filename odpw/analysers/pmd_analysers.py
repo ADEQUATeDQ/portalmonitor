@@ -3,9 +3,12 @@ Created on Jul 30, 2015
 
 @author: jumbrich
 '''
+from collections import defaultdict
+import numpy as np
 from odpw.analysers import Analyser
 from odpw.analysers.core import HistogramAnalyser
-
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 
 
 class PMDDatasetCountAnalyser(HistogramAnalyser):
@@ -81,3 +84,47 @@ class PMDActivityAnalyser(Analyser):
         res= {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error','fetch_end','fetch_start'], 'summary_columns':self.stats_key}
         print res
         return res
+
+
+class MultiHistogramAnalyser(Analyser):
+    def __init__(self, **nphistparams):
+        # should be key value pairs of description + list
+        self.data = defaultdict(list)
+        self.nphistparams=nphistparams
+
+    def getResult(self):
+        result = {}
+        for d in self.data:
+            hist, bin_edges = np.histogram(np.array(self.data[d]), **self.nphistparams)
+            result[d] = {'hist': hist, 'bin_edges': bin_edges}
+        return result
+
+
+class CompletenessHistogram(MultiHistogramAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and CompletenessAnalyser.id in pmd.qa_stats:
+            quality = pmd.qa_stats[CompletenessAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
+
+    def analyse_Dataset(self, dataset):
+        if dataset.qa_stats and CompletenessAnalyser.id in dataset.qa_stats:
+            quality = dataset.qa_stats[CompletenessAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
+
+
+class ContactabilityHistogram(MultiHistogramAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and ContactabilityAnalyser.id in pmd.qa_stats:
+            contact = pmd.qa_stats[ContactabilityAnalyser.id]
+            for root in contact:
+                for child in contact[root]:
+                    self.data[root + '_' + child].append(contact[root][child])
+
+    def analyse_Dataset(self, dataset):
+        if dataset.qa_stats and ContactabilityAnalyser.id in dataset.qa_stats:
+            contact = dataset.qa_stats[ContactabilityAnalyser.id]
+            for root in contact:
+                for child in contact[root]:
+                    self.data[root + '_' + child].append(contact[root][child])
