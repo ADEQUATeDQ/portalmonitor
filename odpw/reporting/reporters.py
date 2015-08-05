@@ -3,9 +3,12 @@ Created on Jul 22, 2015
 
 @author: jumbrich
 '''
+from collections import defaultdict
 
-import pandas
+import pandas as pd
 import numpy as np
+#import matplotlib.pyplot as plt
+from odpw.analysers.fetching import CKANLicenseCount, TagsCount
 import odpw.utils.util as util
 import os
 from odpw.analysers.core import DBAnalyser
@@ -14,14 +17,9 @@ from odpw.db.models import PortalMetaData
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 class Reporter(object):
-    def run(self):
-        pass
     
     def getDataFrame(self):
         pass
-    
-   
-    
     
 
 def getTopK(self, df, k=10, column=None):
@@ -48,9 +46,9 @@ def dftopk(df, column=None, k=10, percentage=False, otherrow=False):
         topn= addPercentageCol(topn)
     return topn
 
-def addPercentageCol(df):
+def addPercentageCol(df, column='count'):
     dfc= df.copy()
-    dfc['perc'] = 100*dfc['count']/dfc['count'].sum()
+    dfc['perc'] = 100*dfc[column]/dfc[column].sum()
     return dfc
 
 def DFtoListDict(df):
@@ -69,34 +67,34 @@ class DBReporter(Reporter):
     
     def __init__(self, analyser):
         self.a = analyser
-        self.df=None
-    
+
     def getDataFrame(self):
-        if  self.df is None:
+        if self.df is None:
             res = self.a.getResult()
-            self.df = pandas.DataFrame(res['rows'])
+            self.df = pd.DataFrame(res['rows'])
             #self.df.columns = res['columns']
         return self.df
-    
-    
+
     
 class UIReporter(object):
     def uireport(self):
-        pass    
+        pass
+
     
 class CSVReporter(object):
     def csvreport(self, folder):
         pass
-    
+
+
 class CLIReporter(object):
     
     def clireport(self):
         pass
 
+class DataFramePlotReporter(object):
 
-
-
-
+    def plotreport(self):
+        pass
 
 
 
@@ -160,14 +158,10 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
     
     
 
-class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
+class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
     
     def __init__(self, reporters):
-        self.rs=reporters
-        
-    def run(self):
-        for r in self.rs:
-            r.run()
+        self.rs = reporters
     
     def uireport(self):
         res = {}
@@ -190,39 +184,39 @@ class ReporterEngine(UIReporter,CSVReporter,CLIReporter):
         for r in self.rs:
             if isinstance(r, CLIReporter):
                 r.clireport()
-        
-        
-    
 
-        
-        
-    
+    def plotreport(self):
+        for r in self.rs:
+            if isinstance(r, DataFramePlotReporter):
+                r.plotreport()
+
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
-    def __init__(self,dbm,analyser):
+    def __init__(self,analyser, snapshot=None,portalID=None):
         self.analyser = analyser
+        
+        self.snapshot=snapshot
+        self.portalID=portalID
+        
         self.df=None
-        
-        
     
     def getDataFrame(self):
         if  self.df is None:
             
-            res = self.ae.getAnalyser(PMDActivityAnalyser).getResult()
-            
-            self.df = pandas.DataFrame(res['rows'])
+            res = self.analyser.getResult()
+            self.df = pd.DataFrame(res['rows'])
             
             #self.df.columns = res['columns']
         return self.df
     
     def uireport(self):
-        res = self.ae.getAnalyser(PMDActivityAnalyser).getResult()['summary']
+        res = self.analyser.getResult()['summary']
         
-        return {'portalactivitylist':DFtoListDict(self.getDataFrame()),'summary':res}
+        return {'portalactivitylist':DFtoListDict(self.getDataFrame()),'portalactivitysummary':res}
     
     def clireport(self):
         
-        summary = self.ae.getAnalyser(PMDActivityAnalyser).getResult()['summary']
+        summary = self.analyser.getResult()['summary']
         print "System activity report"
         if self.snapshot:
             print "  snapshot:",self.snapshot
@@ -237,3 +231,66 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
         for i in ['done','missing']: 
             print "  ",i,'-',summary['head_'+i]
     
+class TagReporter(Reporter, CSVReporter, DataFramePlotReporter):
+    def __init__(self, analyser_set):
+        self.analyser = []
+        for a in analyser_set.getAnalysers():
+            if isinstance(a, TagsCount):
+                self.analyser.append(a)
+        self.df = None
+
+    def getDataFrame(self):
+        if self.df is None:
+            data = defaultdict(int)
+            for a in self.analyser:
+                res = a.getResult()
+                for k in res:
+                    data[k] += res[k]
+            self.df = pd.DataFrame(data.items(), columns=['Tag', 'Count'])
+        return self.df
+
+    def csvreport(self, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        df = self.getDataFrame()
+
+        with open(os.path.join(folder, "tagsFrequency.csv"), "w") as f:
+            df.to_csv(f, index=False)
+        return os.path.join(folder, "tagsFrequency.csv")
+
+    def plotreport(self):
+        #df = self.getDataFrame().copy()
+        #p = df.plot()
+        #plt.show()
+        pass
+
+
+class LicensesReporter(Reporter, CSVReporter):
+    def __init__(self, analyser_set):
+        self.analyser = []
+        for a in analyser_set.getAnalysers():
+            if isinstance(a, CKANLicenseCount):
+                self.analyser.append(a)
+        self.df = None
+
+    def getDataFrame(self):
+        if self.df is None:
+            data = defaultdict(int)
+            conformance = {}
+            for a in self.analyser:
+                frequ, od_conf = a.getResult()
+                for k in frequ:
+                    data[k] += frequ[k]
+                    conformance[k] = od_conf[k] if k in od_conf else 'not found'
+            self.df = pd.DataFrame(data.items(), columns=['LicenseID', 'Count'])
+            self.df['OD Conformance'] = self.df['LicenseID'].map(conformance)
+        return self.df
+
+    def csvreport(self, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        df = self.getDataFrame()
+
+        with open(os.path.join(folder, "licensesFrequency.csv"), "w") as f:
+            df.to_csv(f, index=False)
+        return os.path.join(folder, "licensesFrequency.csv")

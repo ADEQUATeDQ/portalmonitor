@@ -18,7 +18,7 @@ _analyserRegistrar={}
 class AnalyserFactory(object):
     
     def __new__(cls, class_name, parents, attributes):
-        print "Creating class", class_name
+        
         # Here we could add some helper methods or attributes to c
         c = type(class_name, parents, attributes)
         if class_name not in _analyserRegistrar:
@@ -80,7 +80,7 @@ class Analyser(object):
 
 class AnalyserSet(Analyser):
     
-    def __init__(self, analysers=None):
+    def __init__(self, analysers=None, timing=False):
         self.analysers = OrderedDict()
         for a in analysers or []:
             if isinstance(a, Analyser):

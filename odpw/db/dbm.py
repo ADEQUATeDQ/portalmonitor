@@ -263,23 +263,26 @@ class PostgressDBM(object):
                 return Portal.fromResult(dict(res))
             return None
     
-    def getPortals(self,maxDS=None, maxRes=None, software=None, status=None):
+    def getPortals(self, software=None):
         with Timer(key="getPortals") as t:
             
             s = select([self.portals])
-            if status:
-                s=s.where(self.portals.c.status == status)
-                    
-            if maxDS:
-                s=s.where(self.portals.c.datasets <= maxDS)
-                
             if software:
                 s=s.where(self.portals.c.software == software)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             
-            return s.execute().fetchall() 
+            return s.execute() 
             #self.conn.execute(s).fetchall()
+
+    def getPortalsCount(self, software=None):
+        s = select([func.count(self.portals.c.id)])
+        if software:
+            s=s.where(self.portals.c.software == software)
+            
+        self.log.debug(query=s.compile(), params=s.compile().params)
+            
+        return s.execute()
 
     def getPortalMetaData(self,portalID=None, snapshot=None):
         with Timer(key="getPortalMetaData") as t:
@@ -408,6 +411,7 @@ class PostgressDBM(object):
                                                 change=change,
                                               )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
+            self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
             #self.conn.execute(ins)
             ins.execute()
 

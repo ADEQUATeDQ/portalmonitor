@@ -26,6 +26,8 @@ class CKAN(PortalProcessor):
             return attempt*attempt*5
 
     def _get_datasets(self, api, timeout_attempts, rows, start, portal_id):
+        #using timeout_attempts attempts
+
         for attempt in xrange(timeout_attempts):
             time.sleep(self._waiting_time(attempt))
             try:
@@ -34,14 +36,17 @@ class CKAN(PortalProcessor):
             except ckanapi.errors.CKANAPIError as e:
                 err = literal_eval(e.extra_msg)
                 if 500 <= err[1] < 600:
-                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt, waiting=self._waiting_time(attempt))
+                    rows =rows/3 if rows>=3 else rows
+                    log.warn("CKANPackageSearchFetch", pid=portal_id, error='Internal Server Error. Retrying after waiting time.', errorCode=str(err[1]), attempt=attempt, waiting=self._waiting_time(attempt), rows=rows)
+                else:
+                    raise e
         raise e
 
     def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
         starttime=time.time()
         api = ckanapi.RemoteCKAN(Portal.apiurl, get_only=True)
         start=0
-        rows=1000000
+        rows=1000
 
         p_count=0
         p_steps=1
@@ -53,13 +58,14 @@ class CKAN(PortalProcessor):
             p_steps=total/10
             if p_steps ==0:
                 p_steps=1
+
             while True:
                 response = self._get_datasets(api, timeout_attempts, rows, start, Portal.id)
 
                 #print Portal.apiurl, start, rows, len(processed)
                 datasets = response["results"] if response else None
                 if datasets:
-                    rows = len(datasets) if start==0 else rows
+                    rows = len(datasets)
                     start+=rows
                     for datasetJSON in datasets:
                         datasetID = datasetJSON['name']
@@ -71,21 +77,19 @@ class CKAN(PortalProcessor):
                             d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
                             processed.add(d.id)
 
-                            if len(processed) % 1000 == 0:
-                                log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
-
                             p_count+=1
                             if p_count%p_steps ==0:
                                 progressIndicator(p_count, total, label=Portal.id)
+                                log.info("ProgressDSFetchBatch", pid=Portal.id, processed=len(processed))
                                 
                             now = time.time()
                             if now-starttime>timeout:
                                 raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                             yield d
-
+                    rows = min([int(rows*1.2),1000])
                 else:
                     break
-            progressIndicator(p_count, total, label=Portal.id)
+            progressIndicator(p_count, total, label=Portal.id+"_batch")
             #if len(processed) == total:
             #    #assuming that package_search['count']
             #    return
@@ -93,15 +97,16 @@ class CKAN(PortalProcessor):
             raise e
         except Exception as e:
             pass
-
-
-
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
             if total >0 and len(package_list) !=total:
                 log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
             #len(package_list)
-
+            tt=len(package_list)
+            p_steps=tt/100
+            if p_steps == 0:
+                p_steps=1
+            p_count=0
             for entity in package_list:
                 #WAIT between two consecutive GET requests
                 if entity not in processed:
@@ -116,27 +121,33 @@ class CKAN(PortalProcessor):
                                'exception':None
                                }
                         try:
-                            resp = util.getPackage(api=api, apiurl=Portal.apiurl, id=entity)
-                            data = resp
-                            util.extras_to_dict(data)
-                            props['data']=data
-                            props['status']=200
+                            resp, status = util.getPackage(api=api, apiurl=Portal.apiurl, id=entity)
+                            props['status']=status
+                            if resp:
+                                data = resp
+                                util.extras_to_dict(data)
+                                props['data']=data
                         except Exception as e:
                             eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
-                        d = Dataset(snapshot=sn,portalID=Portal.id, did=entity, data=data,status=200)
+                        d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
                         processed.add(d.id)
 
-                        if len(processed) % 1000 == 0:
-                            log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                        p_count+=1
+                        if p_count%p_steps ==0:
+                            progressIndicator(p_count, tt, label=Portal.id+"_single")
+                            log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed))
+
+
                         now = time.time()
                         if now-starttime>timeout:
                             raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
-                        yield d
 
+                        yield d
+            progressIndicator(p_count, tt, label=Portal.id+"_single")
         except Exception as e:
             if len(processed)==0:
                 raise e

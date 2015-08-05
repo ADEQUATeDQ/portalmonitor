@@ -26,6 +26,8 @@ class PMDResourceCountAnalyser(HistogramAnalyser):
 
 class PMDActivityAnalyser(Analyser):
     
+    
+    times=['fetch_start', 'fetch_end']
     def __init__(self):
         self.stats=[]
         self.stats_key=['fetch_done','fetch_failed','fetch_running','fetch_missing',
@@ -36,17 +38,18 @@ class PMDActivityAnalyser(Analyser):
             self.sum[k]=0
     
     def analyse_PortalMetaData(self, pmd):
-        print pmd
-        
         stats={ 'pid':pmd.portal_id, 'snapshot':pmd.snapshot,'fetch_error':''}
         for k in self.stats_key:
             stats[k]=None
         
         if pmd.fetch_stats:
-            stats['fetch_done']=all(pmd.fetch_stats.get(k) for k in ['fetch_start', 'fetch_end']) and pmd.fetch_stats.get('exception')==None
-            stats['fetch_failed'] = all(pmd.fetch_stats.get(k) for k in ['fetch_start', 'exception'])
+            stats['fetch_done']=all(pmd.fetch_stats.get(k) for k in PMDActivityAnalyser.times) and pmd.fetch_stats.get('exception')==None
+            stats['fetch_failed'] = all( pmd.fetch_stats.get(k) for k in ['fetch_start', 'exception'])
+            for t in PMDActivityAnalyser.times:
+                if t in pmd.fetch_stats:
+                    stats[t]= pmd.fetch_stats[t]
+            
             if stats['fetch_failed']:
-                
                 stats['fetch_error']= pmd.fetch_stats['exception'].split(":")[0].replace("<class '","").replace("'>","").replace("<type '","")
                 
             stats['fetch_running'] = not stats['fetch_done'] and not stats['fetch_failed'] and  pmd.fetch_stats.get('fetch_start',None) != None
@@ -72,11 +75,9 @@ class PMDActivityAnalyser(Analyser):
         
     
     def done(self):
-        print 'done'
         pass
         
     def getResult(self):
-        print "results"
-        res= {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error'],'summary_columns':self.stats_key}
+        res= {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error','fetch_end','fetch_start'], 'summary_columns':self.stats_key}
         print res
         return res

@@ -29,70 +29,111 @@
         </aside>
     
         <section class="unit-90">
+            <h2>PortalWatch Activity for snapshot {{data.snapshot}}</h2>
             <div class="units-row">
-                <h2>PortalWatch Activity for snapshot {{ snapshot}}</h2>
-                <div class="unit-33  card">
-                    <div class="header"><h3>Fetch Process</h3></div>
+                <div class="width-30  card unit-33">
+                    <div class="header">
+                        <h3>Fetch Process</h3>
+                    </div>
                     <div class="cnt">
                         <ul class="fa-ul">
                             <li class="group">
-                                <i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-green width-40">Processed</span>
-                                <span id="fetch_done" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_fetch_done right">show</button>
+                                <i class="fa fa-check-square-o fa-fw"></i>
+                                <button id="btn_fetch_done" class="btn label label-green width-60">Processed</button>
+                                <span id="fetch_done" class=" label label-green width-20 "></span>
                             </li>
                             <li class="group">
-                                <i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-blue width-40">Running</span>
-                                <span id="fetch_running" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_fetch_running right ">show</button>
+                                <i class="fa fa-spinner fa-spin fa-fw"></i>
+                                <button id="btn_fetch_running" class="btn label label-blue width-60">Running</button>
+                                <span id="fetch_running" class="label label-white width-20 text-right"></span>
+
                             </li>
-                            <li class="group"><i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-red  width-40">Failed</span>
-                                <span id="fetch_failed" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_fetch_failed right ">show</button>
+                            <li class="group"><i class="fa fa-exclamation-triangle fa-fw"></i>
+                                <button id="btn_fetch_failed" class="btn label label-red  width-60">Failed</button>
+                                <span id="fetch_failed" class="label label-white width-20 text-right"></span>
+
                             </li>
-                            <li class="group"><i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-red  width-40">Missing</span>
-                                <span id="fetch_failed" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_fetch_missing right ">show</button>
+                            <li class="group"><i class="fa fa-question-circle fa-fw"></i>
+                                <button id="btn_fetch_mis" class="btn label  width-60">Missing</button>
+                                <span id="fetch_mis" class="label label-white width-20 text-right"></span>
+
                             </li>
                         </ul>
                     </div>
                 </div>
-                <div class="unit-33  card">
-                    <div class="header"><h3>Head Lookups</h3></div>
+                <div class="unit-30  card">
+                    <div class="header">
+                        <h3>Head Lookups</h3>
+                    </div>
                     <div class="cnt">
-                         <ul class="fa-ul">
+                        <ul class="fa-ul">
                             <li class="group">
-                                <i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-green width-40">Processed</span>
-                                <span id="head_done" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_head_done right">show</button>
+                                <i class="fa fa-check-square-o fa-fw"></i>
+                                <button id="btn_fetch_done" class="btn label label-green width-60">Processed</button>
+                                <span id="fetch_done" class=" label label-white width-20 text-right"></span>
                             </li>
                             <li class="group">
-                                <i class="fa fa-pie-chart fa-fw"></i>
-                                <span class="label label-blue width-40">Missing</span>
-                                <span id="head_missing" class="width-20 text-right"></span>
-                                <button class="btn btn-smaller btn_head_missing right ">show</button>
+                                <i class="fa fa-spinner fa-spin fa-fw"></i>
+                                <button id="btn_fetch_running" class="btn label label-blue width-60">Running</button>
+                                <span id="fetch_running" class="label label-white width-20 text-right"></span>
+
+                            </li>
+                            <li class="group"><i class="fa fa-exclamation-triangle fa-fw"></i>
+                                <button id="btn_fetch_failed" class="btn label label-red  width-60">Failed</button>
+                                <span id="fetch_failed" class="label label-white width-20 text-right"></span>
+
+                            </li>
+                            <li class="group"><i class="fa fa-question-circle fa-fw"></i>
+                                <button id="btn_fetch_mis" class="btn label  width-60">Missing</button>
+                                <span id="fetch_mis" class="label label-white width-20 text-right"></span>
+
                             </li>
                         </ul>
                     </div>
                 </div>
-                    
-            </div>        
+                <div class="unit-30  card">
+                    <div class="header">
+                        <h3>Quality Assessment</h3>
+                    </div>
+                    <div class="cnt">
+                        <ul class="fa-ul">
+                            <li class="group">
+                                <i class="fa fa-check-square-o fa-fw"></i>
+                                <button id="btn_fetch_done" class="btn label label-green width-60">Processed</button>
+                                <span id="fetch_done" class=" label label-white width-20 text-right"></span>
+                            </li>
+                            <li class="group">
+                                <i class="fa fa-spinner fa-spin fa-fw"></i>
+                                <button id="btn_fetch_running" class="btn label label-blue width-60">Running</button>
+                                <span id="fetch_running" class="label label-white width-20 text-right"></span>
+
+                            </li>
+                            <li class="group"><i class="fa fa-exclamation-triangle fa-fw"></i>
+                                <button id="btn_fetch_failed" class="btn label label-red  width-60">Failed</button>
+                                <span id="fetch_failed" class="label label-white width-20 text-right"></span>
+
+                            </li>
+                            <li class="group"><i class="fa fa-question-circle fa-fw"></i>
+                                <button id="btn_fetch_mis" class="btn label  width-60">Missing</button>
+                                <span id="fetch_mis" class="label label-white width-20 text-right"></span>
+
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="units-row">
                 <div class="unit-100  card">
                     <div class="header">Portals</div>
-                    
+
                     <div class="cnt">
-                        <button class="btn btn-smaller btn_all"><i class="fa fa-pie-chart fa-fw"></i>Show full table</button>
+                        <button id="btn_all" class="btn btn-smaller btn_all"><i class="fa fa-pie-chart fa-fw"></i>Show full table</button>
                         <div class="data_table">
                             <table id="sysacttable">
                                 <thead>
                                     <tr>
                                         <th></th>
-                                        <th colspan="4">Fetching</th>
+                                        <th colspan="6">Fetching</th>
                                         <th colspan="2">Head</th>
                                         <th>Quality</th>
                                     </tr>
@@ -102,6 +143,8 @@
                                         <th>Done</th>
                                         <th>Failed</th>
                                         <th>Error</th>
+                                        <th>start</th>
+                                        <th>end</th>
                                         <th>Done</th>
                                         <th>Missing</th>
                                         <th>Done</th>
@@ -111,11 +154,11 @@
                         </div>
                     </div>
                     <div class="card_footer">
-                        
+
                     </div>
                 </div>
-            </div>
-            
+            </div>          
+
         </section>
     </div>
                  
@@ -126,7 +169,7 @@
  <script>
      
      
-     var data = {{ json | safe }};
+     var data = {{ data | tojson|safe }};
      console.log("SERVER DATA")
      console.log(data)
      
@@ -147,27 +190,38 @@
  $(document).ready(function() {
      var t_sysacttable=$('#sysacttable').DataTable();
      data.portalactivitylist.forEach(function(item){
-        t_sysacttable.row.add([item.pid, item.fetch_running, item.fetch_done, item.fetch_failed, item.fetch_error, item.head_done,item.head_missing, item.quality_done]);
+        t_sysacttable.row.add([item.pid, 
+                               item.fetch_running, 
+                               item.fetch_done, 
+                               item.fetch_failed, 
+                               item.fetch_error, 
+                               item.fetch_start, 
+                               item.fetch_end,
+                               item.head_done,
+                               item.head_missing, 
+                               item.quality_done]);
     }); 
      t_sysacttable.draw();
-     
-    $('.btn_fetch_running').click(function() {
-        showRows(t_sysacttable, 1, [0])
+    $('#btn_fetch_done').click(function() {
+         showRows(t_sysacttable, 2, [0,6])
+    }); 
+    $('#btn_fetch_running').click(function() {
+        showRows(t_sysacttable, 1, [0,5])
+    });
+    $('#btn_fetch_failed').click(function() {
+         showRows(t_sysacttable, 3, [0,4])
     });
      
-      $('.btn_all').click(function() {
+      $('#btn_all').click(function() {
         resetTable(t_sysacttable)
         t_sysacttable.columns().visible( true );
       })
-     $('.btn_fetch_failed').click(function() {
-         showRows(t_sysacttable, 3, [0,4])
-    });
-     $('.btn_fetch_done').click(function() {
-         showRows(t_sysacttable, 2, [0])
-    });
      
-     for( var k in data.summary){
-         $('#'+k).text(data.summary[k])
+     
+     for( var k in data.portalactivitysummary){
+         console.log(k)
+         console.log(data.portalactivitysummary[k])
+         $('#'+k).text(data.portalactivitysummary[k])
      }
 })
     

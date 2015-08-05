@@ -114,7 +114,7 @@ class DBAnalyser(Analyser):
     def getResult(self):
         return {'rows':self.rows} 
     
-    
+
 if __name__ == '__main__':
     def f1(test=None):
         print test

@@ -40,9 +40,7 @@ def fetching(obj):
     try:
         ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
-        if not pmd:
-            pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
-            dbm.insertPortalMetaData(pmd)
+        
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
@@ -51,7 +49,7 @@ def fetching(obj):
         return
 
     try: 
-        ae = AnalyserSet()
+        ae = AnalyserSet(timing=True)
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())
@@ -59,8 +57,8 @@ def fetching(obj):
         if Portal.software == 'CKAN':
             ae.add(CKANResourceInDS(withDistinct=True))
             ae.add(CKANResourceInserter(dbm))
-            ae.add(CKANResourceInDSAge())
-            ae.add(CKANDatasetAge())
+            # ae.add(CKANResourceInDSAge())
+            #ae.add(CKANDatasetAge())
             ae.add(CKANKeyAnalyser())
             ae.add(CKANFormatCount())
             ae.add(CKANTagsCount())
@@ -175,11 +173,21 @@ def cli(args,dbm):
     
     if args.url:
         p = dbm.getPortal( apiurl=args.url)
+        pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
+        if not pmd:
+            pmd = PortalMetaData(portalID=p.id, snapshot=sn)
+            dbm.insertPortalMetaData(pmd)
+            
         log.info("Queuing", pid=p.id, apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
         for portalRes in dbm.getPortals():
             p = Portal.fromResult(dict(portalRes))
+            pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
+            if not pmd:
+                pmd = PortalMetaData(portalID=p.id, snapshot=sn)
+                dbm.insertPortalMetaData(pmd)
+                
             log.info("Queuing", pid=p.id)
             jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )        
     try:

@@ -1,6 +1,7 @@
 from odpw.analysers import Analyser
 import numpy as np
 from odpw.analysers.core import ElementCountAnalyser
+from odpw.analysers.fetching import TagsCount
 
 __author__ = 'sebastian'
 
@@ -68,7 +69,7 @@ class SocrataKeyAnalyser(Analyser):
         return self.keys
 
 
-class SocrataTagsCount(ElementCountAnalyser):
+class SocrataTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
         if dataset.data and 'tags' in dataset.data:
             tags = dataset.data['tags']
@@ -77,8 +78,6 @@ class SocrataTagsCount(ElementCountAnalyser):
                     if isinstance(t, basestring):
                         self.add(t)
 
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        # TODO maybe we don't want to save this??
-        pmd.general_stats['tags'] = self.getResult()
+    def analyse_SocrataTagsCount(self, tag_analyser):
+        super(SocrataTagsCount, self).analyse_TagsCount(tag_analyser)
+

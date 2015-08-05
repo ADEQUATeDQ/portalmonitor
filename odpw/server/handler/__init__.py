@@ -5,14 +5,14 @@ from tornado.web import RequestHandler, HTTPError
 from jinja2.exceptions import TemplateNotFound
 from tornado.escape import json_encode
 
-from odpw.db.models import Portal
+from odpw.db.models import Portal, PortalMetaData
 from odpw.utils  import util
 from collections import defaultdict
 from urlparse import urlparse 
 import json
 from odpw.db.dbm import nested_json, date_handler
 from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
-    ReporterEngine, ISO3DistReporter, SoftWareDistReporter,\
+    Report, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter
 from odpw.utils.timer import Timer
 from odpw.analysers import process_all
@@ -70,14 +70,14 @@ class PortalHandler(BaseHandler):
     def get(self, **params):
         print 'kwargs',params
         if not bool(params):
-            rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+            rep = Report([SnapshotsPerPortalReporter(self.db)])
             rep.run()
             self.render('portal_detail_empty.jinja',portals=True, data=rep.uireport())
         elif params['portal']:
             if len(params['portal'].split(",")) ==1:
                 pid=params['portal']
                 
-                rep = ReporterEngine([SnapshotsPerPortalReporter(self.db)])
+                rep = Report([SnapshotsPerPortalReporter(self.db)])
                 
                 rep.run()
                 #r = PortalOverviewReporter(self.db, portalID=pid)
@@ -113,9 +113,8 @@ class IndexHandler(BaseHandler):
     def get(self):
             a = process_all(DBAnalyser(),self.db.getSoftwareDist())
             ab = process_all(DBAnalyser(),self.db.getCountryDist())
-            sys_or = ReporterEngine([SoftWareDistReporter(a),
+            sys_or = Report([SoftWareDistReporter(a),
                  ISO3DistReporter(ab)])
-            
             args={'index':True,
                'data':sys_or.uireport()
             }    
@@ -123,18 +122,22 @@ class IndexHandler(BaseHandler):
         
 class SystemActivityHandler(BaseHandler):
     def get(self):
+        try:
+            sn = util.getCurrentSnapshot()
         
-        sn = util.getCurrentSnapshot()
-        it =self.dbm.getPortalMetaDatas(snapshot=sn,portalID=None)
-        a = process_all(PMDActivityAnalyser(),it)
+            it =PortalMetaData.iter(self.db.getPortalMetaDatas(snapshot=sn, portalID=None))
+            a = process_all(PMDActivityAnalyser(),it)
         
-        report = ReporterEngine([SystemActivityReporter(a)])
-            
-        args={'index':True,
+        
+            report = Report([SystemActivityReporter(a,snapshot=sn)])
+        
+            args={'index':True,
                'data':report.uireport(),
-               'snapshot':util.getCurrentSnapshot()
-        }    
-        self.render('system_activity.jinja',args)
+               'snapshot':sn
+            }    
+            self.render('system_activity.jinja',**args)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
 
         
 class DataHandler(RequestHandler):
