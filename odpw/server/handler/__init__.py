@@ -82,8 +82,9 @@ class PortalHandler(BaseHandler):
             if len(params['portal'].split(",")) ==1:
                 pid=params['portal']
                 
-                a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=pid,apiurl=None))
-                rep = Report([SnapshotsPerPortalReporter(a,pid)])
+                a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=None,apiurl=None))
+                rep = Report([SnapshotsPerPortalReporter(a,None)])
+                
                 
                 self.render('portal_detail.jinja',portals=True,data=rep.uireport())
             else:

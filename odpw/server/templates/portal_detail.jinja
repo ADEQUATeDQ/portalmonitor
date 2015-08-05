@@ -7,120 +7,81 @@
 {% endblock %}
 
 {% block content %}
-
-    <aside>
-<nav class="side">
-    <ul>
-        <li class="cur">
-            <a href="/" > <i class="fa fa-server fa-2x"></i>
-                <p>Overview</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Details</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Quality</p>
-            </a>
-        </li>
-        <li>
-            <a href="/"> <i class="fa fa-server fa-2x"></i>
-                <p>Activities</p>
-            </a>
-        </li>
-        <li>
-            <a href="/list/portals/" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
-                <p>Evolution</p>
-            </a>
-        </li>
-    </ul>
-</nav>
-</aside>
-<section class="content">
-
-    <div class="units-row">
-        <div id="portalHeader" style="background:white;" class="unit-100">
-            <span>Portal</span>
-            <span>dummyportal </span>
-            <button class="btn"><i class="fa fa-cube"></i><br></button>
-            <button class="btn"><i class="fa fa-cubes"></i><br></button>
-            <button class="btn"><i class="fa fa-filter"></i><br></button>
-            <br>
-            <span>In the system since 2014-07-23, with 5 snapshots</span>
-        </div>
-    </div>
-    <div id="snapshots" class="units-row">
-        <div id="weekPicker" class="unit-centered unit-60">
-            <p>Select snapshot</p>
-            <div class="arrows arrow-left"><i onclick="showPrev()">&lt;</i></div>
-            <ul id="weekPicker-ul">
-                    <li>
-                        <code class="bar"></code>
-                        <p class="week">W1</p>
-                        <p class="year">2014</p>
-                    </li>
-                    <li>
-                        <p class="bar"></p>
-                        <p class="week">W2</p>
-                    </li>
-                    <li>
-                        <p class="bar"></p>
-                        <p class="week">W3</p>
-                    </li>
-                    <li>
-                        <p class="bar"></p>
-                        <p class="week">W4</p>
-                    </li>
-                    <li>
-                        <p class="bar"></p>
-                        <p class="week">W5</p>
-                    </li>
-                </ul>
-                <div class="arrows arrow-left"><i onclick="showNext()">&gt;</i></div>
-            </div>
-    </div>
-    <div class="units-row">
-        <div class="unit-50 unit-push-20">t</div>
-        <div class="unit-30">t</div>    
-    </div>
-</section>
+<div id="main" class="units-row end units-split">
+    <aside class="unit-10">
+        <nav id="nav-side" class="nav">
+            <ul>
+                <li class="cur">
+                    <a href="/" > <i class="fa fa-server fa-2x"></i>
+                        <p>Overview</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                        <p>Details</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                        <p>Quality</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                        <p>Activities</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="/list/portals/" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
+                        <p>Evolution</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
     
+    <section class="unit-90">
+        <div class="units-row end">
+            <form onsubmit="this.action='/portal_details/'+this.selectportal.value+'/'+this.selectsnapshot.value;">
+                <div class="unit-70">
+                    <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                        {% for portal in data.portalSnapshots %}
+                            <option value="{{portal}}">{{portal}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="unit-20">
+                    <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                    </select>
+                </div>
+                <div class="unit-10">
+                    <label>-</label>
+                    <button class="btn">go</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="units-row">
+        <h2>General Overview</h2>
+            <div class="unit-33 label-green">
+                b1
+            </div>
+            <div class="unit-33 label-blue">
+                b1
+            </div>
+            <div class="unit-33 label-red">
+                b1
+            </div>
+            <div class="unit-33 label-yellow">
+                b1
+            </div>
+        </div>
+    </section>    
 </div>
 {% endblock %}
 
 {% block pageScripts %}
     <script>
-   $(function() {
-    var availableTags = [
-      "ActionScript",
-      "AppleScript",
-      "Asp",
-      "BASIC",
-      "C",
-      "C++",
-      "Clojure",
-      "COBOL",
-      "ColdFusion",
-      "Erlang",
-      "Fortran",
-      "Groovy",
-      "Haskell",
-      "Java",
-      "JavaScript",
-      "Lisp",
-      "Perl",
-      "PHP",
-      "Python",
-      "Ruby",
-      "Scala",
-      "Scheme"
-    ];
-    $( "#tags" ).autocomplete({
-      source: availableTags
-    });
-  });
+   
     </script>
 {% endblock %}
