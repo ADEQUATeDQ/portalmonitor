@@ -7,92 +7,60 @@
 {% endblock %}
 
 {% block content %}
-<div id="main" class="units-row end units-split">
-    <aside class="unit-10">
-        <nav id="nav-side" class="nav">
-            <ul>
-                <li class="active text-centered">
-                    <a href="/">
-                        <i class="fa fa-server fa-fw"></i>
-                        <p>System</p>
-                    </a>
-                </li>
-                <li class=" text-centered">
-                    <a href="/list/portals">
-                        <i class="fa fa-cubes  fa-fw"></i>
-                        <p>Portals</p>
-                    </a>
-                </li>
-                <li class=" text-centered">
-                    <a href="/activity">
-                        <i class="fa fa-cubes  fa-fw"></i>
-                        <p>Activity</p>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+<div class="units-row container">
 
-    <section class="unit-90">
-        <div class="units-row">
-            <h2>Portal selection</h2>
-        </div>
-        <div class="units-row end">
-
-            <div class="unit-20">
-                <button class="btn singleportal"><i class="fa fa-cube"></i>
-                    <br>Single portal</button>
-            </div>
-            <div class="unit-20">
-                <a href="/portal_details/all" class="btn"><i class="fa fa-cubes"></i><br>All portals</a>
-            </div>
-            <div class="unit-20">
-                <button class="btn"><i class="fa fa-filter"></i>
-                    <br>Set of portals</button>
-            </div>
-        </div>
-        <div class="units-row">
-            <div class="unit-push-20 unit-60">
-                <form class="forms forms-inline" action="" method="Get">
-                    <fieldset>
-                        <legend>Select single portal</legend>
-                        <div class="units-row">
-                            <div class="unit-50">
-                                <label>
-                                    Select portal
-                                </label>
-                                <select id="select_portal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                                    {% for portal in data.portalSnapshots %}
-                                    <option value="{{portal}}">{{portal}}</option>
-                                    {% endfor %}
-                                </select>
-                                </div>
-                                <div class="unit-40">
-                                    <label>
-                                    Snapshot
-                                    </label>
-                                    <select data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                                        <option>1531</option>
-                                    </select>
-                                
-                                </div>
-                            <div class="unit-10">
-                                <button class="btn">Normal</button>
-                            </div>
+        <section class="unit-90 unit-centered">
+                <div class="units-row">
+                    <h2>Portal selection</h2>
+                </div>
+                <div class="units-row">
+                    <div class="unit-90 unit-centered">
+                        <div class="unit-33">
+                            <button class="btn width-100"><i class="fa fa-filter fa-fw"></i>Single Portal</button>
                         </div>
-                        
-                        
-                    </fieldset>
-                </form>
+                        <div class="unit-33">
+                            <a href="/portal_details/all" class="btn width-100"><i class="fa fa-cubes fa-fw"></i>All portals</a>
+                        </div>
+                        <div class="unit-33">
+                            <button class="btn width-100"><i class="fa fa-filter"></i>Set of portals</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="units-row">
+                    <div class="unit-90 unit-centered">
+                        <form class="forms" onsubmit="this.action='/portal_details/'+this.selectportal.value+'/'+this.selectsnapshot.value;">
+                            <fieldset>
+                                <legend>Select single portal</legend>
+                                <div class="units-row">
+                                    <div class="unit-70">
+                                        <label>Portal</label>
+                                        <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                                            {% for portal in data.portalSnapshots %}
+                                                <option value="{{portal}}">{{portal}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="unit-20">
+                                        <label>Snapshot</label>
+                                        <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
+                                        
+                                    </select>
 
-            </div>
 
+                                    </div>
+                                    <div class="unit-10">
+                                        <label>-</label>
+                                        <button class="btn">go</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </section>
         </div>
 
 
-    </section>
-
-</div>
 {% endblock %}
 
 {% block pageScripts %}
@@ -101,8 +69,53 @@
     var data = {{ data | tojson|safe }};
     console.log("SERVER DATA")
     console.log(data)
-
+    
+    $(document).ready(function () {
+        console.log("Ready")
+        $('#selectportal').on('select.tools.filterbox', function(sel)
+        {
+            console.log(sel.id);
+            var options = $("#selectsnapshot");
+            console.log(options)
+            console.log(data.portalSnapshots)
+            console.log(data.portalSnapshots[sel.id])
+            for( var idx in data.portalSnapshots[sel.id]){
+                
+                var sn = data.portalSnapshots[sel.id][idx]
+                console.log(idx+" "+sn)
+                options.append($("<option />").val(sn).text(sn));
+            };
+            $("#selectsnapshot").siblings(".filterbox").each(function(){
+                $(this).remove()
+            })
+            $("#selectsnapshot").filterbox()
+            
+        });
+     });
+     $(document).on('keyup','#selectportal-input', function (e) {
+        var filter = $(this).val().toLowerCase().trim();
         
-
+        var ul = $(this).siblings(".filterbox-list")
+        if (filter.length == 0){
+            ul.each(function(){
+                $(this).hide()
+                $(this).addClass("hide")
+                $(this).removeClass("open")
+            })
+        }
+        ul.each(function(){
+            $(this).find("li").each(function(){
+                var $this = $(this);
+                if ($this.text().toLowerCase().indexOf(filter) !== -1) {
+                    ul.removeClass("hide")
+                    ul.addClass("open")
+                    ul.show()
+                    $this.show()
+                }else{
+                    $this.hide()
+                }
+            })
+        })
+    });
     </script>
 {% endblock %}
