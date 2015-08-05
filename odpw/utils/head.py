@@ -32,7 +32,6 @@ def head (dbm, sn, seen, resource):
             try:
                 props=util.head(resource.url)
             except Exception as e:
-                print e
                 eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
                 props['status']=util.getExceptionCode(e)
                 props['exception']=str(type(e))+":"+str(e.message)
@@ -41,18 +40,30 @@ def head (dbm, sn, seen, resource):
             dbm.updateResource(resource)
             
             for pid in resource.origin:
-                if pid not in seen:
-                        ## get the pmd for this job
-                        pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
-                        if not pmd:
-                            pmd = PortalMetaData(portalID=pid, snapshot=sn)
-                            dbm.insertPortalMetaData(pmd)
-                            pmd.headstart()
-                        pmd.headstart()
-                        dbm.updatePortalMetaData(pmd)
-                        seen[pid]= time.time()
+                d= seen[pid]
+                if d['processed']==0:
+                    ## get the pmd for this job
+                    pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
+                    if not pmd:
+                        pmd = PortalMetaData(portalID=pid, snapshot=sn)
+                        dbm.insertPortalMetaData(pmd)
+                    pmd.headstart()
+                    dbm.updatePortalMetaData(pmd)
+                    d['start'] = time.time()
+            
+                d['processed']+=1
+                if d['processed'] ==d['resources']:
+                    d['end'] = time.time()
+                    pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
+                    if not pmd:
+                        print "AUTSCH, no pmd for ", pid
+                    pmd.headend()
+                    dbm.updatePortalMetaData(pmd)
+                elif d['processed'] >d['resources']:
+                    print ""   
+                    
+                seen[pid]=d 
     except Exception as e:
-        print e
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
 def getResources(dbm, snapshot):
@@ -125,7 +136,7 @@ def cli(args,dbm):
 
     resources=[]
     #total = dbm.getResourceWithoutHeadCount(snapshot=sn)
-    for res in dbm.getResourceWithoutHead(snapshot=sn):
+    for res in dbm.getResourceWithoutHead(snapshot=sn, limit=100):
         try:
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))
@@ -133,11 +144,16 @@ def cli(args,dbm):
         except Exception as e:
             log.debug('Drop head lookup', exctype=type(e), excmsg=e.message, url=url, snapshot=sn)
 
-    log.info("Starting head lookups", count=len(resources), cores=args.processors)
     
     pool = ThreadPool(processes=args.processors,) 
     mgr = multiprocessing.Manager()
     seen = mgr.dict()
+    
+    for pmd in PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn)):
+        seen[pmd.portal_id]= {'resources':pmd.resources, 'processed':0}
+    
+    log.info("Starting head lookups", count=len(resources), cores=args.processors)
+    
     
     head_star = partial(head, dbm, sn,seen)
     
@@ -159,9 +175,10 @@ def cli(args,dbm):
     pool.join()
     
     for p in seen.keys():
+        print p, seen[p]
         ## get the pmd for this job
-        pmd = dbm.getPortalMetaData(portalID=p, snapshot=sn)
-        if not pmd:
-            break
-        pmd.headend()
-        dbm.updatePortalMetaData(pmd)
+        #pmd = dbm.getPortalMetaData(portalID=p, snapshot=sn)
+        #if not pmd:
+        #    break
+        #pmd.headend()
+        #dbm.updatePortalMetaData(pmd)

@@ -174,6 +174,7 @@ class PortalMetaData(Model):
         if not self.res_stats:
             self.res_stats={}
         self.res_stats['head_start'] = datetime.now().isoformat()
+        
     def headend(self):
         if not self.res_stats:
             self.res_stats={}
