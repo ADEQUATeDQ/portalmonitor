@@ -96,7 +96,8 @@ class CKAN(PortalProcessor):
         except TimeoutError as e:
             raise e
         except Exception as e:
-            pass
+            log.warn("CKANDSFetchBatchError", pid=Portal.id, exception=e, error=type(e))
+
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
             if total >0 and len(package_list) !=total:
