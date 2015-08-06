@@ -314,6 +314,22 @@ class PostgressDBM(object):
                
             return s.execute().fetchall()
 
+    def getPortalMetaDatasBySoftware(self, software, snapshot=None, portalID=None):
+        with Timer(key="getPortalMetaDatasBySoftware") as t:
+
+            j = join(self.pmd, self.portals, self.pmd.c.portal_id == self.portals.c.id)
+            s = select([self.pmd]).select_from(j)
+            s = s.where(self.portals.c.software == software)
+
+            if snapshot:
+                s = s.where(self.pmd.c.snapshot == snapshot)
+            if portalID:
+                s = s.where(self.pmd.c.portal_id == portalID)
+
+            self.log.debug(query=s.compile(), params=s.compile().params)
+
+            return s.execute().fetchall()
+
     def insertPortalMetaData(self, PortalMetaData):
         with Timer(key="insertPortalMetaData") as t:
             fetch_stats=None
