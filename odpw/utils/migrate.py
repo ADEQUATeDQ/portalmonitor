@@ -3,7 +3,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import select
 from sqlalchemy.sql.functions import func
 from odpw.db.models import Dataset
-from odpw.utils.util import progressIndicator
+from odpw.utils.util import progressIndicator, ErrorHandler
 __author__ = 'jumbrich'
 
 import structlog
@@ -132,14 +132,19 @@ def cli(args,dbm):
             print "Migrating ",total,"datasets for", Portal.id
             for ds in b.getDatasets(portal=id):
                 c+=1
-                sn=convertSnapshot(ds['snapshot'])
-                data=ds['data']
-                status=ds['status']
-                exception=ds['exception']
-                md5=ds['md5']
-                did=ds['data']['id']
+                try:
+                    sn=convertSnapshot(ds['snapshot'])
+                    data=ds['data']
+                    status=ds['status']
+                    exception=ds['exception']
+                    md5=ds['md5']
+                    did=ds['data']['id']
                 
-                d = Dataset(snapshot=sn, portalID=Portal.id, did=did, data=data,status=status, software=Portal.software, exception=exception, md5=md5)
-                dbm.insertDataset(d)
+                
+                    d = Dataset(snapshot=sn, portalID=Portal.id, did=did, data=data,status=status, software=Portal.software, exception=exception, md5=md5)
+                    dbm.insertDataset(d)
+                except Exception as e:
+                    ErrorHandler.handleError(log, "Migration", exception=e, pid=Portal.id, bdid=ds['dataset'],bpid=id)
                 if c%steps==0:
                     progressIndicator(c,total, label=Portal.id)
+                
