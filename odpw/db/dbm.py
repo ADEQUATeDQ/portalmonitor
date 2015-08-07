@@ -432,6 +432,26 @@ class PostgressDBM(object):
             self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
             #self.conn.execute(ins)
             ins.execute()
+    def insertDataset(self, Dataset):
+        with Timer(key="insertDataset") as t:
+            #assuming we have a change
+            change=2
+            
+            ins = self.datasets.insert().values(
+                                                id=Dataset.id, 
+                                                portal_id=Dataset.portal_id,
+                                                snapshot=Dataset.snapshot,
+                                                data=Dataset.data,
+                                                status=Dataset.status,
+                                                exception=Dataset.exception,
+                                                md5=Dataset.md5,
+                                                change=change,
+                                                software=Dataset.software
+                                              )
+            self.log.debug(query=ins.compile(), params=ins.compile().params)
+            self.log.debug("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
+            #self.conn.execute(ins)
+            ins.execute()
 
 
         
