@@ -750,7 +750,13 @@ class PostgressDBM(object):
             
             s=  select([t1]).select_from(join(t1,latest,and_(portalID==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
             
-            return s.execute()
+            res = s.execute().fetchone()
+            #self.conn.execute(s).fetchone()
+        
+            if res:
+                return PortalMetaData.fromResult(dict( res))
+            return None
+            
     
     def getSoftwareDist(self):
         with Timer(key="getSoftwareDist") as t:

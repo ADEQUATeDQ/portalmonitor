@@ -148,7 +148,7 @@ def cli(args,dbm):
         aset = process_all(aset, PortalMetaData.iter(it))
         
         rep = Report([r,
-                      LicensesReporter(lc,lcc),
+                      LicensesReporter(lc,lcc,topK=3),
                       TagReporter(tc,dc, topK=3),
                       OrganisationReporter(oc, topK=3),
                       FormatCountReporter(fc, topK=3)])        

@@ -4,13 +4,13 @@ from jinja2 import Environment, FileSystemLoader,Markup
 import sys
 import json
 
-from tornado.web import  StaticFileHandler
+from tornado.web import  StaticFileHandler, url
 import tornado.httpserver
 import tornado.ioloop
 
 
 from os.path import dirname, join, isfile
-from odpw.server.handler import SystemActivityHandler
+from odpw.server.handler import SystemActivityHandler, PortalSelectionHandler
 
 
 here = dirname(__file__)
@@ -32,13 +32,13 @@ class ODPWApplication(tornado.web.Application):
         template_path = join(here, 'templates')
         handlers = [
             (r'/', IndexHandler),
-            (r'/activity',SystemActivityHandler),
-            (r'/list/portals', PortalList),
-            (r'/portal/?', PortalHandler),
-            (r'/portal/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
             
-            (r'/portal/details?', PortalHandler),
-            (r'/portal/details/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
+            (r'/activity/?(?P<snapshot>[^\/]+)?',SystemActivityHandler),
+            (r'/portals', PortalList),
+            
+            #(r'/portal/?', PortalSelectionHandler),
+            
+            url(r'/portal/?(?P<portalID>[^\/]+)?/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalHandler),
             
             (r'/static/(.*)', StaticFileHandler),
             (r'/data/(.*)/(.*)', DataHandler),

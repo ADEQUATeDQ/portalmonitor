@@ -192,7 +192,7 @@ class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
         for r in self.rs:
             if isinstance(r, UIReporter):
                 s = r.uireport()
-                print r.name(),s
+                
                 for k, v in s.items():
                     res[k]=v    
         return res

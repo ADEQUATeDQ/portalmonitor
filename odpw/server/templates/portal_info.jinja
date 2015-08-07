@@ -9,35 +9,35 @@
 
 {% block sidenav %}
                 <li class="active">
-                    <a href="/" > <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-server fa-2x"></i>
                         <p>Overview</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
                         <p>Details</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
                         <p>Quality</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
                         <p>Activities</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/list/portals/" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
+                    <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
                         <p>Evolution</p>
                     </a>
                 </li>
 {% endblock %}
     
 {% block section %}
-    <div class="units-row units-split">
-            <form onsubmit="this.action='/portal_details/'+this.selectportal.value+'/'+this.selectsnapshot.value;">
+    <div class="units-row">
+            <form onsubmit="this.action='/portal/'+this.selectportal.value+'/details/'+this.selectsnapshot.value;">
                 <div class="unit-70">
                     <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
                         {% for portal in data.portalSnapshots %}
@@ -54,15 +54,16 @@
                 </div>
             </form>
             </div>
+            <h2>General Overview</h2>
             <div class="units-row">
-                <h2>General Overview</h2>
+                
                 
                 <div class="unit-33 card">
                     <div class="card_header">
-                        <h3>Datasets</h3>
+                        <h3 class="text-centered">Datasets</h3>
                     </div>
                     <div class="card_cnt">
-                        <p id="datasets" class="card_value">
+                        <p id="datasets" class="card_value text-centered">
                         {{ data.datasetsumreporter[0]['Value'] }}
                         </p>
                     </div>
@@ -71,31 +72,32 @@
                 
                 <div class="unit-33 card">
                     <div class="card_header">
-                        <h3>Resources</h3>
+                        <h3 class="text-centered">Resources</h3>
                     </div>
                     <div class="card_cnt">
-                        <p id="resources" class="card_value">
+                        <p id="resources" class="card_value text-centered">
                             {{ data.resourcesumreporter[0]['Value'] }}
                         </p>
                     </div>
                     <div class="card_footer"></div>
                 </div>
                 <div class="unit-33 card">
-                    <div class="card_header"><h3>Size</h3></div>
+                    <div class="card_header"><h3 class="text-centered">Size</h3></div>
                     <div class="card_value">
-                        <p id="resources">
+                        <p id="resources" class="card_value text-centered">
                             {{ data.resourcesumreporter[0]['Value'] }}
                         </p>
                     </div>
-                    <div class="card_footer"></div>
+                    <div class="card_footer">
+                    based on x/y analysed resources</div>
                 </div>
             </div>
             <div class="units-row">
                 <div class="unit-50">
-                    <div class="card_header"><h3>Licenses</h3></div>
+                    <div class="card_header"><h3 class="text-centered">Licenses</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="licenses" class="card_value">1</p>
+                            <p id="licenses" class="card_value text-centered">1</p>
                             <label>distinct</label>
                         </div>
                         <div class="unit-70">
@@ -115,6 +117,7 @@
                                     {% endfor %}    
                                 </tbody>
                             </table>
+                            <label>Top-3</label>
                         </div>
                     </div>
                     <div class="card_footer">
@@ -122,10 +125,10 @@
                 </div>
                 
                 <div class="unit-50 card">
-                    <div class="card_header"><h3>Tags</h3></div>
+                    <div class="card_header"><h3 class="text-centered">Tags</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="tags" class="card_value">1</p>
+                            <p id="tags" class="card_value text-centered">1</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
@@ -153,10 +156,10 @@
             </div>
             <div class="units-row">  
                 <div class="unit-50 card">
-                    <div class="card_header"><h3>Organisation</h3></div>
+                    <div class="card_header"><h3 class="text-centered">Organisation</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="tags" class="card_value">1</p>
+                            <p id="tags" class="card_value text-centered">1</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
@@ -183,10 +186,10 @@
                 </div>
                 
                 <div class="unit-50 card">
-                    <div class="card_header"><h3>Formats</h3></div>
+                    <div class="card_header"><h3 class="text-centered">Formats</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="formats" class="card_value">1</p>
+                            <p id="formats" class="card_value text-centered">1</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">

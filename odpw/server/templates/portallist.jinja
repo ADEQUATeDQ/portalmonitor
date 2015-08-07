@@ -8,7 +8,7 @@
                         </a>
                     </li>
                     <li class="active text-centered">
-                        <a href="/list/portals"> 
+                        <a href="/portals"> 
                             <i class="fa fa-cubes  fa-fw"></i>
                             <p>Portals</p>
                         </a>
@@ -58,7 +58,7 @@
                 <ul class="blocks-mobile-33 list-flat" id="portalList">
                     {% for portal in data %}
                     <li class="btn width-100 ">
-                    <a href="/portal_detail/{{ portal.portal_id}}/">
+                    <a href="/portal/{{ portal.portal_id}}/info/{{portal.snapshot}}">
                         <div class="unit-row end">
                             <div class="title unit-80">
                                 <h4 class="search text-left">{{ portal.portal_id}}</h4>
