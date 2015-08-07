@@ -138,7 +138,10 @@ def cli(args,dbm):
                     status=ds['status']
                     exception=ds['exception']
                     md5=ds['md5']
-                    did=ds['data']['id']
+                    if ds['data']:
+                        did=ds['data']['id']
+                    else:
+                        did=ds['dataset']
                 
                 
                     d = Dataset(snapshot=sn, portalID=Portal.id, did=did, data=data,status=status, software=Portal.software, exception=exception, md5=md5)
