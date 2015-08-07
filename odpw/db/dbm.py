@@ -709,6 +709,16 @@ class PostgressDBM(object):
             
             return s.execute()
     
+    def getLatestPortalMetaData(self, portalID=None):
+        with Timer(key="getLatestPortalMetaData") as t:
+            
+            latest= select([func.max(self.pmd.c.snapshot).label('max')]).where(self.pmd.c.portal_id==portalID).alias()
+            t1=self.pmd.alias()
+            
+            s=  select([t1]).select_from(join(t1,latest,and_(portalID==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
+            
+            return s.execute()
+    
     def getSoftwareDist(self):
         with Timer(key="getSoftwareDist") as t:
             s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)

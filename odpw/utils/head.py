@@ -34,7 +34,7 @@ def head (dbm, sn, seen, resource):
             except Exception as e:
                 eh.handleError(log, "HeadLookupException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
                 props['status']=util.getExceptionCode(e)
-                props['exception']=str(type(e))+":"+str(e.message)
+                props['exception']=util.getExceptionString(e)
         
             resource.updateStats(props)
             dbm.updateResource(resource)

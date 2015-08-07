@@ -34,8 +34,12 @@ class ODPWApplication(tornado.web.Application):
             (r'/', IndexHandler),
             (r'/activity',SystemActivityHandler),
             (r'/list/portals', PortalList),
-            (r'/portal_details/?', PortalHandler),
-            (r'/portal_details/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
+            (r'/portal/?', PortalHandler),
+            (r'/portal/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
+            
+            (r'/portal/details?', PortalHandler),
+            (r'/portal/details/(?P<portal>[^\/]+)/?(?P<snapshot>[^\/]+)?', PortalHandler),
+            
             (r'/static/(.*)', StaticFileHandler),
             (r'/data/(.*)/(.*)', DataHandler),
             (r'/.*$', NoDestinationHandler)

@@ -40,23 +40,33 @@ class DatasetCount(DistinctElementCount):
     def __init__(self):
         super(DatasetCount, self).__init__()
     
+    def analyse_PortalMetaData(self, element):
+        self.count+= element.datasets
+    
     def update_PortalMetaData(self, pmd):
         if not pmd.fetch_stats:
             pmd.fetch_stats = {}
         pmd.datasets = self.getResult()['count']
         pmd.fetch_stats['datasets'] = self.getResult()['count']
 
+class ResourceCount(DistinctElementCount):
+    def __init__(self):
+        super(ResourceCount, self).__init__()
+    
+    def analyse_PortalMetaData(self, element):
+        self.count+= element.resources
+    
+    
+
 class CKANResourceInDS(DistinctElementCount):
     def __init__(self,withDistinct=None):
         super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
         
-    def analyse_Dataset(self, dataset):
-        if dataset.data and 'resources' in dataset.data:
-            for res in dataset.data['resources']:
-                if 'url' in res:
-                    super(CKANResourceInDS,self).analyse(res['url'])
-                else:
-                    super(CKANResourceInDS,self).analyse('NA')
+    
+    def analyse_PortalMetaData(self, element):
+        self.count+= element.resources
+        if self.set is not None and element not in self.set:
+            self.set.add(element.resources)
 
     def update_PortalMetaData(self,pmd):
         if not pmd.res_stats:
@@ -448,12 +458,51 @@ class CKANFormatCount(ElementCountAnalyser):
             pmd.general_stats = {}
         pmd.general_stats['formats'] = self.getResult()
 
+class CKANLicenseConformance(Analyser):
+    def __init__(self):
+        super(CKANLicenseConformance, self).__init__()
+        self.license_mapping = LicensesOpennessMapping()
+        self.conformance = {}
+
+    def analyse_Dataset(self, dataset):
+        if dataset.data:
+            id = dataset.data.get('license_id')
+            url = dataset.data.get('license_url')
+            title = dataset.data.get('license_title')
+
+            id, od_conformance = self.license_mapping.map_license(title=title, lid=id, url=url)
+            
+            # TODO store conformance values for IDs
+            self.conformance[id] = od_conformance
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        if 'licenses' not in pmd.general_stats:
+            pmd.general_stats['licenses']={}
+        pmd.general_stats['licenses']['conformance'] = self.getResult()
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'licenses' in pmd.general_stats:
+            licenses = pmd.general_stats['licenses']['count']
+            if isinstance(licenses, dict):
+                for l in licenses:
+                    self.conformance[l] = self.license_mapping.get_od_conformance(l)
+
+    def analyse_CKANLicenseConformance(self, licenses_analyser):
+        od_conf = licenses_analyser.getResult()
+        if isinstance(od_conf, dict):
+            for l in od_conf:
+                self.conformance[l] = od_conf[l] if l in od_conf else 'not found'
+
+    def getResult(self):
+        return self.conformance
 
 class CKANLicenseCount(ElementCountAnalyser):
     def __init__(self):
         super(CKANLicenseCount, self).__init__()
         self.license_mapping = LicensesOpennessMapping()
-        self.conformance = {}
+        
 
     def analyse_Dataset(self, dataset):
         if dataset.data:
@@ -465,31 +514,35 @@ class CKANLicenseCount(ElementCountAnalyser):
             # add id to ElementCountAnalyser
             self.add(id)
 
-            # TODO store conformance values for IDs
-            self.conformance[id] = od_conformance
+            
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
             pmd.general_stats = {}
-        pmd.general_stats['licenses'] = self.getResult()
+        if 'licenses' not in pmd.general_stats or isinstance(pmd.general_stats['licenses'], list):
+            pmd.general_stats['licenses']={}
+        
+        
+            
+        pmd.general_stats['licenses']['count'] = self.getResult()
 
     def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'licenses' in pmd.general_stats:
-            licenses = pmd.general_stats['licenses']
+        if pmd.general_stats and 'licenses' in pmd.general_stats and 'count' in pmd.general_stats['licenses']:
+            licenses = pmd.general_stats['licenses']['count']
             if isinstance(licenses, dict):
                 for l in licenses:
                     self.add(l, licenses[l])
-                    self.conformance[l] = self.license_mapping.get_od_conformance(l)
+                    
 
     def analyse_CKANLicenseCount(self, licenses_analyser):
-        licenses, od_conf = licenses_analyser.getResult()
+        licenses = licenses_analyser.getResult()
         if isinstance(licenses, dict):
             for l in licenses:
                 self.add(l, licenses[l])
-                self.conformance[l] = od_conf[l] if l in od_conf else 'not found'
+                
 
     def getResult(self):
-        return self.getDist(), self.conformance
+        return self.getDist()
 
 
 
@@ -508,8 +561,8 @@ class CKANOrganizationsCount(ElementCountAnalyser):
         pmd.general_stats['organizations'] = self.getResult()
 
     def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'licenses' in pmd.general_stats:
-            orgs = pmd.general_stats['licenses']
+        if pmd.general_stats and 'organizations' in pmd.general_stats:
+            orgs = pmd.general_stats['organizations']
             if isinstance(orgs, dict):
                 for o in orgs:
                     self.add(o, orgs[o])

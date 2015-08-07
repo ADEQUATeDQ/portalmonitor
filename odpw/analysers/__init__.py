@@ -89,6 +89,7 @@ class AnalyserSet(Analyser):
     def add(self, analyser):
         if isinstance(analyser, Analyser) and analyser.name() not in self.analysers: 
             self.analysers[analyser.name()] = analyser
+        return analyser
 
     def analyse(self, element):
         for c in self.analysers.itervalues():

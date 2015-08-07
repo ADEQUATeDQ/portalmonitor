@@ -672,3 +672,8 @@ def head(url, redirects=0, props=None):
         
         return props
 
+
+if __name__ == '__main__':
+    import urllib3.contrib.pyopenssl
+    urllib3.contrib.pyopenssl.inject_into_urllib3()
+    head('http://www.lka-bw.de/LKA/statistiken/Documents/PKS_Jahrbuch_2010.pdf', 0, {})

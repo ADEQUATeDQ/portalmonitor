@@ -6,12 +6,9 @@
             <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 {% endblock %}
 
-{% block content %}
-<div id="main" class="units-row end units-split">
-    <aside class="unit-10">
-        <nav id="nav-side" class="nav">
-            <ul>
-                <li class="cur">
+
+{% block sidenav %}
+                <li class="active">
                     <a href="/" > <i class="fa fa-server fa-2x"></i>
                         <p>Overview</p>
                     </a>
@@ -36,12 +33,10 @@
                         <p>Evolution</p>
                     </a>
                 </li>
-            </ul>
-        </nav>
-    </aside>
+{% endblock %}
     
-    <section class="unit-90">
-        <div class="units-row end">
+{% block section %}
+    <div class="units-row units-split">
             <form onsubmit="this.action='/portal_details/'+this.selectportal.value+'/'+this.selectsnapshot.value;">
                 <div class="unit-70">
                     <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
@@ -55,33 +50,176 @@
                     </select>
                 </div>
                 <div class="unit-10">
-                    <label>-</label>
                     <button class="btn">go</button>
                 </div>
             </form>
-        </div>
-        
-        <div class="units-row">
-        <h2>General Overview</h2>
-            <div class="unit-33 label-green">
-                b1
             </div>
-            <div class="unit-33 label-blue">
-                b1
+            <div class="units-row">
+                <h2>General Overview</h2>
+                
+                <div class="unit-33 card">
+                    <div class="card_header">
+                        <h3>Datasets</h3>
+                    </div>
+                    <div class="card_cnt">
+                        <p id="datasets" class="card_value">
+                        {{ data.datasetsumreporter[0]['Value'] }}
+                        </p>
+                    </div>
+                    <div class="card_footer"></div>
+                </div>
+                
+                <div class="unit-33 card">
+                    <div class="card_header">
+                        <h3>Resources</h3>
+                    </div>
+                    <div class="card_cnt">
+                        <p id="resources" class="card_value">
+                            {{ data.resourcesumreporter[0]['Value'] }}
+                        </p>
+                    </div>
+                    <div class="card_footer"></div>
+                </div>
+                <div class="unit-33 card">
+                    <div class="card_header"><h3>Size</h3></div>
+                    <div class="card_value">
+                        <p id="resources">
+                            {{ data.resourcesumreporter[0]['Value'] }}
+                        </p>
+                    </div>
+                    <div class="card_footer"></div>
+                </div>
             </div>
-            <div class="unit-33 label-red">
-                b1
+            <div class="units-row">
+                <div class="unit-50">
+                    <div class="card_header"><h3>Licenses</h3></div>
+                    <div class="card_cnt units-row">
+                        <div class=" unit-30">
+                            <p id="licenses" class="card_value">1</p>
+                            <label>distinct</label>
+                        </div>
+                        <div class="unit-70">
+                            <table id="licenseDist" class="topk_table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Datasets</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for l in data.licensesreporter %}
+                                    <tr>
+                                        <td> {{ l.LicenseID}}</td>
+                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                    </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                    </div>
+                </div>
+                
+                <div class="unit-50 card">
+                    <div class="card_header"><h3>Tags</h3></div>
+                    <div class="card_cnt units-row">
+                        <div class=" unit-30">
+                            <p id="tags" class="card_value">1</p>
+                            <label>distinct</label>
+                        </div>
+                        <div class="topk_table unit-70">
+                            <table id="tagreporter">
+                                <thead>
+                                    <tr>
+                                        <th>Tag</th>
+                                        <th>Datasets</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for l in data.tagreporter %}
+                                    <tr>
+                                        <td> {{ l.Tag}}</td>
+                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                    </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                    </div>
+                </div>
             </div>
-            <div class="unit-33 label-yellow">
-                b1
+            <div class="units-row">  
+                <div class="unit-50 card">
+                    <div class="card_header"><h3>Organisation</h3></div>
+                    <div class="card_cnt units-row">
+                        <div class=" unit-30">
+                            <p id="tags" class="card_value">1</p>
+                            <label>distinct</label>
+                        </div>
+                        <div class="topk_table unit-70">
+                            <table id="tagreporter">
+                                <thead>
+                                    <tr>
+                                        <th>Organisation</th>
+                                        <th>Datasets</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for l in data.organisationreporter %}
+                                    <tr>
+                                        <td> {{ l.Organisation}}</td>
+                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                    </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                    </div>
+                </div>
+                
+                <div class="unit-50 card">
+                    <div class="card_header"><h3>Formats</h3></div>
+                    <div class="card_cnt units-row">
+                        <div class=" unit-30">
+                            <p id="formats" class="card_value">1</p>
+                            <label>distinct</label>
+                        </div>
+                        <div class="topk_table unit-70">
+                            <table id="tagreporter">
+                                <thead>
+                                    <tr>
+                                        <th>Format</th>
+                                        <th>Datasets</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for l in data.formatcountreporter %}
+                                    <tr>
+                                        <td> {{ l.Format}}</td>
+                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                    </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>    
-</div>
+        </div>                
+    </div>
 {% endblock %}
 
 {% block pageScripts %}
     <script>
-   
+   var data = {{ data | tojson| safe }};
+    console.log("SERVER DATA")
+    console.log(data)
     </script>
 {% endblock %}

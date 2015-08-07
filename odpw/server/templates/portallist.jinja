@@ -1,66 +1,67 @@
 <!{% extends "_base.jinja" %}
 
+{% block sidenav %}
+            <li class=" text-centered">
+                        <a href="/"> 
+                            <i class="fa fa-server fa-fw"></i>
+                            <p>System</p>
+                        </a>
+                    </li>
+                    <li class="active text-centered">
+                        <a href="/list/portals"> 
+                            <i class="fa fa-cubes  fa-fw"></i>
+                            <p>Portals</p>
+                        </a>
+                    </li>
+                    <li class=" text-centered">
+                        <a href="/activity">
+                            <i class="fa fa-cubes  fa-fw"></i>
+                            <p>Activity</p>
+                        </a>
+                    </li>
+{% endblock %}
 
-{% block content %}
-<div id="main" class="units-row end units-split">
-    <aside class="unit-10">
-        <nav id="nav-side" class="nav">
-            <ul>
-                <li class="active text-centered">
-                    <a href="/">
-                        <i class="fa fa-server fa-fw"></i>
-                        <p>System</p>
-                    </a>
-                </li>
-                <li class=" text-centered">
-                    <a href="/list/portals">
-                        <i class="fa fa-cubes  fa-fw"></i>
-                        <p>Portals</p>
-                    </a>
-                </li>
-                <li class=" text-centered">
-                    <a href="/activity">
-                        <i class="fa fa-cubes  fa-fw"></i>
-                        <p>Activity</p>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
 
-    <section class="unit-90">
-        <h2>PortalWatch Portal List</h2>
+{% block section %}  
+        <h2 class="text-centered width-100">Portals in System</h2>
 
         <div class="units-row">
-            <div class="unit-80 unit-push-10">
-                Filter:
-                <input type="search" name="q" placeholder="Search" class="width-50" id="filter" />
-            </div>
-            <div class="unit-10 ">
-                <span class="right">switch to:</span>
-                <button class="btn mobile-hide btn-smaller right" id="btn_list"><i class="fa fa-list"></i>
-                </button>
-                <button class="btn mobile-hide btn-smaller right" id="btn_blocks"><i class="fa fa-th"></i>
-                </button>
+            
+           
+        </div>
+        <div class="units-row">
+            <div class="unit-90 unit-centered">
+                <div class="units-row end">
+                    <div class="unit-30">
+                        <input type="search" name="q" placeholder="Filter" class="width-90" id="filter" />
+                    </div>
+                    <div class="unit-50">
+                        <span>sort: </span>
+                        <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_iso3">by iso3</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_software">by software</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort num " id="btn_sort_datasets">by datasets</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort num " id="btn_sort_resources">by resources</button>
+                    </div>
+                    <div class="unit-20">
+                        
+                        <button class="btn mobile-hide btn-smaller right" id="btn_list"><i class="fa fa-list"></i>
+                        </button>
+                        <button class="btn mobile-hide btn-smaller right" id="btn_blocks"><i class="fa fa-th"></i>
+                        </button>
+                        <span class="text-right right">switch to:</span>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="units-row">
-            <div class="unit-80 unit-push-10">
-                <button class="btn mobile-hide btn-smaller  btn_sort" id="btn_sort_iso3">by iso3</button>
-                <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_software">by software</button>
-                <button class="btn mobile-hide btn-smaller  btn_sort num" id="btn_sort_datasets">by datasets</button>
-                <button class="btn mobile-hide btn-smaller  btn_sort num" id="btn_sort_resources">by resources</button>
-            </div>
-
-        </div>
-        <div class="units-row">
-            <div class="unit-80">
-                <ul class="blocks-mobile-33" id="portalList">
+            <div class="unit-90 unit-centered">
+                <ul class="blocks-mobile-33 list-flat" id="portalList">
                     {% for portal in data %}
-                    <li>
+                    <li class="btn width-100 ">
+                    <a href="/portal_detail/{{ portal.portal_id}}/">
                         <div class="unit-row end">
                             <div class="title unit-80">
-                                <h4 class="search">{{ portal.portal_id}}</h4>
+                                <h4 class="search text-left">{{ portal.portal_id}}</h4>
                             </div>
                             <div class="unit-10">
                                 <i class="fa fa-globe fa-fw"></i>
@@ -87,18 +88,18 @@
                                 <span class="value snapshot"> {{portal.snapshot}}</span>
                             </div>
                         </div>
+                        </a>
                     </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
-    </section>
-</div>
+
 
 
 {% endblock %} {% block pageScripts %}
 <script>
-    var data = {{ json | safe }};
+    var data = {{ data | tojson| safe }};
     console.log("SERVER DATA")
     console.log(data)
 
@@ -162,7 +163,7 @@
         });        
         
         
-     $('#filter').keypress(function (event) {
+     $('#filter').keyup(function (event) {
          console.log(event.which) //if (event.which != 13) { // return //} 
          var filter = $(this).val().toLowerCase().trim();
          var filter_tags = filter.split(" ");

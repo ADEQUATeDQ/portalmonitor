@@ -53,6 +53,9 @@ class ElementCountAnalyser(Analyser):
         return self.getDist()
     
 
+    
+    
+
 class StatusCodeAnalyser(ElementCountAnalyser):
     dist={
                 '2':'ok',

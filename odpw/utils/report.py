@@ -1,11 +1,13 @@
 from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount, CKANTagsCount
+from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount, CKANTagsCount,\
+    CKANLicenseConformance, ResourceCount, DatasetCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser,\
     PMDActivityAnalyser
 from odpw.analysers.socrata_analysers import SocrataKeyAnalyser
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
-    ISO3DistReporter, SnapshotsPerPortalReporter
+    ISO3DistReporter, SnapshotsPerPortalReporter, TagReporter, LicensesReporter,\
+    OrganisationReporter, FormatCountReporter
 from odpw.analysers.core import DBAnalyser
 
 __author__ = 'jumbrich'
@@ -70,33 +72,35 @@ def cli(args,dbm):
     
         output(sys_or,args)
 
-    if args.pdetail:
-        pmds = dbm.getLatestPortalMetaDatas()
-
-        a = AnalyserSet()
-        da = PMDDatasetCountAnalyser(bins=[0,50,100,500,1000,5000,10000,50000,100000])
-        #ra = PMDResourceCountAnalyser()
-
-        a.add(da)
-        #a.add(ra)
-        process_all(a, PortalMetaData.iter(pmds))
-
-        print da.getResult()
-
-        ds = dbm.getDatasets(portalID='opendata_socrata_com', snapshot=args.snapshot)
-
-        a = AnalyserSet()
-        #a.add(CKANFormatCount())
-        #a.add(CKANLicenseCount())
-        #a.add(CKANOrganizationsCount())
-        #a.add(CKANTagsCount())
-
-        a.add(SocrataKeyAnalyser())
-
-        process_all(a, Dataset.iter(ds))
-
-        for res in a.getAnalysers():
-            print res.getResult()
+#===============================================================================
+#     if args.pdetail:
+#         pmds = dbm.getLatestPortalMetaDatas()
+# 
+#         a = AnalyserSet()
+#         da = PMDDatasetCountAnalyser(bins=[0,50,100,500,1000,5000,10000,50000,100000])
+#         #ra = PMDResourceCountAnalyser()
+# 
+#         a.add(da)
+#         #a.add(ra)
+#         process_all(a, PortalMetaData.iter(pmds))
+# 
+#         print da.getResult()
+# 
+#         ds = dbm.getDatasets(portalID='opendata_socrata_com', snapshot=args.snapshot)
+# 
+#         a = AnalyserSet()
+#         #a.add(CKANFormatCount())
+#         #a.add(CKANLicenseCount())
+#         #a.add(CKANOrganizationsCount())
+#         #a.add(CKANTagsCount())
+# 
+#         a.add(SocrataKeyAnalyser())
+# 
+#         process_all(a, Dataset.iter(ds))
+# 
+#         for res in a.getAnalysers():
+#             print res.getResult()
+#===============================================================================
 
     if any([args.pevolution,
             args.pgen,
@@ -123,13 +127,56 @@ def cli(args,dbm):
         return 
     
     if args.pgen:    
+        #get all available snapshots
         a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=args.portal_id,apiurl=None))
-        rep = Report([SnapshotsPerPortalReporter(a,args.portal_id)])
+        r=SnapshotsPerPortalReporter(a,args.portal_id)
         
+        
+        aset = AnalyserSet()
+        lc=aset.add(CKANLicenseCount())# how many licenses
+        lcc=aset.add(CKANLicenseConformance())
+        
+        tc= aset.add(CKANTagsCount())   # how many tags
+        oc= aset.add(CKANOrganizationsCount())# how many organisations
+        fc= aset.add(CKANFormatCount())# how many formats
+    
+        aset.add(ResourceCount())   # how many resources
+        dc= aset.add(DatasetCount())    # how many datasets
+                                    
+        #use the latest portal meta data object
+        it = dbm.getLatestPortalMetaData(portalID=args.portal_id)
+        aset = process_all(aset, PortalMetaData.iter(it))
+        
+        rep = Report([r,
+                      LicensesReporter(lc,lcc),
+                      TagReporter(tc,dc, topK=3),
+                      OrganisationReporter(oc, topK=3),
+                      FormatCountReporter(fc, topK=3)])        
         output(rep,args)
         
     if args.pdetail:
-        pass
+        
+        aset = AnalyserSet()
+        
+        lc=aset.add(CKANLicenseCount())
+        lcc=aset.add(CKANLicenseConformance())
+        
+        tc= aset.add(CKANTagsCount())
+        oc= aset.add(CKANOrganizationsCount())
+        fc= aset.add(CKANFormatCount())
+    
+        it = dbm.getLatestPortalMetaData(portalID=args.portal_id)
+        aset = process_all(aset, PortalMetaData.iter(it))
+    
+        
+        rep = Report([LicensesReporter(lc,lcc),
+                      TagReporter(tc),
+                      OrganisationReporter(oc),
+                      FormatCountReporter(fc)])
+        
+        output(rep,args)
+    
+    
     if args.pquality:
         pass
     if args.pevolution:
@@ -142,6 +189,6 @@ def output(rE, args):
     rE.clireport()
     
     if args.csv:
-        rE.csvreport(args.outdir)
+        print rE.csvreport(args.outdir)
     if args.ui:
         print rE.uireport()

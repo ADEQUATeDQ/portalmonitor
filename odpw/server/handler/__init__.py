@@ -13,14 +13,19 @@ import json
 from odpw.db.dbm import nested_json, date_handler
 from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
     Report, ISO3DistReporter, SoftWareDistReporter,\
-    SystemActivityReporter, SnapshotsPerPortalReporter
+    SystemActivityReporter, SnapshotsPerPortalReporter, LicensesReporter,\
+    TagReporter, OrganisationReporter, FormatCountReporter, DatasetSumReporter,\
+    ResourceSumReporter
 from odpw.utils.timer import Timer
-from odpw.analysers import process_all
+from odpw.analysers import process_all, AnalyserSet
 
 import sys
 import traceback
 import os
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
+from odpw.analysers.fetching import CKANLicenseCount, CKANLicenseConformance,\
+    CKANTagsCount, CKANOrganizationsCount, CKANFormatCount, ResourceCount,\
+    DatasetCount
 
 
 class BaseHandler(RequestHandler):
@@ -85,7 +90,34 @@ class PortalHandler(BaseHandler):
                 a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=None,apiurl=None))
                 rep = Report([SnapshotsPerPortalReporter(a,None)])
                 
-                
+                #get all available snapshots
+                a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=pid,apiurl=None))
+                r=SnapshotsPerPortalReporter(a,pid)
+        
+        
+                aset = AnalyserSet()
+                lc=aset.add(CKANLicenseCount())# how many licenses
+                lcc=aset.add(CKANLicenseConformance())
+        
+                tc= aset.add(CKANTagsCount())   # how many tags
+                oc= aset.add(CKANOrganizationsCount())# how many organisations
+                fc= aset.add(CKANFormatCount())# how many formats
+    
+                resC= aset.add(ResourceCount())   # how many resources
+                dsC=dc= aset.add(DatasetCount())    # how many datasets
+    
+                #use the latest portal meta data object
+                it = self.db.getLatestPortalMetaData(portalID=pid)
+                aset = process_all(aset, PortalMetaData.iter(it))
+        
+                rep = Report([r,
+                      DatasetSumReporter(resC),
+                      ResourceSumReporter(dsC),
+                      LicensesReporter(lc,lcc,topK=3),
+                      TagReporter(tc,dc, topK=3),
+                      OrganisationReporter(oc, topK=3),
+                      FormatCountReporter(fc, topK=3)])
+    
                 self.render('portal_detail.jinja',portals=True,data=rep.uireport())
             else:
                 self.render('portals_detail.jinja',portals=True)
@@ -109,7 +141,7 @@ class PortalList(BaseHandler):
             
                     portals.append(rdict)
         
-                self.render('portallist.jinja',index=True, data=portals, json=json.dumps(portals, default=date_handler))
+                self.render('portallist.jinja',index=True, data=portals)
             except Exception as e:print e
 
 class IndexHandler(BaseHandler):

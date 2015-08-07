@@ -1,12 +1,7 @@
 <!{% extends "_base.jinja" %}
 
-
-{% block content %}
-    <div id="main" class="units-row end units-split">
-        <aside class="unit-10">
-            <nav id="nav-side" class="nav">
-                <ul>
-                    <li class="active text-centered">
+{% block sidenav %}
+            <li class="active text-centered">
                         <a href="/"> 
                             <i class="fa fa-server fa-fw"></i>
                             <p>System</p>
@@ -24,11 +19,11 @@
                             <p>Activity</p>
                         </a>
                     </li>
-                </ul>
-            </nav>
-        </aside>
-    
-        <section class="unit-90">
+{% endblock %}
+        
+      
+        
+{% block section %}        
             <h2>General Overview</h2>
             <div class="units-row">
                 <div class="unit-30 unit-push-10 border card">
@@ -104,8 +99,7 @@
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
+
                  
       
 {% endblock %}

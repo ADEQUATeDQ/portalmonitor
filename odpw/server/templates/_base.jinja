@@ -10,58 +10,54 @@
         {% block css %}
             <link rel="stylesheet" href="{{ static_url('css/kube.min.css') }}" />
             <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
-           
-            <!--<link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" />-->
             <link rel="stylesheet" href="{{ static_url('css/font-awesome.min.css')}}">
-            <!--<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Julius+Sans+One|Muli:300,400|Open+Sans:400,300|Sorts+Mill+Goudy|Raleway:400,300,700|Open+Sans+Condensed:300">-->
-            
         {% endblock %}
         
-        
-        
-
         {% block scripts %}
-                      
-            
             <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.js"></script>
             <script src="http://vega.github.io/vega-editor/vendor/d3.min.js"></script>
             <script src="http://vega.github.io/vega-editor/vendor/topojson.js"></script>
             <script src="http://vega.github.io/vega/vega.min.js"></script>
             
-            <!--<script src="{{ static_url('js/jquery-1.11.1.js')}}"></script>-->
-            <!-- <script src="{{ static_url('js/d3.v3.min.js')}}"></script>
-                <script src="{{ static_url('js/d3.geo.projection.min.js')}}"></script> 
-                <script src="{{ static_url('js/topojson.js')}}"></script>
-                <script src="{{ static_url('js/vega.min.js') }}"></script>
-            -->
             <script type="text/javascript" src="{{ static_url('js/kube.min.js') }}" ></script>
-            
-
             <script type="text/javascript" src="{{ static_url('js/jquery.dataTables.min.js')}}" ></script>
-            
-              
         {% endblock %}
     </head>
         
     <body>
-    <div class="units-row">
-        <div class="unit-90 unit-centered">
-        <!-- Header -->
-        {% include "_header.jinja" %}
-      
-        <!--  Navigation Bar -->
-        {% include "_mainnav.jinja" %}
-       
-        <!-- Content -->
-        <div class="units-row container">
-            {% block content %}{% endblock %}
+        <div class="units-row">
+            <div class="unit-100 unit-centered">
+                <!-- Header -->
+                {% include "_header.jinja" %}
+
+                <!--  Navigation Bar -->
+                {% include "_mainnav.jinja" %}
+
+                <!-- Content -->
+                <div id="main" class="units-row">
+                    <aside class="unit-10">
+                        <nav id="nav-side" class="nav">
+                            <ul>
+                                {% block sidenav %}
+                    
+                                {% endblock %}    
+                            </ul>
+                        </nav>
+                    </aside>
+                    
+                    <section class="unit-90 unit-role-left">
+                        {% block section %}
+                    
+                        {% endblock %}  
+                    </section>
+                </div>
+
+                {% include "_footer.jinja" %}
+                
+            </div>
         </div>
-        
-        {% include "_footer.jinja" %}
         {% block pageScripts %}
-        
+
         {% endblock %}
-    </div>
-    </div>
     </body>
 </html>

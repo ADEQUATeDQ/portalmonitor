@@ -1,12 +1,7 @@
 <!{% extends "_base.jinja" %}
 
-
-{% block content %}
-    <div id="main" class="units-row end units-split">
-        <aside class="unit-10">
-            <nav id="nav-side" class="nav">
-                <ul>
-                    <li class="active text-centered">
+{% block sidenav %}
+            <li class=" text-centered">
                         <a href="/"> 
                             <i class="fa fa-server fa-fw"></i>
                             <p>System</p>
@@ -18,17 +13,15 @@
                             <p>Portals</p>
                         </a>
                     </li>
-                    <li class=" text-centered">
+                    <li class="active text-centered">
                         <a href="/activity">
                             <i class="fa fa-cubes  fa-fw"></i>
                             <p>Activity</p>
                         </a>
                     </li>
-                </ul>
-            </nav>
-        </aside>
+{% endblock %}
+{% block section %}
     
-        <section class="unit-90">
             <h2>PortalWatch Activity for snapshot {{data.snapshot}}</h2>
             <div class="units-row">
                 <div class="width-30  card unit-33">
@@ -159,8 +152,7 @@
                 </div>
             </div>          
 
-        </section>
-    </div>
+ 
                  
       
 {% endblock %}

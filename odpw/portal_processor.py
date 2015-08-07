@@ -68,8 +68,7 @@ class CKAN(PortalProcessor):
                     rows = len(datasets)
                     start+=rows
                     for datasetJSON in datasets:
-                        datasetID = datasetJSON['name']
-
+                        datasetID = datasetJSON['id']
                         if datasetID not in processed:
                             data = datasetJSON
                             util.extras_to_dicts(data)

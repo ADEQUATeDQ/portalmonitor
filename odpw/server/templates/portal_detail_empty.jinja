@@ -1,4 +1,4 @@
-<!{% extends "_base.jinja" %}
+<!{% extends "_base_woaside.jinja" %}
 
 {% block scripts %}
 {{ super() }}
@@ -6,10 +6,8 @@
             <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 {% endblock %}
 
-{% block content %}
-<div class="units-row container">
+{% block section %}
 
-        <section class="unit-90 unit-centered">
                 <div class="units-row">
                     <h2>Portal selection</h2>
                 </div>
@@ -57,8 +55,7 @@
                         </form>
                     </div>
                 </div>
-            </section>
-        </div>
+           
 
 
 {% endblock %}

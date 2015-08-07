@@ -1,107 +1,84 @@
 @font-face {
     font-family: 'Junction';
     src: url('static/fonts/junction-bold.eot');
-    src: url('static/fonts/junction-bold.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/junction-bold.woff') format('woff'),
-         url('static/fonts/junction-bold.ttf') format('truetype'),
-         url('static/fonts/junction-bold.svg#junctionbold') format('svg');
+    src: url('static/fonts/junction-bold.eot?#iefix') format('embedded-opentype'), url('static/fonts/junction-bold.woff') format('woff'), url('static/fonts/junction-bold.ttf') format('truetype'), url('static/fonts/junction-bold.svg#junctionbold') format('svg');
     font-weight: bold;
     font-style: normal;
-
 }
 
 @font-face {
     font-family: 'Junction';
     src: url('static/fonts/junction-light.eot');
-    src: url('static/fonts/junction-light.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/junction-light.woff') format('woff'),
-         url('static/fonts/junction-light.ttf') format('truetype'),
-         url('static/fonts/junction-light.svg#junctionlight') format('svg');
+    src: url('static/fonts/junction-light.eot?#iefix') format('embedded-opentype'), url('static/fonts/junction-light.woff') format('woff'), url('static/fonts/junction-light.ttf') format('truetype'), url('static/fonts/junction-light.svg#junctionlight') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 @font-face {
     font-family: 'Junction';
     src: url('static/fonts/junction-regular.eot');
-    src: url('static/fonts/junction-regular.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/junction-regular.woff') format('woff'),
-         url('static/fonts/junction-regular.ttf') format('truetype'),
-         url('static/fonts/junction-regular.svg#junctionregular') format('svg');
+    src: url('static/fonts/junction-regular.eot?#iefix') format('embedded-opentype'), url('static/fonts/junction-regular.woff') format('woff'), url('static/fonts/junction-regular.ttf') format('truetype'), url('static/fonts/junction-regular.svg#junctionregular') format('svg');
     font-weight: normal;
     font-style: normal;
 }
-@font-face{
+
+@font-face {
     font-family: 'edelsans';
     src: url("static/fonts/edelsans_regular.otf");
 }
-@font-face { 
-    font-family: "Raleway"; 
-    src: url("static/fonts/raleway_thin-webfont.woff"); 
+
+@font-face {
+    font-family: "Raleway";
+    src: url("static/fonts/raleway_thin-webfont.woff");
 }
-@font-face { 
-    font-family: "GoudyStM"; 
-    src: url("static/fonts/GoudyStM-webfont.woff"); 
+
+@font-face {
+    font-family: "GoudyStM";
+    src: url("static/fonts/GoudyStM-webfont.woff");
 }
 /* Regular */
+
 @font-face {
     font-family: 'League Gothic';
     src: url('static/fonts/leaguegothic-italic-webfont.eot');
-    src: url('static/fonts/leaguegothic-italic-webfont.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/leaguegothic-italic-webfont.woff') format('woff'),
-         url('static/fonts/leaguegothic-italic-webfont.ttf') format('truetype'),
-         url('static/fonts/leaguegothic-italic-webfont.svg#league_gothic_italicregular') format('svg');
+    src: url('static/fonts/leaguegothic-italic-webfont.eot?#iefix') format('embedded-opentype'), url('static/fonts/leaguegothic-italic-webfont.woff') format('woff'), url('static/fonts/leaguegothic-italic-webfont.ttf') format('truetype'), url('static/fonts/leaguegothic-italic-webfont.svg#league_gothic_italicregular') format('svg');
     font-weight: normal;
     font-style: italic;
-
 }
-
 /* Italic */
+
 @font-face {
     font-family: 'League Gothic';
     src: url('static/fonts/leaguegothic-regular-webfont.eot');
-    src: url('static/fonts/leaguegothic-regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/leaguegothic-regular-webfont.woff') format('woff'),
-         url('static/fonts/leaguegothic-regular-webfont.ttf') format('truetype'),
-         url('static/fonts/leaguegothic-regular-webfont.svg#league_gothicregular') format('svg');
+    src: url('static/fonts/leaguegothic-regular-webfont.eot?#iefix') format('embedded-opentype'), url('static/fonts/leaguegothic-regular-webfont.woff') format('woff'), url('static/fonts/leaguegothic-regular-webfont.ttf') format('truetype'), url('static/fonts/leaguegothic-regular-webfont.svg#league_gothicregular') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
-
 /* Condensed */
+
 @font-face {
     font-family: 'League Gothic Condensed';
     src: url('static/fonts/leaguegothic-condensed-regular-webfont.eot');
-    src: url('static/fonts/leaguegothic-condensed-regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/leaguegothic-condensed-regular-webfont.woff') format('woff'),
-         url('static/fonts/leaguegothic-condensed-regular-webfont.ttf') format('truetype'),
-         url('static/fonts/leaguegothic-condensed-regular-webfont.svg#league_gothic_condensed-Rg') format('svg');
+    src: url('static/fonts/leaguegothic-condensed-regular-webfont.eot?#iefix') format('embedded-opentype'), url('static/fonts/leaguegothic-condensed-regular-webfont.woff') format('woff'), url('static/fonts/leaguegothic-condensed-regular-webfont.ttf') format('truetype'), url('static/fonts/leaguegothic-condensed-regular-webfont.svg#league_gothic_condensed-Rg') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
-
 /* Condensed Italic */
+
 @font-face {
     font-family: 'League Gothic Condensed';
     src: url('static/fonts/leaguegothic-condensed-italic-webfont.eot');
-    src: url('static/fonts/leaguegothic-condensed-italic-webfont.eot?#iefix') format('embedded-opentype'),
-         url('static/fonts/leaguegothic-condensed-italic-webfont.woff') format('woff'),
-         url('static/fonts/leaguegothic-condensed-italic-webfont.ttf') format('truetype'),
-         url('static/fonts/leaguegothic-condensed-italic-webfont.svg#league_gothic_condensed_itaRg') format('svg');
+    src: url('static/fonts/leaguegothic-condensed-italic-webfont.eot?#iefix') format('embedded-opentype'), url('static/fonts/leaguegothic-condensed-italic-webfont.woff') format('woff'), url('static/fonts/leaguegothic-condensed-italic-webfont.ttf') format('truetype'), url('static/fonts/leaguegothic-condensed-italic-webfont.svg#league_gothic_condensed_itaRg') format('svg');
     font-weight: normal;
     font-style: italic;
 }
-@font-face{
+
+@font-face {
     font-family: 'Prociono';
     src: url('static/fonts/Prociono-Regular-webfont.eot');
     src: url('static/fonts/Prociono-Regular-webfont.ttf') format('truetype');
     src: url('static/fonts/Prociono-Regular-webfont.woff') format('woff');
 }
-
-
 /*
 
 header{
@@ -123,197 +100,216 @@ footer{
     border: solid 2px  black;
 }
 */
-.border{
-    border: solid 1px black;   
+
+.border {
+    border: solid 1px black;
 }
 
+body{
+    
+}
 
 /* HEADER */
-header{ height: 110px; 
-  background: -webkit-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); /* Chrome 10+, Saf5.1+ */
-  background:    -moz-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); /* FF3.6+ */
-  background:     -ms-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); /* IE10 */
-  background:      -o-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); /* Opera 11.10+ */
-  background:         linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); /* W3C */
-}
-    footer{
-        height: 110px; 
-          background: -webkit-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%); /* Chrome 10+, Saf5.1+ */
-  background:    -moz-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%); /* FF3.6+ */
-  background:     -ms-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%); /* IE10 */
-  background:      -o-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%); /* Opera 11.10+ */
-  background:         linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%); /* W3C */
-    }
 
-header a{
+header {
+    height: 110px;
+    background: -webkit-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -moz-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -ms-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -o-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);    
+}
+
+footer {
+    height: 110px;
     
+    margin-top:20px;
+    background: -webkit-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -moz-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -ms-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -o-linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: linear-gradient(0deg, #ECE9E6 10%, #FFFFFF 90%);
+}
+
+header a {
     padding: 0px 0px 0px 50px;
     margin: 0px;
     line-height: 110px;
-    
     text-decoration: none;
     color: #141414;
-    
-    
     font-family: 'Raleway';
     font-family: 'GoudyStM';
     font-family: "edelsans";
-    font-family: 'GoudyStM';
-    font-size: 50px;
     
-}
-header img {
-  padding: 10px;
-  max-height: 90px;
+    font-size: 50px;
 }
 
+header img {
+    padding: 10px;
+    max-height: 90px;
+}
 /* NAV MAIN */
-#nav-main li a{
-    
+
+#nav-main li a {
     font-family: 'GoudyStM';
     font-family: "Raleway";
     text-transform: capitalize;
-    border-radius: 5px 5px 0px 0px; 
+    border-radius: 5px 5px 0px 0px;
 }
 
-#nav-main li.active a{
-    background: #dcdcdc; 
+#nav-main li.active a {
+    background: #dcdcdc;
     font-weight: bold;
 }
 /* NAV SIDE */
-#main{
+
+#main {
     background: #dcdcdc;
-    padding-top:30px;
-    padding-right: 20px
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
 }
-
 /* NAV SIDE */
-#nav-side ul{
-    margin-top:50px;
+aside{
+    float:left;}
 
+#nav-side ul {
+    margin-top: 50px;
 }
-#nav-side li{
-    margin-left:15px;    
-    margin-top: 10px;
+
+#nav-side li {
+    margin-left: 15px;
     z-index: 0;
-     position: relative;
-    
+    position: relative;
+    height:70px;
+    margin-top:5px
 }
-#nav-side li a, #nav-side li a p{
-    padding:0px;
-    margin:0px;
+
+#nav-side li a{
+    height:70px;
+    
+    }
+#nav-side li a,
+#nav-side li a p {
+  
     border-radius: 5px 0px 0px 5px;
 }
-#nav-side li.active a, #nav-side li a:hover{
-    background:white;
+
+#nav-side li.active a{
+    background: white;
     z-index: 2;
-    margin-right:-1px;
+    margin-right: -1px;
     border-left: solid 1px white;
-    
-     box-shadow: -2px 0px 3px 0px #333;
-  
-  -webkit-box-shadow: 0 0 2px 1px gray;
+    box-shadow: -2px 0px 3px 0px #333;
+    -webkit-box-shadow: 0 0 2px 1px gray;
 }
-#nav-side li.active:after, #nav-side li a:hover :after {
-  display: block;
-  background: #fff;
-  width: 4px;
-  height: 110%;
-  content: " ";
-    
-  position: absolute;
-  top: -1px;
-  right: -4px;
+#nav-side li a:hover {
+    background: #cdcdcd;
+    z-index: 2;
+    margin-right: -1px;
+    border-left: solid 1px white;
+    box-shadow: -2px 0px 3px 0px #333;
+    -webkit-box-shadow: 0 0 2px 1px gray;
+
 }
 
+#nav-side li.active:after,
+#nav-side li a:hover:after {
+    display: block;
+    background: #fff;
+    width: 4px;
+    height: 120%;
+    content: " ";
+    position: absolute;
+    top: -1px;
+    right: -4px;
+}
 /* SECTION */
+
 section{
     border-radius: 5px;
-    background:white;
-    box-shadow: 0 0 5px rgba(0,0,0,0.75);
+    background: white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.75);
     z-index: 0;
 }
 
-#portalList{
+ul#portalList {
     list-style: none;
-}
-#portalList li{
-     border-radius: 3px;
-  height: 60px;
-  box-shadow: 0 0 2px rgba(0,0,0,0.75);
-  background: #e6e6e6;
-  padding: 5px;
-  margin: 5px;
+    margin-left:0px;
+    padding-left:0px;
 }
 
-.card{
-    border-radius: 5px;   
-    /*box-shadow: 2px 2px 3px rgba(0,0,0,0.75);*/
-    margin:5px;
+#portalList li {
+    border-radius: 3px;
+    height: 60px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.75);
+    
+    padding: 5px;
+    margin: 5px;
 }
-.card_header h3{
-    background: rgba(90,94,97, 0.5);
-    border-radius: 5px 5px 0px 0px; 
+
+.card {
+    border-radius: 5px;
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.75);
+    
+}
+
+.card_header {
     font-style: normal;
     font-weight: bold;
     line-height: 40px;
-    margin:0px;
-    font-size: 18px;;
+    margin: 0px;
+    font-size: 18px;
+    
     font-family: 'Raleway';
-    font-family: 'GoudyStM';
-    
-    font-family: "edelsans";
-    font-family: 'Raleway'
-    
-}
-.card .value{
-    font-family: 'Junction'
+    background: -webkit-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -moz-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -ms-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: -o-linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%);
+    background: linear-gradient(180deg, #ECE9E6 10%, #FFFFFF 90%); 
+     border-radius: 5px;
 }
 
-.card_cnt{
+.card_value{
+    font-family: 'Junction';
+    font-size: 50px;
+}
+
+.card_cnt {
     padding-top: 10px;
 }
-.card_cnt li:not(:first-child){
-    border-left: 1px solid rgba(90,94,97, 0.5);
+
+.card_cnt li:not(:first-child) {
+    border-left: 1px solid rgba(90, 94, 97, 0.5);
 }
-.card_cnt p, 
+
+.card_cnt p,
 .card_cnt ul,
-.card_cnt li{
-    margin:0px;
-}
-.card_footer{
-    
+.card_cnt li {
+    margin: 0px;
 }
 
+.card_footer {}
 
-
-#portalHeader{
+#portalHeader {
     border-radius: 5px 5px 0px 0px;
-    background: rgb(90,94,97);
-    padding:10px;
+    background: rgb(90, 94, 97);
+    padding: 10px;
 }
 
-#snapshotPicker ul{
+#snapshotPicker ul {
     float: right
 }
-#snapshotPicker select{
-    
+
+#snapshotPicker select {
     border: 1px solid white;
     color: black;
     padding: 2px;
     width: 100px;
     -webkit-appearance: none;
-
-    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50px' height='50px'><polyline points='46.139,15.518 25.166,36.49 4.193,15.519'/></svg>") right no-repeat;
-    
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50px' height='50px'><polyline points='46.139,15.518 25.166,36.49 4.193,15.519'/></svg>") right no-repeat;
     background-color: lightblue;
     background-transparency: 1;
     background-position: right 5px top 2px;
     background-size: 15px 18px;
 }
-
-
-
-
-
-
