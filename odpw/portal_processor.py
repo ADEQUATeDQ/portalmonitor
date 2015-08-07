@@ -118,7 +118,8 @@ class CKAN(PortalProcessor):
                         props={
                                'status':-1,
                                'data':None,
-                               'exception':None
+                               'exception':None,
+                                'software':Portal.software
                                }
                         try:
                             resp, status = util.getPackage(api=api, apiurl=Portal.apiurl, id=entity)
@@ -181,7 +182,7 @@ class Socrata(PortalProcessor):
                 datasetID = datasetJSON['id']
                 if datasetID not in processed:
                     processed.add(datasetID)
-                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=datasetJSON,status=200)
+                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=datasetJSON,status=200, software=Portal.software)
                     
                     if dcat:
                         try:

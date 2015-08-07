@@ -99,8 +99,8 @@ class CSVReporter(object):
         if not os.path.exists(folder):
             os.makedirs(folder)
             
-        f = os.path.join(folder, self.__class__.__name__.lower()+".csv")
-        log.info("CSVReport", file=f, reporter=self.__class__.__name__.lower())
+        f = os.path.join(folder, self.name()+".csv")
+        log.info("CSVReport", file=f, reporter=self.name())
             
         self._csvreport(f)
         
@@ -216,7 +216,7 @@ class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
                 r.plotreport()
 
 
-class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
+class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
     def __init__(self,analyser, snapshot=None,portalID=None):
         self.analyser = analyser
         
@@ -256,10 +256,11 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter):
             print "  ",i,'-',summary['head_'+i]
 
 class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
-    def __init__(self, analyser, topK=None):
+    def __init__(self, analyser, columns=None, topK=None):
         self.analyser= analyser
         self.topK=topK
         self.df = None
+        self.columns=columns
 
     def getDataFrame(self):
         if self.df is None:
@@ -281,12 +282,12 @@ class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
     
 class TagReporter(ElementCountReporter, CSVReporter):
     def __init__(self, analyser, datasetcount,topK=None):
-        super(TagReporter, self).__init__(analyser,  topK=topK)
-        self.columns= ['Tag', 'Count']
+        super(TagReporter, self).__init__(analyser, columns=['Tag', 'Count'], topK=topK)
         self.total= datasetcount.getResult()['count']
-        print self.total
+
     
     def getDataFrame(self):
+        #override, since we need to total dataset as extra parameter
         if self.df is None:
             self.df = pd.DataFrame(self.analyser.getResult().items(), columns=self.columns)
             if self.topK:
@@ -297,17 +298,17 @@ class TagReporter(ElementCountReporter, CSVReporter):
     
 class OrganisationReporter(ElementCountReporter, CSVReporter):
     def __init__(self, analyser, topK=None):
-        super(OrganisationReporter, self).__init__(analyser, topK=topK)
-        self.columns=['Organisation', 'Count']
+        super(OrganisationReporter, self).__init__(analyser,columns=['Organisation', 'Count'], topK=topK)
+
         
 class FormatCountReporter(ElementCountReporter, CSVReporter):
     def __init__(self, analyser, topK=None):
-        super(FormatCountReporter, self).__init__(analyser, topK=topK)
-        self.columns=['Format', 'Count']
+        super(FormatCountReporter, self).__init__(analyser,columns=['Format', 'Count'], topK=topK)
+
         
 class LicensesReporter(ElementCountReporter, CSVReporter, UIReporter):
     def __init__(self, licenseCount, licenseConform, topK=None):
-        if isinstance(licenseCount, CKANLicenseCount) and  isinstance(licenseConform, CKANLicenseConformance):
+        if isinstance(licenseCount, CKANLicenseCount) and isinstance(licenseConform, CKANLicenseConformance):
             self.licenseCount = licenseCount
             self.licenseConform = licenseConform
         super(LicensesReporter,self).__init__(None, topK=topK)
@@ -317,9 +318,8 @@ class LicensesReporter(ElementCountReporter, CSVReporter, UIReporter):
         if self.df is None:
             self.df = pd.DataFrame(self.licenseCount.getResult().items(), columns=['LicenseID', 'Count'])
             self.df['ODConformance'] = self.df['LicenseID'].map(self.licenseConform.getResult())
-            self.df=addPercentageCol(self.df,column='Count')
+            self.df=addPercentageCol(self.df, column='Count')
         return self.df
-    
     
 class SumReporter(Reporter, UIReporter):
     def __init__(self, analyser):
