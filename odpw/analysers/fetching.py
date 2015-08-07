@@ -41,7 +41,8 @@ class DatasetCount(DistinctElementCount):
         super(DatasetCount, self).__init__()
     
     def analyse_PortalMetaData(self, element):
-        self.count+= element.datasets
+        if element.datasets>=0:
+            self.count+= element.datasets
     
     def update_PortalMetaData(self, pmd):
         if not pmd.fetch_stats:
@@ -54,7 +55,8 @@ class ResourceCount(DistinctElementCount):
         super(ResourceCount, self).__init__()
     
     def analyse_PortalMetaData(self, element):
-        self.count+= element.resources
+        if element.resources>=0:
+            self.count+= element.resources
     
     
 

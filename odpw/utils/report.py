@@ -7,7 +7,7 @@ from odpw.analysers.socrata_analysers import SocrataKeyAnalyser
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter, TagReporter, LicensesReporter,\
-    OrganisationReporter, FormatCountReporter
+    OrganisationReporter, FormatCountReporter, DatasetSumReporter, ResourceSumReporter
 from odpw.analysers.core import DBAnalyser
 
 __author__ = 'jumbrich'
@@ -130,28 +130,30 @@ def cli(args,dbm):
         #get all available snapshots
         a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=args.portal_id,apiurl=None))
         r=SnapshotsPerPortalReporter(a,args.portal_id)
-        
-        
+
         aset = AnalyserSet()
         lc=aset.add(CKANLicenseCount())# how many licenses
         lcc=aset.add(CKANLicenseConformance())
-        
+
         tc= aset.add(CKANTagsCount())   # how many tags
         oc= aset.add(CKANOrganizationsCount())# how many organisations
         fc= aset.add(CKANFormatCount())# how many formats
-    
-        aset.add(ResourceCount())   # how many resources
+
+        resC= aset.add(ResourceCount())   # how many resources
         dc= aset.add(DatasetCount())    # how many datasets
-                                    
+
         #use the latest portal meta data object
         it = dbm.getLatestPortalMetaData(portalID=args.portal_id)
         aset = process_all(aset, PortalMetaData.iter(it))
-        
+
         rep = Report([r,
-                      LicensesReporter(lc,lcc),
-                      TagReporter(tc,dc, topK=3),
-                      OrganisationReporter(oc, topK=3),
-                      FormatCountReporter(fc, topK=3)])        
+              DatasetSumReporter(resC),
+              ResourceSumReporter(dsC),
+              LicensesReporter(lc,lcc,topK=3),
+              TagReporter(tc,dc, topK=3),
+              OrganisationReporter(oc, topK=3),
+              FormatCountReporter(fc, topK=3)])
+
         output(rep,args)
         
     if args.pdetail:
@@ -164,13 +166,14 @@ def cli(args,dbm):
         tc= aset.add(CKANTagsCount())
         oc= aset.add(CKANOrganizationsCount())
         fc= aset.add(CKANFormatCount())
-    
+        dc= aset.add(DatasetCount())    # how many datasets
+
         it = dbm.getLatestPortalMetaData(portalID=args.portal_id)
         aset = process_all(aset, PortalMetaData.iter(it))
     
         
         rep = Report([LicensesReporter(lc,lcc),
-                      TagReporter(tc),
+                      TagReporter(tc,dc),
                       OrganisationReporter(oc),
                       FormatCountReporter(fc)])
         
