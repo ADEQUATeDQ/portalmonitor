@@ -285,7 +285,7 @@ ul#portalList {
     
     font-family: 'Raleway';
   
-     border-radius: 5px;
+    
     border-bottom: solid 1px black;
 }
 
@@ -295,6 +295,9 @@ ul#portalList {
 }
 .card label{
     text-align: center;
+    width: 100%;
+    float:right;
+    color:dimgrey;
 }
 
 .card_cnt {
