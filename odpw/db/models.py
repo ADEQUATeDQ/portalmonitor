@@ -113,6 +113,7 @@ class Dataset(Model):
         self.md5 = None
         self.change = None
         self.qa_stats = None
+        self.software= None
 
         for key, value in kwargs.items():
             setattr(self, key, value)

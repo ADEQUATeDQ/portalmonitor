@@ -167,7 +167,8 @@ class PostgressDBM(object):
                             Column('exception', String),
                             Column('md5', String),
                             Column('change', SmallInteger),
-                            Column('qa_stats', JSONB)
+                            Column('qa_stats', JSONB),
+                            Column('software', String),
                             )
             
             self.resources = Table('resources',self.metadata,
@@ -425,49 +426,17 @@ class PostgressDBM(object):
                                                 exception=Dataset.exception,
                                                 md5=Dataset.md5,
                                                 change=change,
+                                                software=Dataset.software
                                               )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
             #self.conn.execute(ins)
             ins.execute()
 
-    def updateDatasetFetch(self, Dataset):
-        with Timer(key="insertDatasetFetch") as t:
-            change=2
-            
-            s=select([self.datasets.c.md5]).where(
-                                                  and_(
-                                                       self.datasets.c.dataset==Dataset.dataset, 
-                                                       self.datasets.c.portal_id==Dataset.portal_id,
-                                                       self.datasets.c.snapshot!=Dataset.snapshot)
-                                                   ).order_by(self.datasets.c.snapshot.desc()).limit(1)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            result=s.execute()
-            if result:
-                for res in result:
-                    if Dataset.md5 == res['md5'] :
-                        change=0
-            else: change=1
-            
-            #data=json.dumps(nested_json(Dataset.data),default=date_handler)
-        
-            ins = self.datasets.update().values(
-                                                data=Dataset.data,
-                                                status=Dataset.status,
-                                                exception=Dataset.exception,
-                                                md5=Dataset.md5,
-                                                change=change,
-                                                fetch_time=datetime.datetime.now()
-                                               ).where(and_(self.datasets.c.dataset==Dataset.dataset, 
-                                                       self.datasets.c.portal_id==Dataset.portal_id,
-                                                       self.datasets.c.snapshot!=Dataset.snapshot
-                                                ))
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            #self.conn.execute(ins)
-            ins.execute()
+
         
     
-    def getDatasets(self,portalID=None, snapshot=None):
+    def getDatasets(self,portalID=None, snapshot=None, software=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])
             
@@ -475,6 +444,8 @@ class PostgressDBM(object):
                 s= s.where(self.datasets.c.snapshot == snapshot)
             if portalID:
                 s= s.where(self.datasets.c.portal_id == portalID)
+            if software:
+                s= s.where(self.datasets.c.software == software)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
@@ -482,43 +453,32 @@ class PostgressDBM(object):
             #return self.conn.execute(s)
 
 
-    def getDatasetsBySoftware(self, software, portalID=None, snapshot=None):
-        with Timer(key="getDatasetsBySoftware") as t:
 
-            j = join(self.datasets, self.portals, self.datasets.c.portal_id == self.portals.c.id)
-            s = select([self.datasets]).select_from(j)
-            s = s.where(self.portals.c.software == software)
 
-            if snapshot:
-                s = s.where(self.datasets.c.snapshot == snapshot)
-            if portalID:
-                s = s.where(self.datasets.c.portal_id == portalID)
-
-            self.log.debug(query=s.compile(), params=s.compile().params)
-        return s.execute()
-
-    def countDatasets(self, portalID=None, snapshot=None):
+    def countDatasets(self, portalID=None, snapshot=None, software=None):
         with Timer(key="countDatasets") as t:
-            s = select([func.count(self.datasets.c.dataset)])
+            s = select([func.count(self.datasets.c.id)])
             if snapshot:
                 s= s.where(self.datasets.c.snapshot == snapshot)
             if portalID:
                 s= s.where(self.datasets.c.portal_id == portalID)
+            if software:
+                s= s.where(self.datasets.c.software == software)
             
         self.log.debug(query=s.compile(), params=s.compile().params)
         return s.execute()
         #return  self.conn.execute(s)
             
-    def getDataset(self, datasetID=None, snapshot=None, portal=None):
+    def getDataset(self, datasetID=None, snapshot=None, portalID=None):
         with Timer(key="getDataset") as t:
             s = select([self.datasets])
             
             if datasetID:
-                s= s.where(self.datasets.c.dataset == datasetID)
+                s= s.where(self.datasets.c.id == datasetID)
             if snapshot:
                 s= s.where(self.datasets.c.snapshot == snapshot)
-            if portal:
-                s= s.where(self.datasets.c.portal_id == portal)
+            if portalID:
+                s= s.where(self.datasets.c.portal_id == portalID)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
@@ -539,9 +499,9 @@ class PostgressDBM(object):
             if Dataset.qa:
                 qa = Dataset.qa
             up = self.datasets.update().where(
-                                              and_(self.datasets.c.portal_id == Dataset.portal,
+                                              and_(self.datasets.c.portal_id == Dataset.portal_id,
                                                    self.datasets.c.snapshot == Dataset.snapshot,
-                                                   self.datasets.c.dataset == Dataset.dataset
+                                                   self.datasets.c.id == Dataset.id
                                                    )).\
                 values(
                        data=data,
