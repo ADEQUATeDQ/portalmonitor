@@ -120,13 +120,13 @@ class DCATConverter(Analyser):
     
     def analyse_Dataset(self, dataset):
         dataset.dcat=None
-        print dataset.id, dataset.data
+        #print dataset.id, dataset.data
         if dataset.data: 
-            import pprint
-            print "----"
-            pprint.pprint(dataset.data)
-            print ">DCAT"
+            #import pprint
+            #print "----"
+            #pprint.pprint(dataset.data)
+            #print ">DCAT"
             dcat_dict = dict_to_dcat(dataset.data, self.Portal)
-            pprint.pprint(dcat_dict)
+            #pprint.pprint(dcat_dict)
             dataset.dcat=dcat_dict
         

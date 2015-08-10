@@ -15,14 +15,12 @@ if __name__ == '__main__':
     id='pod_opendatasoft_com'
     sn=1532
 
-    Portal = dbm.getPortal(portalID=id)
-    iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
+    portals = dbm.getPortals(software='OpenDataSoft')
+    for p in portals:
+        iter = Dataset.iter(dbm.getDatasets(portalID=p.id, snapshot=sn))
     
-    aset = AnalyserSet()
+        aset = AnalyserSet()
     
-    aset.add(DCATConverter(Portal))
-    
-    for ds in iter:
+        aset.add(DCATConverter(p))
+        process_all(aset, iter)
         
-        aset.analyse(ds)
-    process_all(aset, iter)
