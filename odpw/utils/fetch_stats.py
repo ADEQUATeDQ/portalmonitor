@@ -69,9 +69,8 @@ def simulateFetching(dbm, Portal, sn):
     #ae.add(DatasetFetchUpdater(dbm))
     
     
-    total=0
-    for res in dbm.countDatasets(portalID=Portal.id, snapshot=sn):
-        total=res[0]
+    total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
+    
     steps=total/10
     if steps ==0:
         steps=1
@@ -86,9 +85,9 @@ def simulateFetching(dbm, Portal, sn):
     
     import pprint 
     #pprint.pprint(pmd.__dict__)
-    print "_"
+    #print "_"
     pprint.pprint(pmd1.__dict__)    
-    #dbm.updatePortalMetaData(pmd)
+    dbm.updatePortalMetaData(pmd)
     #dbm.updatePortal(Portal)
 
     log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)

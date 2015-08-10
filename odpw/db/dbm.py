@@ -183,12 +183,10 @@ class PostgressDBM(object):
                              Column('size', BigInteger),
                              Column('origin', JSONB)
                              )
-
     def initTables(self):  
         self.metadata.drop_all(self.engine)
         self.metadata.create_all(self.engine)    
-           
-           
+                 
     def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
             
@@ -203,7 +201,10 @@ class PostgressDBM(object):
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
-         
+     
+    ###
+    # PORTALS
+    ####         
     def insertPortal(self, Portal):
         with Timer(key="insertPortal") as t:
             ins = self.portals.insert().values(
@@ -229,8 +230,6 @@ class PostgressDBM(object):
             
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
-            #self.conn.execute(ins)
-    
     
     def getUnprocessedPortals(self,snapshot=None):
         with Timer(key="getUnprocessedPortals") as t:
@@ -243,9 +242,7 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
             return s.execute().fetchall()
-            #return  self.conn.execute(s).fetchall()
-        
-            
+                
     def getPortal(self, url=None, portalID=None, apiurl=None):
         with Timer(key="getPortal") as t:
             s = select([self.portals])
@@ -274,8 +271,7 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)
             
             return s.execute() 
-            #self.conn.execute(s).fetchall()
-
+        
     def getPortalsCount(self, software=None):
         s = select([func.count(self.portals.c.id)])
         if software:
@@ -285,6 +281,9 @@ class PostgressDBM(object):
             
         return s.execute()
 
+    ####
+    # Portal Meta Data
+    ####
     def getPortalMetaData(self,portalID=None, snapshot=None):
         with Timer(key="getPortalMetaData") as t:
             s = select([self.pmd])
@@ -362,7 +361,6 @@ class PostgressDBM(object):
                                                )
             self.log.debug(query=ins.compile(), params=ins.compile().params)
             ins.execute()
-            #self.conn.execute(ins)
     
     def updatePortalMetaData(self, PortalMetaData):
         with Timer(key="updatePortalMetaData") as t:
@@ -393,7 +391,10 @@ class PostgressDBM(object):
                                                )
             self.log.debug("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
             ins.execute()
-            #self.conn.execute(ins) 
+
+    ### 
+    # Datasets
+    ###
         
     def insertDatasetFetch(self, Dataset):
         with Timer(key="insertDatasetFetch") as t:
@@ -453,9 +454,6 @@ class PostgressDBM(object):
             #self.conn.execute(ins)
             ins.execute()
 
-
-        
-    
     def getDatasets(self,portalID=None, snapshot=None, software=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])
@@ -470,11 +468,7 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
             return s.execute()
-            #return self.conn.execute(s)
-
-
-
-
+  
     def countDatasets(self, portalID=None, snapshot=None, software=None):
         with Timer(key="countDatasets") as t:
             s = select([func.count(self.datasets.c.id)])
@@ -486,7 +480,7 @@ class PostgressDBM(object):
                 s= s.where(self.datasets.c.software == software)
             
         self.log.debug(query=s.compile(), params=s.compile().params)
-        return s.execute()
+        return s.execute().scalar()
         #return  self.conn.execute(s)
             
     def getDataset(self, datasetID=None, snapshot=None, portalID=None):
@@ -534,10 +528,11 @@ class PostgressDBM(object):
                        qa_time=Dataset.qa_time)
             self.log.debug(query=up.compile(), params=up.compile().params)
             up.execute()
-                
-            #self.conn.execute(up)
-
-
+  
+    ###
+    #Resources
+    ###
+  
     def insertResource(self, Resource):
         with Timer(key="insertResource") as t:
             origin=None
@@ -579,8 +574,8 @@ class PostgressDBM(object):
             return s.execute()
         #return  self.conn.execute(s)
     
-    def getResourcesCount(self, snapshot=None, portalID=None, status =None):
-        with Timer(key="getResources") as t:
+    def countResources(self, snapshot=None, portalID=None, status =None):
+        with Timer(key="countResources") as t:
             s = select([func.count(self.resources.c.url)])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)

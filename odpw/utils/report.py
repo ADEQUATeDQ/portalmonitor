@@ -2,13 +2,14 @@ from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.fetching import CKANLicenseConformance
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser,\
     PMDActivityAnalyser
-from odpw.analysers.socrata_analysers import SocrataKeyAnalyser
+
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter, TagReporter, LicensesReporter,\
     OrganisationReporter, FormatCountReporter, DatasetSumReporter, ResourceSumReporter
 from odpw.analysers.core import DBAnalyser
-from odpw.analysers.resource_analysers import ResourceCount
+from odpw.analysers.count_analysers import DCATTagsCount
+
 
 __author__ = 'jumbrich'
 
@@ -117,8 +118,10 @@ def cli(args,dbm):
     if args.sysactivity:
         it =PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn, portalID=args.portal_id))
         a = process_all(PMDActivityAnalyser(),it)
+        totalDS = dbm.countDatasets(snapshot=sn)
+        totalRes= dbm.countResources(snapshot=sn)
         
-        report = Report([SystemActivityReporter(a,snapshot=sn,portalID=args.portal_id)])
+        report = Report([SystemActivityReporter( a, snapshot=sn, portalID=args.portal_id, dbds=totalDS, dbres= totalRes)])
         
         output(report,args)
     
@@ -132,11 +135,12 @@ def cli(args,dbm):
         r=SnapshotsPerPortalReporter(a,args.portal_id)
 
         aset = AnalyserSet()
-        lc=aset.add(CKANLicenseCount())# how many licenses
-        lcc=aset.add(CKANLicenseConformance())
+        
+        #lc=aset.add(CKANLicenseCount())# how many licenses
+        #lcc=aset.add(CKANLicenseConformance())
 
-        tc= aset.add(CKANTagsCount())   # how many tags
-        oc= aset.add(CKANOrganizationsCount())# how many organisations
+        tc= aset.add(DCATTagsCount())   # how many tags
+        oc= aset.add(DCATOrganizationsCount())# how many organisations
         fc= aset.add(CKANFormatCount())# how many formats
 
         resC= aset.add(ResourceCount())   # how many resources
