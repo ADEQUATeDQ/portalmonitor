@@ -178,8 +178,7 @@ def cli(args,dbm):
         log.info("Queuing", pid=p.id, apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
-        for portalRes in dbm.getPortals():
-            p = Portal.fromResult(dict(portalRes))
+        for p in Portal.iter(dbm.getPortals()):
             pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
             if not pmd:
                 pmd = PortalMetaData(portalID=p.id, snapshot=sn)
