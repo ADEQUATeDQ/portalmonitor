@@ -106,7 +106,7 @@ def getPackageList(apiurl):
             else:
                 break
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True)
+        ErrorHandler.handleError(log, "getPackageListRemoteCKAN", exception=e, exc_info=True, apiurl=apiurl)
         ex = e
     
     ex1=None
@@ -119,7 +119,7 @@ def getPackageList(apiurl):
         else:
             status = resp.status_code
     except Exception as e:
-        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True)
+        ErrorHandler.handleError(log, "getPackageListHTTPGet", exception=e, exc_info=True,apiurl=apiurl)
         ex1=e
     
     if len(package_list) == 0:
