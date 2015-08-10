@@ -107,7 +107,10 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     ]
     _add_date_triples_from_dict(g, data, dataset_ref, items)
 
-    # TODO references??
+    # references
+    references = data.get('references')
+    if references and isinstance(references, basestring) and bool(urlparse.urlparse(references).netloc):
+        g.add((dataset_ref, RDFS.seeAlso, URIRef(references)))
 
     # store licenses for distributions
     license = data.get('license')
@@ -330,18 +333,20 @@ class CKANConverter:
         license_id = self._get_dataset_value(dataset_dict, 'license_id')
         license_url = self._get_dataset_value(dataset_dict, 'license_url')
         license_title = self._get_dataset_value(dataset_dict, 'license_title')
-        if license_url and bool(urlparse.urlparse(license_url).netloc):
-            license = URIRef(license_url)
-        else:
-            license = BNode()
-            # TODO maybe a non-valid url?
-            #if license_url:
-            #    g.add((license, RDFS.label, license_url))
+        license = None
+        if license_id or license_url or license_title:
+            if license_url and bool(urlparse.urlparse(license_url).netloc):
+                license = URIRef(license_url)
+            else:
+                license = BNode()
+                # maybe a non-valid url
+                if license_url:
+                    g.add((license, RDFS.comment, Literal(license_url)))
 
-        if license_title:
-            g.add((license, RDFS.label, Literal(license_title)))
-        if license_id:
-            g.add((license, DCT.identifier, Literal(license_id)))
+            if license_title:
+                g.add((license, RDFS.label, Literal(license_title)))
+            if license_id:
+                g.add((license, DCT.identifier, Literal(license_id)))
 
         # Resources
         for resource_dict in dataset_dict.get('resources', []):
@@ -351,7 +356,8 @@ class CKANConverter:
             g.add((distribution, RDF.type, DCAT.Distribution))
 
             # License
-            g.add((distribution, DCT.license, license))
+            if license:
+                g.add((distribution, DCT.license, license))
 
 
             #  Simple values
