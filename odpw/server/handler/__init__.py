@@ -25,7 +25,10 @@ import os
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 from odpw.analysers.fetching import  CKANLicenseConformance
     
-from odpw.analysers.resource_analysers import ResourceCount
+
+from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
+    DCATFormatCount, DatasetCount, ResourceCount
+from odpw.analysers.core import DCATConverter
 
 
 class BaseHandler(RequestHandler):
@@ -93,14 +96,17 @@ class PortalHandler(BaseHandler):
         
         if portalID:
             if len(portalID.split(",")) ==1:
+                Portal = self.db.getPortal(portalID=portalID)
                 if view == 'info':
                     aset = AnalyserSet()
-                    lc=aset.add(CKANLicenseCount())# how many licenses
-                    lcc=aset.add(CKANLicenseConformance())
+                    #lc=aset.add(CKANLicenseCount())# how many licenses
+                    #lcc=aset.add(CKANLicenseConformance())
         
-                    tc= aset.add(CKANTagsCount())   # how many tags
-                    oc= aset.add(CKANOrganizationsCount())# how many organisations
-                    fc= aset.add(CKANFormatCount())# how many formats
+                    aset.add(DCATConverter(Portal))
+        
+                    tc= aset.add(DCATTagsCount())   # how many tags
+                    oc= aset.add(DCATOrganizationsCount())# how many organisations
+                    fc= aset.add(DCATFormatCount())# how many formats
     
                     resC= aset.add(ResourceCount())   # how many resources
                     dsC=dc= aset.add(DatasetCount())    # how many datasets
@@ -115,7 +121,7 @@ class PortalHandler(BaseHandler):
                     rep = Report([rep,
                     DatasetSumReporter(resC),
                     ResourceSumReporter(dsC),
-                    LicensesReporter(lc,lcc,topK=3),
+                    #LicensesReporter(lc,lcc,topK=3),
                     TagReporter(tc,dc, topK=3),
                     OrganisationReporter(oc, topK=3),
                     FormatCountReporter(fc, topK=3)])
@@ -164,13 +170,15 @@ class SystemActivityHandler(BaseHandler):
             if not snapshot:
                 sn = util.getCurrentSnapshot()
             else:
-                sn=snapshot
+                sn = snapshot
         
             it =PortalMetaData.iter(self.db.getPortalMetaDatas(snapshot=sn, portalID=None))
             a = process_all(PMDActivityAnalyser(),it)
+            
+            totalDS = self.db.countDatasets(snapshot=sn)
+            totalRes= self.db.countResources(snapshot=sn)
         
-        
-            report = Report([SystemActivityReporter(a,snapshot=sn)])
+            report = Report([SystemActivityReporter(a,snapshot=sn,dbds=totalDS, dbres= totalRes)])
         
             args={'index':True,
                'data':report.uireport(),

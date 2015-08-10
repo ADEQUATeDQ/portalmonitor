@@ -119,6 +119,7 @@ class DCATConverter(Analyser):
         self.Portal=Portal
     
     def analyse_Dataset(self, dataset):
+        dataset.dcat=None
         if dataset.data: 
             import pprint
             #print "----"
@@ -127,4 +128,4 @@ class DCATConverter(Analyser):
             dcat_dict = dict_to_dcat(dataset.data, self.Portal)
             #pprint.pprint(dcat_dict)
             dataset.dcat=dcat_dict
-             
+        

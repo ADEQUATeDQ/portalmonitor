@@ -23,7 +23,7 @@ log = get_logger()
 def headStats(dbm, sn, portalID):
     total=0
     print portalID,sn
-    total= dbm.getResourcesCount(snapshot=sn, portalID=portalID)
+    total= dbm.countResources(snapshot=sn, portalID=portalID)
         
     log.info("Computing head lookup stats",sn=sn, count=total)
     steps= total/10 
@@ -32,14 +32,14 @@ def headStats(dbm, sn, portalID):
     
     iter = progressIterator(Resource.iter(dbm.getResources(snapshot=sn, portalID=portalID)), total, steps)
         
-    pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
-    
     aset = AnalyserSet()
+    
     rsc= aset.add(ResourceStatusCode())
     rsize= aset.add(ResourceSize())
     
     process_all(aset, iter)
     
+    pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
     aset.update(pmd)
     
     print pmd.res_stats
