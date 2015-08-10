@@ -8,8 +8,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 #import matplotlib.pyplot as plt
-from odpw.analysers.fetching import CKANLicenseCount, TagsCount,\
-    CKANLicenseConformance
+from odpw.analysers.fetching import CKANLicenseConformance
 import odpw.utils.util as util
 import os
 from odpw.analysers.core import DBAnalyser, HistogramAnalyser

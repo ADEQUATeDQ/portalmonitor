@@ -4,8 +4,9 @@ import uuid
 
 from dateutil.parser import parse as parse_date
 
-from rdflib import URIRef, BNode, Literal
 import rdflib
+from rdflib import URIRef, BNode, Literal
+
 from rdflib.namespace import Namespace, RDF, XSD, SKOS
 
 from geomet import wkt, InvalidGeoJSONException
@@ -43,11 +44,13 @@ namespaces = {
 
 
 def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
-    if portal.software == 'CKAN':
-        if not graph:
+    if not graph:
             graph = rdflib.Graph()
+            
+    if portal.software == 'CKAN':
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
+        
         return json.loads(graph.serialize(format=format))
     elif portal.software == 'Socrata':
         raise NotImplementedError('Socrata Converter not implemented')
@@ -86,7 +89,10 @@ class CKANConverter:
 
         # Tags
         for tag in dataset_dict.get('tags', []):
-            g.add((dataset_ref, DCAT.keyword, Literal(tag['name'])))
+            if isinstance(tag, dict):
+                g.add((dataset_ref, DCAT.keyword, Literal(tag['name'])))
+            else:
+                g.add((dataset_ref, DCAT.keyword, Literal(tag)))
 
         # Dates
         items = [
@@ -253,8 +259,8 @@ class CKANConverter:
 
             # Dates
             items = [
-                ('issued', DCT.issued, None),
-                ('modified', DCT.modified, None),
+                ('issued', DCT.issued, ['created']),
+                ('modified', DCT.modified, ['last_modified']),
             ]
 
             self._add_date_triples_from_dict(resource_dict, distribution, items)

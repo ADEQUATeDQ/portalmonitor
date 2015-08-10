@@ -23,6 +23,6 @@ if __name__ == '__main__':
     aset.add(DCATConverter(Portal))
     
     for ds in iter:
-        print ds
+        
         aset.analyse(ds)
     #process_all(aset, iter)

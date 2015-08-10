@@ -1,6 +1,5 @@
 from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.fetching import CKANFormatCount, CKANOrganizationsCount, CKANLicenseCount, CKANTagsCount,\
-    CKANLicenseConformance, DatasetCount
+from odpw.analysers.fetching import CKANLicenseConformance
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser,\
     PMDActivityAnalyser
 from odpw.analysers.socrata_analysers import SocrataKeyAnalyser

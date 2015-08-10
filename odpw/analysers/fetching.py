@@ -14,6 +14,7 @@ from odpw.utils.timer import Timer
 import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
+from odpw.utils.dataset_converter import DCAT, DCT
 
 
 class MD5DatasetAnalyser(Analyser):
@@ -26,16 +27,6 @@ class MD5DatasetAnalyser(Analyser):
                 data_md5 = hashlib.md5(d).hexdigest()
                 dataset.md5=data_md5
                 
-        
-  
-
-    
-
-    
-
-
-
-
 class CKANDatasetAge(Analyser):
     
     def __init__(self):
@@ -87,7 +78,87 @@ class CKANDatasetAge(Analyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['dsage'] = self.getResult()
+
+               
+class DCATDatasetAge(Analyser):
     
+    def __init__(self):
+        self.ages = {'created':[],'modified':[]}
+        
+    def analyse_Dataset(self, dataset):
+        if dataset.dcat:
+            for dcat_el in dataset.dcat:
+                if str(DCAT.Dataset) in dcat_el['@type']:
+                    for f in dcat_el.get(str(DCT.issued),[]):
+                        try:
+                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                            self.ages['created'].append(created)
+                        except Exception as e:
+                            pass
+                    for f in dcat_el.get(str(DCT.modified),[]):
+                        try:
+                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                            self.ages['modified'].append(created)
+                        except Exception as e:
+                            pass
+        
+        
+
+    def done(self):
+        dsc = np.array(self.ages['created'],dtype='datetime64[us]')
+        dsm = np.array(self.ages['modified'],dtype='datetime64[us]')
+        if dsc.size != 0:
+            delta = np.array(dsc - dsc.min())
+
+        if dsm.size != 0:
+            deltam = np.array(dsm - dsm.min())
+
+        now = datetime.datetime.now().isoformat()
+        self.age={
+            'created': {
+                'old': dsc.min().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
+                'new': dsc.max().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
+                'avg': (dsc.min()+delta.mean()).astype(datetime.datetime).isoformat() if dsc.size !=0 else now
+            },
+            'modified': {
+                'old': dsm.min().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
+                'new': dsm.max().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
+                'avg': (dsm.min()+deltam.mean()).astype(datetime.datetime).isoformat() if dsm.size !=0 else now
+            }
+        }
+    def getResult(self):
+        return self.age
+    
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['dsage'] = self.getResult()
+
+
+class DCATResourceInDSAge(DCATDatasetAge):
+
+    def analyse_Dataset(self, dataset):
+        if dataset.dcat:
+            for dcat_el in dataset.dcat:
+                if str(DCAT.Distribution) in dcat_el['@type']:
+                    for f in dcat_el.get(str(DCT.issued),[]):
+                        try:
+                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                            self.ages['created'].append(created)
+                        except Exception as e:
+                            pass
+                    for f in dcat_el.get(str(DCT.modified),[]):
+                        try:
+                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                            self.ages['modified'].append(created)
+                        except Exception as e:
+                            pass
+                    
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['resage'] = self.getResult()
+   
 class CKANResourceInDSAge(CKANDatasetAge):
 
     def analyse_Dataset(self, dataset):
@@ -357,30 +428,6 @@ class CKANKeyAnalyser(Analyser):
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
 
-class CKANFormatCount(ElementCountAnalyser):
-    def analyse_Dataset(self, dataset):
-        if dataset.data and 'resources' in dataset.data:
-            for resource in dataset.data['resources']:
-                format = resource['format'] if 'format' in resource else "mis" 
-                self.add(format)
-
-    def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'formats' in pmd.general_stats:
-            formats = pmd.general_stats['formats']
-            if isinstance(formats, dict):
-                for f in formats:
-                    self.add(f, formats[f])
-
-    def analyse_CKANFormatCount(self, format_analyser):
-        formats = format_analyser.getResult()
-        if isinstance(formats, dict):
-            for f in formats:
-                self.add(f, formats[f])
-
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        pmd.general_stats['formats'] = self.getResult()
 
 class CKANLicenseConformance(Analyser):
     def __init__(self):
@@ -421,105 +468,3 @@ class CKANLicenseConformance(Analyser):
 
     def getResult(self):
         return self.conformance
-
-class CKANLicenseCount(ElementCountAnalyser):
-    def __init__(self):
-        super(CKANLicenseCount, self).__init__()
-        self.license_mapping = LicensesOpennessMapping()
-        
-    def analyse_Dataset(self, dataset):
-        if dataset.data:
-            id = dataset.data.get('license_id')
-            url = dataset.data.get('license_url')
-            title = dataset.data.get('license_title')
-
-            id, od_conformance = self.license_mapping.map_license(title=title, lid=id, url=url)
-            # add id to ElementCountAnalyser
-            self.add(id)
-
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        if 'licenses' not in pmd.general_stats or isinstance(pmd.general_stats['licenses'], list):
-            pmd.general_stats['licenses']={}
-        
-        
-            
-        pmd.general_stats['licenses']['count'] = self.getResult()
-
-    def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'licenses' in pmd.general_stats and 'count' in pmd.general_stats['licenses']:
-            licenses = pmd.general_stats['licenses']['count']
-            if isinstance(licenses, dict):
-                for l in licenses:
-                    self.add(l, licenses[l])
-                    
-    def analyse_CKANLicenseCount(self, licenses_analyser):
-        licenses = licenses_analyser.getResult()
-        if isinstance(licenses, dict):
-            for l in licenses:
-                self.add(l, licenses[l])
-                
-    def getResult(self):
-        return self.getDist()
-
-class CKANOrganizationsCount(ElementCountAnalyser):
-    def analyse_Dataset(self, dataset):
-        if dataset.data and 'organization' in dataset.data:
-            org = dataset.data['organization']
-            if isinstance(org, dict):
-                if 'name' in org:
-                    self.add(org['name'])
-
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        pmd.general_stats['organizations'] = self.getResult()
-
-    def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'organizations' in pmd.general_stats:
-            orgs = pmd.general_stats['organizations']
-            if isinstance(orgs, dict):
-                for o in orgs:
-                    self.add(o, orgs[o])
-
-    def analyse_CKANOrganizationsCount(self, org_analyser):
-        orgs = org_analyser.getResult()
-        if isinstance(orgs, dict):
-            for o in orgs:
-                self.add(o, orgs[o])
-
-class TagsCount(ElementCountAnalyser):
-    def analyse_PortalMetaData(self, pmd):
-        if pmd.general_stats and 'tags' in pmd.general_stats:
-            tags = pmd.general_stats['tags']
-            if isinstance(tags, dict):
-                for t in tags:
-                    self.add(t, tags[t])
-
-    def analyse_TagsCount(self, tag_analyser):
-        tags = tag_analyser.getResult()
-        if isinstance(tags, dict):
-            for t in tags:
-                self.add(t, tags[t])
-
-    def update_PortalMetaData(self, pmd):
-        if not pmd.general_stats:
-            pmd.general_stats = {}
-        pmd.general_stats['tags'] = self.getResult()
-
-class CKANTagsCount(TagsCount):
-    def analyse_Dataset(self, dataset):
-        if dataset.data and 'tags' in dataset.data:
-            tags = dataset.data['tags']
-            if isinstance(tags, list):
-                for t in tags:
-                    if isinstance(t, dict):
-                        if 'name' in t:
-                            self.add(t['name'])
-                    elif isinstance(t, basestring):
-                        self.add(t)
-
-    def analyse_CKANTagsCount(self, tag_analyser):
-        super(CKANTagsCount, self).analyse_TagsCount(tag_analyser)
-
