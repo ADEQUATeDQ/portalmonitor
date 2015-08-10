@@ -8,7 +8,8 @@ import requests
 from odpw.utils import util
 from odpw.db.models import Dataset
 from odpw.utils.timer import Timer
-from odpw.utils.util import ErrorHandler as eh, progressIndicator, TimeoutError
+from odpw.utils.util import ErrorHandler as eh, progressIndicator, TimeoutError,\
+    ErrorHandler
 
 import structlog
 log = structlog.get_logger()
@@ -50,7 +51,8 @@ class CKAN(PortalProcessor):
         p_count=0
         p_steps=1
         total=0
-        processed=set([])
+        processed_ids=set([])
+        processed_names=set([])
         try:
             response = api.action.package_search(rows=0)
             total = response["count"]
@@ -68,17 +70,19 @@ class CKAN(PortalProcessor):
                     start+=rows
                     for datasetJSON in datasets:
                         datasetID = datasetJSON['id']
-                        if datasetID not in processed:
+                        if datasetID not in processed_ids:
                             data = datasetJSON
                             util.extras_to_dicts(data)
                             
                             d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
-                            processed.add(d.id)
-
+                            processed_ids.add(d.id)
+                            processed_names.add(datasetJSON['name'])
+                            
+                            
                             p_count+=1
                             if p_count%p_steps ==0:
                                 progressIndicator(p_count, total, label=Portal.id)
-                                log.info("ProgressDSFetchBatch", pid=Portal.id, processed=len(processed))
+                                log.info("ProgressDSFetchBatch", pid=Portal.id, processed=len(processed_ids))
                                 
                             now = time.time()
                             if now-starttime>timeout:
@@ -94,7 +98,7 @@ class CKAN(PortalProcessor):
         except TimeoutError as e:
             raise e
         except Exception as e:
-            log.warn("CKANDSFetchBatchError", pid=Portal.id, exception=e, error=type(e))
+            ErrorHandler.handleError("CKANDSFetchBatchError", pid=Portal.id, exception=e, error=type(e))
 
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
@@ -108,7 +112,7 @@ class CKAN(PortalProcessor):
             p_count=0
             for entity in package_list:
                 #WAIT between two consecutive GET requests
-                if entity not in processed:
+                if entity not in processed_ids and entity not in processed_names:
 
                     time.sleep(random.uniform(0.5, 1))
                     log.debug("GETMetaData", pid=Portal.id, did=entity)
@@ -127,16 +131,19 @@ class CKAN(PortalProcessor):
                                 data = resp
                                 util.extras_to_dict(data)
                                 props['data']=data
-                                if data and 'id' in data:
-                                    entity = data['id']
+                                
                         except Exception as e:
                             eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
+                        processed_names.add(entity)
+                        if props['data'] and 'id' in props['data']:
+                            entity = props['data']['id']
                         d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
-                        processed.add(d.id)
+                        processed_ids.add(d.id)
+                        
 
                         p_count+=1
                         if p_count%p_steps ==0:
