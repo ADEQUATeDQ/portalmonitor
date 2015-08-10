@@ -1,6 +1,7 @@
 import json
 import datetime
 import uuid
+import StringIO
 
 from dateutil.parser import parse as parse_date
 
@@ -44,16 +45,20 @@ namespaces = {
 
 
 def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
+
+    # init a new graph
     if not graph:
-            graph = rdflib.Graph()
-            
+        graph = rdflib.Graph()
+
     if portal.software == 'CKAN':
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
         
         return json.loads(graph.serialize(format=format))
     elif portal.software == 'Socrata':
-        raise NotImplementedError('Socrata Converter not implemented')
+        if 'dcat' in dataset_dict and dataset_dict['dcat']:
+            graph.parse(data=dataset_dict['dcat'], format='xml')
+            return json.loads(graph.serialize(format=format))
     elif portal.software == 'OpenDataSoft':
         raise NotImplementedError('OpenDataSoft Converter not implemented')
 
