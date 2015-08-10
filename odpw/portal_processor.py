@@ -127,6 +127,8 @@ class CKAN(PortalProcessor):
                                 data = resp
                                 util.extras_to_dict(data)
                                 props['data']=data
+                                if data and 'id' in data:
+                                    entity = data['id']
                         except Exception as e:
                             eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)

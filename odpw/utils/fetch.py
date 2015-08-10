@@ -1,3 +1,6 @@
+from odpw.analysers.count_analysers import DatasetCount
+from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.dbm_handlers import DatasetInserter
 __author__ = 'jumbrich'
 
 
@@ -11,13 +14,8 @@ import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
 
-from odpw.analysers import AnalyseEngine, AnalyserSet, process_all
-from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser
-from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
-from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.quality.analysers.openness import OpennessAnalyser
-from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+from odpw.analysers import  AnalyserSet, process_all
+from odpw.analysers.fetching import MD5DatasetAnalyser
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
@@ -52,21 +50,23 @@ def fetching(obj):
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())
 
+        #ae.add(DCATConverter(Portal))
+        #ae.add(DCATDistributionCount(withDistinct=True))
+        #ae.add(DCATDistributionInserter(dbm))
         if Portal.software == 'CKAN':
-            ae.add(CKANResourceInDS(withDistinct=True))
-            ae.add(CKANResourceInserter(dbm))
+            
             # ae.add(CKANResourceInDSAge())
             #ae.add(CKANDatasetAge())
-            ae.add(CKANKeyAnalyser())
-            ae.add(CKANFormatCount())
-            ae.add(CKANTagsCount())
-            ae.add(CKANLicenseCount())
-            ae.add(CKANOrganizationsCount())
+            #ae.add(CKANKeyAnalyser())
+            #ae.add(CKANFormatCount())
+            #ae.add(CKANTagsCount())
+            #ae.add(CKANLicenseCount())
+            #ae.add(CKANOrganizationsCount())
 
-            ae.add(CompletenessAnalyser())
-            ae.add(ContactabilityAnalyser())
-            ae.add(OpennessAnalyser())
-            ae.add(OPQuastAnalyser())
+            #ae.add(CompletenessAnalyser())
+            #ae.add(ContactabilityAnalyser())
+            #ae.add(OpennessAnalyser())
+            #ae.add(OPQuastAnalyser())
 
             processor = CKAN()
         elif Portal.software == 'Socrata':
@@ -76,7 +76,7 @@ def fetching(obj):
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
 
-        ae.add(DatasetFetchInserter(dbm))
+        ae.add(DatasetInserter(dbm))
         
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)
@@ -88,7 +88,6 @@ def fetching(obj):
 
         pmd.fetchend()
         #processor.fetching(Portal, sn)
-
 
         ae.update(pmd)
         ae.update(Portal)
@@ -179,8 +178,7 @@ def cli(args,dbm):
         log.info("Queuing", pid=p.id, apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
-        for portalRes in dbm.getPortals():
-            p = Portal.fromResult(dict(portalRes))
+        for p in Portal.iter(dbm.getPortals()):
             pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
             if not pmd:
                 pmd = PortalMetaData(portalID=p.id, snapshot=sn)
