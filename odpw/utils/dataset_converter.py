@@ -48,7 +48,7 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
             graph = rdflib.Graph()
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
-        return graph.serialize(format=format)
+        return json.loads(graph.serialize(format=format))
     elif portal.software == 'Socrata':
         raise NotImplementedError('Socrata Converter not implemented')
     elif portal.software == 'OpenDataSoft':
