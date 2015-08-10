@@ -112,6 +112,7 @@ class CKAN(PortalProcessor):
             p_count=0
             for entity in package_list:
                 #WAIT between two consecutive GET requests
+                
                 if entity not in processed_ids and entity not in processed_names:
 
                     time.sleep(random.uniform(0.5, 1))
@@ -131,31 +132,31 @@ class CKAN(PortalProcessor):
                                 data = resp
                                 util.extras_to_dict(data)
                                 props['data']=data
-                                
                         except Exception as e:
                             eh.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
+
                         processed_names.add(entity)
+                        #we always use the ckan-id for the dataset if possible
                         if props['data'] and 'id' in props['data']:
                             entity = props['data']['id']
                         d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
-                        processed_ids.add(d.id)
                         
-
                         p_count+=1
                         if p_count%p_steps ==0:
                             progressIndicator(p_count, tt, label=Portal.id+"_single")
                             log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed_ids))
-
-
                         now = time.time()
                         if now-starttime>timeout:
                             raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
-
-                        yield d
+                        
+                        if d.id not in processed_ids:
+                            processed_ids.add(d.id)
+                            yield d
+                            
             progressIndicator(p_count, tt, label=Portal.id+"_single")
         except Exception as e:
             if len(processed_ids)==0:
