@@ -113,7 +113,7 @@ class CKAN(PortalProcessor):
             for entity in package_list:
                 #WAIT between two consecutive GET requests
                 
-                if entity not in processed_ids and entity not in processed_names:
+                if entity not in processed_ids or entity not in processed_names:
 
                     time.sleep(random.uniform(0.5, 1))
                     log.debug("GETMetaData", pid=Portal.id, did=entity)
