@@ -57,8 +57,108 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
             graph.parse(data=dataset_dict['dcat'], format='xml')
             return json.loads(graph.serialize(format=format))
     elif portal.software == 'OpenDataSoft':
-        raise NotImplementedError('OpenDataSoft Converter not implemented')
+        graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
+        return json.loads(graph.serialize(format=format))
 
+
+def graph_from_opendatasoft(g, dataset_dict, portal_url):
+    # available: title, description, language, theme, keyword, license, publisher, references
+    # additional: created, issued, creator, contributor, accrual periodicity, spatial, temporal, granularity, data quality
+
+    identifier = dataset_dict['datasetid']
+    uri = '{0}/explore/dataset/{1}'.format(portal_url.rstrip('/'), identifier)
+
+    # dataset subject
+    dataset_ref = URIRef(uri)
+    for prefix, namespace in namespaces.iteritems():
+        g.bind(prefix, namespace)
+
+    g.add((dataset_ref, RDF.type, DCAT.Dataset))
+
+    # identifier
+    g.add((dataset_ref, DCT.identifier, Literal(identifier)))
+
+    data = dataset_dict['metas']
+    # Basic fields
+    items = [
+        ('title', DCT.title, None),
+        ('description', DCT.description, None),
+    ]
+    _add_triples_from_dict(g, data, dataset_ref, items)
+
+    # Tags
+    for tag in data.get('keyword', []):
+        g.add((dataset_ref, DCAT.keyword, Literal(tag)))
+
+    #  Lists
+    items = [
+        ('language', DCT.language, None),
+        ('theme', DCAT.theme, None),
+    ]
+    _add_list_triples_from_dict(g, data, dataset_ref, items)
+
+    # publisher
+    publisher_details = BNode()
+    g.add((publisher_details, RDF.type, FOAF.Organization))
+    g.add((dataset_ref, DCT.publisher, publisher_details))
+
+    publisher_name = data.get('publisher')
+    if publisher_name:
+        g.add((publisher_details, FOAF.name, Literal(publisher_name)))
+        # TODO any additional publisher information available? look for fields
+
+    # Dates
+    items = [
+        #('metadata_processed', DCT.issued, ['metadata_created']),
+        ('modified', DCT.modified, ['metadata_processed, metadata_modified']),
+    ]
+    _add_date_triples_from_dict(g, data, dataset_ref, items)
+
+    # TODO references??
+
+    # licenses store for distributions
+    license = data.get('license')
+
+    # distributions
+    if data.get('has_records'):
+        for format, mimetype in [('csv', 'text/comma-separated-values'), ('json', 'application/json')]:
+            distribution = BNode()
+
+            g.add((dataset_ref, DCAT.distribution, distribution))
+            g.add((distribution, RDF.type, DCAT.Distribution))
+            if license:
+                g.add((distribution, DCT.license, Literal(license)))
+
+            # Format
+            g.add((distribution, DCT['format'], Literal(format)))
+            g.add((distribution, DCAT.mediaType, Literal(mimetype)))
+
+            # URL
+            url = portal_url.rstrip('/') + '/api/records/1.0/download?dataset=' + identifier + '&format=' + format
+            g.add((distribution, DCAT.accessURL, Literal(url)))
+
+            # Dates
+            items = [
+                #('issued', DCT.issued, None),
+                ('data_processed', DCT.modified, None),
+            ]
+            _add_date_triples_from_dict(g, data, distribution, items)
+
+    # attachments
+    for attachment in data.get('attachments', []):
+        g.add((dataset_ref, DCAT.distribution, distribution))
+        g.add((distribution, RDF.type, DCAT.Distribution))
+        if license:
+            g.add((distribution, DCT.license, license))
+
+        #  Simple values
+        items = [
+            ('title', DCT.title, None),
+            ('mimetype', DCT.mediaType, None),
+            ('format', DCT['format'], None),
+            ('url', DCT.accessURL, None),
+        ]
+        _add_triples_from_dict(g, attachment, distribution, items)
 
 
 class CKANConverter:
@@ -87,18 +187,21 @@ class CKANConverter:
             ('frequency', DCT.accrualPeriodicity, None),
 
         ]
-        self._add_triples_from_dict(dataset_dict, dataset_ref, items)
+        _add_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 
         # Tags
         for tag in dataset_dict.get('tags', []):
-            g.add((dataset_ref, DCAT.keyword, Literal(tag['name'])))
+            if isinstance(tag, dict):
+                g.add((dataset_ref, DCAT.keyword, Literal(tag['name'])))
+            elif isinstance(tag, basestring):
+                g.add((dataset_ref, DCAT.keyword, Literal(tag)))
 
         # Dates
         items = [
             ('issued', DCT.issued, ['metadata_created']),
             ('modified', DCT.modified, ['metadata_modified']),
         ]
-        self._add_date_triples_from_dict(dataset_dict, dataset_ref, items)
+        _add_date_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 
         #  Lists
         items = [
@@ -106,7 +209,7 @@ class CKANConverter:
             ('theme', DCAT.theme, None),
             ('conforms_to', DCAT.conformsTo, None),
         ]
-        self._add_list_triples_from_dict(dataset_dict, dataset_ref, items)
+        _add_list_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 
         # Contact details
         if any([
@@ -134,7 +237,7 @@ class CKANConverter:
                                                    'author_email']),
             ]
 
-            self._add_triples_from_dict(dataset_dict, contact_details, items)
+            _add_triples_from_dict(self.g, dataset_dict, contact_details, items)
 
         # Publisher
         if any([
@@ -168,7 +271,7 @@ class CKANConverter:
                 ('publisher_type', DCT.type, None),
             ]
 
-            self._add_triples_from_dict(dataset_dict, publisher_details, items)
+            _add_triples_from_dict(self.g, dataset_dict, publisher_details, items)
 
         # Temporal
         start = self._get_dataset_value(dataset_dict, 'temporal_start')
@@ -178,9 +281,9 @@ class CKANConverter:
 
             g.add((temporal_extent, RDF.type, DCT.PeriodOfTime))
             if start:
-                self._add_date_triple(temporal_extent, SCHEMA.startDate, start)
+                _add_date_triple(self.g, temporal_extent, SCHEMA.startDate, start)
             if end:
-                self._add_date_triple(temporal_extent, SCHEMA.endDate, end)
+                _add_date_triple(self.g, temporal_extent, SCHEMA.endDate, end)
             g.add((dataset_ref, DCT.temporal, temporal_extent))
 
         # Spatial
@@ -233,7 +336,7 @@ class CKANConverter:
                 ('license', DCT.license, None),
             ]
 
-            self._add_triples_from_dict(resource_dict, distribution, items)
+            _add_triples_from_dict(self.g, resource_dict, distribution, items)
 
             # Format
             if '/' in resource_dict.get('format', ''):
@@ -262,7 +365,7 @@ class CKANConverter:
                 ('modified', DCT.modified, None),
             ]
 
-            self._add_date_triples_from_dict(resource_dict, distribution, items)
+            _add_date_triples_from_dict(self.g, resource_dict, distribution, items)
 
             # Numbers
             if resource_dict.get('size'):
@@ -280,129 +383,7 @@ class CKANConverter:
 
         Check `_get_dict_value` for details
         '''
-        return self._get_dict_value(dataset_dict, key, default)
-
-    def _add_triples_from_dict(self, _dict, subject, items,
-                               list_value=False,
-                               date_value=False):
-        for item in items:
-            key, predicate, fallbacks = item
-            self._add_triple_from_dict(_dict, subject, predicate, key,
-                                       fallbacks=fallbacks,
-                                       list_value=list_value,
-                                       date_value=date_value)
-
-    def _add_date_triples_from_dict(self, _dict, subject, items):
-        self._add_triples_from_dict(_dict, subject, items,
-                                    date_value=True)
-
-    def _add_list_triples_from_dict(self, _dict, subject, items):
-        self._add_triples_from_dict(_dict, subject, items,
-                                    list_value=True)
-
-    def _add_triple_from_dict(self, _dict, subject, predicate, key,
-                              fallbacks=None,
-                              list_value=False,
-                              date_value=False):
-        '''
-        Adds a new triple to the graph with the provided parameters
-
-        The subject and predicate of the triple are passed as the relevant
-        RDFLib objects (URIRef or BNode). The object is always a literal value,
-        which is extracted from the dict using the provided key (see
-        `_get_dict_value`). If the value for the key is not found, then
-        additional fallback keys are checked.
-
-        If `list_value` or `date_value` are True, then the value is treated as
-        a list or a date respectively (see `_add_list_triple` and
-        `_add_date_triple` for details.
-        '''
-        value = self._get_dict_value(_dict, key)
-        if not value and fallbacks:
-            for fallback in fallbacks:
-                value = self._get_dict_value(_dict, fallback)
-                if value:
-                    break
-
-        if value and list_value:
-            self._add_list_triple(subject, predicate, value)
-        elif value and date_value:
-            self._add_date_triple(subject, predicate, value)
-        elif value:
-            # Normal text value
-            self.g.add((subject, predicate, Literal(value)))
-
-    def _get_dict_value(self, _dict, key, default=None):
-        '''
-        Returns the value for the given key on a CKAN dict
-
-        By default a key on the root level is checked. If not found, extras
-        are checked, both with the key provided and with `dcat_` prepended to
-        support legacy fields.
-
-        If not found, returns the default value, which defaults to None
-        '''
-
-        if key in _dict:
-            return _dict[key]
-
-        extras = _dict.get('extras', [])
-        if isinstance(extras, dict):
-            for k in [key, 'dcat_' + key]:
-                if k in extras:
-                    return extras[k]
-        else:
-            for extra in extras:
-                if extra['key'] == key or extra['key'] == 'dcat_' + key:
-                    return extra['value']
-        return default
-
-    def _add_list_triple(self, subject, predicate, value):
-        '''
-        Adds as many triples to the graph as values
-
-        Values are literal strings, if `value` is a list, one for each
-        item. If `value` is a string there is an attempt to split it using
-        commas, to support legacy fields.
-        '''
-        items = []
-        # List of values
-        if isinstance(value, list):
-            items = value
-        elif isinstance(value, basestring):
-            try:
-                # JSON list
-                items = json.loads(value)
-            except ValueError:
-                if ',' in value:
-                    # Comma-separated list
-                    items = value.split(',')
-                else:
-                    # Normal text value
-                    items = [value]
-
-        for item in items:
-            self.g.add((subject, predicate, Literal(item)))
-
-    def _add_date_triple(self, subject, predicate, value):
-        '''
-        Adds a new triple with a date object
-
-        Dates are parsed using dateutil, and if the date obtained is correct,
-        added to the graph as an XSD.dateTime value.
-
-        If there are parsing errors, the literal string value is added.
-        '''
-        if not value:
-            return
-        try:
-            default_datetime = datetime.datetime(1, 1, 1, 0, 0, 0)
-            _date = parse_date(value, default=default_datetime)
-
-            self.g.add((subject, predicate, Literal(_date.isoformat(),
-                                                    datatype=XSD.dateTime)))
-        except ValueError:
-            self.g.add((subject, predicate, Literal(value)))
+        return _get_dict_value(dataset_dict, key, default)
 
     def publisher_uri_from_dataset_dict(self, dataset_dict):
         '''
@@ -524,13 +505,126 @@ class CKANConverter:
         return uri
 
 
-if __name__ == '__main__':
-    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    p = dbm.getPortal(portalID='data_wu_ac_at')
-    ds = dbm.getDatasets(portalID='data_wu_ac_at', snapshot=1531)
+def _add_triples_from_dict(graph, _dict, subject, items,
+                           list_value=False,
+                           date_value=False):
+    for item in items:
+        key, predicate, fallbacks = item
+        _add_triple_from_dict(graph, _dict, subject, predicate, key,
+                                   fallbacks=fallbacks,
+                                   list_value=list_value,
+                                   date_value=date_value)
 
-    #a = AnalyserSet(Converter(p))
-    #process_all(ds, Dataset.iter(ds))
+def _add_date_triples_from_dict(graph, _dict, subject, items):
+    _add_triples_from_dict(graph, _dict, subject, items,
+                                date_value=True)
 
-    #for c in a.getAnalysers():
-    #    d = c.getResult()
+def _add_list_triples_from_dict(graph, _dict, subject, items):
+    _add_triples_from_dict(graph, _dict, subject, items,
+                                list_value=True)
+
+def _add_triple_from_dict(graph, _dict, subject, predicate, key,
+                          fallbacks=None,
+                          list_value=False,
+                          date_value=False):
+    '''
+    Adds a new triple to the graph with the provided parameters
+
+    The subject and predicate of the triple are passed as the relevant
+    RDFLib objects (URIRef or BNode). The object is always a literal value,
+    which is extracted from the dict using the provided key (see
+    `_get_dict_value`). If the value for the key is not found, then
+    additional fallback keys are checked.
+
+    If `list_value` or `date_value` are True, then the value is treated as
+    a list or a date respectively (see `_add_list_triple` and
+    `_add_date_triple` for details.
+    '''
+    value = _get_dict_value(_dict, key)
+    if not value and fallbacks:
+        for fallback in fallbacks:
+            value = _get_dict_value(_dict, fallback)
+            if value:
+                break
+
+    if value and list_value:
+        _add_list_triple(graph, subject, predicate, value)
+    elif value and date_value:
+        _add_date_triple(graph, subject, predicate, value)
+    elif value:
+        # Normal text value
+        graph.add((subject, predicate, Literal(value)))
+
+def _get_dict_value(_dict, key, default=None):
+    '''
+    Returns the value for the given key on a CKAN dict
+
+    By default a key on the root level is checked. If not found, extras
+    are checked, both with the key provided and with `dcat_` prepended to
+    support legacy fields.
+
+    If not found, returns the default value, which defaults to None
+    '''
+
+    if key in _dict:
+        return _dict[key]
+
+    extras = _dict.get('extras', [])
+    if isinstance(extras, dict):
+        for k in [key, 'dcat_' + key]:
+            if k in extras:
+                return extras[k]
+    else:
+        for extra in extras:
+            if extra['key'] == key or extra['key'] == 'dcat_' + key:
+                return extra['value']
+    return default
+
+
+def _add_list_triple(graph, subject, predicate, value):
+    '''
+    Adds as many triples to the graph as values
+
+    Values are literal strings, if `value` is a list, one for each
+    item. If `value` is a string there is an attempt to split it using
+    commas, to support legacy fields.
+    '''
+    items = []
+    # List of values
+    if isinstance(value, list):
+        items = value
+    elif isinstance(value, basestring):
+        try:
+            # JSON list
+            items = json.loads(value)
+        except ValueError:
+            if ',' in value:
+                # Comma-separated list
+                items = value.split(',')
+            else:
+                # Normal text value
+                items = [value]
+
+    for item in items:
+        graph.add((subject, predicate, Literal(item)))
+
+
+def _add_date_triple(graph, subject, predicate, value):
+    '''
+    Adds a new triple with a date object
+
+    Dates are parsed using dateutil, and if the date obtained is correct,
+    added to the graph as an XSD.dateTime value.
+
+    If there are parsing errors, the literal string value is added.
+    '''
+    if not value:
+        return
+    try:
+        default_datetime = datetime.datetime(1, 1, 1, 0, 0, 0)
+        _date = parse_date(value, default=default_datetime)
+
+        graph.add((subject, predicate, Literal(_date.isoformat(),
+                                                datatype=XSD.dateTime)))
+    except ValueError:
+        graph.add((subject, predicate, Literal(value)))
