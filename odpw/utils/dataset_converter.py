@@ -42,8 +42,10 @@ namespaces = {
 }
 
 
-def dict_to_dcat(dataset_dict, portal, graph=rdflib.Graph(), format='json-ld'):
+def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     if portal.software == 'CKAN':
+        if not graph:
+            graph = rdflib.Graph()
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
         return graph.serialize(format=format)
