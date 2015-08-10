@@ -1,8 +1,6 @@
-from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount
+from odpw.analysers.count_analysers import DatasetCount
 from odpw.analysers.statuscodes import DatasetStatusCount
-from odpw.analysers.core import DCATConverter
-from odpw.analysers.dbm_handlers import DCATDistributionInserter,\
-    DatasetFetchInserter, DatasetInserter
+from odpw.analysers.dbm_handlers import DatasetInserter
 __author__ = 'jumbrich'
 
 
@@ -16,13 +14,8 @@ import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
 
-from odpw.analysers import AnalyseEngine, AnalyserSet, process_all
-from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser
-from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
-from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.quality.analysers.openness import OpennessAnalyser
-from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+from odpw.analysers import  AnalyserSet, process_all
+from odpw.analysers.fetching import MD5DatasetAnalyser
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
