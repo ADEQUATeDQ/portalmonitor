@@ -38,6 +38,7 @@ class ErrorHandler():
     def handleError(cls, log, msg=None, exception=None, **kwargs):
         name=type(exception).__name__
         cls.exceptions[name] +=1
+        
         log.error(msg, exctype=type(exception), excmsg=exception.message,**kwargs)
     
     @classmethod

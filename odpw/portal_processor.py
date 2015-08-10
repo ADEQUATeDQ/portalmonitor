@@ -98,7 +98,7 @@ class CKAN(PortalProcessor):
         except TimeoutError as e:
             raise e
         except Exception as e:
-            ErrorHandler.handleError("CKANDSFetchBatchError", pid=Portal.id, exception=e, error=type(e))
+            ErrorHandler.handleError(log,"CKANDSFetchBatchError", pid=Portal.id, exception=e)
 
         try:
             package_list, status = util.getPackageList(Portal.apiurl)
@@ -148,7 +148,7 @@ class CKAN(PortalProcessor):
                         p_count+=1
                         if p_count%p_steps ==0:
                             progressIndicator(p_count, tt, label=Portal.id+"_single")
-                            log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed))
+                            log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed_ids))
 
 
                         now = time.time()
@@ -158,7 +158,7 @@ class CKAN(PortalProcessor):
                         yield d
             progressIndicator(p_count, tt, label=Portal.id+"_single")
         except Exception as e:
-            if len(processed)==0:
+            if len(processed_ids)==0:
                 raise e
 
 
