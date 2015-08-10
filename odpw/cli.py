@@ -33,12 +33,16 @@ import odpw.utils.head as headcli
 #import odpw.analysers.quality.quality as qualitycli
 import odpw.utils.sanity as statuscli
 import odpw.server.server as servercli
-#import odpw.utils.head_stats as headStatscli
+import odpw.utils.head_stats as headStatscli
 #import odpw.utils.fetch_stats as fetchStatscli
 import odpw.utils.report as reportcli
 import odpw.utils.migrate as migratecli
 
-submodules=[dbcli, initcli, fetchcli,  statuscli,servercli,reportcli,dmcli, headcli,migratecli]
+submodules=[dbcli, initcli, fetchcli,  
+            statuscli, servercli,
+            reportcli, dmcli, 
+            headcli, migratecli,
+            headStatscli]
 
 
 import yaml

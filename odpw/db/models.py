@@ -230,6 +230,14 @@ class PortalMetaData(Model):
     
       
 class Resource(Model):
+    
+    @classmethod
+    def iter(cls, iterable):
+        for i in iterable:
+            r = Resource.fromResult(dict(i))
+            yield r
+        return
+    
     @classmethod
     def newInstance(cls, url=None, snapshot=None):
         props = {}

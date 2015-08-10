@@ -5,7 +5,6 @@ Created on Jul 24, 2015
 '''
 import hashlib
 
-
 from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.analysers import Analyser
 import json
@@ -15,7 +14,6 @@ from odpw.utils.timer import Timer
 import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
-#from odpw.analysers.factory import AnalyserFactory
 
 class MD5DatasetAnalyser(Analyser):
 #    __metaclass__ = AnalyserFactory
@@ -49,22 +47,11 @@ class DatasetCount(DistinctElementCount):
             pmd.fetch_stats = {}
         pmd.datasets = self.getResult()['count']
         pmd.fetch_stats['datasets'] = self.getResult()['count']
-
-class ResourceCount(DistinctElementCount):
-    def __init__(self):
-        super(ResourceCount, self).__init__()
     
-    def analyse_PortalMetaData(self, element):
-        if element.resources>=0:
-            self.count+= element.resources
-    
-    
-
 class CKANResourceInDS(DistinctElementCount):
     def __init__(self,withDistinct=None):
         super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
         
-    
     def analyse_PortalMetaData(self, element):
         self.count+= element.resources
         if self.set is not None and element not in self.set:
@@ -91,8 +78,6 @@ class DatasetFetchUpdater(Analyser):
     def analyse_Dataset(self, dataset):
         self.dbm.updateDatasetFetch(dataset)
 
-
-
 class CKANResourceInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
@@ -103,15 +88,11 @@ class CKANResourceInserter(Analyser):
                     tR =  Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
                     R = self.dbm.getResource(tR)
                     if not R:
-                        #R = Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
                         tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
                         self.dbm.insertResource(tR)
                     else:
                         R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
                         self.dbm.updateResource(R) 
-
-
-
 
 class CKANDatasetAge(Analyser):
     
@@ -434,7 +415,6 @@ class CKANKeyAnalyser(Analyser):
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
 
-
 class CKANFormatCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
@@ -505,7 +485,6 @@ class CKANLicenseCount(ElementCountAnalyser):
         super(CKANLicenseCount, self).__init__()
         self.license_mapping = LicensesOpennessMapping()
         
-
     def analyse_Dataset(self, dataset):
         if dataset.data:
             id = dataset.data.get('license_id')
@@ -515,8 +494,6 @@ class CKANLicenseCount(ElementCountAnalyser):
             id, od_conformance = self.license_mapping.map_license(title=title, lid=id, url=url)
             # add id to ElementCountAnalyser
             self.add(id)
-
-            
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
@@ -535,19 +512,14 @@ class CKANLicenseCount(ElementCountAnalyser):
                 for l in licenses:
                     self.add(l, licenses[l])
                     
-
     def analyse_CKANLicenseCount(self, licenses_analyser):
         licenses = licenses_analyser.getResult()
         if isinstance(licenses, dict):
             for l in licenses:
                 self.add(l, licenses[l])
                 
-
     def getResult(self):
         return self.getDist()
-
-
-
 
 class CKANOrganizationsCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
@@ -575,7 +547,6 @@ class CKANOrganizationsCount(ElementCountAnalyser):
             for o in orgs:
                 self.add(o, orgs[o])
 
-
 class TagsCount(ElementCountAnalyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'tags' in pmd.general_stats:
@@ -594,7 +565,6 @@ class TagsCount(ElementCountAnalyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['tags'] = self.getResult()
-
 
 class CKANTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):

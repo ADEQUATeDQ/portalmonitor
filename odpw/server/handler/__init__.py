@@ -24,8 +24,9 @@ import traceback
 import os
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 from odpw.analysers.fetching import CKANLicenseCount, CKANLicenseConformance,\
-    CKANTagsCount, CKANOrganizationsCount, CKANFormatCount, ResourceCount,\
+    CKANTagsCount, CKANOrganizationsCount, CKANFormatCount,\
     DatasetCount
+from odpw.analysers.resource_analysers import ResourceCount
 
 
 class BaseHandler(RequestHandler):

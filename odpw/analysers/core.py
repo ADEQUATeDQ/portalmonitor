@@ -7,6 +7,7 @@ from odpw.analysers import Analyser
 from _collections import defaultdict
 import pandas as pd
 import numpy as np
+from odpw.utils.dataset_converter import dict_to_dcat
 
 class HistogramAnalyser(Analyser):
     
@@ -27,7 +28,6 @@ class HistogramAnalyser(Analyser):
     def getResult(self):
         hist, bin_edges = np.histogram(np.array(self.list), **self.nphistparams)
         return {'hist':hist, 'bin_edges':bin_edges}
-
 
 class ElementCountAnalyser(Analyser):
     """
@@ -52,10 +52,6 @@ class ElementCountAnalyser(Analyser):
     def getResult(self):
         return self.getDist()
     
-
-    
-    
-
 class StatusCodeAnalyser(ElementCountAnalyser):
     dist={
                 '2':'ok',
@@ -116,21 +112,13 @@ class DBAnalyser(Analyser):
     
     def getResult(self):
         return {'rows':self.rows} 
-    
 
-if __name__ == '__main__':
-    def f1(test=None):
-        print test
+class DCATConverter(Analyser):
     
+    def __init__(self, Portal):
+        self.Portal=Portal
     
-    def calling(func, **param):
-        if param:
-            p=param
-        else:
-            p={}
-        func(**p)
-        
-    d = DBAnalyser(f1)
-    d.analyse()
-        
-    
+    def analyse_Dataset(self, dataset):
+        if dataset.data: 
+            dcat_dict = dict_to_dcat(dataset.data, self.Portal)
+            dataset.dcat=dcat_dict

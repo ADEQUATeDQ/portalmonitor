@@ -44,7 +44,7 @@ namespaces = {
 
 def dict_to_dcat(dataset_dict, portal, graph=rdflib.Graph(), format='json-ld'):
     if portal.software == 'CKAN':
-        converter = CKANConverter(graph, portal.api)
+        converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
         return graph.serialize(format=format)
     elif portal.software == 'Socrata':
@@ -344,9 +344,10 @@ class CKANConverter:
             for k in [key, 'dcat_' + key]:
                 if k in extras:
                     return extras[k]
-        for extra in extras:
-            if extra['key'] == key or extra['key'] == 'dcat_' + key:
-                return extra['value']
+        else:
+            for extra in extras:
+                if extra['key'] == key or extra['key'] == 'dcat_' + key:
+                    return extra['value']
         return default
 
     def _add_list_triple(self, subject, predicate, value):
@@ -493,10 +494,17 @@ class CKANConverter:
 
         uri = dataset_dict.get('uri')
         if not uri:
-            for extra in dataset_dict.get('extras', []):
-                if extra['key'] == 'uri':
-                    uri = extra['value']
-                    break
+            extras = dataset_dict.get('extras', [])
+            if isinstance(extras, dict):
+                for key, value in extras.items():
+                    if key == 'uri':
+                        uri = value
+                        break
+            elif isinstance(extras, list):
+                for extra in extras:
+                    if extra['key'] == 'uri':
+                        uri = extra['value']
+                        break
         if not uri and dataset_dict.get('id'):
             uri = '{0}/dataset/{1}'.format(self.catalog_uri().rstrip('/'),
                                            dataset_dict['id'])
@@ -505,6 +513,7 @@ class CKANConverter:
                                            str(uuid.uuid4()))
             # TODO log.warning('Using a random id for dataset URI')
 
+        uri = URIRef(uri)
         return uri
 
 

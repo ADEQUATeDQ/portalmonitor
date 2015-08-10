@@ -34,7 +34,6 @@ def simulateFetching(dbm, Portal, sn):
      
     pmd.fetchstart()
     dbm.updatePortalMetaData(pmd)
-
     
     ae = AnalyseEngine()
     ae.add(MD5DatasetAnalyser())

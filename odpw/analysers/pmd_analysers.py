@@ -10,7 +10,6 @@ from odpw.analysers.core import HistogramAnalyser
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 
-
 class PMDDatasetCountAnalyser(HistogramAnalyser):
     
     def analyse_PortalMetaData(self, pmd):
@@ -85,7 +84,6 @@ class PMDActivityAnalyser(Analyser):
         print res
         return res
 
-
 class MultiHistogramAnalyser(Analyser):
     def __init__(self, **nphistparams):
         # should be key value pairs of description + list
@@ -99,7 +97,6 @@ class MultiHistogramAnalyser(Analyser):
             result[d] = {'hist': hist, 'bin_edges': bin_edges}
         return result
 
-
 class CompletenessHistogram(MultiHistogramAnalyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.qa_stats and CompletenessAnalyser.id in pmd.qa_stats:
@@ -112,7 +109,6 @@ class CompletenessHistogram(MultiHistogramAnalyser):
             quality = dataset.qa_stats[CompletenessAnalyser.id]
             for group in quality:
                 self.data[group].append(quality[group])
-
 
 class ContactabilityHistogram(MultiHistogramAnalyser):
     def analyse_PortalMetaData(self, pmd):
