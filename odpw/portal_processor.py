@@ -6,10 +6,9 @@ import time
 import requests
 
 from odpw.utils import util
-from odpw.db.models import Dataset, Portal
+from odpw.db.models import Dataset
 from odpw.utils.timer import Timer
 from odpw.utils.util import ErrorHandler as eh, progressIndicator, TimeoutError
-from odpw.analysers import AnalyseEngine
 
 import structlog
 log = structlog.get_logger()
@@ -155,7 +154,7 @@ class CKAN(PortalProcessor):
 
 
 class Socrata(PortalProcessor):
-    def generateFetchDatasetIter(self, Portal, sn, dcat=False):
+    def generateFetchDatasetIter(self, Portal, sn, dcat=True):
 
         api = urlparse.urljoin(Portal.url, '/api/')
         page = 1
@@ -182,14 +181,15 @@ class Socrata(PortalProcessor):
                 datasetID = datasetJSON['id']
                 if datasetID not in processed:
                     processed.add(datasetID)
-                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=datasetJSON,status=200, software=Portal.software)
+                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data={'view': datasetJSON}, status=200, software=Portal.software)
                     
                     if dcat:
                         try:
                             dcat_data = self._dcat(datasetID, api)
                         except Exception as e:
                             dcat_data = None
-                        d.dcat = dcat_data
+                        print dcat_data
+                        d.data['dcat'] = dcat_data
 
                     if len(processed) % 1000 == 0:
                         log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
@@ -197,12 +197,11 @@ class Socrata(PortalProcessor):
             page += 1
 
     def _dcat(self, id, api):
-        url = urlparse.urljoin(api, 'dcat.json/' + id)
+        url = urlparse.urljoin(api, 'dcat.rdf/' + id)
         resp = requests.get(url, verify=False)
         if resp.status_code == 200:
-            # returns a list of datasets
-            res = resp.json()
-            return res
+            # returns a string containing the rdf data
+            return resp.text
         return None
 
 
@@ -238,16 +237,3 @@ class OpenDataSoft(PortalProcessor):
             else:
                 break
 
-
-if __name__ == '__main__':
-    # TESTING
-    ae = AnalyseEngine()
-    # TODO all analysers
-
-    p = CKAN(analyse_engine=ae)
-    p.fetching(Portal('http://data.gov/', 'http://catalog.data.gov/'), '1')
-
-    for a in ae.getAnalysers():
-        #updatePMDwithAnalyserResults(pmd, ae)
-        #pmd.update(ae)
-        pass
