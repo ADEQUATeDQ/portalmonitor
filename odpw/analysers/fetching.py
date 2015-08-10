@@ -15,84 +15,26 @@ import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
 
+
 class MD5DatasetAnalyser(Analyser):
 #    __metaclass__ = AnalyserFactory
     
     def analyse_Dataset(self, dataset):
         if dataset.data and bool(dataset.data):
-            d = json.dumps(dataset.data, sort_keys=True, ensure_ascii=True)
-            data_md5 = hashlib.md5(d).hexdigest()
-            dataset.md5=data_md5
-  
-class DatasetStatusCount(ElementCountAnalyser):
-#    __metaclass__ = AnalyserFactory
-    def analyse_Dataset(self, dataset):
-        self.add(dataset.status)
-
-    def update_PortalMetaData(self, pmd):
-        if not pmd.fetch_stats:
-            pmd.fetch_stats = {}
-        pmd.fetch_stats['respCodes'] = self.getResult()
-    
-class DatasetCount(DistinctElementCount):
-    def __init__(self):
-        super(DatasetCount, self).__init__()
-    
-    def analyse_PortalMetaData(self, element):
-        if element.datasets>=0:
-            self.count+= element.datasets
-    
-    def update_PortalMetaData(self, pmd):
-        if not pmd.fetch_stats:
-            pmd.fetch_stats = {}
-        pmd.datasets = self.getResult()['count']
-        pmd.fetch_stats['datasets'] = self.getResult()['count']
-    
-class CKANResourceInDS(DistinctElementCount):
-    def __init__(self,withDistinct=None):
-        super(CKANResourceInDS, self).__init__(withDistinct=withDistinct)
+            if dataset.software=='CKAN':
+                d = json.dumps(dataset.data, sort_keys=True, ensure_ascii=True)
+                data_md5 = hashlib.md5(d).hexdigest()
+                dataset.md5=data_md5
+                
         
-    def analyse_PortalMetaData(self, element):
-        self.count+= element.resources
-        if self.set is not None and element not in self.set:
-            self.set.add(element.resources)
+  
 
-    def update_PortalMetaData(self,pmd):
-        if not pmd.res_stats:
-            pmd.res_stats = {}
-        pmd.resources = self.getResult()['count']
-        pmd.res_stats['total'] = self.getResult()['count']
-        pmd.res_stats['unique'] = self.getResult()['distinct']
-
-class DatasetFetchInserter(Analyser):
-    def __init__(self, dbm):
-        self.dbm = dbm
     
-    def analyse_Dataset(self, dataset):
-        self.dbm.insertDatasetFetch(dataset)
 
-class DatasetFetchUpdater(Analyser):
-    def __init__(self, dbm):
-        self.dbm = dbm
     
-    def analyse_Dataset(self, dataset):
-        self.dbm.updateDatasetFetch(dataset)
 
-class CKANResourceInserter(Analyser):
-    def __init__(self, dbm):
-        self.dbm = dbm
-    def analyse_Dataset(self, dataset):
-        if dataset.data and 'resources' in dataset.data:
-            for res in dataset.data['resources']:
-                if 'url' in res:
-                    tR =  Resource.newInstance(url=res['url'], snapshot=dataset.snapshot)
-                    R = self.dbm.getResource(tR)
-                    if not R:
-                        tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
-                        self.dbm.insertResource(tR)
-                    else:
-                        R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
-                        self.dbm.updateResource(R) 
+
+
 
 class CKANDatasetAge(Analyser):
     

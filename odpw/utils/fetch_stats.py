@@ -2,11 +2,12 @@
 import time
 import odpw.utils.util as util
 from odpw.analysers import AnalyseEngine
-from odpw.analysers.fetching import *
-from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
-from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.quality.analysers.openness import OpennessAnalyser
-from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+
+from odpw.analysers.core import DCATConverter
+from odpw.analysers.fetching import MD5DatasetAnalyser
+from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount
+from odpw.analysers.dbm_handlers import DatasetFetchUpdater
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -35,12 +36,17 @@ def simulateFetching(dbm, Portal, sn):
     pmd.fetchstart()
     dbm.updatePortalMetaData(pmd)
     
+    
     ae = AnalyseEngine()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
-    ae.add(CKANResourceInDS(withDistinct=True))
-
     ae.add(DatasetStatusCount())
+    
+    ae.add(DCATConverter(Portal))
+    
+    
+    ae.add(DCATDistributionCount(withDistinct=True))
+
     ae.add(CKANResourceInDSAge())
     ae.add(CKANDatasetAge())
     ae.add(CKANKeyAnalyser())
@@ -51,6 +57,8 @@ def simulateFetching(dbm, Portal, sn):
     ae.add(ContactabilityAnalyser())
     ae.add(OpennessAnalyser())
     ae.add(OPQuastAnalyser())
+
+
 
     ae.add(DatasetFetchUpdater(dbm))
     

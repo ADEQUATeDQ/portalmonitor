@@ -8,6 +8,7 @@ from _collections import defaultdict
 import pandas as pd
 import numpy as np
 from odpw.utils.dataset_converter import dict_to_dcat
+import json
 
 class HistogramAnalyser(Analyser):
     
@@ -119,6 +120,8 @@ class DCATConverter(Analyser):
         self.Portal=Portal
     
     def analyse_Dataset(self, dataset):
+        print dataset
         if dataset.data: 
             dcat_dict = dict_to_dcat(dataset.data, self.Portal)
-            dataset.dcat=dcat_dict
+            dataset.dcat=json.loads(dcat_dict)
+            print dcat_dict
