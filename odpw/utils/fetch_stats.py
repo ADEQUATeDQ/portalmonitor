@@ -7,7 +7,8 @@ from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import MD5DatasetAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCount
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount
-from odpw.analysers.dbm_handlers import DatasetFetchUpdater
+from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
+    DCATDistributionInserter
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -43,24 +44,24 @@ def simulateFetching(dbm, Portal, sn):
     ae.add(DatasetStatusCount())
     
     ae.add(DCATConverter(Portal))
-    
-    
     ae.add(DCATDistributionCount(withDistinct=True))
-
-    ae.add(CKANResourceInDSAge())
-    ae.add(CKANDatasetAge())
-    ae.add(CKANKeyAnalyser())
-    ae.add(CKANFormatCount())
-    ae.add(CKANResourceInserter(dbm))
-
-    ae.add(CompletenessAnalyser())
-    ae.add(ContactabilityAnalyser())
-    ae.add(OpennessAnalyser())
-    ae.add(OPQuastAnalyser())
+    ae.add(DCATDistributionInserter(dbm))
 
 
 
-    ae.add(DatasetFetchUpdater(dbm))
+#    ae.add(CKANResourceInDSAge())
+#    ae.add(CKANDatasetAge())
+#    ae.add(CKANKeyAnalyser())
+#    ae.add(CKANFormatCount())
+
+
+#    ae.add(CompletenessAnalyser())
+#    ae.add(ContactabilityAnalyser())
+#    ae.add(OpennessAnalyser())
+#    ae.add(OPQuastAnalyser())
+
+
+#    ae.add(DatasetFetchUpdater(dbm))
     
     
     total=0
@@ -74,9 +75,8 @@ def simulateFetching(dbm, Portal, sn):
     iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
     ae.process_all(progressIterator(iter, total, steps))
     
-    for analyser in ae.getAnalysers():
-        analyser.update(pmd)
-        analyser.update(Portal)
+    ae.update(pmd)
+    ae.update(Portal)
         #print analyser.name()
         #print analyser.getResult()
     
