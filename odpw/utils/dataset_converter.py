@@ -1,20 +1,16 @@
 import json
 import datetime
+import urlparse
 import uuid
-import StringIO
 
 from dateutil.parser import parse as parse_date
 
 import rdflib
 from rdflib import URIRef, BNode, Literal
 
-from rdflib.namespace import Namespace, RDF, XSD, SKOS
+from rdflib.namespace import Namespace, RDF, XSD, SKOS, RDFS
 
 from geomet import wkt, InvalidGeoJSONException
-from sqlalchemy.engine import RowProxy
-from odpw.analysers import AnalyserSet, Analyser, process_all
-from odpw.db.dbm import PostgressDBM
-from odpw.db.models import Dataset
 
 DCT = Namespace("http://purl.org/dc/terms/")
 DCAT = Namespace("http://www.w3.org/ns/dcat#")
@@ -53,16 +49,14 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     if portal.software == 'CKAN':
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
-        
-        return json.loads(graph.serialize(format=format))
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
             graph.parse(data=dataset_dict['dcat'], format='xml')
-            return json.loads(graph.serialize(format=format))
     elif portal.software == 'OpenDataSoft':
         graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
-        print graph.serialize(format='n3')
-        return json.loads(graph.serialize(format=format))
+
+    print graph.serialize(format='n3')
+    return json.loads(graph.serialize(format=format))
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):
@@ -115,7 +109,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
     # TODO references??
 
-    # licenses store for distributions
+    # store licenses for distributions
     license = data.get('license')
 
     # distributions
@@ -131,7 +125,10 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             g.add((dataset_ref, DCAT.distribution, distribution))
             g.add((distribution, RDF.type, DCAT.Distribution))
             if license:
-                g.add((distribution, DCT.license, Literal(license)))
+                l = BNode()
+                g.add((distribution, DCT.license, l))
+                g.add((l, RDF.type, DCT.LicenseDocument))
+                g.add((l, RDFS.label, Literal(license)))
 
             # Format
             g.add((distribution, DCT['format'], Literal(format)))
@@ -154,7 +151,10 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
         g.add((dataset_ref, DCAT.distribution, distribution))
         g.add((distribution, RDF.type, DCAT.Distribution))
         if license:
-            g.add((distribution, DCT.license, Literal(license)))
+            l = BNode()
+            g.add((distribution, DCT.license, l))
+            g.add((l, RDF.type, DCT.LicenseDocument))
+            g.add((l, RDFS.label, Literal(license)))
 
         #  Simple values
         items = [
@@ -326,14 +326,33 @@ class CKANConverter:
                 except (TypeError, ValueError, InvalidGeoJSONException):
                     pass
 
+        # License
+        license_id = self._get_dataset_value(dataset_dict, 'license_id')
+        license_url = self._get_dataset_value(dataset_dict, 'license_url')
+        license_title = self._get_dataset_value(dataset_dict, 'license_title')
+        if license_url and bool(urlparse.urlparse(license_url).netloc):
+            license = URIRef(license_url)
+        else:
+            license = BNode()
+            # TODO maybe a non-valid url?
+            #if license_url:
+            #    g.add((license, RDFS.label, license_url))
+
+        if license_title:
+            g.add((license, RDFS.label, Literal(license_title)))
+        if license_id:
+            g.add((license, DCT.identifier, Literal(license_id)))
+
         # Resources
         for resource_dict in dataset_dict.get('resources', []):
-
             distribution = URIRef(self.resource_uri(resource_dict, dataset_dict.get('id')))
 
             g.add((dataset_ref, DCAT.distribution, distribution))
-
             g.add((distribution, RDF.type, DCAT.Distribution))
+
+            # License
+            g.add((distribution, DCT.license, license))
+
 
             #  Simple values
             items = [
