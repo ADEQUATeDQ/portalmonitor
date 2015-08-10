@@ -12,10 +12,8 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
 
 from odpw.analysers import AnalyseEngine, AnalyserSet, process_all
-from odpw.analysers.fetching import MD5DatasetAnalyser, DatasetCount,\
-    CKANResourceInDS, CKANResourceInserter, DatasetStatusCount, CKANResourceInDSAge,\
-    CKANDatasetAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter,\
-    CKANTagsCount, CKANLicenseCount, CKANOrganizationsCount
+from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDSAge,\
+    CKANDatasetAge, CKANKeyAnalyser
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser

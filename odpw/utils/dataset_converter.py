@@ -5,8 +5,9 @@ import StringIO
 
 from dateutil.parser import parse as parse_date
 
-from rdflib import URIRef, BNode, Literal
 import rdflib
+from rdflib import URIRef, BNode, Literal
+
 from rdflib.namespace import Namespace, RDF, XSD, SKOS
 
 from geomet import wkt, InvalidGeoJSONException
@@ -44,6 +45,7 @@ namespaces = {
 
 
 def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
+
     # init a new graph
     if not graph:
         graph = rdflib.Graph()
@@ -51,6 +53,7 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     if portal.software == 'CKAN':
         converter = CKANConverter(graph, portal.apiurl)
         converter.graph_from_ckan(dataset_dict)
+        
         return json.loads(graph.serialize(format=format))
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
@@ -361,8 +364,8 @@ class CKANConverter:
 
             # Dates
             items = [
-                ('issued', DCT.issued, None),
-                ('modified', DCT.modified, None),
+                ('issued', DCT.issued, ['created']),
+                ('modified', DCT.modified, ['last_modified']),
             ]
 
             _add_date_triples_from_dict(self.g, resource_dict, distribution, items)

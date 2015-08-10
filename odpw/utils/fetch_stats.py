@@ -1,12 +1,17 @@
 
 import time
 import odpw.utils.util as util
-from odpw.analysers import AnalyseEngine
-from odpw.analysers.fetching import *
-from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
-from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.quality.analysers.openness import OpennessAnalyser
-from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
+from odpw.analysers import AnalyseEngine, process_all
+
+from odpw.analysers.core import DCATConverter
+from odpw.analysers.fetching import MD5DatasetAnalyser, DCATDatasetAge,\
+    DCATResourceInDSAge
+from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
+    DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
+from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
+    DCATDistributionInserter
+from odpw.analysers import AnalyserSet
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -15,12 +20,8 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
 
 from odpw.db.models import Portal,  PortalMetaData, Dataset
 
-import logging
-log = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log =structlog.get_logger()
 
 def simulateFetching(dbm, Portal, sn):
     
@@ -29,30 +30,43 @@ def simulateFetching(dbm, Portal, sn):
     
     pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
     if not pmd:
-        pmd = PortalMetaData(portal=Portal.id, snapshot=sn)
+        pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
         dbm.insertPortalMetaData(pmd)
      
     pmd.fetchstart()
     dbm.updatePortalMetaData(pmd)
     
-    ae = AnalyseEngine()
+    
+    pmd1 = PortalMetaData(portalID=Portal.id, snapshot=sn)
+    
+    ae = AnalyserSet()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
-    ae.add(CKANResourceInDS(withDistinct=True))
-
     ae.add(DatasetStatusCount())
-    ae.add(CKANResourceInDSAge())
-    ae.add(CKANDatasetAge())
-    ae.add(CKANKeyAnalyser())
-    ae.add(CKANFormatCount())
-    ae.add(CKANResourceInserter(dbm))
+    
+    ae.add(DCATConverter(Portal))
+    ae.add(DCATDistributionCount(withDistinct=True))
+    ae.add(DCATDistributionInserter(dbm))
+    
+    ae.add(DCATOrganizationsCount())
+    ae.add(DCATTagsCount())
+    ae.add(DCATFormatCount())
+    
+    #ae.add(DCATLicenseCount())
 
-    ae.add(CompletenessAnalyser())
-    ae.add(ContactabilityAnalyser())
-    ae.add(OpennessAnalyser())
-    ae.add(OPQuastAnalyser())
+    ae.add(DCATResourceInDSAge())
+    ae.add(DCATDatasetAge())
 
-    ae.add(DatasetFetchUpdater(dbm))
+#    ae.add(CKANKeyAnalyser())
+
+
+#    ae.add(CompletenessAnalyser())
+#    ae.add(ContactabilityAnalyser())
+#    ae.add(OpennessAnalyser())
+#    ae.add(OPQuastAnalyser())
+
+
+    #ae.add(DatasetFetchUpdater(dbm))
     
     
     total=0
@@ -64,25 +78,27 @@ def simulateFetching(dbm, Portal, sn):
     
     
     iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
-    ae.process_all(progressIterator(iter, total, steps))
+    process_all(ae,progressIterator(iter, total, steps))
     
-    for analyser in ae.getAnalysers():
-        analyser.update(pmd)
-        analyser.update(Portal)
-        #print analyser.name()
-        #print analyser.getResult()
+    ae.update(pmd)
+    ae.update(pmd1)
+    #ae.update(Portal)
     
-    
-    #pmd.update(ae)
-    #from pprint import pprint
-    #pprint(pmd.__dict__)
-    dbm.updatePortalMetaData(pmd)
-    dbm.updatePortal(Portal)
+    import pprint 
+    #pprint.pprint(pmd.__dict__)
+    print "_"
+    pprint.pprint(pmd1.__dict__)    
+    #dbm.updatePortalMetaData(pmd)
+    #dbm.updatePortal(Portal)
 
     log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
 
+def help():
+    return "Simulate a fetch run"
+
 def name():
-    return 'FetchStats'
+    return 'FetchSim'
+
 def setupCLI(pa):
     
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
@@ -99,9 +115,10 @@ def cli(args,dbm):
         p = dbm.getPortal(apiurl=args.url)
         portals.append(p)
     else:
-        for res in dbm.getPortals():
+        for res in dbm.getPortals(software='CKAN'):
             p = Portal.fromResult(dict(res))
-            portals.append(p)
+            if p:
+                portals.append(p)
     
     for p in portals:
         simulateFetching(dbm,p,sn)

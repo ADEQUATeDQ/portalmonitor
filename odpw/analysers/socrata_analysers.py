@@ -1,7 +1,8 @@
 from odpw.analysers import Analyser
 import numpy as np
 from odpw.analysers.core import ElementCountAnalyser
-from odpw.analysers.fetching import TagsCount
+from odpw.analysers.count_analysers import TagsCount
+
 
 __author__ = 'sebastian'
 
