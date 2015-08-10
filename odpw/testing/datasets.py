@@ -12,7 +12,7 @@ from odpw.db.models import Dataset
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
-    id='data_wu_ac_at'
+    id='pod_opendatasoft_com'
     sn=1532
 
     Portal = dbm.getPortal(portalID=id)
@@ -25,4 +25,4 @@ if __name__ == '__main__':
     for ds in iter:
         
         aset.analyse(ds)
-    #process_all(aset, iter)
+    process_all(aset, iter)

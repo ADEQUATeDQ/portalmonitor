@@ -61,6 +61,7 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
             return json.loads(graph.serialize(format=format))
     elif portal.software == 'OpenDataSoft':
         graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
+        print graph.serialize(format='n3')
         return json.loads(graph.serialize(format=format))
 
 
@@ -80,7 +81,6 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
     # identifier
     g.add((dataset_ref, DCT.identifier, Literal(identifier)))
-
     data = dataset_dict['metas']
     # Basic fields
     items = [
@@ -89,24 +89,20 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     ]
     _add_triples_from_dict(g, data, dataset_ref, items)
 
-    # Tags
-    for tag in data.get('keyword', []):
-        g.add((dataset_ref, DCAT.keyword, Literal(tag)))
-
     #  Lists
     items = [
         ('language', DCT.language, None),
         ('theme', DCAT.theme, None),
+        ('keyword', DCAT.keyword, None),
     ]
     _add_list_triples_from_dict(g, data, dataset_ref, items)
 
     # publisher
-    publisher_details = BNode()
-    g.add((publisher_details, RDF.type, FOAF.Organization))
-    g.add((dataset_ref, DCT.publisher, publisher_details))
-
     publisher_name = data.get('publisher')
     if publisher_name:
+        publisher_details = BNode()
+        g.add((publisher_details, RDF.type, FOAF.Organization))
+        g.add((dataset_ref, DCT.publisher, publisher_details))
         g.add((publisher_details, FOAF.name, Literal(publisher_name)))
         # TODO any additional publisher information available? look for fields
 
@@ -123,10 +119,15 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     license = data.get('license')
 
     # distributions
-    if data.get('has_records'):
-        for format, mimetype in [('csv', 'text/comma-separated-values'), ('json', 'application/json')]:
+    if dataset_dict.get('has_records'):
+        exports = [('csv', 'text/comma-separated-values'), ('json', 'application/json'), ('xls', 'application/vnd.ms-excel')]
+        if 'geo' in dataset_dict.get('features', []):
+            exports.append(('geojson', 'application/vnd.geo+json'))
+            exports.append(('kml', 'application/vnd.google-earth.kml+xml'))
+            # TODO shape files?
+            # exports.append(('shp', 'application/octet-stream'))
+        for format, mimetype in exports:
             distribution = BNode()
-
             g.add((dataset_ref, DCAT.distribution, distribution))
             g.add((distribution, RDF.type, DCAT.Distribution))
             if license:
@@ -148,21 +149,25 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             _add_date_triples_from_dict(g, data, distribution, items)
 
     # attachments
-    for attachment in data.get('attachments', []):
+    for attachment in dataset_dict.get('attachments', []):
+        distribution = BNode()
         g.add((dataset_ref, DCAT.distribution, distribution))
         g.add((distribution, RDF.type, DCAT.Distribution))
         if license:
-            g.add((distribution, DCT.license, license))
+            g.add((distribution, DCT.license, Literal(license)))
 
         #  Simple values
         items = [
             ('title', DCT.title, None),
             ('mimetype', DCT.mediaType, None),
             ('format', DCT['format'], None),
-            ('url', DCT.accessURL, None),
         ]
         _add_triples_from_dict(g, attachment, distribution, items)
 
+        # URL
+        if attachment.get('id'):
+            url = portal_url.rstrip('/') + '/api/datasets/1.0/' + identifier + '/attachments/' + attachment.get('id')
+            g.add((distribution, DCT.accessURL, Literal(url)))
 
 class CKANConverter:
     def __init__(self, graph, portal_base_url):
