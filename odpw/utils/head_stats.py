@@ -12,12 +12,8 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
 from odpw.db.models import Portal,  PortalMetaData, Dataset, Resource
 from pprint import  pprint
 
-import logging
-log = logging.getLogger(__name__)
-from structlog import get_logger, configure
-from structlog.stdlib import LoggerFactory
-configure(logger_factory=LoggerFactory())
-log = get_logger()
+import structlog
+log =structlog.get_logger()
 
 
 def headStats(dbm, sn, portalID):
@@ -143,5 +139,5 @@ def cli(args,dbm):
         else:
             snapshots.append(sn)
         
-        for sn in snapshots:
+        for sn in sorted(snapshots):
             headStats(dbm,sn,pid)

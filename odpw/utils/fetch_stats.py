@@ -83,10 +83,10 @@ def simulateFetching(dbm, Portal, sn):
     ae.update(pmd1)
     #ae.update(Portal)
     
-    import pprint 
+    #import pprint 
     #pprint.pprint(pmd.__dict__)
     #print "_"
-    pprint.pprint(pmd1.__dict__)    
+    #pprint.pprint(pmd1.__dict__)    
     dbm.updatePortalMetaData(pmd)
     #dbm.updatePortal(Portal)
 
@@ -106,21 +106,25 @@ def setupCLI(pa):
     
 def cli(args,dbm):
     sn = getSnapshot(args)
-    if not sn:
-        return
     
-    portals=[]
+    pids=[]
     if args.url:
         p = dbm.getPortal(apiurl=args.url)
-        portals.append(p)
+        if p:
+            pids.append(p)
     else:
-        for res in dbm.getPortals(software='CKAN'):
-            p = Portal.fromResult(dict(res))
-            if p:
-                portals.append(p)
+        for p in Portal.iter(dbm.getPortals()):
+            pids.append(p)
+    snapshots=[]
     
-    for p in portals:
-        simulateFetching(dbm,p,sn)
-    
+    for p in pids:
+        if not sn:
+            for s in dbm.getSnapshots(portalID=p.id):
+                snapshots.append(s['snapshot'])
+        else:
+            snapshots.append(sn)
+        
+        for sn in sorted(snapshots):
+            simulateFetching(dbm,p,sn)
     
     

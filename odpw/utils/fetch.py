@@ -1,3 +1,8 @@
+from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount
+from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.core import DCATConverter
+from odpw.analysers.dbm_handlers import DCATDistributionInserter,\
+    DatasetFetchInserter, DatasetInserter
 __author__ = 'jumbrich'
 
 
@@ -52,21 +57,23 @@ def fetching(obj):
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())
 
+        #ae.add(DCATConverter(Portal))
+        #ae.add(DCATDistributionCount(withDistinct=True))
+        #ae.add(DCATDistributionInserter(dbm))
         if Portal.software == 'CKAN':
-            ae.add(CKANResourceInDS(withDistinct=True))
-            ae.add(CKANResourceInserter(dbm))
+            
             # ae.add(CKANResourceInDSAge())
             #ae.add(CKANDatasetAge())
-            ae.add(CKANKeyAnalyser())
-            ae.add(CKANFormatCount())
-            ae.add(CKANTagsCount())
-            ae.add(CKANLicenseCount())
-            ae.add(CKANOrganizationsCount())
+            #ae.add(CKANKeyAnalyser())
+            #ae.add(CKANFormatCount())
+            #ae.add(CKANTagsCount())
+            #ae.add(CKANLicenseCount())
+            #ae.add(CKANOrganizationsCount())
 
-            ae.add(CompletenessAnalyser())
-            ae.add(ContactabilityAnalyser())
-            ae.add(OpennessAnalyser())
-            ae.add(OPQuastAnalyser())
+            #ae.add(CompletenessAnalyser())
+            #ae.add(ContactabilityAnalyser())
+            #ae.add(OpennessAnalyser())
+            #ae.add(OPQuastAnalyser())
 
             processor = CKAN()
         elif Portal.software == 'Socrata':
@@ -76,7 +83,7 @@ def fetching(obj):
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
 
-        ae.add(DatasetFetchInserter(dbm))
+        ae.add(DatasetInserter(dbm))
         
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)
@@ -88,7 +95,6 @@ def fetching(obj):
 
         pmd.fetchend()
         #processor.fetching(Portal, sn)
-
 
         ae.update(pmd)
         ae.update(Portal)
