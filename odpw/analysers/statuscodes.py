@@ -21,3 +21,13 @@ class DatasetStatusCount(ElementCountAnalyser):
             resp_codes = pmd.fetch_stats['respCodes']
             for code in resp_codes:
                 self.add(code, resp_codes[code])
+        
+        
+class ResourceStatusCode(ElementCountAnalyser):
+    def analyse_Resource(self, res):
+        self.add(res.status)
+    
+    def update_PortalMetaData(self, pmd):
+        if not pmd.res_stats:
+            pmd.res_stats = {}
+        pmd.res_stats['respCodes'] = self.getResult()

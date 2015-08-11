@@ -6,15 +6,9 @@ Created on Aug 7, 2015
 from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.analysers import Analyser
 from odpw.utils.dataset_converter import DCAT
+import odpw.utils.util as util
 
-class ResourceStatusCode(ElementCountAnalyser):
-    def analyse_Resource(self, res):
-        self.add(res.status)
-    
-    def update_PortalMetaData(self, pmd):
-        if not pmd.res_stats:
-            pmd.res_stats = {}
-        pmd.res_stats['status'] = self.getResult()
+
 
   
 class ResourceFormat(ElementCountAnalyser):
@@ -45,12 +39,21 @@ class ResourceSize(Analyser):
         if element.size and element.size>0:
             self.size+= element.size
             self.elements+=1
+    
+    def analyse_PortalMetaData(self, element):
+        print element.res_stats
+        if element.res_stats and 'size' in element.res_stats:
+            self.size += element.res_stats['size']['size']
+            self.elements+=element.res_stats['size']['count']
+            #return {'content-length':self.size,'size':util.convertSize(self.size), 'count':self.elements}
+            
             
     def update_PortalMetaData(self, pmd):
         if not pmd.res_stats:
             pmd.res_stats = {}
-        pmd.res_stats['size'] = self.getResult()   
+        pmd.res_stats['size'] = self.getResult()
+        print pmd.res_stats['size']    
         
     def getResult(self):
-        return {'content-length':self.size, 'count':self.elements}
+        return {'contentlength':util.convertSize(self.size),'size':self.size, 'count':self.elements}
  

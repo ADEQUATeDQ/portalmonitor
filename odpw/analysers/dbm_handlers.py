@@ -56,7 +56,7 @@ class DCATDistributionCount(DistinctElementCount):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el['@type']:
+                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     if str(DCAT.accessURL) in dcat_el: 
                         url = dcat_el[str(DCAT.accessURL)][0]['@value']
                         self.analyse_generic(url)
@@ -67,8 +67,7 @@ class DCATDistributionCount(DistinctElementCount):
                         log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
                         self.analyse_generic('empty')
             
-        else:
-            print "no dcat"
+        
             
     def update_PortalMetaData(self, pmd):
         if not pmd.res_stats:
@@ -83,7 +82,7 @@ class DCATDistributionInserter(Analyser):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el['@type']:
+                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     url=None
                     if str(DCAT.accessURL) in dcat_el: 
                         url = dcat_el[str(DCAT.accessURL)][0]['@value']
@@ -98,6 +97,4 @@ class DCATDistributionInserter(Analyser):
                         else:
                             R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
                             self.dbm.updateResource(R)
-        else:
-            print "no dcat"
         

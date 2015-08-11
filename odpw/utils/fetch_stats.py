@@ -25,7 +25,7 @@ log =structlog.get_logger()
 
 def simulateFetching(dbm, Portal, sn):
     
-    log.info("START Simulated Fetch", pid=Portal.id, snapshot=sn)
+    log.info("START Simulated Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
     dbm.engine.dispose()
     
     pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
@@ -33,17 +33,33 @@ def simulateFetching(dbm, Portal, sn):
         pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
         dbm.insertPortalMetaData(pmd)
      
-    pmd.fetchstart()
-    dbm.updatePortalMetaData(pmd)
-    
-    
-    pmd1 = PortalMetaData(portalID=Portal.id, snapshot=sn)
     
     ae = AnalyserSet()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
     ae.add(DatasetStatusCount())
     
+    if Portal.software == 'CKAN':
+        pass
+        # ae.add(CKANResourceInDSAge())
+            #ae.add(CKANDatasetAge())
+            #ae.add(CKANKeyAnalyser())
+            #ae.add(CKANFormatCount())
+            #ae.add(CKANTagsCount())
+            #ae.add(CKANLicenseCount())
+            #ae.add(CKANOrganizationsCount())
+
+            #ae.add(CompletenessAnalyser())
+            #ae.add(ContactabilityAnalyser())
+            #ae.add(OpennessAnalyser())
+            #ae.add(OPQuastAnalyser())
+
+    elif Portal.software == 'Socrata':
+        pass
+    elif Portal.software == 'OpenDataSoft':
+        pass
+            
+            
     ae.add(DCATConverter(Portal))
     ae.add(DCATDistributionCount(withDistinct=True))
     ae.add(DCATDistributionInserter(dbm))
@@ -58,14 +74,10 @@ def simulateFetching(dbm, Portal, sn):
     ae.add(DCATDatasetAge())
 
 #    ae.add(CKANKeyAnalyser())
-
-
 #    ae.add(CompletenessAnalyser())
 #    ae.add(ContactabilityAnalyser())
 #    ae.add(OpennessAnalyser())
 #    ae.add(OPQuastAnalyser())
-
-
     #ae.add(DatasetFetchUpdater(dbm))
     
     
@@ -80,13 +92,14 @@ def simulateFetching(dbm, Portal, sn):
     process_all(ae,progressIterator(iter, total, steps))
     
     ae.update(pmd)
-    ae.update(pmd1)
+    #ae.update(pmd1)
     #ae.update(Portal)
     
     #import pprint 
     #pprint.pprint(pmd.__dict__)
     #print "_"
-    #pprint.pprint(pmd1.__dict__)    
+    #pprint.pprint(pmd1.__dict__)  
+    pmd.fetchend()  
     dbm.updatePortalMetaData(pmd)
     #dbm.updatePortal(Portal)
 
@@ -115,16 +128,19 @@ def cli(args,dbm):
     else:
         for p in Portal.iter(dbm.getPortals()):
             pids.append(p)
-    snapshots=[]
     
+    
+    print len(pids)
     for p in pids:
+        snapshots=set([])
         if not sn:
             for s in dbm.getSnapshots(portalID=p.id):
-                snapshots.append(s['snapshot'])
+                snapshots.add(s['snapshot'])
         else:
-            snapshots.append(sn)
+            snapshots.add(sn)
         
         for sn in sorted(snapshots):
+            print p.id, sn
             simulateFetching(dbm,p,sn)
     
     

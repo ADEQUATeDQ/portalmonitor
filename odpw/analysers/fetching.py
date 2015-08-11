@@ -22,10 +22,15 @@ class MD5DatasetAnalyser(Analyser):
     
     def analyse_Dataset(self, dataset):
         if dataset.data and bool(dataset.data):
-            if dataset.software=='CKAN':
-                d = json.dumps(dataset.data, sort_keys=True, ensure_ascii=True)
-                data_md5 = hashlib.md5(d).hexdigest()
-                dataset.md5=data_md5
+            data = dataset.data
+            
+            if dataset.software=='Socrata' and 'view' in dataset.data:
+                data = dataset.data['view']
+            
+            d = json.dumps(data, sort_keys=True, ensure_ascii=True)
+            data_md5 = hashlib.md5(d).hexdigest()
+            dataset.md5=data_md5
+                
                 
 class CKANDatasetAge(Analyser):
     
@@ -88,7 +93,7 @@ class DCATDatasetAge(Analyser):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Dataset) in dcat_el['@type']:
+                if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for f in dcat_el.get(str(DCT.issued),[]):
                         try:
                             created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
@@ -140,7 +145,7 @@ class DCATResourceInDSAge(DCATDatasetAge):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el['@type']:
+                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     for f in dcat_el.get(str(DCT.issued),[]):
                         try:
                             created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
