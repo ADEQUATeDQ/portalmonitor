@@ -45,6 +45,7 @@ def fetching(obj):
 
     try: 
         ae = AnalyserSet(timing=True)
+        
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
         ae.add(DatasetStatusCount())

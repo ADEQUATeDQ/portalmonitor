@@ -75,7 +75,7 @@ class CKAN(PortalProcessor):
                                 data = datasetJSON
                                 util.extras_to_dicts(data)
                             
-                                d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
+                                d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=data, status=200, software=Portal.software)
                                 processed_ids.add(d.id)
                                 processed_names.add(datasetJSON['name'])
                                 

@@ -1,3 +1,4 @@
+from odpw.utils.util import ErrorHandler
 __author__ = 'jumbrich'
 
 import pandas
@@ -91,7 +92,7 @@ class AnalyserSet(Analyser):
             self.analysers[analyser.name()] = analyser
         return analyser
 
-    def analyse(self, element):
+    def analyse(self, element, safe=None):
         for c in self.analysers.itervalues():
             c.analyse(element)
         
@@ -111,6 +112,16 @@ class AnalyserSet(Analyser):
         
     def getAnalysers(self):
         return self.analysers.values()
+    
+    
+class SAFEAnalyserSet(AnalyserSet):
+    
+   def analyse(self, element, safe=None):
+        for c in self.analysers.itervalues():
+            try:
+                c.analyse(element)
+            except Exception as e:
+                ErrorHandler.handleError(log, "AnalyserException", analyser=str(c), exception=e, exc_info=True)
 
 class AnalyseEngine(Analyser):
     

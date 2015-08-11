@@ -40,6 +40,8 @@ def dftopk(df, column=None, k=10, percentage=False, otherrow=False):
     rows=df.shape[0]
     dfsort = df.sort(column, ascending=False)
     
+    if rows <k:
+        k=rows
     topn = dfsort.copy().head(k)
     
     if otherrow and k<rows:
@@ -57,7 +59,11 @@ def addPercentageCol(df, column='count', total=None):
     tsum = dfc[column].sum()
     if total:
         tsum=total
-    dfc['perc'] = 100*dfc[column]/tsum
+    
+    if tsum==0:
+        dfc['perc'] = 100*dfc[column]/100
+    else:
+        dfc['perc'] = 100*dfc[column]/tsum
     return dfc
 
 def DFtoListDict(df):
@@ -346,6 +352,27 @@ class DatasetSumReporter(SumReporter):
     pass
 class ResourceSumReporter(SumReporter):
     pass
+
+class ResourceSizeReporter(Reporter, UIReporter):
+    def __init__(self, analyser):
+        self.analyser= analyser
+        self.df = None    
+    
+    def getDataFrame(self):
+        if self.df is None:
+            print self.analyser.getResult()
+            
+            self.df = pd.DataFrame([self.analyser.getResult()])
+        return self.df
+
+    def uireport(self):
+        return {self.name(): self.analyser.getResult()}
+
+    def clireport(self):
+        print self.name()
+        print '-------------------'
+        print self.getDataFrame()
+        print      
 #===============================================================================
 # 
 # class LicensesReporter(Reporter, CSVReporter):

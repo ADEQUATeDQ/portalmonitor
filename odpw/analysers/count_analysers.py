@@ -15,13 +15,27 @@ log =structlog.get_logger()
 
 class ResourceCount(DistinctElementCount):
     
-    def __init__(self):
-        super(ResourceCount, self).__init__(withDistinct=True)
+    def __init__(self,withDistinct=None, updateAll=False):
+        super(ResourceCount, self).__init__(withDistinct=withDistinct)
+        self.updateAll=updateAll
+        
         
     def update_PortalMetaData(self, pmd):
+        exists=True
         if not pmd.res_stats:
             pmd.res_stats = {}
-        pmd.res_stats['status'] = self.getResult()
+            exists=False
+        
+        if self.updateAll:
+            pmd.res_stats['total']= self.getResult()['count']
+        if 'distinct' in self.getResult():
+            if exists and pmd.res_stats['distinct'] !=  self.getResult()['distinct']:
+                print "mismatch between distinct",pmd.res_stats['distinct'],  self.getResult()['distinct']
+            else:
+                pmd.res_stats['distinct']= self.getResult()['distinct']
+                pmd.res_stats['urls']= self.getResult()['urls']
+        if self.updateAll:
+            pmd.resources = self.getResult()['count']
     
     def analyse_PortalMetaData(self, element):
         if element.resources>=0:
@@ -29,6 +43,18 @@ class ResourceCount(DistinctElementCount):
             
     def analyse_Resource(self, resource):
         self.analyse_generic(resource.url)
+    
+    def getResult(self):
+        res = super(ResourceCount,self).getResult()
+        if self.set is not None:
+            res['urls']=0
+            for r in self.set:
+                try:
+                    url = urlnorm.norm(r)
+                    res['urls']+=1
+                except Exception as e:
+                    pass
+        return res
 
 class DatasetCount(DistinctElementCount):
     def __init__(self):
@@ -193,7 +219,7 @@ class DCATDistributionCount(DistinctElementCount):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el['@type']:
+                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     if str(DCAT.accessURL) in dcat_el: 
                         url = dcat_el[str(DCAT.accessURL)][0]['@value']
                         self.analyse_generic(url)
@@ -204,8 +230,8 @@ class DCATDistributionCount(DistinctElementCount):
                         log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
                         self.empty+=1
             
-        else:
-            print "no dcat"
+        #else:
+        #   print "no dcat"
       
     def getResult(self):
         res = super(DCATDistributionCount,self).getResult()
@@ -236,7 +262,7 @@ class DCATFormatCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el['@type']:
+                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
                         self.add(f['@value'])
         
@@ -275,7 +301,7 @@ class DCATOrganizationsCount(ElementCountAnalyser):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
                 #TODO there is also a FOAF.Ogranisation
-                if str(FOAF.Organization) in dcat_el['@type']:
+                if str(FOAF.Organization) in dcat_el.get('@type',[]):
                     for tag in dcat_el.get(str(FOAF.name),[]):
                         self.add(tag['@value'])
 
@@ -301,7 +327,7 @@ class DCATTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
         if dataset.dcat:
             for dcat_el in dataset.dcat:
-                if str(DCAT.Dataset) in dcat_el['@type']:
+                if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for tag in dcat_el.get(str(DCAT.keyword),[]):
                         self.add(tag['@value'])
                              

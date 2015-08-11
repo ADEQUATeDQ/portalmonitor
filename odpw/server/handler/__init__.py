@@ -15,7 +15,7 @@ from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,
     Report, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter, LicensesReporter,\
     TagReporter, OrganisationReporter, FormatCountReporter, DatasetSumReporter,\
-    ResourceSumReporter
+    ResourceSumReporter, ResourceSizeReporter
 from odpw.utils.timer import Timer
 from odpw.analysers import process_all, AnalyserSet
 
@@ -29,6 +29,7 @@ from odpw.analysers.fetching import  CKANLicenseConformance
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
     DCATFormatCount, DatasetCount, ResourceCount
 from odpw.analysers.core import DCATConverter
+from odpw.analysers.resource_analysers import ResourceSize
 
 
 class BaseHandler(RequestHandler):
@@ -59,12 +60,14 @@ class BaseHandler(RequestHandler):
         except TemplateNotFound:
             raise HTTPError(404)
         self.env.globals['static_url'] = self.static_url
-        if self.printHtml:
-            try:
-                with open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), "w") as f:
-                    f.write(template.render(kwargs ))
-            except TemplateNotFound as e:
-                print e
+        #=======================================================================
+        # if self.printHtml:
+        #     try:
+        #         with open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), "w") as f:
+        #             f.write(template.render(kwargs ))
+        #     except TemplateNotFound as e:
+        #         print e
+        #=======================================================================
         
         
         self.write(template.render(kwargs))
@@ -110,17 +113,20 @@ class PortalHandler(BaseHandler):
     
                     resC= aset.add(ResourceCount())   # how many resources
                     dsC=dc= aset.add(DatasetCount())    # how many datasets
+                    rsize=aset.add(ResourceSize())
     
                     #use the latest portal meta data object
                     if not snapshot:
                         pmd = self.db.getLatestPortalMetaData(portalID=portalID)
                     else:
+                        print snapshot
                         pmd = self.db.getPortalMetaData(portalID=portalID, snapshot=snapshot)
                     aset = process_all(aset, [pmd])
         
                     rep = Report([rep,
                     DatasetSumReporter(resC),
                     ResourceSumReporter(dsC),
+                    ResourceSizeReporter(rsize),
                     #LicensesReporter(lc,lcc,topK=3),
                     TagReporter(tc,dc, topK=3),
                     OrganisationReporter(oc, topK=3),

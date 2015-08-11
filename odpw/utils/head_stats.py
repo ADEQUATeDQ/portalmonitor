@@ -3,6 +3,7 @@ import time
 import odpw.utils.util as util
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.resource_analysers import ResourceStatusCode, ResourceSize
+from odpw.analysers.count_analysers import ResourceCount
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -32,15 +33,17 @@ def headStats(dbm, sn, portalID):
     
     rsc= aset.add(ResourceStatusCode())
     rsize= aset.add(ResourceSize())
+    rc= aset.add(ResourceCount(withDistinct=True))
     
     process_all(aset, iter)
     
     pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
+    
     aset.update(pmd)
     
-    print pmd.res_stats
-    print 'res',rsc.getResult()
-
+    #print pmd.res_stats
+    
+    dbm.updatePortalMetaData(pmd)
     
 
 #===============================================================================
@@ -130,14 +133,13 @@ def cli(args,dbm):
     else:
         for p in Portal.iter(dbm.getPortals()):
             pids.append(p.id)
-    snapshots=[]
-    
     for pid in pids:
+        snapshots=set([])
         if not sn:
             for s in dbm.getSnapshots(portalID=pid):
-                snapshots.append(s['snapshot'])
+                snapshots.add(s['snapshot'])
         else:
-            snapshots.append(sn)
+            snapshots.add(sn)
         
         for sn in sorted(snapshots):
             headStats(dbm,sn,pid)
