@@ -308,3 +308,21 @@ class DCATTagsCount(TagsCount):
     def analyse_DCATTagsCount(self, tag_analyser):
         super(DCATTagsCount, self).analyse_TagsCount(tag_analyser)
 
+
+class CKANKeysCount(ElementCountAnalyser):
+    def __init__(self, keys_set=None):
+        super(CKANKeysCount, self).__init__()
+        self.keys_set = keys_set
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'keys' in pmd.general_stats:
+            keys = pmd.general_stats['keys']
+            if not isinstance(keys, dict):
+                return
+            if self.keys_set:
+                groups = [self.keys_set]
+            else:
+                groups = ['core', 'extra', 'res']
+            for g in groups:
+                for k in keys.get(g, []):
+                    self.add(k, k['count'])

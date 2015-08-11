@@ -15,3 +15,9 @@ class DatasetStatusCount(ElementCountAnalyser):
         if not pmd.fetch_stats:
             pmd.fetch_stats = {}
         pmd.fetch_stats['respCodes'] = self.getResult()
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.fetch_stats and 'respCodes' in pmd.fetch_stats:
+            resp_codes = pmd.fetch_stats['respCodes']
+            for code in resp_codes:
+                self.add(code, resp_codes[code])

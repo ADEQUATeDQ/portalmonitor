@@ -337,6 +337,8 @@ class CKANKeyAnalyser(Analyser):
 
         self.__aggregateResKeys(self.freq[self.R], self.keys[self.R])
 
+    def getKeys(self):
+        return self.freq
 
     def getResult(self):
         return self.keys
@@ -427,6 +429,75 @@ class CKANKeyAnalyser(Analyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['keys'] = self.getResult()
+
+
+class UsageAnalyser(Analyser):
+    def __init__(self, keyAnalyser):
+        self.keys = keyAnalyser.getKeys()
+        self.size=0
+        self.quality= {'total':0,
+                       'core':0,
+                       'extra':0,
+                       'res':0}
+        self.usage = {'total':np.array([]),
+                       'core':np.array([]),
+                       'extra':np.array([]),
+                       'res':np.array([])}
+
+    def analyse_Dataset(self, dataset):
+        # if no dict, return (e.g. access denied)
+        if not dataset.data or not isinstance(dataset.data, dict):
+            return
+        data = dataset.data
+        # count only opened packages
+        self.size += 1
+
+        fields = {
+            'total': 0,
+            'core': len(data),
+            'extra': len(data['extras']) if 'extras' in data else 0,
+            'res': 0
+        }
+
+        reskeys = 0
+        if "resources" in data:
+            reskeys = len(self.keys['res'].keys())*1.0* len(data['resources'])
+            for res in data['resources']:
+                fields['res'] += len(res)
+
+        fields['total'] = fields['core'] + fields['extra'] + fields['res']
+
+        self.usage['core'] = np.append(
+            self.usage['core'],
+            fields['core'] / (len(self.keys['core'].keys()) *1.0)
+        )
+        if len(self.keys['extra'].keys())!= 0:
+            self.usage['extra'] = np.append(
+                self.usage['extra'],
+                fields['extra'] / (len(self.keys['extra'].keys())*1.0)
+            )
+        if reskeys != 0:
+            self.usage['res'] = np.append(
+                self.usage['res'],
+                fields['res'] / (reskeys) )
+
+        self.usage['total'] = np.append(
+            self.usage['total'],
+            fields['total'] /
+                ( len(self.keys['core'].keys()) + len(self.keys['extra'].keys())+ reskeys)
+        )
+
+    def done(self):
+        for i in ['total', 'extra', 'core', 'res']:
+            self.quality[i] = self.usage[i].mean()
+
+    def getResult(self):
+        return self.quality
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats['Qu'] = self.quality
 
 
 class CKANLicenseConformance(Analyser):
