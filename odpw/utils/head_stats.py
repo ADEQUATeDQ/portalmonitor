@@ -2,8 +2,9 @@
 import time
 import odpw.utils.util as util
 from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.resource_analysers import ResourceStatusCode, ResourceSize
+from odpw.analysers.resource_analysers import  ResourceSize
 from odpw.analysers.count_analysers import ResourceCount
+from odpw.analysers.statuscodes import ResourceStatusCode
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\

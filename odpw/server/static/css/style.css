@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'Junction';
-    src: url('static/fonts/junction-bold.eot');
-    src: url('static/fonts/junction-bold.eot?#iefix') format('embedded-opentype'), url('static/fonts/junction-bold.woff') format('woff'), url('static/fonts/junction-bold.ttf') format('truetype'), url('static/fonts/junction-bold.svg#junctionbold') format('svg');
+    src: url('junction-bold.eot');
+    src: url('junction-bold.eot?#iefix') format('embedded-opentype'), url('static/fonts/junction-bold.woff') format('woff'), url('static/fonts/junction-bold.ttf') format('truetype'), url('static/fonts/junction-bold.svg#junctionbold') format('svg');
     font-weight: bold;
     font-style: normal;
 }
@@ -204,10 +204,7 @@ aside{
 }
 #nav-side li a,
 #nav-side li a p {
-  
     border-radius: 5px 0px 0px 5px;
-    
-    
 }
 
 #nav-side li.active a{
@@ -273,20 +270,32 @@ ul#portalList {
 	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
     
     box-shadow: 0 0.5px 0 0 #ffffff inset, 0 1px 2px 0 #B3B3B3;
+    box-shadow: 0 0.5px 0 0 #ffffff inset, 0 1px 2px 0 #B3B3B3;
     */
+    
+    
 }
 
 .card_header {
     font-style: normal;
     font-weight: bold;
+    height:40px;
     line-height: 40px;
     margin: 0px;
     font-size: 18px;
+    border-radius: 5px 5px 0px 0px;
     
     font-family: 'Raleway';
   
-    
-    border-bottom: solid 1px black;
+    background: rgba(220,220,220,0.1);
+    border-bottom: solid 1px rgba(200,200,200,0.5);
+}
+.card_cnt {
+    padding-top: 10px;
+    /*background: rgba(200,200,200,0.1);  */
+}
+.card_footer {
+    border-top: solid 1px rgba(200,200,200,0.5);
 }
 
 .card_value{
@@ -300,9 +309,7 @@ ul#portalList {
     color:dimgrey;
 }
 
-.card_cnt {
-    padding-top: 10px;
-}
+
 
 .card_cnt li:not(:first-child) {
     border-left: 1px solid rgba(90, 94, 97, 0.5);
@@ -314,7 +321,7 @@ ul#portalList {
     margin: 0px;
 }
 
-.card_footer {}
+
 
 
 

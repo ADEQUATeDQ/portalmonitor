@@ -15,7 +15,7 @@ from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,
     Report, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter, LicensesReporter,\
     TagReporter, OrganisationReporter, FormatCountReporter, DatasetSumReporter,\
-    ResourceSumReporter, ResourceSizeReporter
+    ResourceSumReporter, ResourceSizeReporter, ResourceCountReporter
 from odpw.utils.timer import Timer
 from odpw.analysers import process_all, AnalyserSet
 
@@ -27,7 +27,7 @@ from odpw.analysers.fetching import  CKANLicenseConformance
     
 
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, DatasetCount, ResourceCount
+    DCATFormatCount, DatasetCount, ResourceCount, PMDResourceCount
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
 
@@ -60,14 +60,13 @@ class BaseHandler(RequestHandler):
         except TemplateNotFound:
             raise HTTPError(404)
         self.env.globals['static_url'] = self.static_url
-        #=======================================================================
-        # if self.printHtml:
-        #     try:
-        #         with open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), "w") as f:
-        #             f.write(template.render(kwargs ))
-        #     except TemplateNotFound as e:
-        #         print e
-        #=======================================================================
+        if self.printHtml:
+            try:
+                import codecs
+                with codecs.open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), 'wb', 'utf-8') as f:
+                    f.write(template.render( kwargs ))
+            except TemplateNotFound as e:
+                print e
         
         
         self.write(template.render(kwargs))
@@ -105,13 +104,12 @@ class PortalHandler(BaseHandler):
                     #lc=aset.add(CKANLicenseCount())# how many licenses
                     #lcc=aset.add(CKANLicenseConformance())
         
-                    aset.add(DCATConverter(Portal))
-        
+                    #aset.add(DCATConverter(Portal))
                     tc= aset.add(DCATTagsCount())   # how many tags
                     oc= aset.add(DCATOrganizationsCount())# how many organisations
                     fc= aset.add(DCATFormatCount())# how many formats
     
-                    resC= aset.add(ResourceCount())   # how many resources
+                    resC= aset.add(PMDResourceCount())   # how many resources
                     dsC=dc= aset.add(DatasetCount())    # how many datasets
                     rsize=aset.add(ResourceSize())
     
@@ -119,20 +117,19 @@ class PortalHandler(BaseHandler):
                     if not snapshot:
                         pmd = self.db.getLatestPortalMetaData(portalID=portalID)
                     else:
-                        print snapshot
                         pmd = self.db.getPortalMetaData(portalID=portalID, snapshot=snapshot)
                     aset = process_all(aset, [pmd])
         
                     rep = Report([rep,
-                    DatasetSumReporter(resC),
-                    ResourceSumReporter(dsC),
+                    DatasetSumReporter(dsC),
+                    ResourceCountReporter(resC),
                     ResourceSizeReporter(rsize),
                     #LicensesReporter(lc,lcc,topK=3),
                     TagReporter(tc,dc, topK=3),
                     OrganisationReporter(oc, topK=3),
                     FormatCountReporter(fc, topK=3)])
     
-                    self.render('portal_info.jinja', portals=True,data=rep.uireport(), portalID=portalID, snapshot=snapshot)
+                    self.render('portal_info.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
             else:
                 self.render('portals_detail.jinja', portals=True)
             

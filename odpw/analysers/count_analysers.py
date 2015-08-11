@@ -10,9 +10,24 @@ from odpw.utils.dataset_converter import DCAT, FOAF, VCARD, DCT
 import structlog
 from odpw.analysers import Analyser
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
+from _collections import defaultdict
 log =structlog.get_logger()
 
 
+class PMDResourceCount(Analyser):
+    
+    def __init__(self):
+        self.aggs=defaultdict(int)
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.res_stats:
+            for k,v in pmd.res_stats.items():
+                if not isinstance(v, list) and not isinstance(v, dict):
+                    self.aggs[k]+=v
+        
+    def getResult(self):
+        return dict(self.aggs)
+        
 class ResourceCount(DistinctElementCount):
     
     def __init__(self,withDistinct=None, updateAll=False):
@@ -36,10 +51,6 @@ class ResourceCount(DistinctElementCount):
                 pmd.res_stats['urls']= self.getResult()['urls']
         if self.updateAll:
             pmd.resources = self.getResult()['count']
-    
-    def analyse_PortalMetaData(self, element):
-        if element.resources>=0:
-            self.count+= element.resources
             
     def analyse_Resource(self, resource):
         self.analyse_generic(resource.url)

@@ -353,6 +353,20 @@ class DatasetSumReporter(SumReporter):
 class ResourceSumReporter(SumReporter):
     pass
 
+class ResourceCountReporter(Reporter, UIReporter):
+    def __init__(self, analyser):
+        self.analyser= analyser
+        self.df = None 
+
+    def getDataFrame(self):
+        if self.df is None:
+            print self.analyser.getResult()
+            self.df = pd.DataFrame([self.analyser.getResult()])
+        return self.df
+
+    def uireport(self):
+        return {self.name(): self.analyser.getResult()}
+
 class ResourceSizeReporter(Reporter, UIReporter):
     def __init__(self, analyser):
         self.analyser= analyser
