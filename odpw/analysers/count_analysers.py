@@ -238,7 +238,7 @@ class DCATDistributionCount(DistinctElementCount):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         self.empty=0
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     if str(DCAT.accessURL) in dcat_el: 
@@ -281,7 +281,7 @@ class DCATDistributionCount(DistinctElementCount):
 
 class DCATFormatCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
@@ -319,7 +319,7 @@ class DCATLicenseCount(ElementCountAnalyser):
 
 class DCATOrganizationsCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 #TODO there is also a FOAF.Ogranisation
                 if str(FOAF.Organization) in dcat_el.get('@type',[]):
@@ -346,7 +346,7 @@ class DCATOrganizationsCount(ElementCountAnalyser):
 
 class DCATTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for tag in dcat_el.get(str(DCAT.keyword),[]):
