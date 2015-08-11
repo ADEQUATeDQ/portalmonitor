@@ -36,7 +36,6 @@ def fetching(obj):
     try:
         ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
-        
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
@@ -133,7 +132,6 @@ def checkProcesses(processes, pidFile):
                 pidFile.flush()
             except Exception as e:
                 print e
-    
     for pID in rem:
         del processes[pID]
     assert p-len(processes) == len(rem) 

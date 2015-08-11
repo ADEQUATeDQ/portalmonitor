@@ -137,7 +137,7 @@ def extras_to_dicts(datasets):
 
 def extras_to_dict(dataset):
     extras_dict = {}
-    if dataset:
+    if dataset and isinstance(dataset, dict):
         extras = dataset.get("extras", [])
         if isinstance(extras, list):
             for extra in extras:
@@ -146,6 +146,8 @@ def extras_to_dict(dataset):
                     value = extra["value"]
                     extras_dict[key] = value
             dataset["extras"] = extras_dict
+        else:
+            log.info("DatasetUnicode", data=dataset)
 
 def computeID(url):
     try:

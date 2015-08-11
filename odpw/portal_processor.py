@@ -70,24 +70,28 @@ class CKAN(PortalProcessor):
                     start+=rows
                     for datasetJSON in datasets:
                         datasetID = datasetJSON['id']
-                        if datasetID not in processed_ids:
-                            data = datasetJSON
-                            util.extras_to_dicts(data)
+                        try:
+                            if datasetID not in processed_ids:
+                                data = datasetJSON
+                                util.extras_to_dicts(data)
                             
-                            d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
-                            processed_ids.add(d.id)
-                            processed_names.add(datasetJSON['name'])
-                            
-                            
-                            p_count+=1
-                            if p_count%p_steps ==0:
-                                progressIndicator(p_count, total, label=Portal.id)
-                                log.info("ProgressDSFetchBatch", pid=Portal.id, processed=len(processed_ids))
+                                d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
+                                processed_ids.add(d.id)
+                                processed_names.add(datasetJSON['name'])
                                 
-                            now = time.time()
-                            if now-starttime>timeout:
-                                raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
-                            yield d
+                                p_count+=1
+                                if p_count%p_steps ==0:
+                                    progressIndicator(p_count, total, label=Portal.id)
+                                    log.info("ProgressDSFetchBatch", pid=Portal.id, processed=len(processed_ids))
+                                    
+                                now = time.time()
+                                if now-starttime>timeout:
+                                    raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
+                                yield d
+                                
+                        except Exception as e:
+                            ErrorHandler.handleError(log,"CKANDSFetchDatasetBatchError", pid=Portal.id, did=datasetID, exception=e, exc_info=True)
+                    
                     rows = min([int(rows*1.2),1000])
                 else:
                     break
@@ -113,7 +117,7 @@ class CKAN(PortalProcessor):
             for entity in package_list:
                 #WAIT between two consecutive GET requests
                 
-                if entity not in processed_ids or entity not in processed_names:
+                if entity not in processed_ids and entity not in processed_names:
 
                     time.sleep(random.uniform(0.5, 1))
                     log.debug("GETMetaData", pid=Portal.id, did=entity)
@@ -138,7 +142,6 @@ class CKAN(PortalProcessor):
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
 
-
                         processed_names.add(entity)
                         #we always use the ckan-id for the dataset if possible
                         if props['data'] and 'id' in props['data']:
@@ -149,6 +152,7 @@ class CKAN(PortalProcessor):
                         if p_count%p_steps ==0:
                             progressIndicator(p_count, tt, label=Portal.id+"_single")
                             log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed_ids))
+                        
                         now = time.time()
                         if now-starttime>timeout:
                             raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
@@ -165,7 +169,6 @@ class CKAN(PortalProcessor):
 
 class Socrata(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, sn, dcat=True):
-
         api = urlparse.urljoin(Portal.url, '/api/')
         page = 1
         processed=set([])
@@ -198,7 +201,6 @@ class Socrata(PortalProcessor):
                             dcat_data = self._dcat(datasetID, api)
                         except Exception as e:
                             dcat_data = None
-                        print dcat_data
                         d.data['dcat'] = dcat_data
 
                     if len(processed) % 1000 == 0:
