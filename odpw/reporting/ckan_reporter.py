@@ -48,7 +48,7 @@ if __name__ == '__main__':
     core_key_count = pmd_analyser.add(CKANKeysCount(keys_set='core', total_count=False))
     extra_key_count = pmd_analyser.add(CKANKeysCount(keys_set='extra', total_count=False))
 
-    lid_count = pmd_analyser.add(CKANLicenseIDCount())
+    lid_count = pmd_analyser.add(CKANLicenseIDCount(total_count=True))
 
     # 2. Portal size distribution
     bins = [0,100,500,1000,10000,50000,100000,1000000]
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     # TODO resource resp code distribution
 
     # usage and completeness
-    compl_histogram = pmd_analyser.add(CompletenessHistogram)
+    compl_histogram = pmd_analyser.add(CompletenessHistogram())
 
 
 

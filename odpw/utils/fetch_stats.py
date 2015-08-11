@@ -5,7 +5,7 @@ from odpw.analysers.quality.analysers.contactability import ContactabilityAnalys
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
 from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 import odpw.utils.util as util
-from odpw.analysers import AnalyseEngine, process_all
+from odpw.analysers import AnalyseEngine, process_all, SAFEAnalyserSet
 
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATDatasetAge,\
@@ -39,7 +39,7 @@ def simulateFetching(dbm, Portal, sn):
         dbm.insertPortalMetaData(pmd)
      
     
-    ae = AnalyserSet()
+    ae = SAFEAnalyserSet()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
     ae.add(DatasetStatusCount())
