@@ -190,18 +190,28 @@ class CKANOrganizationsCount(ElementCountAnalyser):
                 self.add(o, orgs[o])
 
 class TagsCount(ElementCountAnalyser):
+    def __init__(self, total_count=True):
+        super(TagsCount, self).__init__()
+        self.total_count = total_count
+
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'tags' in pmd.general_stats:
             tags = pmd.general_stats['tags']
             if isinstance(tags, dict):
                 for t in tags:
-                    self.add(t, tags[t])
+                    if self.total_count:
+                        self.add(t, tags[t])
+                    else:
+                        self.add(t)
 
     def analyse_TagsCount(self, tag_analyser):
         tags = tag_analyser.getResult()
         if isinstance(tags, dict):
             for t in tags:
-                self.add(t, tags[t])
+                if self.total_count:
+                    self.add(t, tags[t])
+                else:
+                    self.add(t)
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
@@ -344,4 +354,57 @@ class DCATTagsCount(TagsCount):
                              
     def analyse_DCATTagsCount(self, tag_analyser):
         super(DCATTagsCount, self).analyse_TagsCount(tag_analyser)
+
+
+class CKANKeysCount(ElementCountAnalyser):
+    def __init__(self, keys_set=None, total_count=False):
+        super(CKANKeysCount, self).__init__()
+        self.keys_set = keys_set
+        self.total_count = total_count
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'keys' in pmd.general_stats:
+            keys = pmd.general_stats['keys']
+            if not isinstance(keys, dict):
+                return
+            if self.keys_set:
+                groups = [self.keys_set]
+            else:
+                groups = ['core', 'extra', 'res']
+            for g in groups:
+                key_group = keys.get(g, {})
+                for k in key_group:
+                    if self.total_count:
+                        self.add(k, key_group[k]['count'])
+                    else:
+                        self.add(k)
+
+
+class CKANLicenseIDCount(ElementCountAnalyser):
+    def __init__(self, total_count=True):
+        super(CKANLicenseIDCount, self).__init__()
+        self.total_count = total_count
+
+    def analyse_Dataset(self, dataset):
+        if dataset.data and 'license_id' in dataset.data:
+            lid = dataset.data.get('license_id', 'mis')
+            if isinstance(lid, basestring):
+                self.add(lid)
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'licenses' in pmd.general_stats and 'id_count' in pmd.general_stats['licenses']:
+            ids = pmd.general_stats['licenses']['id_count']
+            if isinstance(ids, dict):
+                for lid in ids:
+                    if self.total_count:
+                        self.add(lid, ids[lid])
+                    else:
+                        self.add(lid)
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        if 'licenses' not in pmd.general_stats:
+            pmd.general_stats['licenses'] = {}
+        pmd.general_stats['licenses']['id_count'] = self.getResult()
 

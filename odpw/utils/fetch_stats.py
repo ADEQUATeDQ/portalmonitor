@@ -1,14 +1,19 @@
 
 import time
+from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
+from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 import odpw.utils.util as util
-from odpw.analysers import AnalyseEngine, process_all
+from odpw.analysers import AnalyseEngine, process_all, SAFEAnalyserSet
 
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATDatasetAge,\
-    DCATResourceInDSAge
+    DCATResourceInDSAge, CKANKeyAnalyser, CKANDatasetAge, CKANResourceInDSAge
 from odpw.analysers.statuscodes import DatasetStatusCount
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
-    DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
+    DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, CKANLicenseIDCount, CKANTagsCount, \
+    CKANFormatCount, CKANLicenseCount, CKANOrganizationsCount
 from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
     DCATDistributionInserter
 from odpw.analysers import AnalyserSet
@@ -34,25 +39,24 @@ def simulateFetching(dbm, Portal, sn):
         dbm.insertPortalMetaData(pmd)
      
     
-    ae = AnalyserSet()
+    ae = SAFEAnalyserSet()
     ae.add(MD5DatasetAnalyser())
     ae.add(DatasetCount())
     ae.add(DatasetStatusCount())
     
     if Portal.software == 'CKAN':
-        pass
-        # ae.add(CKANResourceInDSAge())
-            #ae.add(CKANDatasetAge())
-            #ae.add(CKANKeyAnalyser())
-            #ae.add(CKANFormatCount())
-            #ae.add(CKANTagsCount())
-            #ae.add(CKANLicenseCount())
-            #ae.add(CKANOrganizationsCount())
-
-            #ae.add(CompletenessAnalyser())
-            #ae.add(ContactabilityAnalyser())
-            #ae.add(OpennessAnalyser())
-            #ae.add(OPQuastAnalyser())
+        ae.add(CKANKeyAnalyser())
+        ae.add(CKANLicenseIDCount())
+        ae.add(CKANResourceInDSAge())
+        ae.add(CKANDatasetAge())
+        ae.add(CKANFormatCount())
+        ae.add(CKANTagsCount())
+        ae.add(CKANLicenseCount())
+        ae.add(CKANOrganizationsCount())
+        ae.add(CompletenessAnalyser())
+        ae.add(ContactabilityAnalyser())
+        ae.add(OpennessAnalyser())
+        ae.add(OPQuastAnalyser())
 
     elif Portal.software == 'Socrata':
         pass

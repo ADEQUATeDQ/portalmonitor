@@ -52,8 +52,10 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
             graph.parse(data=dataset_dict['dcat'], format='xml')
+            # TODO redesign distribution, format, contact (publisher, organization)
     elif portal.software == 'OpenDataSoft':
         graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
+        # TODO contact, publisher, organization
 
     #print graph.serialize(format='n3')
     return json.loads(graph.serialize(format=format))
