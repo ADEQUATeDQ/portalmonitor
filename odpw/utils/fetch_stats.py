@@ -15,7 +15,7 @@ from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, CKANLicenseIDCount, CKANTagsCount, \
     CKANFormatCount, CKANLicenseCount, CKANOrganizationsCount
 from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
-    DCATDistributionInserter
+    DCATDistributionInserter, DatasetUpdater
 from odpw.analysers import AnalyserSet
 __author__ = 'jumbrich'
 
@@ -57,12 +57,12 @@ def simulateFetching(dbm, Portal, sn):
         ae.add(ContactabilityAnalyser())
         ae.add(OpennessAnalyser())
         ae.add(OPQuastAnalyser())
-
+        
     elif Portal.software == 'Socrata':
         pass
     elif Portal.software == 'OpenDataSoft':
         pass
-            
+    
             
     ae.add(DCATConverter(Portal))
     ae.add(DCATDistributionCount(withDistinct=True))
@@ -74,6 +74,8 @@ def simulateFetching(dbm, Portal, sn):
     ae.add(DCATResourceInDSAge())
     ae.add(DCATDatasetAge())
 
+    ae.add(DatasetUpdater(dbm))
+    
     total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
     
     steps=total/10

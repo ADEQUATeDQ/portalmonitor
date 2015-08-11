@@ -32,6 +32,14 @@ class DatasetFetchUpdater(Analyser):
     def analyse_Dataset(self, dataset):
         self.dbm.updateDatasetFetch(dataset)
 
+class DatasetUpdater(Analyser):
+    def __init__(self, dbm):
+        self.dbm = dbm
+    
+    def analyse_Dataset(self, dataset):
+        self.dbm.updateDataset(dataset)
+
+
 class CKANResourceInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
