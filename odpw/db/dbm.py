@@ -190,7 +190,22 @@ class PostgressDBM(object):
     def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
             
-            s = select([self.pmd.c.portal_id,self.pmd.c.snapshot])
+            s = select([self.datasets.c.portal_id , self.datasets.c.snapshot])
+            
+            if portalID:
+                s= s.where(self.datasets.c.portal_id==portalID)
+            if apiurl:
+                s= s.where(self.datasets.c.apiurl==apiurl)
+            
+            s=s.distinct()
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
+     
+    def getSnapshotsFromPMD(self, portalID=None,apiurl=None):
+        with Timer(key="getSnapshotsFromPMD") as t:
+            
+            s = select([self.pmd.c.portal_id , self.pmd.c.snapshot])
             
             if portalID:
                 s= s.where(self.pmd.c.portal_id==portalID)
@@ -201,7 +216,6 @@ class PostgressDBM(object):
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
-     
     ###
     # PORTALS
     ####         
@@ -433,6 +447,46 @@ class PostgressDBM(object):
             self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
             #self.conn.execute(ins)
             ins.execute()
+    
+    def updateDatasetFetch(self, Dataset):
+        with Timer(key="insertDatasetFetch") as t:
+            #assuming we have a change
+            change=2
+            
+            #TODO optimise query, get first the latest snapshot and check then for md5
+            s=select([self.datasets.c.md5]).where(
+                                                  and_(
+                                                       self.datasets.c.id==Dataset.id, 
+                                                       self.datasets.c.portal_id==Dataset.portal_id,
+                                                       self.datasets.c.snapshot != Dataset.snapshot)
+                                                   ).order_by(self.datasets.c.snapshot.desc()).limit(1)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            result=s.execute()
+            if result:
+                for res in result:
+                    if Dataset.md5 == res['md5'] :
+                        change=0
+            else: 
+                change=1
+            
+            up = self.datasets.update().where(
+                                              and_(self.datasets.c.portal_id == Dataset.portal_id,
+                                                   self.datasets.c.snapshot == Dataset.snapshot,
+                                                   self.datasets.c.id == Dataset.id
+                                                   )).\
+                values(
+                       data=Dataset.data,
+                       status=Dataset.status,
+                       exception=Dataset.exception,
+                       md5=Dataset.md5,
+                       change=change,
+                       qa_stats=Dataset.qa_stats,
+                       )
+            
+            self.log.debug(query=up.compile(), params=up.compile().params)
+            #self.conn.execute(ins)
+            up.execute()        
+    
     def insertDataset(self, Dataset):
         with Timer(key="insertDataset") as t:
             #assuming we have a change
@@ -639,7 +693,6 @@ class PostgressDBM(object):
             s = select([self.resources])
         
             s= s.where(self.resources.c.url == Resource.url)
-            
             s= s.where(self.resources.c.snapshot == Resource.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
@@ -768,6 +821,22 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             
+            
+    #SELECT portal_id, count(id)  from datasets where (data -> 'extras') is Null and snapshot=1533 and software='CKAN' and status=200 group by portal_id
+
+    def getMissingExtras(self,snapshot=None, software=None):
+        s = select([ self.datasets.c.portal_id, self.datasets.c.id])
+        
+        if snapshot:
+            s= s.where(self.datasets.c.snapshot == snapshot)
+        if software:
+            s= s.where(self.datasets.c.software == software)
+        s= s.where(self.datasets.c.status == 200)
+        s=s.where(self.datasets.c.data['extras']==None)
+        
+
+        self.log.debug(query=s.compile(), params=s.compile().params)
+        return s.execute()
     
 def name():
     return 'DB'

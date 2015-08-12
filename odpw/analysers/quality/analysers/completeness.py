@@ -3,6 +3,7 @@ __author__ = 'jumbrich'
 
 import numpy as np
 from odpw.analysers.quality.interpret_meta_field import is_empty
+import odpw.utils.util as odpwutil
 
 class CompletenessAnalyser(Analyser):
 
@@ -15,10 +16,10 @@ class CompletenessAnalyser(Analyser):
                        'extra':0,
                        'res':0}
 
-        self.compl = {'total':np.array([]),
-                       'core':np.array([]),
-                       'extra':np.array([]),
-                       'res':np.array([])}
+        self.compl = {'total':[],
+                       'core':[],
+                       'extra':[],
+                       'res':[]}
 
 
     def analyse_Dataset(self, dataset):
@@ -26,6 +27,7 @@ class CompletenessAnalyser(Analyser):
         # taking the top level metadata fields of the dataset into account
         #print dataset
         data = dataset.data
+        odpwutil.extras_to_dict(data)
 
         qa={'total':0,'core':0,'extra':0,'res':0}
 
@@ -50,7 +52,6 @@ class CompletenessAnalyser(Analyser):
                     cnt['cne'] += 1.0
             if cnt['c'] != 0.0:
                 compl = cnt['cne']/cnt['c']
-
         qa['core']=compl
         
         # taking the extra fields of the dataset into account
@@ -75,16 +76,17 @@ class CompletenessAnalyser(Analyser):
                 for resource in resources:
                     for key in resource:
                         if key not in res:
-                            res[key] = np.array([])
+                            res[key] = {'c':0,'e':0}
                         if not is_empty(resource[key]):
-                            res[key] = np.append(res[key], 1)
+                            res[key]['c']+=1.0
                         else:
-                            res[key] = np.append(res[key], 0)
+                            res[key]['e']+=1.0
 
                 for key in res:
                     #print "res:",key," = ", res[key]
                     cnt['r'] += 1.0
-                    cnt['rne'] += res[key].mean()
+                    if res[key]['c']>0:
+                        cnt['rne'] += (res[key]['e']+res[key]['c'])/res[key]['c']
                 if cnt['r'] != 0.0:
                     rescomp = cnt['rne']/ cnt['r']
         qa['res'] = rescomp
@@ -95,7 +97,7 @@ class CompletenessAnalyser(Analyser):
         qa['total'] = cnt['tne']/ cnt['t'] if cnt['t'] != 0.0 else 0 
         
         for key in qa.keys():
-            self.compl[key] = np.append(self.compl[key], qa[key] )
+            self.compl[key].append(qa[key] )
             
         if not dataset.qa_stats:
             dataset.qa_stats={}
@@ -110,7 +112,7 @@ class CompletenessAnalyser(Analyser):
     def done(self):
         roots=['total', 'core', 'extra', 'res']
         for r in roots:
-            self.quality[r] =  self.compl[r].mean() if len(self.compl[r])!=0 else None 
+            self.quality[r] =  np.array(self.compl[r]).mean() if len(self.compl[r])!=0 else None 
         
         
     def getResult(self):

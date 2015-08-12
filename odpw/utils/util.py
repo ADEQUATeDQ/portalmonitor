@@ -4,6 +4,7 @@ from ast import literal_eval
 from odpw.utils.timer import Timer
 
 
+
 __author__ = 'jumbrich'
 
 import ckanapi
@@ -53,14 +54,14 @@ class ErrorHandler():
             print " -------------------------"
 
 
-def getPackage(api, apiurl, id):
+def getPackage(apiurl, id):
     ex =None
     package = None
-    try:
-        package = api.action.package_show(id=id)
-        return package, 200
-    except Exception as e:
-        ex = e
+    #try:
+    #    package = api.action.package_show(id=id)
+    #    return package, 200
+    #except Exception as e:
+    #    ex = e
 
     ex1=None
     try:
@@ -72,14 +73,15 @@ def getPackage(api, apiurl, id):
         else:
             return None, resp.status_code
     except Exception as e:
-        ex1=e
+        ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
+        raise ex1
 
     #we have no package
-    if ex and ex1:
-        ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, api=api, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
-        raise ex1
-    else:
-        return package
+    #if ex and ex1:
+    #    ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, api=api, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
+    #    raise ex1
+    #else:
+    #    return package
 
 
 def getPackageList(apiurl):
@@ -138,16 +140,15 @@ def extras_to_dicts(datasets):
 def extras_to_dict(dataset):
     extras_dict = {}
     if dataset and isinstance(dataset, dict):
-        extras = dataset.get("extras", [])
+        extras = dataset.get("extras", {})
         if isinstance(extras, list):
             for extra in extras:
-                if isinstance(extra,dict) and 'key' in extra:
+                if isinstance(extra, dict) and 'key' in extra and 'value' in extra:
                     key = extra["key"]
                     value = extra["value"]
                     extras_dict[key] = value
             dataset["extras"] = extras_dict
-        else:
-            log.info("DatasetUnicode", data=dataset)
+        
 
 def computeID(url):
     try:
@@ -602,15 +603,18 @@ def timer(delta):
     return ("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
 
 
-def progressIterator(iterable, total, steps):
+def progressIterator(iterable, total, steps, label=None):
     c=0
     start= time.time()
+    start_interim=start
     for element in iterable:
         c+=1
         if c%steps ==0:
             elapsed = (time.time() - start)
-            progressIndicator(c, total, elapsed=elapsed)
-        
+            interim=(time.time()-start_interim)
+            progressIndicator(c, total, elapsed=elapsed, interim=interim, label=label)
+            start_interim=time.time()
+            #Timer.printStats()
         yield element
 
 def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None, label=None):
@@ -681,6 +685,25 @@ def head(url, redirects=0, props=None):
 
 
 if __name__ == '__main__':
-    import urllib3.contrib.pyopenssl
-    urllib3.contrib.pyopenssl.inject_into_urllib3()
-    head('http://www.lka-bw.de/LKA/statistiken/Documents/PKS_Jahrbuch_2010.pdf', 0, {})
+    
+    #api = ckanapi.RemoteCKAN('http://data.london.gov.uk/', get_only=True)
+    #data = api.action.package_show(id='be657824-f18c-48bf-a254-3c9f436ce289')
+     
+    import pprint
+    #pprint.pprint(data)
+     
+    #extras_to_dict(data)
+     
+    #print "______"
+    #pprint.pprint(data)
+    
+    from odpw.db.dbm import PostgressDBM
+    dbm = PostgressDBM(host='portalwatch.ai.wu.ac.at', port=5432)
+    
+    d= dbm.getDataset('f52480f3-4cf9-489d-8508-27cb0b2f596b', 1533, 'data_wu_ac_at')
+    print "######"
+    pprint.pprint(d.data)
+    extras_to_dict(d.data)
+    print "---"
+    pprint.pprint(d.data)
+    

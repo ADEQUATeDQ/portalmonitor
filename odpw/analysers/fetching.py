@@ -15,7 +15,7 @@ import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
 from odpw.utils.dataset_converter import DCAT, DCT
-
+import odpw.utils.util as odpwutil
 
 class MD5DatasetAnalyser(Analyser):
 #    __metaclass__ = AnalyserFactory
@@ -202,16 +202,16 @@ class CKANKeyAnalyser(Analyser):
         
         #appearing meta data fields
         self.keys = {
-            'core': {},
-            'extra': {},
-            'res': {}
+            self.C: {},
+            self.E: {},
+            self.R: {}
         }
         
         # delete fields afterwards
         self.freq= {
-            'core': {},
-            'extra': {},
-            'res': {},
+            self.C: {},
+            self.E: {},
+            self.R: {},
         }
         
         #actual number of datasets and resource analysed
@@ -241,10 +241,12 @@ class CKANKeyAnalyser(Analyser):
 
                     for k in res:
                         if k not in self.reskey:
-                            self.reskey[k] = np.array([], dtype=object)
+                            self.reskey[k] = [] 
+                            #np.array([], dtype=object)
 
                         #list with average compl per dataset over DS resources
-                        self.reskey[k] = np.append(self.reskey[k], res[k].sum()/(len(fv)*1.0))
+                        self.reskey[k].append(sum(res[k])/(len(fv)*1.0)) 
+                        #np.append(self.reskey[k], res[k].sum()/(len(fv)*1.0))
 
                     fv = 'list'
                 elif len(fv) == 0:
@@ -272,9 +274,9 @@ class CKANKeyAnalyser(Analyser):
                     fv = 'dict'
 
             if field not in self.freq[self.C]:
-                self.freq[self.C][field] = np.array([], dtype=object)
-            a = self.freq[self.C][field]
-            self.freq[self.C][field] = np.append(a, fv)
+                self.freq[self.C][field] = []#np.array([], dtype=object)
+            #a = self.freq[self.C][field]
+            self.freq[self.C][field].append(fv)# = np.append(a, fv)
             
             
     def __updateExtras(self, extras):
@@ -301,10 +303,10 @@ class CKANKeyAnalyser(Analyser):
                 else:
                     fv = 'list'
             if field not in self.freq[self.E]:
-                self.freq[self.E][field] = np.array([], dtype=object)
+                self.freq[self.E][field] = []#np.array([], dtype=object)
 
-            a = self.freq[self.E][field]
-            self.freq[self.E][field] = np.append(a, fv)
+            #a = self.freq[self.E][field]
+            self.freq[self.E][field].append(fv)# = np.append(a, fv)
     
     def __updateResource(self, resource,res):
         for field in resource:
@@ -323,16 +325,16 @@ class CKANKeyAnalyser(Analyser):
                     fv = 'list'
 
             if field not in self.freq[self.R]:
-                self.freq[self.R][field] = np.array([])
-            self.freq[self.R][field] = np.append(self.freq[self.R][field], fv)
+                self.freq[self.R][field] = []#np.array([])
+            self.freq[self.R][field].append(fv)# = np.append(self.freq[self.R][field], fv)
 
             if field not in res:
-                res[field] = np.array([], dtype=object)
+                res[field] = []#np.array([], dtype=object)
             a = res[field]
             if fv == 'NA':
-                res[field] = np.append(a, 0)
+                res[field].append(0)# = np.append(a, 0)
             else:
-                res[field] = np.append(a, 1)
+                res[field].append(1)# = np.append(a, 1)
                 
     def done(self):
         #aggregate the core keys
@@ -355,9 +357,6 @@ class CKANKeyAnalyser(Analyser):
         a = self.reskey
 
         for field in a:
-                # store frequency analysis of field entries
-            #values.add(PortalFieldValues(self.portal_id, self.snapshot, field, counts[field]))
-
             stats[field] = {
                 'count': len( np.where( a[field] != 0.0)[0] ),
                 'mis': len( np.where(a[field] == 0.0)[0] ),
@@ -438,63 +437,73 @@ class CKANKeyAnalyser(Analyser):
 
 class UsageAnalyser(Analyser):
     def __init__(self, keyAnalyser):
-        self.keys = keyAnalyser.getKeys()
+        self.keysAnalyser = keyAnalyser
         self.size=0
         self.quality= {'total':0,
                        'core':0,
                        'extra':0,
                        'res':0}
-        self.usage = {'total':np.array([]),
-                       'core':np.array([]),
-                       'extra':np.array([]),
-                       'res':np.array([])}
+        self.usage = {'total':[],
+                       'core':[],
+                       'extra':[],
+                       'res':[]}
+
+        self.keysperDS = {'total':[],
+                       'core':[],
+                       'extra':[],
+                       'res':[]}
 
     def analyse_Dataset(self, dataset):
         # if no dict, return (e.g. access denied)
         if not dataset.data or not isinstance(dataset.data, dict):
             return
         data = dataset.data
+        odpwutil.extras_to_dict(data)
         # count only opened packages
         self.size += 1
 
+        #cout of keys for this dataset
         fields = {
-            'total': 0,
             'core': len(data),
             'extra': len(data['extras']) if 'extras' in data else 0,
             'res': 0
         }
 
-        reskeys = 0
+        rescount=0
         if "resources" in data:
-            reskeys = len(self.keys['res'].keys())*1.0* len(data['resources'])
             for res in data['resources']:
                 fields['res'] += len(res)
-
+                rescount+=1
+        
         fields['total'] = fields['core'] + fields['extra'] + fields['res']
 
-        self.usage['core'] = np.append(
-            self.usage['core'],
-            fields['core'] / (len(self.keys['core'].keys()) *1.0)
-        )
-        if len(self.keys['extra'].keys())!= 0:
-            self.usage['extra'] = np.append(
-                self.usage['extra'],
-                fields['extra'] / (len(self.keys['extra'].keys())*1.0)
-            )
-        if reskeys != 0:
-            self.usage['res'] = np.append(
-                self.usage['res'],
-                fields['res'] / (reskeys) )
+        for k in [ 'core', 'extra', 'total']:
+            self.keysperDS[k].append(fields[k])
+        self.keysperDS['res'].append( (fields['res'], rescount))
+        
 
-        self.usage['total'] = np.append(
-            self.usage['total'],
-            fields['total'] /
-                ( len(self.keys['core'].keys()) + len(self.keys['extra'].keys())+ reskeys)
-        )
 
     def done(self):
-        for i in ['total', 'extra', 'core', 'res']:
-            self.quality[i] = self.usage[i].mean()
+        #make sure that we have a key analser and its done() method is called before this
+        keys = self.keysAnalyser.getKeys()
+        
+        tkey = (len(keys['extra'].keys()) *1.0)+(len(keys['core'].keys()) *1.0)
+        
+        for i in [ 'extra', 'core']:
+            a = np.array(self.keysperDS[i])
+            a = a/( len(keys[i].keys()) *1.0)
+            self.quality[i] = a.mean()
+            
+        resusage=[]
+        tousage=[]
+        i=0
+        for res,c in self.keysperDS['res']:
+            rest=(len(keys['res'].keys())*1.0* c)
+            resusage.append(  res  / rest)
+            tousage.append(self.keysperDS['total'][i] / (tkey+rest) )
+            i+=1
+        self.quality['res'] = np.array(resusage).mean()
+        self.quality['total'] = np.array(tousage).mean()
 
     def getResult(self):
         return self.quality

@@ -39,13 +39,13 @@ class OpennessAnalyser(Analyser):
         }
 
         #open formats for at least one resource for a dataset
-        self.openformats = np.array([])
+        self.openformats = []
 
         #open formats for at least one resource for a dataset
-        self.opentotal = np.array([])
+        self.opentotal = []
 
         #open licenses for at least one resource for a dataset
-        self.openlicenses = np.array([])
+        self.openlicenses = []
 
     def analyse_Dataset(self, dataset):
         data = dataset.data
@@ -56,15 +56,15 @@ class OpennessAnalyser(Analyser):
         quality = {'format':0, 'license':0, 'total':0}
 
         open = self._format_openess(data)
-        self.openformats = np.append(self.openformats, open)
-        self.opentotal = np.append(self.opentotal, open)
+        self.openformats.append(open)
+        self.opentotal.append(open)
         
         quality['format']=open
         quality['total']+=open
         
         open = self._license_openess(data)
-        self.openlicenses = np.append(self.openlicenses,open)
-        self.opentotal = np.append(self.opentotal, open)
+        self.openlicenses.append(open)
+        self.opentotal.append( open)
         quality['license']=open
         quality['total']+=open
         
@@ -87,9 +87,9 @@ class OpennessAnalyser(Analyser):
     def done(self):
 
 
-        self.quality['format'] = self.openformats.mean() if len(self.openformats) else None
-        self.quality['license'] = self.openlicenses.mean()if len(self.openlicenses) else None
-        self.quality['total'] = self.opentotal.mean()if len(self.opentotal) else None
+        self.quality['format'] = np.array(self.openformats).mean() if len(self.openformats) else None
+        self.quality['license'] = np.array(self.openlicenses).mean()if len(self.openlicenses) else None
+        self.quality['total'] = np.array(self.opentotal).mean()if len(self.opentotal) else None
 
     def _format_openess(self, data):
         open = False

@@ -238,18 +238,17 @@ class DCATDistributionCount(DistinctElementCount):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         self.empty=0
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
-                    if str(DCAT.accessURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.accessURL)][0]['@value']
-                        self.analyse_generic(url)
-                    elif str(DCAT.downloadURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.downloadURL)][0]['@value']
-                        self.analyse_generic(url)
-                    else:
-                        log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
-                        self.empty+=1
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+                if str(DCAT.accessURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.accessURL)][0]['@value']
+                    self.analyse_generic(url)
+                elif str(DCAT.downloadURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.downloadURL)][0]['@value']
+                    self.analyse_generic(url)
+                else:
+                    log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
+                    self.empty+=1
             
         #else:
         #   print "no dcat"
@@ -281,12 +280,11 @@ class DCATDistributionCount(DistinctElementCount):
 
 class DCATFormatCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
-                    for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
-                        self.add(f['@value'])
-        
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+                for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
+                    self.add(f['@value'])
+    
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'formats' in pmd.general_stats:
             formats = pmd.general_stats['formats']
@@ -319,12 +317,11 @@ class DCATLicenseCount(ElementCountAnalyser):
 
 class DCATOrganizationsCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                #TODO there is also a FOAF.Ogranisation
-                if str(FOAF.Organization) in dcat_el.get('@type',[]):
-                    for tag in dcat_el.get(str(FOAF.name),[]):
-                        self.add(tag['@value'])
+        for dcat_el in getattr(dataset,'dcat',[]):
+            #TODO there is also a FOAF.Ogranisation
+            if str(FOAF.Organization) in dcat_el.get('@type',[]):
+                for tag in dcat_el.get(str(FOAF.name),[]):
+                    self.add(tag['@value'])
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
@@ -346,12 +343,11 @@ class DCATOrganizationsCount(ElementCountAnalyser):
 
 class DCATTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Dataset) in dcat_el.get('@type',[]):
-                    for tag in dcat_el.get(str(DCAT.keyword),[]):
-                        self.add(tag['@value'])
-                             
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Dataset) in dcat_el.get('@type',[]):
+                for tag in dcat_el.get(str(DCAT.keyword),[]):
+                    self.add(tag['@value'])
+                         
     def analyse_DCATTagsCount(self, tag_analyser):
         super(DCATTagsCount, self).analyse_TagsCount(tag_analyser)
 

@@ -19,15 +19,16 @@ class Timer(object):
         return self
 
     def __exit__(self, *args):
-        self.end = time.time()
-        self.secs = self.end - self.start
-        self.msecs = self.secs * 1000  # millisecs
+        end = time.time()
+        secs = end - self.start
+        msecs = secs * 1000  # millisecs
         if self.verbose:
-            print '(%s) elapsed time: %f ms' % (self.key,self.msecs)
+            print '(%s) elapsed time: %f ms' % (self.key,msecs)
         if self.key:
             if self.key not in self.__class__.measures:
                 self.__class__.measures[self.key]=faststat.Stats()
-            self.__class__.measures[self.key].add(self.msecs)
+            if msecs>=0:
+                self.__class__.measures[self.key].add(msecs)
             
 
     @classmethod
@@ -41,7 +42,6 @@ class Timer(object):
     @classmethod
     def getStats(cls):
         stats={}
-        
         for m in cls.measures:
             stats[m]={'avg':cls.measures[m].mean, 'calls':cls.measures[m].n, 'min':cls.measures[m].min, 'max':cls.measures[m].max}
         return stats

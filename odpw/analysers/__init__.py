@@ -116,12 +116,14 @@ class AnalyserSet(Analyser):
     
 class SAFEAnalyserSet(AnalyserSet):
     
-   def analyse(self, element, safe=None):
-        for c in self.analysers.itervalues():
-            try:
-                c.analyse(element)
-            except Exception as e:
-                ErrorHandler.handleError(log, "AnalyserException", analyser=str(c), exception=e, exc_info=True)
+    def analyse(self, element, safe=None):
+        with Timer(key="analyse") as t:
+            for c in self.analysers.itervalues():
+                try:
+                    with Timer(key=c.name()) as t:
+                        c.analyse(element)
+                except Exception as e:
+                    ErrorHandler.handleError(log, "AnalyserException", analyser=str(c), exception=e, exc_info=True)
 
 class AnalyseEngine(Analyser):
     

@@ -14,10 +14,10 @@ class UsageAnalyser:
                        'extra':0,
                        'res':0}
 
-        self.usage = {'total':np.array([]),
-                       'core':np.array([]),
-                       'extra':np.array([]),
-                       'res':np.array([])}
+        self.usage = {'total':[],
+                       'core':[],
+                       'extra':[],
+                       'res':[]}
 
 
     def visit(self, dataset):
@@ -53,7 +53,7 @@ class UsageAnalyser:
         
 
         for key in quality:
-            self.usage[key] = np.append(self.usage[key],quality[key])
+            self.usage[key].append(quality[key])
 
         dataset.updateQA({'qa':{UsageAnalyser.id:quality}})
 
@@ -62,7 +62,7 @@ class UsageAnalyser:
             if len(self.usage[i]) ==0:
                 self.quality[i] = None
             else:
-                self.quality[i] = self.usage[i].mean()
+                self.quality[i] = np.array(self.usage[i]).mean()
 
 
 
