@@ -17,9 +17,9 @@ class ContactabilityAnalyser(Analyser):
                        }
 
         self.stats = {
-                'email': { 'total':np.array([]), 'author':np.array([]), 'maintainer':np.array([])},
-                'url': { 'total':np.array([]), 'author':np.array([]), 'maintainer':np.array([])},
-                'total': { 'total':np.array([]), 'author':np.array([]), 'maintainer':np.array([])}
+                'email': { 'total':[], 'author':[], 'maintainer':[]},
+                'url': { 'total':[], 'author':[], 'maintainer':[]},
+                'total': { 'total':[], 'author':[], 'maintainer':[]}
                     }
 
 
@@ -72,7 +72,7 @@ class ContactabilityAnalyser(Analyser):
 
         for key, value in quality.items():
             for key1, value1 in value.items():
-                self.stats[key][key1] = np.append(self.stats[key][key1],quality[key][key1])
+                self.stats[key][key1].append(quality[key][key1])
 
         if not dataset.qa_stats:
             dataset.qa_stats={}
@@ -89,7 +89,7 @@ class ContactabilityAnalyser(Analyser):
         
         for r in roots:
             for c in childs:
-                self.quality[r][c] =  self.stats[r][c].mean() if len(self.stats[r][c])!=0 else None
+                self.quality[r][c] =  np.array(self.stats[r][c]).mean() if len(self.stats[r][c])!=0 else None
        
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:

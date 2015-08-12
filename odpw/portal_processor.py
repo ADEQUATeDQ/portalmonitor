@@ -130,7 +130,7 @@ class CKAN(PortalProcessor):
                                 'software':Portal.software
                                }
                         try:
-                            resp, status = util.getPackage(api=api, apiurl=Portal.apiurl, id=entity)
+                            resp, status = util.getPackage( apiurl=Portal.apiurl, id=entity)
                             props['status']=status
                             if resp:
                                 data = resp

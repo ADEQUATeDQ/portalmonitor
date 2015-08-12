@@ -62,19 +62,18 @@ class DCATDistributionCount(DistinctElementCount):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
-                    if str(DCAT.accessURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.accessURL)][0]['@value']
-                        self.analyse_generic(url)
-                    elif str(DCAT.downloadURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.downloadURL)][0]['@value']
-                        self.analyse_generic(url)
-                    else:
-                        log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
-                        self.analyse_generic('empty')
-            
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+                if str(DCAT.accessURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.accessURL)][0]['@value']
+                    self.analyse_generic(url)
+                elif str(DCAT.downloadURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.downloadURL)][0]['@value']
+                    self.analyse_generic(url)
+                else:
+                    log.info("No Resource URL", did=dataset.id, pid=dataset.portal_id)
+                    self.analyse_generic('empty')
+        
         
             
     def update_PortalMetaData(self, pmd):
@@ -88,21 +87,20 @@ class DCATDistributionInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
     def analyse_Dataset(self, dataset):
-        if hasattr(dataset,'dcat'):
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
-                    url=None
-                    if str(DCAT.accessURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.accessURL)][0]['@value']
-                    elif str(DCAT.downloadURL) in dcat_el: 
-                        url = dcat_el[str(DCAT.downloadURL)][0]['@value']
-                    if url:
-                        tR =  Resource.newInstance(url=url, snapshot=dataset.snapshot)
-                        R = self.dbm.getResource(tR)
-                        if not R:
-                            tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
-                            self.dbm.insertResource(tR)
-                        else:
-                            R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
-                            self.dbm.updateResource(R)
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+                url=None
+                if str(DCAT.accessURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.accessURL)][0]['@value']
+                elif str(DCAT.downloadURL) in dcat_el: 
+                    url = dcat_el[str(DCAT.downloadURL)][0]['@value']
+                if url:
+                    tR =  Resource.newInstance(url=url, snapshot=dataset.snapshot)
+                    R = self.dbm.getResource(tR)
+                    if not R:
+                        tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
+                        self.dbm.insertResource(tR)
+                    else:
+                        R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
+                        self.dbm.updateResource(R)
         

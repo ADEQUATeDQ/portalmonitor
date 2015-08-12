@@ -90,7 +90,7 @@ class PortalSelectionHandler(BaseHandler):
 class PortalHandler(BaseHandler):
     def get(self, view=None, portalID=None, snapshot=None):
         
-        a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=None,apiurl=None))
+        a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None,apiurl=None))
         rep = SnapshotsPerPortalReporter(a,None)
         if not portalID:
             self.render('portal_empty.jinja', portals=True, data=rep.uireport())
@@ -99,42 +99,44 @@ class PortalHandler(BaseHandler):
         if portalID:
             if len(portalID.split(",")) ==1:
                 Portal = self.db.getPortal(portalID=portalID)
-                if view == 'info':
-                    aset = AnalyserSet()
-                    #lc=aset.add(CKANLicenseCount())# how many licenses
-                    #lcc=aset.add(CKANLicenseConformance())
-        
-                    #aset.add(DCATConverter(Portal))
-                    tc= aset.add(DCATTagsCount())   # how many tags
-                    oc= aset.add(DCATOrganizationsCount())# how many organisations
-                    fc= aset.add(DCATFormatCount())# how many formats
-    
-                    resC= aset.add(PMDResourceCount())   # how many resources
-                    dsC=dc= aset.add(DatasetCount())    # how many datasets
-                    rsize=aset.add(ResourceSize())
-    
-                    #use the latest portal meta data object
-                    if not snapshot:
-                        pmd = self.db.getLatestPortalMetaData(portalID=portalID)
-                    else:
-                        pmd = self.db.getPortalMetaData(portalID=portalID, snapshot=snapshot)
-                    aset = process_all(aset, [pmd])
-        
-                    rep = Report([rep,
-                    DatasetSumReporter(dsC),
-                    ResourceCountReporter(resC),
-                    ResourceSizeReporter(rsize),
-                    #LicensesReporter(lc,lcc,topK=3),
-                    TagReporter(tc,dc, topK=3),
-                    OrganisationReporter(oc, topK=3),
-                    FormatCountReporter(fc, topK=3)])
-    
-                    self.render('portal_info.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
+                
+                fun= getattr(self, view+"rendering")
+                fun(portalID, snapshot, rep)
             else:
                 self.render('portals_detail.jinja', portals=True)
             
-                
-        
+    
+    def inforendering(self, portalID, snapshot, rep):      
+        with Timer(key="viewrendering", verbose=True) as t:
+            aset = AnalyserSet()
+            #lc=aset.add(CKANLicenseCount())# how many licenses
+            #lcc=aset.add(CKANLicenseConformance())
+    
+            tc= aset.add(DCATTagsCount())   # how many tags
+            oc= aset.add(DCATOrganizationsCount())# how many organisations
+            fc= aset.add(DCATFormatCount())# how many formats
+    
+            resC= aset.add(PMDResourceCount())   # how many resources
+            dsC=dc= aset.add(DatasetCount())    # how many datasets
+            rsize=aset.add(ResourceSize())
+    
+            #use the latest portal meta data object
+            if not snapshot:
+                pmd = self.db.getLatestPortalMetaData(portalID=portalID)
+            else:
+                pmd = self.db.getPortalMetaData(portalID=portalID, snapshot=snapshot)
+            aset = process_all(aset, [pmd])
+    
+            rep = Report([rep,
+            DatasetSumReporter(dsC),
+            ResourceCountReporter(resC),
+            ResourceSizeReporter(rsize),
+            #LicensesReporter(lc,lcc,topK=3),
+            TagReporter(tc,dc, topK=3),
+            OrganisationReporter(oc, topK=3),
+            FormatCountReporter(fc, topK=3)])
+    
+            self.render('portal_info.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
         
 class PortalList(BaseHandler):
     def get(self):

@@ -9,39 +9,54 @@
 
 {% block sidenav %}
                 <li class="active">
-                    <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-server fa-2x"></i>
-                        <p>Overview</p>
+                    <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-info fa-2x"></i>
+                        <p>Info</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-eye fa-2x"></i>
                         <p>Details</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-star-o fa-2x"></i>
                         <p>Quality</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-server fa-2x"></i>
+                    <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-heartbeat fa-2x"></i>
                         <p>Activities</p>
                     </a>
                 </li>
                 <li>
-                    <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-cubes  fa-2x"></i>
+                    <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-line-chart  fa-2x"></i>
                         <p>Evolution</p>
                     </a>
                 </li>
 {% endblock %}
     
 {% block section %}
+    <div class="units-row units-split end">
+                        <div class="unit-70 label-red">
+                            <label>
+                            {{portalID}}
+                            </label>
+                        </div>
+                        <div class="unit-20 label-red">
+                            <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal...">
+                            <option value="{{snapshot}}" >{{snapshot}}</option>
+                                </select>
+                        </div>
+                        <div class="unit-10 label-red">
+                            <span>select</span>
+                        </div>
+                    </div>
     <div class="units-row">
             <form onsubmit="this.action='/portal/'+this.selectportal.value+'/details/'+this.selectsnapshot.value;">
                 <div class="unit-70">
                     <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
                         {% for portal in data.portalSnapshots %}
-                            <option value="{{portal}}">{{portal}}</option>
+                            <option value="{{portalID}}">{{portalID}}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -117,7 +132,7 @@
                                     {% for l in data.licensesreporter %}
                                     <tr>
                                         <td> {{ l.LicenseID}}</td>
-                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -128,27 +143,26 @@
                     <div class="card_footer">
                     </div>
                 </div>
-                
-                <div class="unit-50 card unit-padding">
-                    <div class="card_header"><h3 class="text-centered">Tags</h3></div>
+                <div class="unit-50 unit-padding card">
+                    <div class="card_header"><h3 class="text-centered">Formats</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="tags" class="card_value text-centered">1</p>
+                            <p id="formats" class="card_value text-centered">1</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
                             <table id="tagreporter">
                                 <thead>
                                     <tr>
-                                        <th>Tag</th>
+                                        <th>Format</th>
                                         <th>Datasets</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for l in data.tagreporter %}
+                                    {% for l in data.formatcountreporter %}
                                     <tr>
-                                        <td> {{ l.Tag}}</td>
-                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                        <td> {{ l.Format}}</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -158,6 +172,7 @@
                     <div class="card_footer">
                     </div>
                 </div>
+                
             </div>
             <div class="units-row end">  
                 <div class="unit-50 unit-padding card">
@@ -179,7 +194,36 @@
                                     {% for l in data.organisationreporter %}
                                     <tr>
                                         <td> {{ l.Organisation}}</td>
-                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
+                                    </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card_footer">
+                    </div>
+                </div>
+                <div class="unit-50 card unit-padding">
+                    <div class="card_header"><h3 class="text-centered">Tags</h3></div>
+                    <div class="card_cnt units-row">
+                        <div class=" unit-30">
+                            <p id="tags" class="card_value text-centered">1</p>
+                            <label>distinct</label>
+                        </div>
+                        <div class="topk_table unit-70">
+                            <table id="tagreporter">
+                                <thead>
+                                    <tr>
+                                        <th>Tag</th>
+                                        <th>Datasets</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for l in data.tagreporter %}
+                                    <tr>
+                                        <td> {{ l.Tag}}</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -190,35 +234,6 @@
                     </div>
                 </div>
                 
-                <div class="unit-50 unit-padding card">
-                    <div class="card_header"><h3 class="text-centered">Formats</h3></div>
-                    <div class="card_cnt units-row">
-                        <div class=" unit-30">
-                            <p id="formats" class="card_value text-centered">1</p>
-                            <label>distinct</label>
-                        </div>
-                        <div class="topk_table unit-70">
-                            <table id="tagreporter">
-                                <thead>
-                                    <tr>
-                                        <th>Format</th>
-                                        <th>Datasets</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for l in data.formatcountreporter %}
-                                    <tr>
-                                        <td> {{ l.Format}}</td>
-                                        <td> {{ l.Count}} ({{ l.perc}} %)</td>
-                                    </tr>
-                                    {% endfor %}    
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card_footer">
-                    </div>
-                </div>
             </div>
         </div>                
     </div>
