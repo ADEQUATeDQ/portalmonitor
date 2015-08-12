@@ -32,6 +32,14 @@ class DatasetFetchUpdater(Analyser):
     def analyse_Dataset(self, dataset):
         self.dbm.updateDatasetFetch(dataset)
 
+class DatasetUpdater(Analyser):
+    def __init__(self, dbm):
+        self.dbm = dbm
+    
+    def analyse_Dataset(self, dataset):
+        self.dbm.updateDataset(dataset)
+
+
 class CKANResourceInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
@@ -54,7 +62,7 @@ class DCATDistributionCount(DistinctElementCount):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     if str(DCAT.accessURL) in dcat_el: 
@@ -80,7 +88,7 @@ class DCATDistributionInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     url=None

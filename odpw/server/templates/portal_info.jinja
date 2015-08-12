@@ -76,10 +76,13 @@
                     </div>
                     <div class="card_cnt">
                         <p id="resources" class="card_value text-centered">
-                            {{ data.resourcesumreporter[0]['Value'] }}
+                            {{ data.resourcecountreporter.total }}
                         </p>
                     </div>
-                    <div class="card_footer"></div>
+                    <div class="card_footer">
+                        of which are <span class="label label-white">{{data.resourcecountreporter.urls}}</span><span class="">unique URLs</span>
+                        
+                    </div>
                 </div>
                 <div class="unit-33 card unit-padding">
                     <div class="card_header"><h3 class="text-centered">Size</h3></div>

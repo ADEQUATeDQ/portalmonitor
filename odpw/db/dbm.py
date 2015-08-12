@@ -509,9 +509,9 @@ class PostgressDBM(object):
             data=None
             if Dataset.data:
                 data = Dataset.data
-            qa=None
-            if Dataset.qa:
-                qa = Dataset.qa
+            qa_stats=None
+            if Dataset.qa_stats:
+                qa_stats = Dataset.qa_stats
             up = self.datasets.update().where(
                                               and_(self.datasets.c.portal_id == Dataset.portal_id,
                                                    self.datasets.c.snapshot == Dataset.snapshot,
@@ -523,9 +523,8 @@ class PostgressDBM(object):
                        exception=Dataset.exception,
                        md5=Dataset.md5,
                        change=Dataset.change,
-                       fetch_time=Dataset.fetch_time,
-                       qa=qa,
-                       qa_time=Dataset.qa_time)
+                       qa_stats=qa_stats,
+                       )
             self.log.debug(query=up.compile(), params=up.compile().params)
             up.execute()
   

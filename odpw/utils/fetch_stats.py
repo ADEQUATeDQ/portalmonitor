@@ -15,7 +15,7 @@ from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, CKANLicenseIDCount, CKANTagsCount, \
     CKANFormatCount, CKANLicenseCount, CKANOrganizationsCount
 from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
-    DCATDistributionInserter
+    DCATDistributionInserter, DatasetUpdater
 from odpw.analysers import AnalyserSet
 __author__ = 'jumbrich'
 
@@ -47,22 +47,22 @@ def simulateFetching(dbm, Portal, sn):
     if Portal.software == 'CKAN':
         ae.add(CKANKeyAnalyser())
         ae.add(CKANLicenseIDCount())
-        ae.add(CKANResourceInDSAge())
-        ae.add(CKANDatasetAge())
-        ae.add(CKANFormatCount())
-        ae.add(CKANTagsCount())
+        #ae.add(CKANResourceInDSAge())
+        #ae.add(CKANDatasetAge())
+        #ae.add(CKANFormatCount())
+        #ae.add(CKANTagsCount())
         ae.add(CKANLicenseCount())
-        ae.add(CKANOrganizationsCount())
+        #ae.add(CKANOrganizationsCount())
         ae.add(CompletenessAnalyser())
         ae.add(ContactabilityAnalyser())
         ae.add(OpennessAnalyser())
         ae.add(OPQuastAnalyser())
-
+        
     elif Portal.software == 'Socrata':
         pass
     elif Portal.software == 'OpenDataSoft':
         pass
-            
+    
             
     ae.add(DCATConverter(Portal))
     ae.add(DCATDistributionCount(withDistinct=True))
@@ -71,19 +71,10 @@ def simulateFetching(dbm, Portal, sn):
     ae.add(DCATOrganizationsCount())
     ae.add(DCATTagsCount())
     ae.add(DCATFormatCount())
-    
-    #ae.add(DCATLicenseCount())
-
     ae.add(DCATResourceInDSAge())
     ae.add(DCATDatasetAge())
 
-#    ae.add(CKANKeyAnalyser())
-#    ae.add(CompletenessAnalyser())
-#    ae.add(ContactabilityAnalyser())
-#    ae.add(OpennessAnalyser())
-#    ae.add(OPQuastAnalyser())
-    #ae.add(DatasetFetchUpdater(dbm))
-    
+    ae.add(DatasetUpdater(dbm))
     
     total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
     
@@ -91,22 +82,13 @@ def simulateFetching(dbm, Portal, sn):
     if steps ==0:
         steps=1
     
-    
     iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
     process_all(ae,progressIterator(iter, total, steps))
     
     ae.update(pmd)
-    #ae.update(pmd1)
-    #ae.update(Portal)
     
-    #import pprint 
-    #pprint.pprint(pmd.__dict__)
-    #print "_"
-    #pprint.pprint(pmd1.__dict__)  
-    pmd.fetchend()  
     dbm.updatePortalMetaData(pmd)
-    #dbm.updatePortal(Portal)
-
+    
     log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
 
 def help():

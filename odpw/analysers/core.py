@@ -120,8 +120,7 @@ class DCATConverter(Analyser):
     
     def analyse_Dataset(self, dataset):
         dataset.dcat=None
-        #print dataset.id, dataset.data
-        if dataset.software=='CKAN' and dataset.data: 
+        if dataset.data: 
             #import pprint
             #print "----"
             #pprint.pprint(dataset.data)

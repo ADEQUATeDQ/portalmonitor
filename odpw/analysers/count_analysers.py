@@ -10,9 +10,24 @@ from odpw.utils.dataset_converter import DCAT, FOAF, VCARD, DCT
 import structlog
 from odpw.analysers import Analyser
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
+from _collections import defaultdict
 log =structlog.get_logger()
 
 
+class PMDResourceCount(Analyser):
+    
+    def __init__(self):
+        self.aggs=defaultdict(int)
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.res_stats:
+            for k,v in pmd.res_stats.items():
+                if not isinstance(v, list) and not isinstance(v, dict):
+                    self.aggs[k]+=v
+        
+    def getResult(self):
+        return dict(self.aggs)
+        
 class ResourceCount(DistinctElementCount):
     
     def __init__(self,withDistinct=None, updateAll=False):
@@ -36,10 +51,6 @@ class ResourceCount(DistinctElementCount):
                 pmd.res_stats['urls']= self.getResult()['urls']
         if self.updateAll:
             pmd.resources = self.getResult()['count']
-    
-    def analyse_PortalMetaData(self, element):
-        if element.resources>=0:
-            self.count+= element.resources
             
     def analyse_Resource(self, resource):
         self.analyse_generic(resource.url)
@@ -227,7 +238,7 @@ class DCATDistributionCount(DistinctElementCount):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         self.empty=0
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     if str(DCAT.accessURL) in dcat_el: 
@@ -270,7 +281,7 @@ class DCATDistributionCount(DistinctElementCount):
 
 class DCATFormatCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                     for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
@@ -308,7 +319,7 @@ class DCATLicenseCount(ElementCountAnalyser):
 
 class DCATOrganizationsCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 #TODO there is also a FOAF.Ogranisation
                 if str(FOAF.Organization) in dcat_el.get('@type',[]):
@@ -335,7 +346,7 @@ class DCATOrganizationsCount(ElementCountAnalyser):
 
 class DCATTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
+        if hasattr(dataset,'dcat'):
             for dcat_el in dataset.dcat:
                 if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for tag in dcat_el.get(str(DCAT.keyword),[]):
