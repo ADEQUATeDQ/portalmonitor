@@ -40,6 +40,7 @@ namespaces = {
 }
 
 
+
 def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
 
     # init a new graph
@@ -52,13 +53,80 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
             graph.parse(data=dataset_dict['dcat'], format='xml')
+            fix_socrata_graph(graph, dataset_dict, portal.apiurl)
             # TODO redesign distribution, format, contact (publisher, organization)
     elif portal.software == 'OpenDataSoft':
         graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
         # TODO contact, publisher, organization
 
-    #print graph.serialize(format='n3')
+    print graph.serialize(format='n3')
     return json.loads(graph.serialize(format=format))
+
+
+def fix_socrata_graph(g, dataset_dict, portal_url):
+    # add additional info
+    if 'view' in dataset_dict and isinstance(dataset_dict['view'], dict):
+        data = dataset_dict['view']
+        try:
+            identifier = data['id']
+            uri = '{0}/dataset/{1}'.format(portal_url.rstrip('/'), identifier)
+            dataset_ref = URIRef(uri)
+            # replace blank node by dataset reference
+            dataset_node = g.value(predicate=RDF.type, object=DCAT.Dataset, any=False)
+            for s, p, o in g.triples( (dataset_node, None, None) ):
+                g.remove((s, p, o))
+                g.add((dataset_ref, p, o))
+
+            # owner
+            if 'owner' in data and isinstance(data['owner'], dict) and 'displayName' in data['owner']:
+                owner = data['owner']['displayName']
+                # add owner as publisher
+                publisher_details = BNode()
+                g.add((publisher_details, RDF.type, FOAF.Organization))
+                g.add((dataset_ref, DCT.publisher, publisher_details))
+                g.add((publisher_details, FOAF.name, Literal(owner)))
+            # author
+            if 'tableAuthor' in data and isinstance(data['tableAuthor'], dict) and 'displayName' in data['tableAuthor']:
+                author = data['tableAuthor']['displayName']
+                contact_details = BNode()
+                g.add((contact_details, RDF.type, VCARD.Organization))
+                g.add((dataset_ref, DCAT.contactPoint, contact_details))
+                g.add((contact_details, VCARD.fn, Literal(author)))
+        except Exception as e:
+            # should only happen if there are multiple
+            print e
+        try:
+            # redesign distribution, format
+            for ds, has_distr, dcat_download in g.triples((None, DCAT.distribution, None)):
+
+                # create new distr
+                distribution = BNode()
+
+                # rewrite format
+                for s, p, format_bnode in g.triples((dcat_download, DCT['format'], None)):
+                    format = g.value(format_bnode, RDFS.label)
+                    mime_type = g.value(format_bnode, RDF.value)
+                    g.remove((format_bnode, None, None))
+                    g.add((distribution, DCT['format'], format))
+                    g.add((distribution, DCAT.mediaType, mime_type))
+                    g.remove((s, p, format_bnode))
+
+                # add new distr
+                g.add((ds, DCAT.distribution, distribution))
+                g.add((distribution, RDF.type, DCAT.Distribution))
+                # remove old dcat:Download
+                g.remove((ds, has_distr, dcat_download))
+                g.remove((dcat_download, RDF.type, None))
+                # add links from old distribution
+                for s, p, o in g.triples((dcat_download, None, None)):
+                    g.remove((s, p, o))
+                    g.add((distribution, p, o))
+
+        except Exception as e:
+            # should only happen if there are multiple
+            print e
+
+
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):
