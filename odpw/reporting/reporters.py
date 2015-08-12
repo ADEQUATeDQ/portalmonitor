@@ -128,7 +128,7 @@ class CLIReporter(object):
 
 class DataFramePlotReporter(object):
 
-    def plotreport(self):
+    def plotreport(self, dir):
         pass
 
 
@@ -219,10 +219,10 @@ class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
             if isinstance(r, CLIReporter):
                 r.clireport()
 
-    def plotreport(self):
+    def plotreport(self, dir):
         for r in self.rs:
             if isinstance(r, DataFramePlotReporter):
-                r.plotreport()
+                r.plotreport(dir)
 
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):

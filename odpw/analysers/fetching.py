@@ -436,6 +436,8 @@ class CKANKeyAnalyser(Analyser):
 
 
 class UsageAnalyser(Analyser):
+    id = 'Qu'
+
     def __init__(self, keyAnalyser):
         self.keysAnalyser = keyAnalyser
         self.size=0
@@ -511,7 +513,7 @@ class UsageAnalyser(Analyser):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats['Qu'] = self.quality
+        pmd.qa_stats[UsageAnalyser.id] = self.quality
 
 
 class CKANLicenseConformance(Analyser):

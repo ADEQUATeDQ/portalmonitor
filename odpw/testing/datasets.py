@@ -13,9 +13,9 @@ if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
     id='pod_opendatasoft_com'
-    sn=1532
+    sn=1533
 
-    portals = dbm.getPortals(software='OpenDataSoft')
+    portals = dbm.getPortals(software='Socrata')
     for p in portals:
         iter = Dataset.iter(dbm.getDatasets(portalID=p.id, snapshot=sn))
     
