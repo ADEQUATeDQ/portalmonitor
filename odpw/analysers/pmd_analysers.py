@@ -7,8 +7,11 @@ from collections import defaultdict
 import numpy as np
 from odpw.analysers import Analyser
 from odpw.analysers.core import HistogramAnalyser
+from odpw.analysers.fetching import UsageAnalyser
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
+from odpw.analysers.quality.analysers.openness import OpennessAnalyser
+
 
 class PMDDatasetCountAnalyser(HistogramAnalyser):
     
@@ -124,3 +127,31 @@ class ContactabilityHistogram(MultiHistogramAnalyser):
             for root in contact:
                 for child in contact[root]:
                     self.data[root + '_' + child].append(contact[root][child])
+
+
+class OpennessHistogram(MultiHistogramAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and OpennessAnalyser.id in pmd.qa_stats:
+            quality = pmd.qa_stats[OpennessAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
+
+    def analyse_Dataset(self, dataset):
+        if dataset.qa_stats and OpennessAnalyser.id in dataset.qa_stats:
+            quality = dataset.qa_stats[OpennessAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
+
+
+class UsageHistogram(MultiHistogramAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and UsageAnalyser.id in pmd.qa_stats:
+            quality = pmd.qa_stats[UsageAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
+
+    def analyse_Dataset(self, dataset):
+        if dataset.qa_stats and UsageAnalyser.id in dataset.qa_stats:
+            quality = dataset.qa_stats[UsageAnalyser.id]
+            for group in quality:
+                self.data[group].append(quality[group])
