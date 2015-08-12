@@ -508,7 +508,7 @@ class PostgressDBM(object):
             #self.conn.execute(ins)
             ins.execute()
 
-    def getDatasets(self,portalID=None, snapshot=None, software=None):
+    def getDatasets(self,portalID=None, snapshot=None, software=None, status=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])
             
@@ -518,6 +518,8 @@ class PostgressDBM(object):
                 s= s.where(self.datasets.c.portal_id == portalID)
             if software:
                 s= s.where(self.datasets.c.software == software)
+            if status:
+                s= s.where(self.datasets.c.status == status)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             

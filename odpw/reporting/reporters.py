@@ -17,13 +17,18 @@ from odpw.db.models import PortalMetaData
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 import structlog
+from abc import abstractmethod
 log = structlog.get_logger()
 
 class Reporter(object):
     
+    def __init__(self):
+        self.df=None
     
     def name(self):
         return self.__class__.__name__.lower()
+    
+    @abstractmethod
     def getDataFrame(self):
         pass
     
@@ -135,7 +140,6 @@ class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
         self.portalID= portalID
         
     def uireport(self):
-        
         df = self.getDataFrame()
         grouped = df.groupby("portal_id")
         results={}
