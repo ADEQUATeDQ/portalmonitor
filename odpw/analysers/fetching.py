@@ -494,7 +494,7 @@ class UsageAnalyser(Analyser):
         for i in [ 'extra', 'core']:
             a = np.array(self.keysperDS[i])
             a = a/( len(keys[i].keys()) *1.0)
-            self.quality[i] = a.mean()
+            self.quality[i] = a.mean() if len(a) != 0 else 0
             
         resusage=[]
         tousage=[]
@@ -504,8 +504,8 @@ class UsageAnalyser(Analyser):
             resusage.append(  res  / rest)
             tousage.append(self.keysperDS['total'][i] / (tkey+rest) )
             i+=1
-        self.quality['res'] = np.array(resusage).mean()
-        self.quality['total'] = np.array(tousage).mean()
+        self.quality['res'] = np.array(resusage).mean() if len(resusage) != 0 else 0
+        self.quality['total'] = np.array(tousage).mean()if len(tousage) != 0 else 0
 
     def getResult(self):
         return self.quality
