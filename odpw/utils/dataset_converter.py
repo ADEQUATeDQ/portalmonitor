@@ -1,5 +1,6 @@
 import json
 import datetime
+import re
 import urlparse
 import uuid
 
@@ -93,8 +94,7 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
                 g.add((dataset_ref, DCAT.contactPoint, contact_details))
                 g.add((contact_details, VCARD.fn, Literal(author)))
         except Exception as e:
-            # should only happen if there are multiple
-            print e
+            pass
         try:
             # redesign distribution, format
             for ds, has_distr, dcat_download in g.triples((None, DCAT.distribution, None)):
@@ -123,10 +123,32 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
                     g.add((distribution, p, o))
 
         except Exception as e:
-            # should only happen if there are multiple
-            print e
+            pass
 
+        try:
+            # created, modified keys
+            ODS_created = URIRef('http://open-data-standards.github.com/2012/01/open-data-standards#created')
+            ODS_modified = URIRef('http://open-data-standards.github.com/2012/01/open-data-standards#last_modified')
+            for s, p, o in g.triples((None, ODS_created, None)):
+                g.remove((s, p, o))
+                g.add((s, DCT.issued, o))
+            for s, p, o in g.triples((None, ODS_modified, None)):
+                g.remove((s, p, o))
+                g.add((s, DCT.modified, o))
 
+        except Exception as e:
+            pass
+
+VALID_URL = re.compile(
+        r'^(?:http|ftp)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        r'localhost|' #localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?' # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+def is_valid_url(references):
+    return bool(VALID_URL.match(references))
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):
@@ -180,7 +202,11 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     # references
     references = data.get('references')
     if references and isinstance(references, basestring) and bool(urlparse.urlparse(references).netloc):
-        g.add((dataset_ref, RDFS.seeAlso, URIRef(references)))
+        references = references.strip()
+        if is_valid_url(references):
+            g.add((dataset_ref, RDFS.seeAlso, URIRef(references)))
+        else:
+            g.add((dataset_ref, RDFS.seeAlso, Literal(references)))
 
     # store licenses for distributions
     license = data.get('license')
@@ -209,7 +235,10 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
             # URL
             url = portal_url.rstrip('/') + '/api/records/1.0/download?dataset=' + identifier + '&format=' + format
-            g.add((distribution, DCAT.accessURL, Literal(url)))
+            if is_valid_url(url):
+                g.add((distribution, DCAT.accessURL, URIRef(url)))
+            else:
+                g.add((distribution, DCAT.accessURL, Literal(url)))
 
             # Dates
             items = [
@@ -458,10 +487,17 @@ class CKANConverter:
             url = resource_dict.get('url')
             download_url = resource_dict.get('download_url')
             if download_url:
-                g.add((distribution, DCAT.downloadURL, Literal(download_url)))
+                download_url = download_url.strip()
+                if is_valid_url(download_url):
+                    g.add((distribution, DCAT.downloadURL, URIRef(download_url)))
+                else:
+                    g.add((distribution, DCAT.downloadURL, Literal(download_url)))
             if (url and not download_url) or (url and url != download_url):
-                g.add((distribution, DCAT.accessURL, Literal(url)))
-
+                url = url.strip()
+                if is_valid_url(url):
+                    g.add((distribution, DCAT.accessURL, URIRef(url)))
+                else:
+                    g.add((distribution, DCAT.accessURL, Literal(url)))
             # Dates
             items = [
                 ('issued', DCT.issued, ['created']),
