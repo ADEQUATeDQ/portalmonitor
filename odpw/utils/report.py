@@ -3,17 +3,22 @@ from odpw.analysers.fetching import CKANLicenseConformance
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser,\
     PMDActivityAnalyser
 
-from odpw.db.models import PortalMetaData, Dataset
+from odpw.db.models import PortalMetaData, Dataset, Portal
 from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
     ISO3DistReporter, SnapshotsPerPortalReporter, TagReporter, LicensesReporter,\
     OrganisationReporter, FormatCountReporter, DatasetSumReporter, ResourceSumReporter,\
-    ResourceCountReporter, ResourceSizeReporter
+    ResourceCountReporter, ResourceSizeReporter, PortalListReporter,\
+    SystemEvolutionReport
 from odpw.analysers.core import DBAnalyser
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
     DCATFormatCount, PMDResourceCount, DatasetCount
 from odpw.analysers.resource_analysers import ResourceSize
-from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution
-from odpw.reporting.evolution_reporter import EvolutionReporter
+from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
+    SystemSoftwareEvolution
+from odpw.reporting.evolution_reporter import EvolutionReporter,\
+    DatasetEvolutionReporter, ResourcesEvolutionReporter,\
+    SystemSoftwareEvolutionReporter
+import os
 
 
 __author__ = 'jumbrich'
@@ -24,6 +29,97 @@ import structlog
 log =structlog.get_logger()
 
 
+def portalevolution(dbm, sn, portal_id):
+    print portal_id, sn
+    aset = AnalyserSet()
+    de=aset.add(DatasetEvolution())
+    re= aset.add(ResourceEvolution())
+    
+    it = dbm.getPortalMetaDatasUntil(snapshot=sn, portalID=portal_id)
+    aset = process_all(aset, PortalMetaData.iter(it))
+    
+    rep = Report([
+                    DatasetEvolutionReporter(de),
+                    ResourcesEvolutionReporter(re),
+                ])
+   
+    return rep
+    
+
+def systeminfo(dbm):
+    """
+        country and software distribution of portals in the system
+        full list of portals
+    """
+    
+    a = process_all(DBAnalyser(),dbm.getSoftwareDist())
+    ab = process_all(DBAnalyser(),dbm.getCountryDist())
+    pa = process_all(DBAnalyser(),dbm.getPortals())
+    r = Report([SoftWareDistReporter(a),
+                 ISO3DistReporter(ab),
+                 PortalListReporter(pa)
+                 ])
+    
+    return r
+
+def systemevolution(dbm):
+    """
+    
+    """
+    aset = AnalyserSet()
+    
+    p={}
+    for P in Portal.iter(dbm.getPortals()):
+        p[P.id]=P.software
+
+    de=aset.add(DatasetEvolution())
+    re= aset.add(ResourceEvolution())
+    se= aset.add(SystemSoftwareEvolution(p))
+    
+    it = dbm.getPortalMetaDatas()
+    aset = process_all(aset, PortalMetaData.iter(it))
+    
+    rep = SystemEvolutionReport([
+                                 DatasetEvolutionReporter(de),
+                                 ResourcesEvolutionReporter(re),
+                                 SystemSoftwareEvolutionReporter(se)
+                                 ])
+   
+    return rep
+    
+
+def portalinfo(dbm, sn, portal_id):
+    a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+    r=SnapshotsPerPortalReporter(a,portal_id)
+
+        
+    aset = AnalyserSet()
+    #lc=aset.add(CKANLicenseCount())# how many licenses
+    #lcc=aset.add(CKANLicenseConformance())
+
+    tc= aset.add(DCATTagsCount())   # how many tags
+    oc= aset.add(DCATOrganizationsCount())# how many organisations
+    fc= aset.add(DCATFormatCount())# how many formats
+
+    resC= aset.add(PMDResourceCount())   # how many resources
+    dsC=dc= aset.add(DatasetCount())    # how many datasets
+    rsize=aset.add(ResourceSize())
+
+    #use the latest portal meta data object
+    pmd = dbm.getPortalMetaData(portalID=portal_id, snapshot=sn)
+    aset = process_all(aset, [pmd])
+
+    rep = Report([r,
+    DatasetSumReporter(dsC),
+    ResourceCountReporter(resC),
+    ResourceSizeReporter(rsize),
+    #LicensesReporter(lc,lcc,topK=3),
+    TagReporter(tc,dc, topK=3),
+    OrganisationReporter(oc, topK=3),
+    FormatCountReporter(fc, topK=3)])
+    
+    return rep
+
 def name():
     return 'Report'
 def help():
@@ -32,51 +128,53 @@ def help():
 def setupCLI(pa):
     
     pa.add_argument("-sn","--snapshot",  type=int, help='what snapshot is it', dest='snapshot')
-    pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     
     
+    tasks = pa.add_argument_group("Views")
+    tasks.add_argument("-i",  help='generate the overview report', dest='info', action='store_true')
+    tasks.add_argument("-a",  help='generate the activity report', dest='activity', action='store_true')
+    tasks.add_argument("-e",  help='generate the evolution report', dest='evolution', action='store_true')
+    tasks.add_argument("-q",  help='generate the quality report', dest='quality', action='store_true')
     
-    tasks = pa.add_argument_group("system reports")
-    tasks.add_argument("--overview",  help='generate the system overview report', dest='sysover', action='store_true')
-    tasks.add_argument("--activity",  help='generate the system activity report', dest='sysactivity', action='store_true')
     
-    tasks = pa.add_argument_group("portal reports")
-    #tasks.add_argument("--apiurl",  help='Portal apiurl ', dest='apiurl')
-    tasks.add_argument("--pid",  help='Portal id ', dest='portal_id')
-    
-    tasks.add_argument("--pgen",  help='Portal overview report', dest='pgen', action='store_true')
-    tasks.add_argument("--pdetail",  help='Portal detail report', dest='pdetail', action='store_true')
-    tasks.add_argument("--pquality",  help='Portal quality report', dest='pquality', action='store_true')
-    tasks.add_argument("--pactivity",  help='Portal activity report', dest='pactivity', action='store_true')
-    tasks.add_argument("--pevolution",  help='Portal evolution report', dest='pevolution', action='store_true')
-    
+    focus = pa.add_argument_group("Views")
+    focus.add_argument("-p",  help='Portal id ', dest='portal')
+    focus.add_argument("-s",  help='Portal id ', dest='system', action='store_true')
     
     out = pa.add_argument_group("Output")
-    out.add_argument("--out",  help='outputfolder to write the reports', dest='outdir')
-    out.add_argument("--csv",  help='generate the system activity report', dest='csv', action='store_true')
-    out.add_argument("--ui",  help='generate the system activity report', dest='ui', action='store_true')
+    out.add_argument("-o",  help='outputfolder to write the reports', dest='outdir')
+    out.add_argument("-c",  help='generate the system activity report', dest='csv', action='store_true')
+    out.add_argument("-u",  help='generate the system activity report', dest='ui', action='store_true')
     
 def cli(args,dbm):
     
-    
-    #for pmd in dbm.getLatestPortalMetaDatas():
-    #    print pmd
     outdir= args.outdir
     if not outdir and any([args.csv]):
         print "No output dir "
         return
-        
     
-    if args.sysover:
+    
+    if args.info:
+        if args.system:
+            report = systeminfo(dbm) 
+            output( report , args) 
+        
+        if args.portal:
+            sn = getSnapshot(args)
+            report = portalinfo(dbm,sn , args.portal)
+            output( report , args, snapshot=sn)
+        
+    if args.evolution:
+        if args.system:
+            report = systemevolution(dbm) 
+            output( report , args) 
+            
+        if args.portal:
+            sn = getSnapshot(args)
+            report = portalevolution(dbm,sn , args.portal)
+            output( report , args, snapshot=sn)
 
-        (DBAnalyser, dbm.getSoftwareDist)
-        (DBAnalyser, dbm.getCountryDist)
         
-        sys_or = Report([SoftWareDistReporter(dbm),
-                                 ISO3DistReporter(dbm)])
-        sys_or.run()
-    
-        output(sys_or,args)
 
 #===============================================================================
 #     if args.pdetail:
@@ -108,68 +206,33 @@ def cli(args,dbm):
 #             print res.getResult()
 #===============================================================================
 
-    if any([
-            args.pgen,
-            args.pdetail,
-            args.pquality, 
-            args.pactivity,
-            args.sysactivity ]):
-        sn = getSnapshot(args)
-        
-        if not sn:
-            print "No snapshot specified"
-            return
+    
              
     
-    if args.sysactivity:
-        it =PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn, portalID=args.portal_id))
-        a = process_all(PMDActivityAnalyser(),it)
-        totalDS = dbm.countDatasets(snapshot=sn)
-        totalRes= dbm.countResources(snapshot=sn)
-        
-        report = Report([SystemActivityReporter( a, snapshot=sn, portalID=args.portal_id, dbds=totalDS, dbres= totalRes)])
-        
-        output(report,args)
-    
-    if any([args.pevolution,args.pgen,args.pdetail,args.pquality, args.pactivity ]) and not any([  args.portal_id]):
-        print "Portal URL or ID is missing"
-        return 
-    
-    if args.pgen:    
-        #get all available snapshots
-        a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=args.portal_id,apiurl=None))
-        r=SnapshotsPerPortalReporter(a,args.portal_id)
-
-        
-        aset = AnalyserSet()
-        #lc=aset.add(CKANLicenseCount())# how many licenses
-        #lcc=aset.add(CKANLicenseConformance())
-
-        tc= aset.add(DCATTagsCount())   # how many tags
-        oc= aset.add(DCATOrganizationsCount())# how many organisations
-        fc= aset.add(DCATFormatCount())# how many formats
-
-        resC= aset.add(PMDResourceCount())   # how many resources
-        dsC=dc= aset.add(DatasetCount())    # how many datasets
-        rsize=aset.add(ResourceSize())
-
-        #use the latest portal meta data object
-        it = dbm.getLatestPortalMetaData(portalID=args.portal_id)
-        aset = process_all(aset, PortalMetaData.iter(it))
-
-        rep = Report([r,
-        DatasetSumReporter(dsC),
-        ResourceCountReporter(resC),
-        ResourceSizeReporter(rsize),
-        #LicensesReporter(lc,lcc,topK=3),
-        TagReporter(tc,dc, topK=3),
-        OrganisationReporter(oc, topK=3),
-        FormatCountReporter(fc, topK=3)])
-        
-        output(rep,args)
-        
-    if args.pdetail:
-        pass
+    #===========================================================================
+    # if args.sysactivity:
+    #     it =PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn, portalID=args.portal_id))
+    #     a = process_all(PMDActivityAnalyser(),it)
+    #     totalDS = dbm.countDatasets(snapshot=sn)
+    #     totalRes= dbm.countResources(snapshot=sn)
+    #     
+    #     report = Report([SystemActivityReporter( a, snapshot=sn, portalID=args.portal_id, dbds=totalDS, dbres= totalRes)])
+    #     
+    #     output(report,args)
+    # 
+    # if any([args.pevolution,args.pgen,args.pdetail,args.pquality, args.pactivity ]) and not any([  args.portal_id]):
+    #     print "Portal URL or ID is missing"
+    #     return 
+    # 
+    # if args.pgen:    
+    #     #get all available snapshots
+    #     
+    #     
+    #     
+    #     
+    # if args.pdetail:
+    #     pass
+    #===========================================================================
 #===============================================================================
 #         aset = AnalyserSet()
 #         
@@ -198,30 +261,33 @@ def cli(args,dbm):
 #===============================================================================
     
     
-    if args.pquality:
-        pass
-    if args.pevolution:
-        aset = AnalyserSet()
-        
-        de=aset.add(DatasetEvolution())
-        re= aset.add(ResourceEvolution())
-        
-        
-        it = dbm.getPortalMetaDatas(portalID=args.portal_id)
-        aset = process_all(aset, PortalMetaData.iter(it))
-        
-        rep = Report([EvolutionReporter(de)])
-  
-        output(rep,args)
-        
-    if args.pactivity:
-        pass
-    
-def output(rE, args):
+  #=============================================================================
+  #   if args.pquality:
+  #       pass
+  #   if args.pevolution:
+  #       aset = AnalyserSet()
+  #       
+  #       de=aset.add(DatasetEvolution())
+  #       re= aset.add(ResourceEvolution())
+  #       
+  #       
+  #       it = dbm.getPortalMetaDatas(portalID=args.portal_id)
+  #       aset = process_all(aset, PortalMetaData.iter(it))
+  #       
+  #       rep = Report([EvolutionReporter(de)])
+  # 
+  #       output(rep,args)
+  #       
+  #   if args.pactivity:
+  #       pass
+  #   
+  #=============================================================================
+def output(rE, args,  snapshot=None):
     
     rE.clireport()
     
     if args.csv:
-        print rE.csvreport(args.outdir)
+        outdir= os.path.join(args.out, snapshot ) if snapshot else args.out 
+        print rE.csvreport(outdir )
     if args.ui:
         print rE.uireport()

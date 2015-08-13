@@ -5,6 +5,7 @@ from odpw.utils.timer import Timer
 
 
 
+
 __author__ = 'jumbrich'
 
 import ckanapi
@@ -559,7 +560,7 @@ def getSnapshot(args):
     else:
         sn = getCurrentSnapshot()
         
-        if not args.ignore:
+        if hasattr(args,'ignore'):
             while True:
                 choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
                 if choice == 'y':
@@ -685,6 +686,15 @@ def head(url, redirects=0, props=None):
 
 
 if __name__ == '__main__':
+    
+    from odpw.db.models import Dataset
+    dataset=Dataset(snapshot=1533, portalID="test", did="test")
+    
+    for i in  getattr(dataset,'dcat',[]):
+        print i
+    
+    sys.exit(0)
+    
     
     id='7184b7f9-c61b-4c50-abb7-b0f08f756049'
     pid='open-data_europa_eu'

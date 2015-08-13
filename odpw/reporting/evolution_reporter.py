@@ -4,11 +4,11 @@ Created on Aug 12, 2015
 @author: jumbrich
 '''
 from odpw.reporting.reporters import Reporter, UIReporter, CLIReporter,\
-    DFtoListDict
+    DFtoListDict, CSVReporter
 import pandas as pd
 
 
-class EvolutionReporter(Reporter, UIReporter, CLIReporter):
+class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
     
     def __init__(self, analyser):
         super(EvolutionReporter, self).__init__()
@@ -16,13 +16,19 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter):
     
     def getDataFrame(self):
         if  self.df is None:
-            self.df= pd.DataFrame(self.a.getResult().items(), columns=['snapshot','datasets'])
+            res=[]
+            print self.a.getResult()
+            for sn, dkv in  self.a.getResult().items():
+                d={'snapshot':sn}
+                for k,v in dkv.items():
+                    d[k]=v
+                res.append(d) 
+            self.df= pd.DataFrame(res)
         return self.df
     
-    def uireport(self):
-        return {self.name():DFtoListDict(self.getDataFrame())}
-
-    def clireport(self):
-        df = self.getDataFrame()
-        print df
-        
+class DatasetEvolutionReporter(EvolutionReporter):
+    pass
+class ResourcesEvolutionReporter(EvolutionReporter):
+    pass 
+class SystemSoftwareEvolutionReporter(EvolutionReporter):
+    pass
