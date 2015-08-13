@@ -91,21 +91,20 @@ class DCATDatasetAge(Analyser):
         self.ages = {'created':[],'modified':[]}
         
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Dataset) in dcat_el.get('@type',[]):
-                    for f in dcat_el.get(str(DCT.issued),[]):
-                        try:
-                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            self.ages['created'].append(created)
-                        except Exception as e:
-                            pass
-                    for f in dcat_el.get(str(DCT.modified),[]):
-                        try:
-                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            self.ages['modified'].append(created)
-                        except Exception as e:
-                            pass
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Dataset) in dcat_el.get('@type',[]):
+                for f in dcat_el.get(str(DCT.issued),[]):
+                    try:
+                        created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                        self.ages['created'].append(created)
+                    except Exception as e:
+                        pass
+                for f in dcat_el.get(str(DCT.modified),[]):
+                    try:
+                        created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                        self.ages['modified'].append(created)
+                    except Exception as e:
+                        pass
         
         
 
@@ -143,21 +142,20 @@ class DCATDatasetAge(Analyser):
 class DCATResourceInDSAge(DCATDatasetAge):
 
     def analyse_Dataset(self, dataset):
-        if dataset.dcat:
-            for dcat_el in dataset.dcat:
-                if str(DCAT.Distribution) in dcat_el.get('@type',[]):
-                    for f in dcat_el.get(str(DCT.issued),[]):
-                        try:
-                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            self.ages['created'].append(created)
-                        except Exception as e:
-                            pass
-                    for f in dcat_el.get(str(DCT.modified),[]):
-                        try:
-                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            self.ages['modified'].append(created)
-                        except Exception as e:
-                            pass
+        for dcat_el in getattr(dataset,'dcat',[]):
+            if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+                for f in dcat_el.get(str(DCT.issued),[]):
+                    try:
+                        created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                        self.ages['created'].append(created)
+                    except Exception as e:
+                        pass
+                for f in dcat_el.get(str(DCT.modified),[]):
+                    try:
+                        created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                        self.ages['modified'].append(created)
+                    except Exception as e:
+                        pass
                     
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
