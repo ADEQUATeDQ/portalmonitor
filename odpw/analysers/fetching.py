@@ -493,9 +493,9 @@ class UsageAnalyser(Analyser):
         
         for i in [ 'extra', 'core']:
             a = np.array(self.keysperDS[i])
-            if len(a) != 0:
+            if len(self.keysperDS[i]) != 0:
                 a = a/( len(keys[i].keys()) *1.0)
-            self.quality[i] = a.mean() if len(a) != 0 else 0
+            self.quality[i] = a.mean() if len(self.keysperDS[i]) != 0 else 0
             
         resusage=[]
         tousage=[]

@@ -322,9 +322,29 @@ ul#portalList {
     margin: 0px;
 }
 
-
-
-
+#portalInfo{
+    border-top: 5px solid rgba(0,0,0,0.3); 
+    border-bottom: 5px solid rgba(0,0,0,0.3); 
+    background: rgba(0,0,0,0.1);
+    line-height: 20px;
+}
+#portalInfo:before {
+    content:"\a0";
+    display:block;
+    line-height:0px;
+    border-top:1px solid rgba(150,150,150,1);     
+}
+#portalInfo:after {
+    content:"\a0";
+    display:block;
+    line-height:0px;
+    border-top:1px solid rgba(150,150,150,0.4);     
+}
+#portalInfo label{
+    line-height: 35px;
+    font-size: 20px;
+    padding-left: 10px;
+}
 
 
 table {
