@@ -77,9 +77,9 @@ class DCATDistributionInserter(Analyser):
                     aurl=dcat_el.get(str(DCAT.accessURL),[])
                     for au in aurl: 
                         url = au.get('@value',None)
-                    if url: 
-                        break
-                    url = au.get('@id',None)
+                        if url: 
+                            break
+                        url = au.get('@id',None)
                
                
                 if url:
