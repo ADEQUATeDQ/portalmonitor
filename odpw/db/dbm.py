@@ -316,6 +316,21 @@ class PostgressDBM(object):
                 return PortalMetaData.fromResult(dict( res))
             return None
         
+        
+    def getPortalMetaDatasUntil(self, snapshot=None, portalID=None):
+        with Timer(key="getPortalMetaDatas") as t:
+            s = select([self.pmd])
+            if snapshot:
+                s=s.where(self.pmd.c.snapshot <= snapshot)
+            if portalID:
+                s= s.where(self.pmd.c.portal_id == portalID)
+                
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            
+            print s.compile()
+            
+            return s.execute()
+        
     def getPortalMetaDatas(self, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatas") as t:
             s = select([self.pmd])
@@ -326,7 +341,7 @@ class PostgressDBM(object):
                 
             self.log.debug(query=s.compile(), params=s.compile().params)
                
-            return s.execute().fetchall()
+            return s.execute()
 
     def getPortalMetaDatasBySoftware(self, software, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatasBySoftware") as t:
@@ -508,7 +523,7 @@ class PostgressDBM(object):
             #self.conn.execute(ins)
             ins.execute()
 
-    def getDatasets(self,portalID=None, snapshot=None, software=None):
+    def getDatasets(self,portalID=None, snapshot=None, software=None, status=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])
             
@@ -518,6 +533,8 @@ class PostgressDBM(object):
                 s= s.where(self.datasets.c.portal_id == portalID)
             if software:
                 s= s.where(self.datasets.c.software == software)
+            if status:
+                s= s.where(self.datasets.c.status == status)
             
             self.log.debug(query=s.compile(), params=s.compile().params)    
             

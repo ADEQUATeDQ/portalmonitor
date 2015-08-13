@@ -5,6 +5,7 @@ from odpw.utils.timer import Timer
 
 
 
+
 __author__ = 'jumbrich'
 
 import ckanapi
@@ -65,7 +66,7 @@ def getPackage(apiurl, id):
 
     ex1=None
     try:
-        url = urlparse.urljoin(apiurl, "/api/2/rest/dataset/" + id)
+        url = urlparse.urljoin(apiurl, "api/2/rest/dataset/" + id)
         resp = requests.get(url, verify=False)
         if resp.status_code == requests.codes.ok:
             package = resp.json()
@@ -113,7 +114,7 @@ def getPackageList(apiurl):
     
     ex1=None
     try:
-        url = urlparse.urljoin(apiurl, "/api/2/rest/dataset")
+        url = urlparse.urljoin(apiurl, "api/2/rest/dataset")
         resp = requests.get(url, verify=False)
         if resp.status_code == requests.codes.ok:
             p_l = resp.json()
@@ -559,7 +560,7 @@ def getSnapshot(args):
     else:
         sn = getCurrentSnapshot()
         
-        if not args.ignore:
+        if hasattr(args,'ignore'):
             while True:
                 choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
                 if choice == 'y':
@@ -685,6 +686,31 @@ def head(url, redirects=0, props=None):
 
 
 if __name__ == '__main__':
+    
+    from odpw.db.models import Dataset
+    dataset=Dataset(snapshot=1533, portalID="test", did="test")
+    
+    for i in  getattr(dataset,'dcat',[]):
+        print i
+    
+    sys.exit(0)
+    
+    
+    id='7184b7f9-c61b-4c50-abb7-b0f08f756049'
+    pid='open-data_europa_eu'
+    apiurl='http://open-data.europa.eu/en/data/'
+    
+    url = urlparse.urljoin(apiurl, "api/2/rest/dataset/" + id)
+    print url
+    
+    resp, status = getPackage(apiurl, id)
+    
+    print resp, status
+    
+    
+    sys.exit(0)
+    
+    
     
     #api = ckanapi.RemoteCKAN('http://data.london.gov.uk/', get_only=True)
     #data = api.action.package_show(id='be657824-f18c-48bf-a254-3c9f436ce289')

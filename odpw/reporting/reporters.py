@@ -17,13 +17,18 @@ from odpw.db.models import PortalMetaData
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 import structlog
+from abc import abstractmethod
 log = structlog.get_logger()
 
 class Reporter(object):
     
+    def __init__(self):
+        self.df=None
     
     def name(self):
         return self.__class__.__name__.lower()
+    
+    @abstractmethod
     def getDataFrame(self):
         pass
     
@@ -96,7 +101,8 @@ class DBReporter(Reporter):
     
 class UIReporter(object):
     def uireport(self):
-        pass
+        return {self.name():DFtoListDict(self.getDataFrame())}
+
 
     
 class CSVReporter(object):
@@ -117,9 +123,12 @@ class CSVReporter(object):
             df.to_csv(f, index=False)
 
 class CLIReporter(object):
-    
+
     def clireport(self):
-        pass
+        print self.name()
+        df = self.getDataFrame()
+        print df
+        
 
 class DataFramePlotReporter(object):
 
@@ -135,7 +144,6 @@ class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
         self.portalID= portalID
         
     def uireport(self):
-        
         df = self.getDataFrame()
         grouped = df.groupby("portal_id")
         results={}
@@ -151,15 +159,23 @@ class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
             print "Snapshots for", portalID
             print group['snapshot'].tolist()
         
+
+class PortalListReporter(DBReporter,UIReporter,CLIReporter,CSVReporter):
+    def __init__(self, analyser):
+        super(PortalListReporter,self).__init__(analyser)
+        
+    def uireport(self):
+        return {'portallist':DFtoListDict(self.getDataFrame())}
+
     
-class SoftWareDistReporter(DBReporter,UIReporter):
+class SoftWareDistReporter(DBReporter,UIReporter, CLIReporter,CSVReporter):
     def __init__(self, analyser):
         super(SoftWareDistReporter,self).__init__(analyser)
         
     def uireport(self):
         return {'softdist':DFtoListDict(addPercentageCol(self.getDataFrame()))}
 
-class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
+class ISO3DistReporter(DBReporter,UIReporter,CSVReporter,CLIReporter):
     def __init__(self, analyser):
         super(ISO3DistReporter,self).__init__(analyser)
     
@@ -177,15 +193,10 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter):
         
         return {'iso3dist':iso3dist,'iso3Map':iso3Map }
     
-    def _csvreport(self, folder):
-        
+    def _csvreport(self, file):
         df = addPercentageCol(self.getDataFrame())
-        with open(os.path.join(folder,"iso3dist.csv"), "w") as f:
+        with open(file, "w") as f:
             df.to_csv(f,index=False)
-            
-        return os.path.join(folder,"iso3dist.csv")
-    
-    
 
 class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
     
@@ -419,3 +430,38 @@ class ResourceSizeReporter(Reporter, UIReporter):
 #             df.to_csv(f, index=False)
 #         return os.path.join(folder, "licensesFrequency.csv")
 #===============================================================================
+
+class SystemEvolutionReport(Report):
+    
+    def uireport(self):
+        res = {}
+        for r in self.rs:
+            if isinstance(r, UIReporter):
+                s = r.uireport()
+                
+                for k, v in s.items():
+                    res[k]=v    
+        return res
+    
+    def getDataFrame(self):
+        df = None
+        for r in self.rs:
+            if df is None:
+                df = r.getDataFrame()
+                df = df.set_index('snapshot')
+            else:
+                df1= r.getDataFrame()
+                df1 = df1.set_index('snapshot')
+                df = df.join(df1)
+                
+        return df
+    def _csvreport(self, file):
+        df = self.getDataFrame()
+        
+        with open(file, "w") as f:
+            df.to_csv(f, index=False)
+    
+    def clireport(self):
+        print self.getDataFrame()
+        
+    

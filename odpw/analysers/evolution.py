@@ -1,0 +1,43 @@
+'''
+Created on Aug 12, 2015
+
+@author: jumbrich
+'''
+from odpw.analysers import Analyser
+from _collections import defaultdict
+
+
+class EvolutionCountAnalyser(Analyser):
+    
+    def __init__(self):
+        self._evolv={}
+        self.keys=set([])
+        
+    def add(self, snapshot, key, value):
+        sndict = self._evolv.get(snapshot, defaultdict(int))
+        sndict[key]+=value
+        self._evolv[snapshot]=sndict
+        self.keys.add(key)
+
+    def getResult(self):
+        res={}
+        for sn, ddict in self._evolv.items():
+            res[sn]= { k: ddict.get(k) for k in self.keys}
+        return res
+
+class DatasetEvolution(EvolutionCountAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        self.add(pmd.snapshot, 'datasets',pmd.datasets)
+    
+class ResourceEvolution(EvolutionCountAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        self.add(pmd.snapshot, 'resources',pmd.resources)
+        
+class SystemSoftwareEvolution(EvolutionCountAnalyser):
+    
+    def __init__(self, portalSoftware):
+        self.portalSoftware= portalSoftware
+        super(SystemSoftwareEvolution, self).__init__()
+        
+    def analyse_PortalMetaData(self, pmd):
+        self.add(pmd.snapshot, self.portalSoftware[pmd.portal_id], 1)

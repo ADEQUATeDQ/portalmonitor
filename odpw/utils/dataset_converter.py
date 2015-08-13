@@ -60,7 +60,6 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
         graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
         # TODO contact, publisher, organization
 
-    print graph.serialize(format='n3')
     return json.loads(graph.serialize(format=format))
 
 
