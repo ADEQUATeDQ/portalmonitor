@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 
 
-
+    #"{"www_data_gc_ca": ["fe3a1013-9877-40ac-8d90-61a78abcdc75"]}"
     id="www_data_gc_ca"
     did="fe3a1013-9877-40ac-8d90-61a78abcdc75"
     sn=1533
@@ -32,9 +32,11 @@ if __name__ == '__main__':
     
     dc = DCATConverter(dbm.getPortal(portalID=id))
     d1= DCATDistributionCount()
+    di = DCATDistributionInserter(dbm)
     
     dc.analyse_Dataset(d)
     d1.analyse_Dataset(d)
+    di.analyse_Dataset(d)
     
     d1.done()
     

@@ -160,11 +160,11 @@ def cli(args,dbm):
     total=len(jobs)
     steps= total/100 if total/100 !=0 else 1
     
-    for res in results:
-        c+=1
-        if c%steps==0:
-            elapsed = (time.time() - start)
-            progressIndicator(c, total, elapsed=elapsed, label="Fetch Simulate Progress")
+    #for res in results:
+    #    c+=1
+    #    if c%steps==0:
+    #        elapsed = (time.time() - start)
+    #        progressIndicator(c, total, elapsed=elapsed, label="Fetch Simulate Progress")
    
-    progressIndicator(c, total, elapsed=elapsed, label="Fetch Simulate Progress")
+    #progressIndicator(c, total, elapsed=elapsed, label="Fetch Simulate Progress")
     pool.join()

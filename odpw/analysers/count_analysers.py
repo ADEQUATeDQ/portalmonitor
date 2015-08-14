@@ -263,7 +263,7 @@ class DCATDistributionCount(DistinctElementCount):
                     self.analyse_generic(url)
                 else:
                     self.empty+=1
-                    print 'emtpy', dcat_el
+                    
       
     def getResult(self):
         res = super(DCATDistributionCount,self).getResult()
