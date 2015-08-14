@@ -16,6 +16,10 @@ import numpy as np
 from odpw.analysers.quality import interpret_meta_field
 from odpw.utils.dataset_converter import DCAT, DCT
 import odpw.utils.util as odpwutil
+from _collections import defaultdict
+from pybloom import ScalableBloomFilter
+
+
 
 class MD5DatasetAnalyser(Analyser):
 #    __metaclass__ = AnalyserFactory
@@ -233,18 +237,27 @@ class CKANKeyAnalyser(Analyser):
                 # field value is a list
                 if field == 'resources':
                     self.size[self.RES] += len(fv)
+                    
                     res = {}
+                    #res[key] = {'mis':0,'count':0}
                     for resource in fv:
-                        self.__updateResource(resource,res)
+                        self.__updateResource(resource, res)
 
                     for k in res:
                         if k not in self.reskey:
-                            self.reskey[k] = [] 
-                            #np.array([], dtype=object)
-
+                            self.reskey[k] = {'total':0, 'sum':0, 'ne':0} 
+                            
                         #list with average compl per dataset over DS resources
-                        self.reskey[k].append(sum(res[k])/(len(fv)*1.0)) 
-                        #np.append(self.reskey[k], res[k].sum()/(len(fv)*1.0))
+                        #number of resources with non empty key / number of resourec 
+                        compl= res[k]['ne'] / (len(fv)*1.0)
+                        
+                        if compl!=0.0:
+                            self.reskey[k]['ne']+=1
+                            
+                        self.reskey[k]['sum']+=compl
+                        
+                        #count number of datasets this key appear
+                        self.reskey[k]['total']+=1
 
                     fv = 'list'
                 elif len(fv) == 0:
@@ -272,9 +285,18 @@ class CKANKeyAnalyser(Analyser):
                     fv = 'dict'
 
             if field not in self.freq[self.C]:
-                self.freq[self.C][field] = []#np.array([], dtype=object)
-            #a = self.freq[self.C][field]
-            self.freq[self.C][field].append(fv)# = np.append(a, fv)
+                self.freq[self.C][field] =  {'types':defaultdict(int), 'bloom':ScalableBloomFilter(), 'distinct':0, 'total':0, 'mis':0}
+
+            if fv not in self.freq[self.C][field]['bloom']:
+                self.freq[self.C][field]['bloom'].add(fv)
+                self.freq[self.C][field]['distinct']+=1
+            
+            self.freq[self.C][field]['types'][self.__computeType(fv)]+=1
+            self.freq[self.C][field]['total']+=1
+            
+            if fv == 'NA':
+                self.freq[self.C][field]['mis']+=1
+                
             
             
     def __updateExtras(self, extras):
@@ -301,10 +323,18 @@ class CKANKeyAnalyser(Analyser):
                 else:
                     fv = 'list'
             if field not in self.freq[self.E]:
-                self.freq[self.E][field] = []#np.array([], dtype=object)
+                self.freq[self.E][field] = {'types':defaultdict(int), 'bloom':ScalableBloomFilter(), 'distinct':0, 'total':0, 'mis':0}
 
-            #a = self.freq[self.E][field]
-            self.freq[self.E][field].append(fv)# = np.append(a, fv)
+            if fv not in self.freq[self.E][field]['bloom']:
+                self.freq[self.E][field]['bloom'].add(fv)
+                self.freq[self.E][field]['distinct']+=1
+            
+            self.freq[self.E][field]['types'][self.__computeType(fv)]+=1
+            self.freq[self.E][field]['total']+=1
+            
+            if fv == 'NA':
+                self.freq[self.E][field]['mis']+=1
+            
     
     def __updateResource(self, resource,res):
         for field in resource:
@@ -322,17 +352,24 @@ class CKANKeyAnalyser(Analyser):
                 else:
                     fv = 'list'
 
+            
             if field not in self.freq[self.R]:
-                self.freq[self.R][field] = []#np.array([])
-            self.freq[self.R][field].append(fv)# = np.append(self.freq[self.R][field], fv)
-
+                self.freq[self.R][field] = {'types':defaultdict(int), 'bloom':ScalableBloomFilter(), 'distinct':0, 'total':0, 'mis':0}
+            
+            if fv not in self.freq[self.R][field]['bloom']:
+                self.freq[self.R][field]['bloom'].add(fv)
+                self.freq[self.R][field]['distinct']+=1
+            
+            
+            self.freq[self.R][field]['types'][self.__computeType(fv)]+=1
+            self.freq[self.R][field]['total']+=1
             if field not in res:
-                res[field] = []#np.array([], dtype=object)
-            a = res[field]
-            if fv == 'NA':
-                res[field].append(0)# = np.append(a, 0)
+                res[field] = {'ne':0,'count':0}
+            if fv != 'NA':
+                res[field]['ne']+=1
             else:
-                res[field].append(1)# = np.append(a, 1)
+                self.freq[self.R][field]['mis']+=1
+            res[field]['count']+=1
                 
     def done(self):
         #aggregate the core keys
@@ -350,28 +387,28 @@ class CKANKeyAnalyser(Analyser):
 
 
     def __aggregateResKeys(self, counts, stats):
-        # core fields
+        #counts = {'types':defaultdict(int), 'bloom':ScalableBloomFilter(), 'distinct':0, 'total':0, 'mis':0}
 
         a = self.reskey
-
-        for field in a:
-            stats[field] = {
-                'count': len( np.where( a[field] != 0.0)[0] ),
-                'mis': len( np.where(a[field] == 0.0)[0] ),
+        #self.reskey[k] = {'total':0, 'sum':0, 'ne':0} 
+        for key in self.reskey:
+            stats[key] = {
+                'count': self.reskey[key]['ne'],          
+                'mis': self.reskey[key]['total']-self.reskey[key]['ne']
             }
             # completeness
-            stats[field]['compl'] = self.__calc_completeness(stats[field])
+            stats[key]['compl'] = self.__calc_completeness(stats[key])
             # availability
-            stats[field]['usage'] = self.__calc_availability(stats[field], self.size[self.DS])
+            stats[key]['usage'] = self.__calc_availability(stats[key], self.size[self.DS])
 
         for field in counts:
-            distinct = np.unique(counts[field])
-            types = self.__computeTypes(counts[field])
+            distinct = counts[field]['distinct']
+            types = dict(counts[field]['types'])
 
             stats[field]['res'] = {
-                'count': len( np.where( counts[field] != 'NA')[0] ),
-                'mis': len(np.where(counts[field] == 'NA')[0] ),
-                'distinct': len(np.where( distinct != 'NA')[0] ),
+                'count': (counts[field]['total']-counts[field]['mis']),
+                'mis': counts[field]['mis'],
+                'distinct': distinct,
                 'types': types
             }
             # completeness
@@ -382,22 +419,19 @@ class CKANKeyAnalyser(Analyser):
     def __aggregateKeys(self, counts, stats):
         # core fields
 
-        a = counts
+        
 
-        for field in a:
+        for field in counts:
                 # store frequency analysis of field entries
             #values.add(PortalFieldValues(self.portal_id, self.snapshot, field, counts[field]))
 
-            distinct = np.unique(a[field])
+            distinct = counts[field]['distinct']
             stats[field] = {
-                'count': len( np.where( counts[field] != 'NA')[0] ),
-                'mis': len(np.where(counts[field] == 'NA')[0] ),
-                'distinct': len(np.where( distinct != 'NA')[0] )
+                'count': (counts[field]['total']-counts[field]['mis']),
+                'mis': counts[field]['mis'],
+                'distinct': distinct,
+                'types': dict(counts[field]['types'])
             }
-
-
-            types = self.__computeTypes(counts[field])
-            stats[field]['types'] = types
 
             # completeness
             stats[field]['compl'] = self.__calc_completeness(stats[field])
@@ -415,7 +449,11 @@ class CKANKeyAnalyser(Analyser):
             return float(field_entry['count'] + field_entry['mis']) / float(count)
         else:
             return 0
-        
+    
+    def __computeType(self, value):
+        return str(interpret_meta_field.get_type(value))
+
+    
     def __computeTypes(self, dict):
         types = {}
         for key in dict:
