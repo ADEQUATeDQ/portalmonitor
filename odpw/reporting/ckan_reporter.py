@@ -13,7 +13,8 @@ from odpw.analysers.statuscodes import DatasetStatusCount
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData
 from odpw.reporting import plotting
-from odpw.reporting.reporters import Report, Reporter, DataFramePlotReporter
+from odpw.reporting.reporters import Report, Reporter, DataFramePlotReporter, FormatCountReporter, TagReporter, \
+    ElementCountReporter, CSVReporter
 
 from matplotlib.ticker import FuncFormatter
 from matplotlib import pyplot as plt
@@ -74,16 +75,11 @@ class MultiHistogramReporter(Reporter, DataFramePlotReporter):
     def plotreport(self, dir):
         plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=bins, colors=self.colors)
 
-def report():
-
-    #portals = dbm.getPortals(software='CKAN')
+if __name__ == '__main__':
+    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    sn = 1533
 
     pmd_analyser = AnalyserSet()
-    #dataset_analyser = AnalyserSet()
-
-    #key_analyser = dataset_analyser.add(CKANKeyAnalyser())
-    #usage = dataset_analyser.add(UsageAnalyser(key_analyser))
-
 
     # 1. STATS
     ds_count = pmd_analyser.add(DatasetCount())
@@ -121,27 +117,42 @@ def report():
     retr_distr = pmd_analyser.add(DatasetStatusCount())
     # TODO resource resp code distribution
 
-    # usage and completeness
-    compl_histogram = pmd_analyser.add(CompletenessHistogram())
-
-
-
-if __name__ == '__main__':
-    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1531
 
     #np.arange(0,1,0.1)
-    pmds = dbm.getPortalMetaDatasBySoftware(software='CKAN', snapshot=sn)
-    pmd_iter = PortalMetaData.iter(pmds)
 
-    pmd_analyser = AnalyserSet()
     bins=np.arange(0.0,1.1,0.1)
     compl_histogram = pmd_analyser.add(CompletenessHistogram(bins=bins))
     usage_histogram = pmd_analyser.add(UsageHistogram(bins=bins))
     cont_histogram = pmd_analyser.add(ContactabilityHistogram(bins=bins))
     open_histogram = pmd_analyser.add(OpennessHistogram(bins=bins))
+
+    pmds = dbm.getPortalMetaDatasBySoftware(software='CKAN', snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
     process_all(pmd_analyser, pmd_iter)
 
+    ################# RESULTS ###########################
+    print 'ds_count', ds_count.getResult()
+    print 'res_count', res_count.getResult()
+    print 'unique license ids', len(lid_count.getResult())
+
+    # top k reporter
+    format_rep = FormatCountReporter(format_count, topK=10)
+    tags_rep = TagReporter(tags_count, ds_count, topK=10)
+    key_rep = ElementCountReporter(key_count, columns=['Keys', 'Count'])
+    core_rep = ElementCountReporter(core_key_count, columns=['Core Keys', 'Count'])
+    extra_rep = ElementCountReporter(extra_key_count, columns=['Extra Keys', 'Count'])
+    res_rep = ElementCountReporter(res_key_count, columns=['Resource Keys', 'Count'])
+    lid_rep = ElementCountReporter(lid_count, columns=['License ID', 'Count'])
+    retr_rep = ElementCountReporter(retr_distr, columns=['Retrievable', 'Count'])
+    csv_re = Report([format_rep, tags_rep, key_rep, extra_rep, res_rep, lid_rep, retr_rep])
+    csv_re.csvreport('tmp')
+
+    print 'ds_histogram', ds_histogram.getResult()
+    print 'res_histogram', res_histogram.getResult()
+
+
+
+    # histogram reporting
     col = ['black', 'white', 'dimgrey', 'lightgrey']
     keys_labels = {
         'total': "$\mathcal{K}$",
@@ -171,8 +182,7 @@ if __name__ == '__main__':
     open_rep = MultiHistogramReporter(data, labels=labels, xlabel="$Q_o$", ylabel="Portals", filename="qo.pdf", colors=col)
 
     # x, y tuples for scatter plot
-    # TODO data = OrderedDict([(g, (compl_histogram.data[g], usage_histogram.data[g])) for g in ['total', 'res', 'core', 'extra']])
-    data = OrderedDict([(g, (compl_histogram.data[g], compl_histogram.data[g])) for g in ['total', 'res', 'core', 'extra']])
+    data = OrderedDict([(g, (compl_histogram.data[g], usage_histogram.data[g])) for g in ['total', 'res', 'core', 'extra']])
     colors = ['black', 'red', 'blue', 'green']
     scatter = MultiScatterReporter(data, keys_labels, "$Q_c$", "$Q_u$", "cvude.pdf", colors=colors)
 

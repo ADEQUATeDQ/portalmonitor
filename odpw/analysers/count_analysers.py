@@ -34,7 +34,11 @@ class ResourceCount(DistinctElementCount):
         super(ResourceCount, self).__init__(withDistinct=withDistinct)
         self.updateAll=updateAll
         
-        
+
+    def analyse_PortalMetaData(self, element):
+        if element.resources >= 0:
+            self.count += element.resources
+
     def update_PortalMetaData(self, pmd):
         exists=True
         if not pmd.res_stats:
