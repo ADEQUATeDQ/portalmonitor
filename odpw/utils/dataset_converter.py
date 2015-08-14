@@ -212,7 +212,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
     # distributions
     if dataset_dict.get('has_records'):
-        exports = [('csv', 'text/comma-separated-values'), ('json', 'application/json'), ('xls', 'application/vnd.ms-excel')]
+        exports = [('csv', 'text/csv'), ('json', 'application/json'), ('xls', 'application/vnd.ms-excel')]
         if 'geo' in dataset_dict.get('features', []):
             exports.append(('geojson', 'application/vnd.geo+json'))
             exports.append(('kml', 'application/vnd.google-earth.kml+xml'))
