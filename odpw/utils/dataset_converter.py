@@ -194,7 +194,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     # Dates
     items = [
         #('metadata_processed', DCT.issued, ['metadata_created']),
-        ('modified', DCT.modified, ['metadata_processed, metadata_modified']),
+        ('modified', DCT.modified, ['metadata_processed', 'metadata_modified']),
     ]
     _add_date_triples_from_dict(g, data, dataset_ref, items)
 

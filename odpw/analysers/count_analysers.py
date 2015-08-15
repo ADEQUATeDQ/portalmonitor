@@ -374,6 +374,12 @@ class CKANKeysCount(ElementCountAnalyser):
         self.keys_set = keys_set
         self.total_count = total_count
 
+    def name(self):
+        if self.keys_set:
+            return self.__class__.__name__ + self.keys_set
+        else:
+            return super(CKANKeysCount, self).name()
+
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'keys' in pmd.general_stats:
             keys = pmd.general_stats['keys']
