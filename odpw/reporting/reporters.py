@@ -467,4 +467,3 @@ class SystemEvolutionReport(Report):
     def clireport(self):
         print self.getDataFrame()
         
-    

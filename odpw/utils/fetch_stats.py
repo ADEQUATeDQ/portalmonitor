@@ -32,6 +32,66 @@ from odpw.db.models import Portal,  PortalMetaData, Dataset
 import structlog
 log =structlog.get_logger()
 
+
+rerun=[
+       
+       #"http://scisf.opendatasoft.com",
+       #"http://dataratp.opendatasoft.com",
+       #"http://pod.opendatasoft.com",
+       #"http://public.opendatasoft.com",
+
+       
+       
+#===============================================================================
+#        "http://opendata.comune.bari.it/",
+# "https://offenedaten.de/",
+# "http://datosabiertos.malaga.eu/",
+# "http://datagm.org.uk/",
+# "http://catalog.data.ug/",
+# "http://ckan.data.ktn.gv.at/",
+# "http://datos.argentina.gob.ar/",
+# "http://hubofdata.ru/",
+# "https://www.data.vic.gov.au/",
+# "http://data.salzburgerland.com/",
+# "https://opendata.bayern.de/",
+# "http://data.gov.ie/",
+# "http://ckan.okfn.gr/",
+# "http://www.opendata-hro.de/",
+# "http://data.gov.au/",
+# "http://opingogn.is/",
+# "http://data.openpolice.ru/",
+# "http://datospublicos.org/",
+# "http://leedsdatamill.org/",
+# "http://opendata.lisra.jp/",
+# "https://catalogodatos.gub.uy/",
+# "https://data.stadt-zuerich.ch/",
+# "https://beta.avoindata.fi/data/fi/",
+# "http://data.nhm.ac.uk/",
+# "http://dados.recife.pe.gov.br/",
+# "http://www.edinburghopendata.info/",
+# "http://drdsi.jrc.ec.europa.eu/",
+# "http://africaopendata.org/",
+# "http://linkeddatacatalog.dws.informatik.uni-mannheim.de/",
+# "http://dartportal.leeds.ac.uk/",
+# "http://data.opencolorado.org/",
+# "http://opendata.opennorth.se/",
+# "http://data.opencolorado.org/",
+# "http://data.grcity.us/",
+# "https://data.overheid.nl/data/",
+# "http://data.glasgow.gov.uk/",
+# "http://opendata.awt.be/",
+# "http://www.odaa.dk/",
+# "http://www.datos.misiones.gov.ar/",
+# "http://dados.gov.br/",
+# "http://iatiregistry.org/",
+# "http://bermuda.io/",
+# "http://data.amsterdamopendata.nl/",
+# "http://data.cityofsantacruz.com/",
+# "http://datahub.io/",
+# "http://opendata.admin.ch/",
+#===============================================================================
+]
+
 def simulateFetching(dbm, job):
     Portal = job['Portal']
     sn = job['snapshot']
@@ -72,7 +132,7 @@ def simulateFetching(dbm, job):
     
             
     ae.add(DCATConverter(Portal))
-    ae.add(DCATDistributionCount(withDistinct=True))
+    ddc=ae.add(DCATDistributionCount(withDistinct=True))
     ae.add(DCATDistributionInserter(dbm))
     
     ae.add(DCATOrganizationsCount())
@@ -94,6 +154,7 @@ def simulateFetching(dbm, job):
     
     ae.update(pmd)
     
+    print ddc.getResult()
     dbm.updatePortalMetaData(pmd)
     
     log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
@@ -114,11 +175,19 @@ def setupCLI(pa):
 def cli(args,dbm):
     sn = getSnapshot(args)
     
+    
+    
+    
     portals=[]
     if args.url:
         p = dbm.getPortal(apiurl=args.url)
         if p:
             portals.append(p)
+    elif len(rerun)>0:
+        for apiurl in rerun:
+            p = dbm.getPortal(apiurl=apiurl)
+            if p:
+                portals.append(p)
     else:
         for p in Portal.iter(dbm.getPortals()):
             portals.append(p)

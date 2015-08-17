@@ -6,8 +6,8 @@ Created on Aug 14, 2015
 from odpw.db.models import PortalMetaData
 from odpw.analysers import process_all
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
-from odpw.reporting.ckan_reporter import report
-from odpw.reporting.reporters import SystemActivityReporter
+
+from odpw.reporting.reporters import SystemActivityReporter, Report
 
 def systemactivity(dbm, sn):
     print 'Start iteration'
@@ -17,5 +17,5 @@ def systemactivity(dbm, sn):
     totalDS = dbm.countDatasets(snapshot=sn)
     totalRes= dbm.countResources(snapshot=sn)
 
-    return report([SystemActivityReporter(a,snapshot=sn, dbds=totalDS, dbres= totalRes)])
+    return Report([SystemActivityReporter(a,snapshot=sn, dbds=totalDS, dbres= totalRes)])
     

@@ -15,17 +15,16 @@ class FetchSanity(Analyser):
         self.rows=[]
     
     def analyse_PortalMetaData(self, pmd):
-        row = {'snapshot':pmd.snapshot, 'portalID':pmd.portal_id, 'exception':None,'processed':None}
+        row = {'snapshot':pmd.snapshot, 'portalID':pmd.portal_id, 'fetch_exception':None,'fetch_processed':None}
         sanity={}
         ds={ 'idx_ds':self.dbm.countDatasetsPerSnapshot(portalID=pmd.portal_id,snapshot=pmd.snapshot),
-             
              'pmd_ds': pmd.datasets
              }
         if pmd.fetch_stats:
             #seems we have some full fetch stats
             
             if pmd.fetch_stats.get('status', -2) != 200:
-                row['exception']= pmd.datasets==-1
+                row['fetch_exception']= pmd.datasets==-1
             else:    
                 """ Checks
                     1) indexed =   number of ds == indexed ds
@@ -38,26 +37,26 @@ class FetchSanity(Analyser):
                 
                 #1
                 ds['ds'] = pmd.fetch_stats['datasets'] if 'datasets' in pmd.fetch_stats else -1
-                sanity['indexed'] = ds['ds'] == ds['idx_ds']
+                sanity['fetch_indexed'] = ds['ds'] == ds['idx_ds']
                 
                 #2
                 resp = pmd.fetch_stats.get('respCodes',None)
-                sanity['status'] =  sum(resp.values()) == ds['idx_ds'] if resp else False
+                sanity['fetch_status'] =  sum(resp.values()) == ds['idx_ds'] if resp else False
                 
                 #3
-                sanity['end'] = 'fetch_end' in pmd.fetch_stats
+                sanity['fetch_end'] = 'fetch_end' in pmd.fetch_stats
                    
                 #4
                 sanity['pmd_ds'] =  ( pmd.datasets >= ds['idx_ds'] and pmd.datasets >=ds['ds'])
                 
-                row['processed']= all( sanity.values())
+                row['fetch_processed']= all( sanity.values())
                 
                 row.update(sanity)
         self.rows.append(row)
         
     
     def getResult(self):
-        return self.rows
+        return {'rows':self.rows}
     
     
 class HeadSanity(Analyser):
@@ -66,7 +65,7 @@ class HeadSanity(Analyser):
         self.rows=[]
     
     def analyse_PortalMetaData(self, pmd):
-        row = {'snapshot':pmd.snapshot, 'portalID':pmd.portal_id, 'processed_fetch':None, 'processed_head':None}
+        row = {'snapshot':pmd.snapshot, 'portalID':pmd.portal_id, 'head_processed_fetch':None, 'head_processed':None}
         sanity={}
         res={ 'idx_res':self.dbm.countResourcesPerSnapshot(portalID=pmd.portal_id,snapshot=pmd.snapshot),
              'pmd_res': pmd.resources
@@ -89,24 +88,24 @@ class HeadSanity(Analyser):
             res['distinct'] = pmd.res_stats['distinct'] if 'distinct' in pmd.res_stats else -1
             res['status'] = bool(pmd.res_stats['status']) if 'status' in pmd.res_stats else False
             
-            sanity['keys'] = set(['urls', 'total', 'distinct']).issubset(pmd.res_stats)
-            sanity['card'] = sanity['keys'] and  pmd.res_stats['total']>=pmd.res_stats['distinct']>=pmd.res_stats['urls']
-            sanity['indexed'] = sanity['keys'] and res['idx_res'] == pmd.res_stats['distinct']
+            sanity['head_keys'] = set(['urls', 'total', 'distinct']).issubset(pmd.res_stats)
+            sanity['head_card'] = sanity['head_keys'] and  pmd.res_stats['total']>=pmd.res_stats['distinct']>=pmd.res_stats['urls']
+            sanity['head_indexed'] = sanity['head_keys'] and res['idx_res'] == pmd.res_stats['distinct']
                 
-            row['processed_fetch'] = all(sanity.values())
+            row['head_processed_fetch'] = all(sanity.values())
             row.update(sanity)
             
             sanity={}
             
             resp = pmd.res_stats.get('status',None)
-            sanity['status'] =  sum(resp.values()) == res['idx_res'] if resp else False
-            sanity['size'] = 'size' in pmd.res_stats
+            sanity['head_status'] =  sum(resp.values()) == res['idx_res'] if resp else False
+            sanity['head_size'] = 'size' in pmd.res_stats
             
-            row['processed_head'] = all(sanity.values())
+            row['head_processed'] = all(sanity.values())
             row.update(sanity)
         self.rows.append(row)
         
     
     def getResult(self):
-        return self.rows
+        return {'rows':self.rows}
             

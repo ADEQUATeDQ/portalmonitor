@@ -8,6 +8,7 @@ from _collections import defaultdict
 import numpy as np
 from odpw.utils.dataset_converter import dict_to_dcat
 import json
+from pybloom import ScalableBloomFilter
 
 class HistogramAnalyser(Analyser):
     
@@ -81,21 +82,27 @@ class DistinctElementCount(Analyser):
     def __init__(self, withDistinct=None):
         super(DistinctElementCount, self).__init__()
         self.count=0
-        self.set=None
+        self.bloom=None
         if withDistinct:
+            self.bloom=ScalableBloomFilter()
+            self.distinct=0
             self.set=set([])
     
     def analyse_generic(self, element):
         self.count+=1
         
         #TODO prob datastrucutre for distinct
-        if self.set is not None and element not in self.set:
-            self.set.add(element)
+        if self.bloom is not None and element not in self.bloom:
+            self.distinct+=1
+            self.bloom.add(element)
+            
+        #else:
+            #print "seen", element
             
     def getResult(self):
         res= {'count':self.count}
-        if self.set is not None:
-            res['distinct']=len(self.set)
+        if self.bloom is not None:
+            res['distinct']=self.distinct
         return res
     
 class DBAnalyser(Analyser):
