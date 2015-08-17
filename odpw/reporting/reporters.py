@@ -120,7 +120,7 @@ class CSVReporter(object):
     def _csvreport(self, file):
         df = self.getDataFrame()
         with open(file, "w") as f:
-            df.to_csv(f, index=False)
+            df.to_csv(f, index=False, encoding='utf-8')
 
 class CLIReporter(object):
 
@@ -278,6 +278,9 @@ class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
         self.topK=topK
         self.df = None
         self.columns=columns
+
+    def name(self):
+        return self.analyser.name().lower()
 
     def getDataFrame(self):
         if self.df is None:

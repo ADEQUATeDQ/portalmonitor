@@ -194,7 +194,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     # Dates
     items = [
         #('metadata_processed', DCT.issued, ['metadata_created']),
-        ('modified', DCT.modified, ['metadata_processed, metadata_modified']),
+        ('modified', DCT.modified, ['metadata_processed', 'metadata_modified']),
     ]
     _add_date_triples_from_dict(g, data, dataset_ref, items)
 
@@ -212,7 +212,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
     # distributions
     if dataset_dict.get('has_records'):
-        exports = [('csv', 'text/comma-separated-values'), ('json', 'application/json'), ('xls', 'application/vnd.ms-excel')]
+        exports = [('csv', 'text/csv'), ('json', 'application/json'), ('xls', 'application/vnd.ms-excel')]
         if 'geo' in dataset_dict.get('features', []):
             exports.append(('geojson', 'application/vnd.geo+json'))
             exports.append(('kml', 'application/vnd.google-earth.kml+xml'))
