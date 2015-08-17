@@ -65,11 +65,11 @@ class ResourceOverlapAnalyser(Analyser):
         self.overlap = defaultdict(lambda: defaultdict(int))
 
     def analyse_Resource(self, element):
-        if element.origin and len(element.origin) > 1:
+        if element.origin:
             if not self.filter_portal:
                 # collect all overlap information
                 for source_id in element.origin:
-                    for dest_id in (id for id in element.origin if id != source_id):
+                    for dest_id in element.origin:
                         self.overlap[source_id][dest_id] += 1
 
             if self.filter_portal and self.filter_portal in element.origin:
@@ -94,8 +94,11 @@ class ResourceOccurrenceCountAnalyser(ElementCountAnalyser):
     def analyse_Resource(self, element):
         if element.origin:
             if not self.portal_id:
+                # count the total occurrences of a URL over all portals
+                occurences = 0
                 for pid in element.origin:
-                    self.add(len(element.origin[pid]))
+                    occurences += len(element.origin[pid])
+                self.add(occurences)
 
             if self.portal_id in element.origin:
                 self.add(len(element.origin[self.portal_id]))

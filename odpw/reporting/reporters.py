@@ -10,6 +10,7 @@ import numpy as np
 #import matplotlib.pyplot as plt
 from odpw.analysers.count_analysers import CKANLicenseCount
 from odpw.analysers.fetching import CKANLicenseConformance
+from odpw.reporting import graph_plot
 import odpw.utils.util as util
 import os
 from odpw.analysers.core import DBAnalyser, HistogramAnalyser
@@ -131,7 +132,7 @@ class CLIReporter(object):
         print df
         
 
-class DataFramePlotReporter(object):
+class PlotReporter(object):
 
     def plotreport(self, dir):
         pass
@@ -199,7 +200,7 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter,CLIReporter):
         with open(file, "w") as f:
             df.to_csv(f,index=False)
 
-class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
+class Report(UIReporter,CSVReporter,CLIReporter, PlotReporter):
     
     def __init__(self, reporters):
         self.rs = reporters
@@ -229,7 +230,7 @@ class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
 
     def plotreport(self, dir):
         for r in self.rs:
-            if isinstance(r, DataFramePlotReporter):
+            if isinstance(r, PlotReporter):
                 r.plotreport(dir)
 
 
@@ -469,7 +470,7 @@ class SystemEvolutionReport(Report):
         print self.getDataFrame()
 
 
-class ResourceOverlapReporter(Reporter):
+class ResourceOverlapReporter(Reporter, PlotReporter, CSVReporter):
     def __init__(self, analyser):
         super(ResourceOverlapReporter, self).__init__()
         self.analyser = analyser
@@ -480,3 +481,12 @@ class ResourceOverlapReporter(Reporter):
             nested_dict = self.analyser.getResult()
             self.df = pd.DataFrame(nested_dict).T.fillna(0)
         return self.df
+
+    def plotreport(self, dir):
+        graph_plot.draw_graph(self.getDataFrame())
+
+    def _csvreport(self, file):
+        df = self.getDataFrame()
+
+        with open(file, "w") as f:
+            df.to_csv(f, index=False)

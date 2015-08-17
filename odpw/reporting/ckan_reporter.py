@@ -14,7 +14,7 @@ from odpw.analysers.statuscodes import DatasetStatusCount
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData, Resource
 from odpw.reporting import plotting
-from odpw.reporting.reporters import Report, Reporter, DataFramePlotReporter, FormatCountReporter, TagReporter, \
+from odpw.reporting.reporters import Report, Reporter, PlotReporter, FormatCountReporter, TagReporter, \
     ElementCountReporter, CSVReporter, ResourceOverlapReporter
 
 from matplotlib.ticker import FuncFormatter
@@ -51,7 +51,7 @@ def createDir(dName):
         os.makedirs(dName)
 
 
-class MultiScatterReporter(Reporter, DataFramePlotReporter):
+class MultiScatterReporter(Reporter, PlotReporter):
     def __init__(self, data, labels, xlabel, ylabel, filename, colors=None):
         self.data = data
         self.labels = labels
@@ -63,7 +63,7 @@ class MultiScatterReporter(Reporter, DataFramePlotReporter):
     def plotreport(self, dir):
         plotting.scatterplotComb(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, colors=colors)
 
-class MultiHistogramReporter(Reporter, DataFramePlotReporter):
+class MultiHistogramReporter(Reporter, PlotReporter):
     def __init__(self, data, labels, xlabel, ylabel, filename, bins=None, colors=None):
         self.data = data
         self.labels = labels
@@ -76,33 +76,20 @@ class MultiHistogramReporter(Reporter, DataFramePlotReporter):
     def plotreport(self, dir):
         plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=bins, colors=self.colors)
 
-if __name__ == '__main__':
-    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1533
 
-    res = dbm.getResources(snapshot=sn, portalID='data_gov')
+def overlap_report(dbm, sn, portal_filter=None):
     res_analyser = AnalyserSet()
+    overlap = res_analyser.add(ResourceOverlapAnalyser(portal_filter))
+    mult_occur = res_analyser.add(ResourceOccurrenceCountAnalyser())
+    process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn, portalID=portal_filter)))
 
-    a1 = res_analyser.add(ResourceOverlapAnalyser())
+    rep1 = ResourceOverlapReporter(overlap)
+    rep2 = ElementCountReporter(mult_occur, columns=['Occurrences', 'Count'])
 
-    a2 = res_analyser.add(ResourceOverlapAnalyser('data_gov'))
+    return Report([rep1, rep2])
 
-    a3 = res_analyser.add(ResourceOccurrenceCountAnalyser('data_gov'))
-    iter = Resource.iter(res)
-    process_all(res_analyser, iter)
 
-    rep1 = ResourceOverlapReporter(a1)
-    rep2 = ResourceOverlapReporter(a2)
-    print 'Num of multiple dataset occurrences'
-    rep3 = ElementCountReporter(a3, columns=['Occurrences','Count'])
-
-    #r = Report([rep1, rep2])
-    print rep1.getDataFrame()
-    print rep2.getDataFrame()
-    print rep3.getDataFrame()
-
-    exit()
-
+def obd_report(dbm, sn):
     pmd_analyser = AnalyserSet()
 
     # 1. STATS
@@ -226,3 +213,13 @@ if __name__ == '__main__':
 
     re = Report([con_rep, compl_rep, open_rep, scatter])
     re.plotreport('tmp')
+
+
+
+if __name__ == '__main__':
+    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    sn = 1533
+
+    report = overlap_report(dbm, sn)
+
+    report.csvreport('tmp/overlap')
