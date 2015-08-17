@@ -113,7 +113,12 @@ class AnalyserSet(Analyser):
     def getAnalysers(self):
         return self.analysers.values()
     
-    
+    def getResult(self): 
+        res={}
+        for c in self.analysers.itervalues():
+            res[c.name()]=c.getResult()
+        
+        return res
 class SAFEAnalyserSet(AnalyserSet):
     
     def analyse(self, element, safe=None):

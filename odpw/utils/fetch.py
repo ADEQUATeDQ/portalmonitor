@@ -1,6 +1,9 @@
-from odpw.analysers.count_analysers import DatasetCount
+from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
+    DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
 from odpw.analysers.statuscodes import DatasetStatusCount
-from odpw.analysers.dbm_handlers import DatasetInserter
+from odpw.analysers.dbm_handlers import DatasetInserter,\
+    DCATDistributionInserter
+from odpw.analysers.core import DCATConverter
 __author__ = 'jumbrich'
 
 
@@ -15,7 +18,8 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
 
 from odpw.analysers import  AnalyserSet, process_all
-from odpw.analysers.fetching import MD5DatasetAnalyser
+from odpw.analysers.fetching import MD5DatasetAnalyser, DCATResourceInDSAge,\
+    DCATDatasetAge
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
@@ -76,6 +80,16 @@ def fetching(obj):
         else:
             raise NotImplementedError(Portal.software + ' is not implemented')
 
+        ae.add(DCATConverter(Portal))
+        ae.add(DCATDistributionCount(withDistinct=True))
+        ae.add(DCATDistributionInserter(dbm))
+    
+        ae.add(DCATOrganizationsCount())
+        ae.add(DCATTagsCount())
+        ae.add(DCATFormatCount())
+        ae.add(DCATResourceInDSAge())
+        ae.add(DCATDatasetAge())
+        
         ae.add(DatasetInserter(dbm))
         
         try:

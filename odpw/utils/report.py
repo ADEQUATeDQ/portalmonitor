@@ -11,7 +11,7 @@ from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDis
     SystemEvolutionReport
 from odpw.analysers.core import DBAnalyser
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, PMDResourceCount, DatasetCount
+    DCATFormatCount, PMDResourceStatsCount, DatasetCount
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
     SystemSoftwareEvolution
@@ -19,6 +19,7 @@ from odpw.reporting.evolution_reporter import EvolutionReporter,\
     DatasetEvolutionReporter, ResourcesEvolutionReporter,\
     SystemSoftwareEvolutionReporter
 import os
+from odpw.reporting.activity_reports import systemactivity
 
 
 __author__ = 'jumbrich'
@@ -29,96 +30,9 @@ import structlog
 log =structlog.get_logger()
 
 
-def portalevolution(dbm, sn, portal_id):
-    print portal_id, sn
-    aset = AnalyserSet()
-    de=aset.add(DatasetEvolution())
-    re= aset.add(ResourceEvolution())
-    
-    it = dbm.getPortalMetaDatasUntil(snapshot=sn, portalID=portal_id)
-    aset = process_all(aset, PortalMetaData.iter(it))
-    
-    rep = Report([
-                    DatasetEvolutionReporter(de),
-                    ResourcesEvolutionReporter(re),
-                ])
-   
-    return rep
-    
 
-def systeminfo(dbm):
-    """
-        country and software distribution of portals in the system
-        full list of portals
-    """
-    
-    a = process_all(DBAnalyser(),dbm.getSoftwareDist())
-    ab = process_all(DBAnalyser(),dbm.getCountryDist())
-    pa = process_all(DBAnalyser(),dbm.getPortals())
-    r = Report([SoftWareDistReporter(a),
-                 ISO3DistReporter(ab),
-                 PortalListReporter(pa)
-                 ])
-    
-    return r
 
-def systemevolution(dbm):
-    """
-    
-    """
-    aset = AnalyserSet()
-    
-    p={}
-    for P in Portal.iter(dbm.getPortals()):
-        p[P.id]=P.software
 
-    de=aset.add(DatasetEvolution())
-    re= aset.add(ResourceEvolution())
-    se= aset.add(SystemSoftwareEvolution(p))
-    
-    it = dbm.getPortalMetaDatas()
-    aset = process_all(aset, PortalMetaData.iter(it))
-    
-    rep = SystemEvolutionReport([
-                                 DatasetEvolutionReporter(de),
-                                 ResourcesEvolutionReporter(re),
-                                 SystemSoftwareEvolutionReporter(se)
-                                 ])
-   
-    return rep
-    
-
-def portalinfo(dbm, sn, portal_id):
-    a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
-    r=SnapshotsPerPortalReporter(a,portal_id)
-
-        
-    aset = AnalyserSet()
-    #lc=aset.add(CKANLicenseCount())# how many licenses
-    #lcc=aset.add(CKANLicenseConformance())
-
-    tc= aset.add(DCATTagsCount())   # how many tags
-    oc= aset.add(DCATOrganizationsCount())# how many organisations
-    fc= aset.add(DCATFormatCount())# how many formats
-
-    resC= aset.add(PMDResourceCount())   # how many resources
-    dsC=dc= aset.add(DatasetCount())    # how many datasets
-    rsize=aset.add(ResourceSize())
-
-    #use the latest portal meta data object
-    pmd = dbm.getPortalMetaData(portalID=portal_id, snapshot=sn)
-    aset = process_all(aset, [pmd])
-
-    rep = Report([r,
-    DatasetSumReporter(dsC),
-    ResourceCountReporter(resC),
-    ResourceSizeReporter(rsize),
-    #LicensesReporter(lc,lcc,topK=3),
-    TagReporter(tc,dc, topK=3),
-    OrganisationReporter(oc, topK=3),
-    FormatCountReporter(fc, topK=3)])
-    
-    return rep
 
 def name():
     return 'Report'
@@ -164,6 +78,12 @@ def cli(args,dbm):
             report = portalinfo(dbm,sn , args.portal)
             output( report , args, snapshot=sn)
         
+    if args.activity:
+        
+        if args.system:
+            report = systemactivity(dbm, sn)
+            output(report, args)
+            
     if args.evolution:
         if args.system:
             report = systemevolution(dbm) 
@@ -243,7 +163,7 @@ def cli(args,dbm):
 #         oc= aset.add(DCATOrganizationsCount())# how many organisations
 #         fc= aset.add(DCATFormatCount())# how many formats
 # 
-#         resC= aset.add(PMDResourceCount())   # how many resources
+#         resC= aset.add(PMDResourceStatsCount())   # how many resources
 #         dsC=dc= aset.add(DatasetCount())    # how many datasets
 #         rsize=aset.add(ResourceSize())
 # 

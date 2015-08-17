@@ -36,7 +36,7 @@ class PMDActivityAnalyser(Analyser):
     def __init__(self):
         self.stats=[]
         self.stats_key=['fetch_done','fetch_failed','fetch_running','fetch_missing',
-                        'head_missing','head_done',
+                        'head_missing','head_done','head_running'
                         'quality_done']
         self.sum={}
         for k in self.stats_key:

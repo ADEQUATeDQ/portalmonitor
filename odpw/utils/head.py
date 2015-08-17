@@ -154,7 +154,6 @@ def cli(args,dbm):
     
     log.info("Starting head lookups", count=len(resources), cores=args.processors)
     
-    
     head_star = partial(head, dbm, sn, seen)
     
     start = time.time()

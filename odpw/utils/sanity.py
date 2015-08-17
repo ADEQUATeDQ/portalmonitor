@@ -1,3 +1,5 @@
+from odpw.analysers.sanity import FetchSanity, HeadSanity
+from odpw.analysers import AnalyserSet, process_all
 
 __author__ = 'jumbrich'
 
@@ -25,24 +27,15 @@ def setupCLI(pa):
     pa.add_argument("-f","--fix",  help='try to fix missing steps', dest='fix', action='store_true')
 
 def cli(args,dbm):
-    
-    
     sn = getSnapshot(args)
-    
     
     portals=[]
     if args.url:
         p = dbm.getPortal(apiurl=args.url)
         portals.append(p)
     else:
-        for res in dbm.getPortals():
-            p = Portal.fromResult(dict(res))
+        for p in Portal.iter(dbm.getPortals()):
             portals.append(p)
-    
-    
-    #sn, portal
-    data={}
-    
     
     df = pd.DataFrame()
     for portal in portals:
@@ -59,83 +52,28 @@ def cli(args,dbm):
             
             stats={'snapshot':sn, 'portal':portal.id, 'portal_ds':None,'portal_res':None}
             
-            #===================================================================
-            #  data[portal.id]['snapshots'][sn]={'status':{}, 'sanity':{}}
-            # 
-            # status=data[portal.id]['snapshots'][sn]['status']
-            # sanity=data[portal.id]['snapshots'][sn]['sanity']
-            # 
-            #===================================================================
             checkagain=True
+            
+            
             
             while checkagain:
                 pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
-                if pmd:
-                    stats['pmd']=True
+            
+                aset= AnalyserSet()
+                fs= aset.add(FetchSanity(dbm))
+                rs= aset.add(HeadSanity(dbm))
+                
+                process_all(aset, [pmd])
+                
+                if not fs.getResult()['processed'] or  not rs.getResult()['processed_fetch']:
+                    print " Fetch simulation is required"
+                if not rs.getResult()['processed_head']:
+                    print " head is required"
                     
-                    ## store how many datasets and resources are indexed
-                    ds=0
-                    for res in dbm.datasetsPerSnapshot(portalID=portal.id,snapshot=sn):
-                        ds=res['datasets']
-                    stats['indexed_ds']=ds
-                    res=0
-                    for result in dbm.resourcesPerSnapshot(portalID=portal.id,snapshot=sn):
-                        res=result['resources']
-                    stats['indexed_res']=res
-                    
-                    
-                    if pmd.fetch_stats:
-                        #seems we have some full fetch stats
-                        #we do not need to rerun the fetch script if
-                        fs_ds= pmd.fetch_stats['datasets'] if 'datasets' in pmd.fetch_stats else -1
-                        fs_resp = bool(pmd.fetch_stats['respCodes']) if 'respCodes' in pmd.fetch_stats else False
-                        fs_end = 'fetch_end' in pmd.fetch_stats
-                        
-                        #fetch process was NOT successful if 
-                        # *) we do not have a fetch_end
-                        # *) we have datasets but not resp codes 
-                        # *) datasets is not equals indexed datasets 
-                        if not fs_end or (fs_ds >0 and not fs_resp) or fs_ds != stats['indexed_ds']:
-                            stats['fetch_process']=False
-                        else:
-                            stats['fetch_process']=True
-                        print portal.id, sn,'fetch_process',stats['fetch_process'], ds, fs_ds, fs_end, fs_resp 
-                    else:
-                        stats['fetch_process']='missing'
-                    
-                    if pmd.res_stats:
-                        res_total = pmd.res_stats['total'] if 'total' in pmd.res_stats else -1
-                        res_unique = pmd.res_stats['unique'] if 'unique' in pmd.res_stats else -1
-                        res_respCode = bool(pmd.res_stats['respCodes']) if 'respCodes' in pmd.res_stats else False
-                        
-                        #We have to distinguish between a re-fetch and head stats 
-                        # we need to do a re-fetch  
-                        # *) resources in pmd != total resources
-                        if  (res_unique < 0 or  
-                            (res_total >0 and res_unique <=0) or  
-                            res_total < 0 or 
-                            res_unique != stats['indexed_res'] or
-                            (res_total < res_unique <=0) or
-                            (res_unique>0 and not res_respCode)):
-                            
-                            stats['res_process']=False
-                        else:
-                            stats['res_process']=True
-                            print portal.id, sn,'res_process',stats['res_process'], res, res_total, res_unique, res_respCode
-                        
-                    else:
-                        #that is bad, this means we should do a re fetch
-                        stats['res_process']='missing'
-                        stats['fetch_process']=False
-                             
-                    
-                    
-                    
-                else:
-                    stats['pmd']=False     
-                                            
                      
                 if args.fix:
+                    
+                    
                     if not stats['fetch_process']:
                         print "Simulating fetch because of missing PMD"
                         simulateFetching(dbm,portal,  sn)
@@ -206,7 +144,7 @@ def cli(args,dbm):
 #         resources={}
 #         sn=[]
 #         #check the DB for datasets
-#         for res in dbm.datasetsPerSnapshot(portalID=portal.id):
+#         for res in dbm.countDatasetsPerSnapshot(portalID=portal.id):
 #             datasets[res['snapshot']]= res['datasets']
 #             if res['snapshot'] not in sn:
 #                 sn.append(res['snapshot'])
@@ -216,7 +154,7 @@ def cli(args,dbm):
 #             if pmd.snapshot not in sn:
 #                 sn.append(pmd.snapshot)
 #         
-#         for res in dbm.resourcesPerSnapshot(portalID=portal.id):
+#         for res in dbm.countResourcesPerSnapshot(portalID=portal.id):
 #             resources[res['snapshot']]= res['resources']
 #             if res['snapshot'] not in sn:
 #                 sn.append(res['snapshot'])

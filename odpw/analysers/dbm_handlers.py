@@ -80,8 +80,6 @@ class DCATDistributionInserter(Analyser):
                         if url: 
                             break
                         url = au.get('@id',None)
-               
-               
                 if url:
                     tR =  Resource.newInstance(url=url, snapshot=dataset.snapshot)
                     R = self.dbm.getResource(tR)

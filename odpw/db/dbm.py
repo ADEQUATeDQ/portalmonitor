@@ -749,9 +749,9 @@ class PostgressDBM(object):
     ##############
     # STATS
     ##############
-    def datasetsPerSnapshot(self, portalID=None, snapshot=None):
-        with Timer(key="datasetsPerSnapshot") as t:
-            s=select( [self.datasets.c.snapshot, func.count(self.datasets.c.id).label('datasets')]).\
+    def countDatasetsPerSnapshot(self, portalID=None, snapshot=None):
+        with Timer(key="countDatasetsPerSnapshot") as t:
+            s=select( [func.count(self.datasets.c.id)]).\
             where(self.datasets.c.portal_id==portalID)
             if snapshot:
                 s=s.where(self.datasets.c.snapshot==snapshot)
@@ -759,20 +759,33 @@ class PostgressDBM(object):
             s=s.group_by(self.datasets.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            return s.execute().scalar()
             #return self.conn.execute(s)
-    def resourcesPerSnapshot(self,portalID=None, snapshot=None):
-        with Timer(key="resourcesPerSnapshot") as t:
-            s=select( [self.resources.c.snapshot, func.count(self.resources.c.url).label('resources')]).\
+    
+    def countResourcesPerSnapshot(self,portalID=None, snapshot=None):
+        with Timer(key="countResourcesPerSnapshot") as t:
+            s=select( [func.count(self.resources.c.url).label('resources')]).\
             where(self.resources.c.origin[portalID]!=None)
             if snapshot:
                 s=s.where(self.resources.c.snapshot==snapshot)
             
             s=s.group_by(self.resources.c.snapshot)
             
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute().scalar()
+    
+    def countProcessedResourcesPerSnapshot(self,portalID=None, snapshot=None):
+        with Timer(key="countResourcesPerSnapshot") as t:
+            s=select( [func.count(self.resources.c.url).label('resources')]).\
+            where(self.resources.c.origin[portalID]!=None)
+            if snapshot:
+                s=s.where(self.resources.c.snapshot==snapshot)
+            s.s.where(self.resources.c.status != -1)
+            
+            s=s.group_by(self.resources.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            return s.execute().scalar()
              
              
              

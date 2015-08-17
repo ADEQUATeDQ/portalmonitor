@@ -27,7 +27,7 @@ from odpw.analysers.fetching import  CKANLicenseConformance
     
 
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, DatasetCount, ResourceCount, PMDResourceCount
+    DCATFormatCount, DatasetCount, ResourceCount, PMDResourceStatsCount
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
 
@@ -116,7 +116,7 @@ class PortalHandler(BaseHandler):
             oc= aset.add(DCATOrganizationsCount())# how many organisations
             fc= aset.add(DCATFormatCount())# how many formats
     
-            resC= aset.add(PMDResourceCount())   # how many resources
+            resC= aset.add(PMDResourceStatsCount())   # how many resources
             dsC=dc= aset.add(DatasetCount())    # how many datasets
             rsize=aset.add(ResourceSize())
     
@@ -171,28 +171,27 @@ class IndexHandler(BaseHandler):
         
 class SystemActivityHandler(BaseHandler):
     def get(self, snapshot=None):
-        try:
+        with Timer(key='SystemActivityHandler', verbose=True) as t:
             if not snapshot:
                 sn = util.getCurrentSnapshot()
             else:
                 sn = snapshot
         
+            print 'Start iteration'
             it =PortalMetaData.iter(self.db.getPortalMetaDatas(snapshot=sn, portalID=None))
             a = process_all(PMDActivityAnalyser(),it)
-            
+            print 'done iteration'
             totalDS = self.db.countDatasets(snapshot=sn)
             totalRes= self.db.countResources(snapshot=sn)
         
-            report = Report([SystemActivityReporter(a,snapshot=sn,dbds=totalDS, dbres= totalRes)])
+            report = Report([SystemActivityReporter(a,snapshot=sn, dbds=totalDS, dbres= totalRes)])
         
             args={'index':True,
                'data':report.uireport(),
                'snapshot':sn
             }    
             self.render('system_activity.jinja',**args)
-        except Exception as e:
-            traceback.print_exc(file=sys.stdout)
-
+        
         
 class DataHandler(RequestHandler):
     @property

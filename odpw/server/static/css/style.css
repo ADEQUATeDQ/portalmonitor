@@ -262,7 +262,7 @@ ul#portalList {
 
 .card {
     border-radius: 5px;
-    
+    box-shadow: 0 0px 1px #333333,0px 0px 3px #333333,1px 1px 3px #333333 ;
     /*
     box-shadow: 0 1px #FFFFFF inset, 0 1px 3px rgba(34, 25, 25, 0.4);
     
@@ -323,12 +323,13 @@ ul#portalList {
 }
 
 #portalInfo{
-    border-top: 5px solid rgba(0,0,0,0.3); 
-    border-bottom: 5px solid rgba(0,0,0,0.3); 
+    /*border-top: 5px solid rgba(0,0,0,0.3); 
+    border-bottom: 5px solid rgba(0,0,0,0.3); */
     background: rgba(0,0,0,0.1);
     line-height: 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.3);
 }
-#portalInfo:before {
+/*#portalInfo:before {
     content:"\a0";
     display:block;
     line-height:0px;
@@ -340,6 +341,7 @@ ul#portalList {
     line-height:0px;
     border-top:1px solid rgba(150,150,150,0.4);     
 }
+*/
 #portalInfo label{
     line-height: 35px;
     font-size: 20px;

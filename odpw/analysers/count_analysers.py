@@ -14,7 +14,7 @@ from _collections import defaultdict
 log =structlog.get_logger()
 
 
-class PMDResourceCount(Analyser):
+class PMDResourceStatsCount(Analyser):
     
     def __init__(self):
         self.aggs=defaultdict(int)
