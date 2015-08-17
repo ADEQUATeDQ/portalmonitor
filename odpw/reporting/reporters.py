@@ -8,6 +8,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 #import matplotlib.pyplot as plt
+from odpw.analysers.count_analysers import CKANLicenseCount
 from odpw.analysers.fetching import CKANLicenseConformance
 import odpw.utils.util as util
 import os
@@ -466,7 +467,6 @@ class SystemEvolutionReport(Report):
     
     def clireport(self):
         print self.getDataFrame()
-        
 
 
 class ResourceOverlapReporter(Reporter):

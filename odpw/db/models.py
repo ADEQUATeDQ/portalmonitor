@@ -242,7 +242,7 @@ class Resource(Model):
     def newInstance(cls, url=None, snapshot=None):
         props = {}
         try:
-            url = urlnorm.norm(url)
+            url = urlnorm.norm(url.strip())
             # props=util.head(url)
         except Exception as e:
             log.debug('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot, exc_info=True)

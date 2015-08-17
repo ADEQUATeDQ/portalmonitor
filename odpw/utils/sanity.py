@@ -1,6 +1,8 @@
 from odpw.analysers.sanity import FetchSanity, HeadSanity
 from odpw.analysers import AnalyserSet, process_all
 
+from odpw.reporting.sanity_reports import SanityReport, SanityReporter
+
 __author__ = 'jumbrich'
 
 from odpw.db.models import Portal
@@ -38,8 +40,15 @@ def cli(args,dbm):
             portals.append(p)
     
     df = pd.DataFrame()
+    
+    pmds=[]
+    
+    aset= AnalyserSet()
+    fs= aset.add(FetchSanity(dbm))
+    rs= aset.add(HeadSanity(dbm))
+    
     for portal in portals:
-        print "Sanity check for", portal.id
+        
         snapshots=[]
         if not sn:
             for s in dbm.getSnapshots(portalID=portal.id):
@@ -48,61 +57,32 @@ def cli(args,dbm):
             snapshots.append(sn)
             
         for sn in snapshots:
-            print "  snapshot",sn
-            
-            stats={'snapshot':sn, 'portal':portal.id, 'portal_ds':None,'portal_res':None}
-            
-            checkagain=True
-            
-            
-            
-            while checkagain:
-                pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
-            
-                aset= AnalyserSet()
-                fs= aset.add(FetchSanity(dbm))
-                rs= aset.add(HeadSanity(dbm))
-                
-                process_all(aset, [pmd])
-                
-                if not fs.getResult()['processed'] or  not rs.getResult()['processed_fetch']:
-                    print " Fetch simulation is required"
-                if not rs.getResult()['processed_head']:
-                    print " head is required"
-                    
-                     
-                if args.fix:
-                    
-                    
-                    if not stats['fetch_process']:
-                        print "Simulating fetch because of missing PMD"
-                        simulateFetching(dbm,portal,  sn)
-                    #===========================================================
-                    # if not status['pmd']:
-                    #     print "Simulating fetch because of missing PMD"
-                    #     simulateFetching(dbm,portal,  sn)
-                    # elif not sanity['fetch_stats_head']:
-                    #     print "Simulating fetch because of inconsistent total/unqiue"
-                    #     simulateFetching(dbm,portal,  sn)
-                    # 
-                    # elif not status['head']:
-                    #     print "Computing head stats"
-                    #     headStats(dbm,sn,portal.id)
-                    # elif not sanity['res_stats']:
-                    #     print "Simulating fetch"
-                    #     simulateFetching( dbm,portal, sn)
-                    #     print "Computing head stats"
-                    #     headStats(dbm,sn,portal.id)
-                    # else:
-                    #     checkagain=False
-                    #===========================================================
-                    checkagain=False
-                else:
-                    checkagain=False
-            
-            
-            print 'stats',stats
-            df=df.append(stats,ignore_index=True)
+            pmd = dbm.getPortalMetaData(portalID= portal.id, snapshot=sn)
+            pmds.append(pmd)
+        
+    log.info("Sanity", pmds=len(pmds))
+    process_all(aset, pmds)          
+
+    sr= SanityReport([SanityReporter(fs),
+                        SanityReporter(rs)])
+    
+    df=sr.getDataFrame()
+    for index, row in df.iterrows():
+        print row['portalID'],row['snapshot']
+        if row['fetch_processed']:
+            print "\t[O]- Fetch process done"
+        else:
+            print "\t[X]- Fetch process"
+            for k,v in row.iteritems():
+                if k.startswith("fetch_") and not v and k != 'fetch_processed':
+                    print "\t", '[O]-' if v else '[X]-', k
+        if row['head_processed']:
+            print "\t[O]- Head process"
+        else:
+            print "\t[X]- Head process"
+            for k,v in row.iteritems():
+                if k.startswith("head_") and not v and k != 'head_processed':
+                    print "\t", '[O]-' if v else '[X]-', k
             
         #print df
         
