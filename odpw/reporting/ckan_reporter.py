@@ -9,12 +9,13 @@ from odpw.analysers.count_analysers import DatasetCount, ResourceCount, CKANForm
 from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
     ContactabilityHistogram, OpennessHistogram, UsageHistogram
+from odpw.analysers.resource_analysers import ResourceOverlapAnalyser, ResourceOccurrenceCountAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCount
 from odpw.db.dbm import PostgressDBM
-from odpw.db.models import Dataset, PortalMetaData
+from odpw.db.models import Dataset, PortalMetaData, Resource
 from odpw.reporting import plotting
 from odpw.reporting.reporters import Report, Reporter, DataFramePlotReporter, FormatCountReporter, TagReporter, \
-    ElementCountReporter, CSVReporter
+    ElementCountReporter, CSVReporter, ResourceOverlapReporter
 
 from matplotlib.ticker import FuncFormatter
 from matplotlib import pyplot as plt
@@ -79,6 +80,29 @@ if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
 
+    res = dbm.getResources(snapshot=sn, portalID='data_gov')
+    res_analyser = AnalyserSet()
+
+    a1 = res_analyser.add(ResourceOverlapAnalyser())
+
+    a2 = res_analyser.add(ResourceOverlapAnalyser('data_gov'))
+
+    a3 = res_analyser.add(ResourceOccurrenceCountAnalyser('data_gov'))
+    iter = Resource.iter(res)
+    process_all(res_analyser, iter)
+
+    rep1 = ResourceOverlapReporter(a1)
+    rep2 = ResourceOverlapReporter(a2)
+    print 'Num of multiple dataset occurrences'
+    rep3 = ElementCountReporter(a3, columns=['Occurrences','Count'])
+
+    #r = Report([rep1, rep2])
+    print rep1.getDataFrame()
+    print rep2.getDataFrame()
+    print rep3.getDataFrame()
+
+    exit()
+
     pmd_analyser = AnalyserSet()
 
     # 1. STATS
@@ -94,7 +118,7 @@ if __name__ == '__main__':
     lid_count = pmd_analyser.add(CKANLicenseIDCount(total_count=True))
 
     # 2. Portal size distribution
-    bins = [0,100,500,1000,10000,50000,100000,1000000]
+    bins = [0,100,500,1000,10000,50000,100000,1000000,10000000]
     ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
     res_histogram = pmd_analyser.add(PMDResourceCountAnalyser(bins=bins))
 
@@ -102,9 +126,17 @@ if __name__ == '__main__':
     # 4. Portal Overlap: num of unique resources more then once -> datasets in same portal vs different portals
     # TODO resource analyser
 
+
+
     # 5. num of overlapping resources in pan european portal
     # resources, unique resources
     # TODO
+    # analyser #1: argument filter by portal
+    #- total urls
+    #- cross portal urls -> dict in 2, 3, 4, 5 portals
+    #
+    #- portal intern urls
+
 
     # 6. extra keys in one, resp. more than one, more than two, more than x portals
     res_key_count = pmd_analyser.add(CKANKeysCount(keys_set='res', total_count=False))
@@ -133,7 +165,13 @@ if __name__ == '__main__':
     ################# RESULTS ###########################
     print 'ds_count', ds_count.getResult()
     print 'res_count', res_count.getResult()
-    print 'unique license ids', len(lid_count.getResult())
+    print 'license ids', len(lid_count.getResult())
+    print 'file formats', len(format_count.getResult())
+    print 'tags', len(tags_count.getResult())
+    print 'keys', len(key_count.getResult())
+    print 'core', len(core_key_count.getResult())
+    print 'extra', len(extra_key_count.getResult())
+    print 'res', len(res_key_count.getResult())
 
     # top k reporter
     format_rep = FormatCountReporter(format_count, topK=10)

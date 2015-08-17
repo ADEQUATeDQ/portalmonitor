@@ -467,4 +467,16 @@ class SystemEvolutionReport(Report):
     def clireport(self):
         print self.getDataFrame()
         
-    
+
+
+class ResourceOverlapReporter(Reporter):
+    def __init__(self, analyser):
+        super(ResourceOverlapReporter, self).__init__()
+        self.analyser = analyser
+        self.df = None
+
+    def getDataFrame(self):
+        if self.df is None:
+            nested_dict = self.analyser.getResult()
+            self.df = pd.DataFrame(nested_dict).T.fillna(0)
+        return self.df
