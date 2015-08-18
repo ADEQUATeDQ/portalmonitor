@@ -20,6 +20,7 @@ from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
 from odpw.analysers import AnalyserSet
 from multiprocessing.pool import ThreadPool
 from _functools import partial
+from odpw.analysers.datasetlife import DatasetLifeAnalyser
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -145,6 +146,7 @@ def simulateFetching(dbm, job):
         ae.add(DCATDatasetAge())
     
         ae.add(DatasetFetchUpdater(dbm))
+        ae.add(DatasetLifeAnalyser(dbm))
         
         total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
         

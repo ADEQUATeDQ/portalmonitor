@@ -164,4 +164,4 @@ class DatasetLifeAnalyser(Analyser):
                 else:
                     self.dbm.updateDatasetLife(df)
             else:
-                print 'No creation date'
+                print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
