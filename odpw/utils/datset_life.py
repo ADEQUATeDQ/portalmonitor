@@ -7,7 +7,7 @@ Created on Aug 17, 2015
 from odpw.db.models import Dataset, DatasetLife, Portal
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import DCATDatasetAge
-from odpw.utils.util import getSnapshot, progressIterator
+from odpw.utils.util import getSnapshot, progressIterator, ErrorHandler
 from _collections import defaultdict
 from odpw.db.dbm import PostgressDBM
 
@@ -28,23 +28,26 @@ log =structlog.get_logger()
 
 
 def compute_dataset_life(dbm, job):
-    Portal = job['Portal']
-    sn = job['snapshot']
+    try: 
+        Portal = job['Portal']
+        sn = job['snapshot']
     
-    log.info("START DatasetLife Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
+        log.info("START DatasetLife Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
     
-    dbm.engine.dispose()
+        dbm.engine.dispose()
     
-    aset = AnalyserSet()
+        aset = AnalyserSet()
     
-    aset.add(DCATConverter(Portal))
-    aset.add(DatasetLifeAnalyser(dbm))
+        aset.add(DCATConverter(Portal))
+        aset.add(DatasetLifeAnalyser(dbm))
     
-    iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
-    total = dbm.countDatasets(portalID=Portal.id, snapshot=sn)
-    print total
-    steps = total/10 if total>10 else 1
-    process_all(aset, progressIterator(iter, total, steps, label=Portal.id))
+        iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
+        total = dbm.countDatasets(portalID=Portal.id, snapshot=sn)
+    
+        steps = total/10 if total>10 else 1
+        process_all(aset, progressIterator(iter, total, steps, label=Portal.id))
+    except Exception as e:
+        ErrorHandler.handleError(log, "DatasetLifeException", portal=Portal.id, snapshot=sn)
     
 
 def help():

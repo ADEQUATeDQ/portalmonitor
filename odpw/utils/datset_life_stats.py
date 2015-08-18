@@ -7,7 +7,8 @@ from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, DatasetLife, Portal
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import DCATDatasetAge
-from odpw.utils.util import getSnapshot, progressIterator, progressIndicator
+from odpw.utils.util import getSnapshot, progressIterator, progressIndicator,\
+    ErrorHandler
 from _collections import defaultdict
 
 import dateutil
@@ -26,30 +27,33 @@ log =structlog.get_logger()
 
 
 def compute_dataset_life(dbm, job):
-    Portal = job['Portal']
-    sn = job['snapshot']
+    try:
+        Portal = job['Portal']
+        sn = job['snapshot']
     
-    log.info("START DatasetLifeStats Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
+        log.info("START DatasetLifeStats Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
     
-    dbm.engine.dispose()
-    
-    
-    aset = AnalyserSet()
-    
-    dls=aset.add(DatasetLifeStatsAnalyser(dbm, sn, Portal))
-    
-    it = DatasetLife.iter(dbm.getDatasetLifeResults(portalID=Portal.id))
-    total = dbm.countDatasetLifeResults(portalID=Portal.id)
-    
-    steps = total/10 if total>10 else 1
-    process_all(aset, progressIterator(it, total, steps, label=Portal.id))
+        dbm.engine.dispose()
     
     
+        aset = AnalyserSet()
     
-    pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
-    aset.update(pmd)
-    dbm.updatePortalMetaData(pmd)
-    return Portal
+        dls=aset.add(DatasetLifeStatsAnalyser(dbm, sn, Portal))
+    
+        it = DatasetLife.iter(dbm.getDatasetLifeResults(portalID=Portal.id))
+        total = dbm.countDatasetLifeResults(portalID=Portal.id)
+    
+        steps = total/10 if total>10 else 1
+        process_all(aset, progressIterator(it, total, steps, label=Portal.id))
+    
+    
+    
+        pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
+        aset.update(pmd)
+        dbm.updatePortalMetaData(pmd)
+        
+    except Exception as e:
+        ErrorHandler.handleError(log, "DatasetLifeStatsException", portal=Portal.id, snapshot=sn)
 
 def help():
     return "Update datasetlife statistics"
