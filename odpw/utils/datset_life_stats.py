@@ -67,6 +67,8 @@ def setupCLI(pa):
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
+    pa.add_argument("-ns","--nosnap",  help='no snapshot', dest='snapshotignore', action='store_true')
+    
     
 def cli(args,dbm):
     sn = getSnapshot(args)
