@@ -30,9 +30,9 @@ def normalized_dict(dict, x, y):
     return normalized
 
 
-def draw_graph(dataframe, min_ds=100, node_labels=None, graph_layout='shell',
-               node_size=10000, node_color='grey', node_alpha=0.5,
-               node_text_size=8,
+def draw_graph(dataframe, min_ds=5000, node_labels=None, graph_layout='shell',
+               node_size=13000, node_color='grey', node_alpha=0.5,
+               node_text_size=9,
                edge_color='grey', edge_alpha=0.5, edge_tickness=10,
                edge_text_pos=0.3,
                text_font='sans-serif'):
@@ -61,7 +61,7 @@ def draw_graph(dataframe, min_ds=100, node_labels=None, graph_layout='shell',
     for n in G.nodes():
         nodes.append(num_of_resources[n])
 
-    node_sizes = normalized(nodes, 500, node_size)
+    node_sizes = normalized(nodes, 5000, node_size)
 
     # these are different layouts for the network you may try
     # shell seems to work best
@@ -76,16 +76,18 @@ def draw_graph(dataframe, min_ds=100, node_labels=None, graph_layout='shell',
 
     if node_labels is None:
         node_labels = {i: dataframe.index.values[i] for i in G.nodes()}
+    else:
+        node_labels = {i: node_labels[i] for i in G.nodes()}
 
     edge_labels = dict([((u, v,), int(d['weight'])) for u, v, d in G.edges(data=True)])
-    width_dict = edge_labels.copy()
-    width_dict = normalized_dict(width_dict, 0, edge_tickness)
+    #width_dict = edge_labels.copy()
+    #width_dict = normalized_dict(width_dict, 0, edge_tickness)
 
-    plt.figure(1,figsize=(16, 14))
+    plt.figure(1,figsize=(14, 12))
     # draw graph
     nx.draw_networkx_nodes(G,graph_pos,node_size=node_sizes,
                            alpha=node_alpha, node_color=node_color)
-    nx.draw_networkx_edges(G,graph_pos, edge_width=width_dict,
+    nx.draw_networkx_edges(G,graph_pos, #edge_width=width_dict,
                            alpha=edge_alpha,edge_color=edge_color)
     nx.draw_networkx_labels(G, graph_pos, node_labels, font_size=node_text_size,
                             font_family=text_font)

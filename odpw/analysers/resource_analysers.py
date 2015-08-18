@@ -90,18 +90,26 @@ class ResourceOccurrenceCountAnalyser(ElementCountAnalyser):
     def __init__(self, portal_id=None):
         super(ResourceOccurrenceCountAnalyser, self).__init__()
         self.portal_id = portal_id
+        self.single_portal = defaultdict(int)
 
     def analyse_Resource(self, element):
         if element.origin:
             if not self.portal_id:
                 # count the total occurrences of a URL over all portals
                 occurences = 0
+                if len(element.origin) == 1:
+                    # occurs in single portal
+                    for pid in element.origin:
+                            self.single_portal[len(element.origin[pid])] += 1
                 for pid in element.origin:
                     occurences += len(element.origin[pid])
                 self.add(occurences)
 
             if self.portal_id in element.origin:
                 self.add(len(element.origin[self.portal_id]))
+
+    def getSinglePortalOccurences(self):
+        return self.single_portal
 
     def name(self):
         name = super(ResourceOccurrenceCountAnalyser, self).name()

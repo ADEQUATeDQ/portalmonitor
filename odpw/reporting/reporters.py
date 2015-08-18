@@ -489,4 +489,4 @@ class ResourceOverlapReporter(Reporter, PlotReporter, CSVReporter):
         df = self.getDataFrame()
 
         with open(file, "w") as f:
-            df.to_csv(f, index=False)
+            df.to_csv(f)
