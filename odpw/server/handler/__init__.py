@@ -30,6 +30,7 @@ from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount
     DCATFormatCount, DatasetCount, ResourceCount, PMDResourceStatsCount
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
+from odpw.reporting.activity_reports import systemactivity
 
 
 class BaseHandler(RequestHandler):
@@ -177,15 +178,8 @@ class SystemActivityHandler(BaseHandler):
             else:
                 sn = snapshot
         
-            print 'Start iteration'
-            it =PortalMetaData.iter(self.db.getPortalMetaDatas(snapshot=sn, portalID=None))
-            a = process_all(PMDActivityAnalyser(),it)
-            print 'done iteration'
-            totalDS = self.db.countDatasets(snapshot=sn)
-            totalRes= self.db.countResources(snapshot=sn)
-        
-            report = Report([SystemActivityReporter(a,snapshot=sn, dbds=totalDS, dbres= totalRes)])
-        
+            report = systemactivity(self.db, sn)
+            
             args={'index':True,
                'data':report.uireport(),
                'snapshot':sn

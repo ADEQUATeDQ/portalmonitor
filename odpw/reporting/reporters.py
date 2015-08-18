@@ -233,12 +233,13 @@ class Report(UIReporter,CSVReporter,CLIReporter, DataFramePlotReporter):
 
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
-    def __init__(self,analyser, snapshot=None,portalID=None, dbds=0, dbres=0):
+    def __init__(self,analyser, snapshot=None,portalID=None, dbds=0, dbres=0,dbresproc=0):
         self.analyser = analyser
         self.dbds=dbds
         self.dbres=dbres
         self.snapshot=snapshot
         self.portalID=portalID
+        self.dbresproc=dbresproc
         
         self.df=None
     
@@ -254,7 +255,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
     def uireport(self):
         res = self.analyser.getResult()['summary']
         
-        return {'portalactivitylist':DFtoListDict(self.getDataFrame()),'portalactivitysummary':res, 'dbds':self.dbds, 'dbres':self.dbres}
+        return {'portalactivitylist':DFtoListDict(self.getDataFrame()),'portalactivitysummary':res, 'dbds':self.dbds, 'dbres':self.dbres,'dbresproc':self.dbresproc}
     
     def clireport(self):
         summary = self.analyser.getResult()['summary']

@@ -62,7 +62,7 @@
                         
                     </div>
                     <div class="card_footer">
-                        <span class="text-centered width-100">{{data.dbds}} datasets already inserted</span>
+                        <span class="text-centered width-100">{{ '{0:,}'.format(data.dbds)}} datasets inserted</span>
                     </div>
                 </div>
                 <div class="unit-33 card unit-padding">
@@ -101,7 +101,7 @@
                         </table>
                     </div>
                     <div class="card_footer">
-                        <span class="label label-white width-100">{{data.dbres}} resources</span>
+                        <span class="width-100">{{  '{0:,}'.format(data.dbresproc) }} of {{ '{0:,}'.format(data.dbres)}} resources</span>
                     </div>
                 </div>
                 <div class="unit-30  card unit-padding">

@@ -555,12 +555,13 @@ def getCurrentSnapshot():
     return sn
 
 def getSnapshot(args):
+    if args.snapshotignore:
+        return None
     if args.snapshot:
         return args.snapshot
     else:
         sn = getCurrentSnapshot()
-        
-        if hasattr(args,'ignore'):
+        if not args.ignore:
             while True:
                 choice = raw_input("WARNING: Do you really want to use the current date as snapshot "+sn+"?: (Y/N)").lower()
                 if choice == 'y':

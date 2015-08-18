@@ -1,17 +1,15 @@
 from __future__ import generators
-from sqlalchemy.sql.expression import join, exists
-
 
 __author__ = 'jumbrich'
 
-
+from sqlalchemy.sql.expression import join, exists
 import structlog
 log =structlog.get_logger()
 
 import sys
 import datetime
 from odpw.utils.timer import Timer
-from odpw.db.models import Portal,PortalMetaData,Resource,Dataset
+from odpw.db.models import Portal,PortalMetaData,Resource,Dataset, DatasetLife
 
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, VARCHAR, Boolean, SmallInteger,TIMESTAMP,BigInteger
@@ -170,6 +168,12 @@ class PostgressDBM(object):
                             Column('qa_stats', JSONB),
                             Column('software', String),
                             )
+            self.datasetslife = Table('datasets_life',self.metadata,
+                            Column('id', String,primary_key=True,index=True),
+                            Column('portal_id', String(70),primary_key=True,index=True),
+                            Column('snapshots', JSONB),
+                            
+                            )
             
             self.resources = Table('resources',self.metadata,
                              Column('url', String,primary_key=True,index=True),
@@ -187,6 +191,9 @@ class PostgressDBM(object):
         self.metadata.drop_all(self.engine)
         self.metadata.create_all(self.engine)    
                  
+    def initDatasetsLife(self):
+        self.datasetslife.create(self.engine)
+        
     def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
             
@@ -202,15 +209,15 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
      
-    def getSnapshotsFromPMD(self, portalID=None,apiurl=None):
+    def getSnapshotsFromPMD(self, portalID=None):
         with Timer(key="getSnapshotsFromPMD") as t:
             
             s = select([self.pmd.c.portal_id , self.pmd.c.snapshot])
             
             if portalID:
                 s= s.where(self.pmd.c.portal_id==portalID)
-            if apiurl:
-                s= s.where(self.pmd.c.apiurl==apiurl)
+            #if apiurl:
+            #    s= s.where(self.pmd.c.apiurl==apiurl)
             
             s=s.distinct()
             
@@ -421,6 +428,70 @@ class PostgressDBM(object):
             self.log.debug("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
             ins.execute()
 
+
+    #####
+    # DatasetLife
+    #####
+    
+    def getDatasetLife(self, id=None, portalID= None):
+        with Timer(key="getDatasetLife") as t:
+            s = select([self.datasetslife])
+            
+            if portalID:
+                s= s.where(self.datasetslife.c.portal_id == portalID)
+            if id:
+                s= s.where(self.datasetslife.c.id == id)
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)    
+            
+            res = s.execute().fetchone()
+            
+            if res:
+                return DatasetLife.fromResult( dict( res))
+            return None
+    def getDatasetLifeResults(self, portalID=None):
+         with Timer(key="getDatasetLifeResults") as t:
+            s = select([self.datasetslife])
+            
+            if portalID:
+                s= s.where(self.datasetslife.c.portal_id == portalID)
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)    
+            
+            return s.execute()
+          
+    def countDatasetLifeResults(self,portalID=None):
+        with Timer(key="countDatasetLifeResults") as t:
+            s = select([func.count(self.datasetslife.c.id)])
+            
+            if portalID:
+                s= s.where(self.datasetslife.c.portal_id == portalID)
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)    
+            
+            return s.execute().scalar()
+    def insertDatasetLife(self, DatasetLife):
+        with Timer(key="getDatasetLife") as t:
+            ins = self.datasetslife.insert().values( id=DatasetLife.id,
+                                                   snapshots=DatasetLife.snapshots,
+                                                   portal_id=DatasetLife.portal_id)
+            
+            self.log.debug(query=ins.compile(), params=ins.compile().params)
+            #self.conn.execute(ins)
+            ins.execute()
+            
+    
+    def updateDatasetLife(self, DatasetLife):
+        with Timer(key="getDatasetLife") as t:
+            
+            up= self.datasetslife.update().where(
+                    (self.datasetslife.c.portal_id == DatasetLife.portal_id) &
+                    (self.datasetslife.c.id == DatasetLife.id)).values(
+                                                           snapshots=DatasetLife.snapshots)
+            
+            self.log.debug(query=up.compile(), params=up.compile().params)    
+            
+            res = up.execute()
     ### 
     # Datasets
     ###
@@ -602,7 +673,13 @@ class PostgressDBM(object):
     ###
     #Resources
     ###
-  
+    def deleteResource(self,url, snapshot):
+        with Timer(key="deleteResource") as t:
+            delete= self.resources.delete().where(and_(self.resources.c.snapshot==snapshot,
+                                                    self.resources.c.url == url))
+            self.log.debug(query=delete.compile(), params=delete.compile().params)
+            delete.execute()
+            
     def insertResource(self, Resource):
         with Timer(key="insertResource") as t:
             origin=None
@@ -764,25 +841,28 @@ class PostgressDBM(object):
     
     def countResourcesPerSnapshot(self,portalID=None, snapshot=None):
         with Timer(key="countResourcesPerSnapshot") as t:
-            s=select( [func.count(self.resources.c.url).label('resources')]).\
-            where(self.resources.c.origin[portalID]!=None)
+            s=select( [func.count(self.resources.c.url).label('resources')])
+            if portalID:
+                s=s.where(self.resources.c.origin[portalID]!=None)
             if snapshot:
                 s=s.where(self.resources.c.snapshot==snapshot)
             
-            s=s.group_by(self.resources.c.snapshot)
+            #s=s.group_by(self.resources.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().scalar()
     
     def countProcessedResourcesPerSnapshot(self,portalID=None, snapshot=None):
         with Timer(key="countResourcesPerSnapshot") as t:
-            s=select( [func.count(self.resources.c.url).label('resources')]).\
-            where(self.resources.c.origin[portalID]!=None)
+            s=select( [func.count(self.resources.c.url).label('resources')])
+            
+            if portalID:
+                s=s.where(self.resources.c.origin[portalID]!=None)
             if snapshot:
                 s=s.where(self.resources.c.snapshot==snapshot)
-            s.s.where(self.resources.c.status != -1)
+            s=s.where(self.resources.c.status != -1)
             
-            s=s.group_by(self.resources.c.snapshot)
+            #s=s.group_by(self.resources.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().scalar()

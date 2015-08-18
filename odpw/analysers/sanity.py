@@ -24,7 +24,8 @@ class FetchSanity(Analyser):
             #seems we have some full fetch stats
             
             if pmd.fetch_stats.get('status', -2) != 200:
-                row['fetch_exception']= pmd.datasets==-1
+                row['fetch_exception']=  pmd.datasets ==-1
+                row['fetch_processed']= True
             else:    
                 """ Checks
                     1) indexed =   number of ds == indexed ds
@@ -52,8 +53,8 @@ class FetchSanity(Analyser):
                 row['fetch_processed']= all( sanity.values())
                 
                 row.update(sanity)
-        self.rows.append(row)
         
+        self.rows.append(row)
     
     def getResult(self):
         return {'rows':self.rows}
