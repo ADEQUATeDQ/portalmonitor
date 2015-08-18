@@ -147,7 +147,8 @@ class DatasetLifeAnalyser(Analyser):
             if df is None:
                 insert=True
                 df = DatasetLife(did=did, portalID= dataset.portal_id)
-                 
+            
+            created=None     
             for dcat_el in getattr(dataset,'dcat',[]):
                 if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for f in dcat_el.get(str(DCT.issued),[]):

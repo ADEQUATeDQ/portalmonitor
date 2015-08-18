@@ -136,7 +136,7 @@ def simulateFetching(dbm, job):
         
                 
         ae.add(DCATConverter(Portal))
-        ddc=ae.add(DCATDistributionCount(withDistinct=True))
+        ae.add(DCATDistributionCount(withDistinct=True))
         ae.add(DCATDistributionInserter(dbm))
         
         ae.add(DCATOrganizationsCount())
@@ -159,7 +159,7 @@ def simulateFetching(dbm, job):
         
         ae.update(pmd)
         
-        print ddc.getResult()
+        
         dbm.updatePortalMetaData(pmd)
         
         log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
