@@ -83,6 +83,7 @@ class DistinctElementCount(Analyser):
         super(DistinctElementCount, self).__init__()
         self.count=0
         self.bloom=None
+        self.set=None
         if withDistinct:
             self.bloom=ScalableBloomFilter()
             self.distinct=0
