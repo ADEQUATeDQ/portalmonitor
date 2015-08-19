@@ -22,8 +22,10 @@ class PMDResourceStatsCount(Analyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.res_stats:
             for k,v in pmd.res_stats.items():
-                if not isinstance(v, list) and not isinstance(v, dict):
-                    self.aggs[k]+=v
+                if k in ['total', 'distinct']:
+                    if not isinstance(v, list) and not isinstance(v, dict):
+                        print k,v
+                        self.aggs[k]+=v
         
     def getResult(self):
         return dict(self.aggs)

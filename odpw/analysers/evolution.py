@@ -5,6 +5,7 @@ Created on Aug 12, 2015
 '''
 from odpw.analysers import Analyser
 from _collections import defaultdict
+from odpw.analysers.datasetlife import DatasetLifeStatsAnalyser
 
 
 class EvolutionCountAnalyser(Analyser):
@@ -27,7 +28,14 @@ class EvolutionCountAnalyser(Analyser):
 
 class DatasetEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):
-        self.add(pmd.snapshot, 'datasets',pmd.datasets)
+        if pmd.fetch_stats:
+            for i in DatasetLifeStatsAnalyser.keys:
+                self.add(pmd.snapshot, i,pmd.fetch_stats.get(i,0))
+        else:
+            self.add(pmd.snapshot,'no_stats', 1)
+        
+        
+        
     
 class ResourceEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):

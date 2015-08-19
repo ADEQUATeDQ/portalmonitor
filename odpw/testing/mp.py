@@ -12,6 +12,7 @@ from random import randint
 from multiprocessing import Pool
 import functools
 from odpw.utils.util import TimeoutError
+import sys
 
 
 
@@ -54,6 +55,13 @@ def main():
 
 if __name__ == "__main__":
     #main()
+    
+    import datetime
+    print datetime.datetime(2014, 6, 1).isoformat()
+    print datetime.date(2014, 6, 1).isoformat()
+    
+    sys.exit(0)
+    
     from pandas import DataFrame
     from pandas import merge
     left = DataFrame({'key1': ['K0', 'K0', 'K1', 'K2'],

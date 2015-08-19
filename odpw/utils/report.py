@@ -20,6 +20,8 @@ from odpw.reporting.evolution_reporter import EvolutionReporter,\
     SystemSoftwareEvolutionReporter
 import os
 from odpw.reporting.activity_reports import systemactivity
+from odpw.reporting.info_reports import systeminfo, portalinfo
+from odpw.reporting.evolution_reports import systemevolution, portalevolution
 
 
 __author__ = 'jumbrich'
@@ -42,7 +44,7 @@ def help():
 def setupCLI(pa):
     
     pa.add_argument("-sn","--snapshot",  type=int, help='what snapshot is it', dest='snapshot')
-    
+    pa.add_argument("-ns","--nosnap",  help='no snapshot', dest='snapshotignore', action='store_true')
     
     tasks = pa.add_argument_group("Views")
     tasks.add_argument("-i",  help='generate the overview report', dest='info', action='store_true')

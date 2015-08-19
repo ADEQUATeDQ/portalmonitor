@@ -17,7 +17,6 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
     def getDataFrame(self):
         if  self.df is None:
             res=[]
-            print self.a.getResult()
             for sn, dkv in  self.a.getResult().items():
                 d={'snapshot':sn}
                 for k,v in dkv.items():
@@ -28,6 +27,15 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
     
 class DatasetEvolutionReporter(EvolutionReporter):
     pass
+
+    def uireport(self):
+        res=[]
+        for sn, dkv in  self.a.getResult().items():
+            for k,v in dkv.items():
+                d={'snapshot':sn, 'value':v, 'key':k}
+                res.append(d)
+        return {self.name():res} 
+            
 class ResourcesEvolutionReporter(EvolutionReporter):
     pass
 class ResourceAnalyseReporter(EvolutionReporter):

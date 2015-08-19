@@ -31,6 +31,7 @@ from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.activity_reports import systemactivity
+from odpw.reporting.evolution_reports import portalevolution
 
 
 class BaseHandler(RequestHandler):
@@ -91,7 +92,7 @@ class PortalSelectionHandler(BaseHandler):
 class PortalHandler(BaseHandler):
     def get(self, view=None, portalID=None, snapshot=None):
         
-        a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None,apiurl=None))
+        a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
         rep = SnapshotsPerPortalReporter(a,None)
         if not portalID:
             self.render('portal_empty.jinja', portals=True, data=rep.uireport())
@@ -138,6 +139,15 @@ class PortalHandler(BaseHandler):
             FormatCountReporter(fc, topK=3)])
     
             self.render('portal_info.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
+    
+    def evolutionrendering(self, portalID, snapshot, rep):      
+        with Timer(key="evolutionrendering", verbose=True) as t:
+            
+            r = portalevolution(self.db, snapshot, portalID)
+            rep = Report([rep,r])
+            import pprint
+            pprint.pprint(r.uireport())
+            self.render('portal_evolution.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
         
 class PortalList(BaseHandler):
     def get(self):
@@ -155,7 +165,7 @@ class PortalList(BaseHandler):
             
                     portals.append(rdict)
         
-                self.render('portallist.jinja',index=True, data=portals)
+                self.render('portalevol.jinja',index=True, data=portals)
             except Exception as e:print e
 
 class IndexHandler(BaseHandler):
