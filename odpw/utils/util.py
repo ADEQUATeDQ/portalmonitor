@@ -490,7 +490,7 @@ def getCountry(url):
 def getExceptionCode(e):
     #connection erorrs
     try:
-        
+
         if isinstance(e,requests.exceptions.ConnectionError):
             return 702
         if isinstance(e,requests.exceptions.ConnectTimeout):
