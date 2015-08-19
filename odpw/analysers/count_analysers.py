@@ -104,6 +104,10 @@ class CKANResourceInDS(DistinctElementCount):
         pmd.res_stats['unique'] = self.getResult()['distinct']
 
 class CKANFormatCount(ElementCountAnalyser):
+    def __init__(self, total_count=True):
+        super(CKANFormatCount, self).__init__()
+        self.total_count = total_count
+
     def analyse_Dataset(self, dataset):
         if dataset.data and 'resources' in dataset.data:
             for resource in dataset.data['resources']:
@@ -115,7 +119,10 @@ class CKANFormatCount(ElementCountAnalyser):
             formats = pmd.general_stats['formats']
             if isinstance(formats, dict):
                 for f in formats:
-                    self.add(f, formats[f])
+                    if self.total_count:
+                        self.add(f, formats[f])
+                    else:
+                        self.add(f)
 
     def analyse_CKANFormatCount(self, format_analyser):
         formats = format_analyser.getResult()
