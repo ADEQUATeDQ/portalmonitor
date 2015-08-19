@@ -37,12 +37,16 @@ import odpw.utils.head_stats as headStatscli
 import odpw.utils.fetch_stats as fetchStatscli
 import odpw.utils.report as reportcli
 import odpw.utils.migrate as migratecli
-
+import odpw.utils.datset_life as datasetlifecli
+import odpw.utils.datset_life_stats as datasetlifestatscli
 submodules=[dbcli, initcli, fetchcli,  
             statuscli, servercli,
             reportcli, dmcli, 
             headcli, migratecli,
-            headStatscli,fetchStatscli]
+            headStatscli,fetchStatscli,
+            datasetlifecli,datasetlifestatscli
+            
+            ]
 
 
 import yaml

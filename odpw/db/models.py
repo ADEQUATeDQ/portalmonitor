@@ -119,6 +119,48 @@ class Dataset(Model):
             setattr(self, key, value)
 
 
+
+class DatasetLife(Model):
+    
+    @classmethod
+    def iter(cls, iterable):
+        for i in iterable:
+            r = DatasetLife.fromResult(dict(i))
+            yield r
+        return
+
+    @classmethod
+    def fromResult(cls, result):
+        if isinstance(result, RowProxy):
+            result = dict(result)
+
+        portal_id = result['portal_id']
+        did = result['id']
+
+        del result['portal_id']
+        del result['id']
+        
+        return cls(portalID=portal_id, did=did, **result)
+
+    def __init__(self,  portalID, did, data=None, **kwargs):
+        super(DatasetLife,self).__init__(**{'portal_id':portalID,'id':did})
+        
+        self.portal_id = portalID
+        self.id = did
+
+        self.snapshots= None
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    def updateSnapshot(self, created,sn ):
+        if self.snapshots is None:
+            self.snapshots={}
+        if created not in self.snapshots:
+            self.snapshots[created]=[]
+        if sn not in self.snapshots[created]: 
+            self.snapshots[created].append(sn)
+
 class PortalMetaData(Model):
 
     @classmethod

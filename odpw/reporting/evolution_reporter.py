@@ -29,6 +29,8 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
 class DatasetEvolutionReporter(EvolutionReporter):
     pass
 class ResourcesEvolutionReporter(EvolutionReporter):
+    pass
+class ResourceAnalyseReporter(EvolutionReporter):
     pass 
 class SystemSoftwareEvolutionReporter(EvolutionReporter):
     pass

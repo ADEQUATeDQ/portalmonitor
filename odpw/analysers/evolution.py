@@ -32,6 +32,14 @@ class DatasetEvolution(EvolutionCountAnalyser):
 class ResourceEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):
         self.add(pmd.snapshot, 'resources',pmd.resources)
+
+class ResourceAnalysedEvolution(EvolutionCountAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        count=0
+        if pmd.res_stats and 'status' in pmd.res_stats:
+            count = sum(pmd.res_stats['status'].values())
+        self.add(pmd.snapshot, 'resources_analysed',count)
+
         
 class SystemSoftwareEvolution(EvolutionCountAnalyser):
     

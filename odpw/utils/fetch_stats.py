@@ -20,10 +20,11 @@ from odpw.analysers.dbm_handlers import DatasetFetchUpdater,\
 from odpw.analysers import AnalyserSet
 from multiprocessing.pool import ThreadPool
 from _functools import partial
+from odpw.analysers.datasetlife import DatasetLifeAnalyser
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
-    progressIterator, progressIndicator
+    progressIterator, progressIndicator, ErrorHandler
 
 from multiprocessing.process import Process
 import multiprocessing
@@ -93,71 +94,77 @@ rerun=[
 ]
 
 def simulateFetching(dbm, job):
+    
     Portal = job['Portal']
     sn = job['snapshot']
     
-    log.info("START Simulated Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
-    dbm.engine.dispose()
-    
-    pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
-    if not pmd:
-        pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
-        dbm.insertPortalMetaData(pmd)
-     
-    
-    ae = SAFEAnalyserSet()
-    ae.add(MD5DatasetAnalyser())
-    ae.add(DatasetCount())
-    ae.add(DatasetStatusCount())
-    
-    if Portal.software == 'CKAN':
-        ka= ae.add(CKANKeyAnalyser())
-        ae.add(CKANLicenseIDCount())
-        #ae.add(CKANResourceInDSAge())
-        #ae.add(CKANDatasetAge())
-        #ae.add(CKANFormatCount())
-        #ae.add(CKANTagsCount())
-        ae.add(CKANLicenseCount())
-        #ae.add(CKANOrganizationsCount())
-        ae.add(CompletenessAnalyser())
-        ae.add(ContactabilityAnalyser())
-        ae.add(OpennessAnalyser())
-        ae.add(OPQuastAnalyser())
-        ae.add(UsageAnalyser(ka))
+    try:
         
-    elif Portal.software == 'Socrata':
-        pass
-    elif Portal.software == 'OpenDataSoft':
-        pass
-    
+        log.info("START Simulated Fetch", pid=Portal.id, snapshot=sn, software=Portal.software)
+        dbm.engine.dispose()
+        
+        pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
+        if not pmd:
+            pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
+            dbm.insertPortalMetaData(pmd)
+         
+        
+        ae = SAFEAnalyserSet()
+        ae.add(MD5DatasetAnalyser())
+        ae.add(DatasetCount())
+        ae.add(DatasetStatusCount())
+        
+        if Portal.software == 'CKAN':
+            ka= ae.add(CKANKeyAnalyser())
+            ae.add(CKANLicenseIDCount())
+            #ae.add(CKANResourceInDSAge())
+            #ae.add(CKANDatasetAge())
+            #ae.add(CKANFormatCount())
+            #ae.add(CKANTagsCount())
+            ae.add(CKANLicenseCount())
+            #ae.add(CKANOrganizationsCount())
+            ae.add(CompletenessAnalyser())
+            ae.add(ContactabilityAnalyser())
+            ae.add(OpennessAnalyser())
+            ae.add(OPQuastAnalyser())
+            ae.add(UsageAnalyser(ka))
             
-    ae.add(DCATConverter(Portal))
-    ddc=ae.add(DCATDistributionCount(withDistinct=True))
-    ae.add(DCATDistributionInserter(dbm))
+        elif Portal.software == 'Socrata':
+            pass
+        elif Portal.software == 'OpenDataSoft':
+            pass
+        
+                
+        ae.add(DCATConverter(Portal))
+        ae.add(DCATDistributionCount(withDistinct=True))
+        ae.add(DCATDistributionInserter(dbm))
+        
+        ae.add(DCATOrganizationsCount())
+        ae.add(DCATTagsCount())
+        ae.add(DCATFormatCount())
+        ae.add(DCATResourceInDSAge())
+        ae.add(DCATDatasetAge())
     
-    ae.add(DCATOrganizationsCount())
-    ae.add(DCATTagsCount())
-    ae.add(DCATFormatCount())
-    ae.add(DCATResourceInDSAge())
-    ae.add(DCATDatasetAge())
-
-    ae.add(DatasetFetchUpdater(dbm))
-    
-    total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
-    
-    steps=total/10
-    if steps ==0:
-        steps=1
-    
-    iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
-    process_all(ae,progressIterator(iter, total, steps, label=Portal.id))
-    
-    ae.update(pmd)
-    
-    print ddc.getResult()
-    dbm.updatePortalMetaData(pmd)
-    
-    log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
+        ae.add(DatasetFetchUpdater(dbm))
+        ae.add(DatasetLifeAnalyser(dbm))
+        
+        total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
+        
+        steps=total/10
+        if steps ==0:
+            steps=1
+        
+        iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
+        process_all(ae,progressIterator(iter, total, steps, label=Portal.id))
+        
+        ae.update(pmd)
+        
+        
+        dbm.updatePortalMetaData(pmd)
+        
+        log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
+    except Exception as e:
+        ErrorHandler.handleError(log, "SimulateFetchException", portal=Portal.id, snapshot=sn)
 
 def help():
     return "Simulate a fetch run"
@@ -171,12 +178,10 @@ def setupCLI(pa):
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
+    pa.add_argument("-ns","--nosnap",  help='no snapshot', dest='snapshotignore', action='store_true')
     
 def cli(args,dbm):
     sn = getSnapshot(args)
-    
-    
-    
     
     portals=[]
     if args.url:
@@ -192,8 +197,6 @@ def cli(args,dbm):
         for p in Portal.iter(dbm.getPortals()):
             portals.append(p)
     
-    
-    print len(portals)
     jobs=[]
     for p in portals:
         snapshots=set([])
@@ -211,15 +214,11 @@ def cli(args,dbm):
     
     pool = ThreadPool(processes=args.processors,) 
     mgr = multiprocessing.Manager()
-    seen = mgr.dict()
-    
-    #for pmd in PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn)):
-    #    seen[pmd.portal_id]= {'resources':pmd.resources, 'processed':0}
     
     log.info("Starting fetch sim lookups", count=len(portals), cores=args.processors)
     
     
-    head_star = partial(simulateFetching,dbm)
+    head_star = partial(simulateFetching, dbm)
     
     start = time.time()
     results = pool.imap_unordered(head_star, jobs)
