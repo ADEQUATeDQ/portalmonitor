@@ -9,7 +9,7 @@ from odpw.reporting.reporters import SoftWareDistReporter, ISO3DistReporter,\
     PortalListReporter, SnapshotsPerPortalReporter, DatasetSumReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report
-from odpw.reporting.ckan_reporter import report
+
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
     DCATFormatCount, PMDResourceStatsCount, DatasetCount
 from odpw.analysers.resource_analysers import ResourceSize

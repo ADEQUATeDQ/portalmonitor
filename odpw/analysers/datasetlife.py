@@ -42,6 +42,14 @@ def getSnapshotfromTime(now, delta=None,before=False):
 
 class DatasetLifeStatsAnalyser(Analyser):
     
+    ADDACC='added_accessed'
+    ACC='accessed'
+    ADDMISAV='added_mis_av'
+    MISAV='mis_av'
+    DEAD='dead'
+    
+    keys=[ADDACC, ACC, ADDMISAV, MISAV, DEAD]
+    
     def __init__(self, dbm, snapshot, portal):
         self.snasphot = snapshot
         self.counts={}
@@ -95,9 +103,9 @@ class DatasetLifeStatsAnalyser(Analyser):
                 else:
                     if pmd_sn in ds_snap:
                         if pmd_sn == created: 
-                            self.counts[pmd_sn]['added_accessed']+=1
+                            self.counts[ pmd_sn ][ self.ADDACC ]+=1
                         else:
-                            self.counts[pmd_sn]['accessed']+=1
+                            self.counts[pmd_sn][ self.ACC ]+=1
                             if pmd_sn == self.snasphot:
                                 #get prev ds snapshot
                                 if ds_snap.index(pmd_sn)>=1:
@@ -112,11 +120,11 @@ class DatasetLifeStatsAnalyser(Analyser):
                                         ##check if we need to update the older snapshots
                             
                     elif pmd_sn == created:
-                        self.counts[pmd_sn]['added_mis_av']+=1
+                        self.counts[pmd_sn][  self.ADDMISAV ]+=1
                     elif ds_start <= pmd_sn <=ds_end:
-                        self.counts[pmd_sn]['mis_av']+=1
+                        self.counts[pmd_sn][self.MISAV]+=1
                     elif pmd_sn > ds_end:
-                        self.counts[pmd_sn]['dead']+=1
+                        self.counts[pmd_sn][self.DEAD]+=1
     
     
     def done(self):
@@ -158,11 +166,11 @@ class DatasetLifeAnalyser(Analyser):
                             break
                         except Exception as e:
                             pass
-            if created:
-                df.updateSnapshot(created.isoformat(),dataset.snapshot )
-                if insert:
-                    self.dbm.insertDatasetLife(df)
-                else:
-                    self.dbm.updateDatasetLife(df)
-            else:
+            if created is None:
+                created = datetime.datetime(2014, 6, 1)
                 print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
+            df.updateSnapshot(created.isoformat(),dataset.snapshot )
+            if insert:
+                self.dbm.insertDatasetLife(df)
+            else:
+                self.dbm.updateDatasetLife(df)            

@@ -210,7 +210,6 @@ class Report(UIReporter,CSVReporter,CLIReporter, PlotReporter):
         for r in self.rs:
             if isinstance(r, UIReporter):
                 s = r.uireport()
-                
                 for k, v in s.items():
                     res[k]=v    
         return res

@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import pprint
-from odpw.util import defaultdict
 import operator
 import os
 import numpy as np
@@ -24,6 +23,7 @@ from odpw.reporting.reporters import Report, Reporter, PlotReporter, FormatCount
 
 from matplotlib.ticker import FuncFormatter
 from matplotlib import pyplot as plt
+from _collections import defaultdict
 
 
 __author__ = 'sebastian'

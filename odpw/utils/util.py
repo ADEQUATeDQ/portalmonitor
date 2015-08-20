@@ -555,7 +555,7 @@ def getCurrentSnapshot():
     return sn
 
 def getSnapshot(args):
-    if args.snapshotignore:
+    if hasattr(args, 'snapshotignore') and args.snapshotignore:
         return None
     if args.snapshot:
         return args.snapshot
