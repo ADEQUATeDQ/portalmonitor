@@ -1,16 +1,14 @@
 import mimetypes
+import pickle
 
-import pycountry
+from odpw.analysers import Analyser, AnalyserSet, process_all
+from odpw.analysers.quality.analysers import analyze_resource_format
+from odpw.db.dbm import PostgressDBM
+from odpw.db.models import Resource, Dataset, Portal
 
-from analysis.analysers import analyze_resource_format
-from db.model.Package import Package
-from db.model.Resource import Resource
+import structlog
+log =structlog.get_logger()
 
-
-__author__ = 'neumaier'
-
-import logging
-import datetime
 
 
 def format(resource_meta_datas, resource):
@@ -28,35 +26,22 @@ def format(resource_meta_datas, resource):
                 # assuming no file extension is longer than 10 characters
                 if 0 < len(file_extension) < 10:
                     ext = file_extension[1:].lower()
+                    count_extension += 1
 
-                    if 'archive' in resource.parse_meta_data:
-                        archive = resource.parse_meta_data['archive']
-                        for f in archive:
-                            count_extension += archive[f]
-                            if f in analyze_resource_format.get_format_list(meta):
-                                # TODO check if zip is in meta
-                                score_extension += archive[f]
-                    else:
-                        count_extension += 1
-                        if analyze_resource_format.get_format(ext) in analyze_resource_format.get_format_list(meta):
-                            score_extension += 1
+                    if analyze_resource_format.get_format(ext) in analyze_resource_format.get_format_list(meta):
+                        score_extension += 1
 
             # check mime type
-            if 'header' in resource.crawl_meta_data and resource.crawl_meta_data['header'] is not None:
-                header = resource.crawl_meta_data['header']
-                cont_type = None
-                if 'Content-Type' in header:
-                    cont_type = header['Content-Type']
-                elif 'content-type' in header:
-                    cont_type = header['content-type']
-                if cont_type is not None:
-                    header_mime_type = cont_type.split(';')[0]
-                    guessed_extensions = mimetypes.guess_all_extensions(header_mime_type)
-                    count_header += 1
-                    for ext in guessed_extensions:
-                        if analyze_resource_format.get_format(ext) in analyze_resource_format.get_format_list(meta):
-                            score_header += 1
-                            break
+            if resource.mime:
+                cont_type = resource.mime
+
+                header_mime_type = cont_type.split(';')[0]
+                guessed_extensions = mimetypes.guess_all_extensions(header_mime_type)
+                count_header += 1
+                for ext in guessed_extensions:
+                    if analyze_resource_format.get_format(ext) in analyze_resource_format.get_format_list(meta):
+                        score_header += 1
+                        break
 
     result = {'content': {'count': count_extension},
               'header': {'count': count_header}}
@@ -76,13 +61,8 @@ def mime_type(resource_meta_datas, resource):
     result = {'content': {'count': 0, 'score': None},
               'header': {'count': 0, 'score': None}}
 
-    if resource.crawl_meta_data['header'] is not None:
-        if 'Content-Type' in resource.crawl_meta_data['header']:
-            cont_type = resource.crawl_meta_data['header']['Content-Type']
-        elif 'content-type' in resource.crawl_meta_data['header']:
-            cont_type = resource.crawl_meta_data['header']['content-type']
-        else:
-            return result
+    if resource.mime:
+        cont_type = resource.mime
     else:
         return result
 
@@ -103,127 +83,19 @@ def mime_type(resource_meta_datas, resource):
     return result
 
 
-def _try_get_language(param, param_name=None):
-    try:
-        if param_name == 'alpha2':
-            return pycountry.languages.get(alpha2=param)
-        elif param_name == 'bibliographic':
-            return pycountry.languages.get(bibliographic=param)
-        elif param_name == 'terminology':
-            return pycountry.languages.get(terminology=param)
-        elif param_name == 'common_name':
-            return pycountry.languages.get(common_name=param)
-        else:
-            return pycountry.languages.get(name=param)
-    except:
-        return None
-
-
-def language(resource_meta_datas, resource):
-    result = {'content': {'count': 0, 'score': None},
-              'header': {'count': 0, 'score': None}}
-
-    score = 0.0
-    count = 0.0
-    for rmd in resource_meta_datas:
-        if 'language' in rmd:
-            if 'guessed_language' in resource.parse_meta_data:
-                count += 1
-                # guess is in 2-letter code
-                guess = _try_get_language(resource.parse_meta_data['guessed_language'], 'alpha2')
-                meta = rmd['language']
-                if guess is not None and meta is not None:
-                    meta = meta.lower()
-                    if len(meta) == 2:
-                        # iso_639_1
-                        code = _try_get_language(meta, 'alpha2')
-                    elif len(meta) == 3:
-                        # iso_639_2
-                        code = _try_get_language(meta, 'bibliographic')
-                        if code is None:
-                            code = _try_get_language(meta, 'terminology')
-                    else:
-                        code = _try_get_language(meta, 'name')
-                        if code is None:
-                            code = _try_get_language(meta, 'common_name')
-                    if guess == code:
-                        score += 1
-
-    result['content']['count'] = count
-    if count == 0:
-        result['content']['score'] = None
-    else:
-        result['content']['score'] = score / count
-    return result
-
-
-def encoding(resource_meta_datas, resource):
-    # check for header encoding info
-    header_encoding = None
-    if resource.crawl_meta_data['header'] is not None:
-        if 'Content-Type' in resource.crawl_meta_data['header']:
-            cont_type = resource.crawl_meta_data['header']['Content-Type']
-        elif 'content-type' in resource.crawl_meta_data['header']:
-            cont_type = resource.crawl_meta_data['header']['content-type']
-        else:
-            cont_type = None
-        if cont_type:
-            header = cont_type.split(';')
-            if len(header) > 1:
-                header_encoding = header[1]
-
-    score_content = 0.0
-    score_header = 0.0
-    count_content = 0.0
-    count_header = 0.0
-    for rmd in resource_meta_datas:
-        if 'characterset' in rmd:
-            meta_encoding = rmd['characterset']
-            if header_encoding:
-                count_header += 1
-                if meta_encoding is not None and len(meta_encoding) > 0:
-                    if meta_encoding.lower() in header_encoding.lower():
-                        score_header += 1
-            elif 'guessed_encoding' in resource.parse_meta_data:
-                guessed_encoding = resource.parse_meta_data['guessed_encoding']
-                count_content += 1
-                if guessed_encoding is not None and meta_encoding is not None:
-                    if guessed_encoding.lower() == meta_encoding.lower():
-                        score_content += 1
-
-    result = {'content': {'count': count_content},
-              'header': {'count': count_header}}
-    if count_content > 0:
-        result['content']['score'] = score_content / count_content
-    else:
-        result['content']['score'] = None
-    if count_header > 0:
-        result['header']['score'] = score_header / count_header
-    else:
-        result['header']['score'] = None
-    return result
-
-
 def size(resource_meta_datas, resource):
     result = {'content': {'count': 0, 'score': None},
               'header': {'count': 0, 'score': None}}
 
-    if resource.crawl_meta_data['header'] is not None:
-        if 'Content-Length' in resource.crawl_meta_data['header'] and \
-                        resource.crawl_meta_data['header']['Content-Length'] is not None:
-            header_field = float(resource.crawl_meta_data['header']['Content-Length'])
-        elif 'content-length' in resource.crawl_meta_data['header'] and \
-                        resource.crawl_meta_data['header']['content-length'] is not None:
-            header_field = float(resource.crawl_meta_data['header']['content-length'])
-        else:
-            return result
+    if resource.size:
+        header_field = resource.size
     else:
         return result
 
     try:
         cont_length = float(header_field)
     except Exception:
-        logger.error("(%s) Cannot read content length in header of resource: %s",
+        log.warn("(%s) Cannot read content length in header of resource: %s",
                      resource.url, header_field)
         return result
 
@@ -292,133 +164,107 @@ def _compute_dict_accuracy(acc_dict):
     return result
 
 
-def compute_accuracy(dbm, portal, snapshot):
-    # ############
-    log_time_start = datetime.datetime.now()
-    log_time_resource = datetime.timedelta()
 
-    dt = datetime.datetime.fromtimestamp(snapshot)
-    packages = dbm.getPackages(portal, snapshot)
-    p_f = {}
-    p_m = {}
-    p_l = {}
-    p_e = {}
-    p_s = {}
-    p_time_span = datetime.timedelta()
-    for p in packages:
-        package = Package(dict_string=p)
-        urls = []
+
+
+class AccuracyAnalyser(Analyser):
+    def __init__(self, dbm):
+        self.dbm = dbm
+        self.p_f = {}
+        self.p_m = {}
+        self.p_s = {}
+
+    def analyse_Dataset(self, dataset):
+        self.compute_accuracy(dataset)
+
+    def getResult(self):
+        # return portal accuracy
+        return {
+            'format': _compute_dict_accuracy(self.p_f),
+            'mime_type': _compute_dict_accuracy(self.p_m),
+            'size': _compute_dict_accuracy(self.p_s),
+        }
+
+    def compute_accuracy(self, dataset):
         f = {}
         m = {}
-        l = {}
-        e = {}
         s = {}
-        max_time_span = datetime.timedelta()
-        # ########
-        log_time_resource_start = datetime.datetime.now()
+        resources = []
+        if dataset.data:
+            data =dataset.data
+            for res in data.get('resources', []):
+                resource = self.dbm.getResource(Resource(res['url'], dataset.snapshot))
+                if resource:
+                    resources.append(resource)
 
-        resources = dbm.getResourcesByPackageBeforeDateTimeDescending(portal, package, dt)
-        for r_obj in resources:
-            log_time_resource += datetime.datetime.now() - log_time_resource_start
-            resource = Resource(dict_string=r_obj)
-            # use newest resources (resources order descending by datetime)
-            if resource.url not in urls:
-                urls.append(resource.url)
-                if package.content and type(package.content) is dict:
+            for resource in resources:
                     # calculate resource accuracy
-                    package_resources = [r for r in package.content['resources'] if r['url'] == resource.url]
+                    package_resources = data.get('resources', [])
                     if len(package_resources) > 0:
                         try:
                             f[resource.url] = format(package_resources, resource)
                         except Exception as ex:
-                            logger.error("(%s) during url %s: %s", portal.url, resource.url, ex.message)
+                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
                         try:
                             m[resource.url] = mime_type(package_resources, resource)
                         except Exception as ex:
-                            logger.error("(%s) during url %s: %s", portal.url, resource.url, ex.message)
-                        try:
-                            l[resource.url] = language(package_resources, resource)
-                        except Exception as ex:
-                            logger.error("(%s) during url %s: %s", portal.url, resource.url, ex.message)
-                        try:
-                            e[resource.url] = encoding(package_resources, resource)
-                        except Exception as ex:
-                            logger.error("(%s) during url %s: %s", portal.url, resource.url, ex.message)
+                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
                         try:
                             s[resource.url] = size(package_resources, resource)
                         except Exception as ex:
-                            logger.error("(%s) during url %s: %s", portal.url, resource.url, ex.message)
+                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
 
-                        # calculate timespan of used resources
-                        max_time_span = max(max_time_span, dt - resource.time)
 
-                        # store accuracy per resource
-                        resource.add_accuracy({
-                            'format': f.get(resource.url, None),
-                            'mime_type': m.get(resource.url, None),
-                            'language': l.get(resource.url, None),
-                            'encoding': e.get(resource.url, None),
-                            'size': s.get(resource.url, None),
-                            'time_span': (dt - resource.time).total_seconds()
-                        })
-                        dbm.storeResource(resource)
+                            # store accuracy per resource
+                            #resource.add_accuracy({
+                            #    'format': f.get(resource.url, None),
+                            #    'mime_type': m.get(resource.url, None),
+                            #    'language': l.get(resource.url, None),
+                            #    'encoding': e.get(resource.url, None),
+                            #    'size': s.get(resource.url, None),
+                            #    'time_span': (dt - resource.time).total_seconds()
+                            #})
+                            #dbm.storeResource(resource)
 
-            # ######
-            log_time_resource_start = datetime.datetime.now()
-
-        log_time_resource += datetime.datetime.now() - log_time_resource_start
 
         # calcluate package accuracy
-        p_f[package.id] = _compute_dict_accuracy(f)
-        p_m[package.id] = _compute_dict_accuracy(m)
-        p_l[package.id] = _compute_dict_accuracy(l)
-        p_e[package.id] = _compute_dict_accuracy(e)
-        p_s[package.id] = _compute_dict_accuracy(s)
-        p_time_span = max(p_time_span, max_time_span)
+        self.p_f[dataset.id] = _compute_dict_accuracy(f)
+        self.p_m[dataset.id] = _compute_dict_accuracy(m)
+        self.p_s[dataset.id] = _compute_dict_accuracy(s)
 
-        # store package accuracy in dataset_metrics
-        metrics = dbm.getSingleDatasetMetrics(portal, package, snapshot)
-        if metrics is not None:
-            metrics.add_accuracy({
-                'format': p_f[package.id],
-                'mime_type': p_m[package.id],
-                'language': p_l[package.id],
-                'encoding': p_e[package.id],
-                'size': p_s[package.id],
-                'time_span': max_time_span.total_seconds()
-            })
-            dbm.storeDatasetMetrics(metrics)
-
-    # calculate portal accuracy
-    accuracy = {
-        'format': _compute_dict_accuracy(p_f),
-        'mime_type': _compute_dict_accuracy(p_m),
-        'language': _compute_dict_accuracy(p_l),
-        'encoding': _compute_dict_accuracy(p_e),
-        'size': _compute_dict_accuracy(p_s),
-        'time_span': p_time_span.total_seconds()
-    }
-    log_time_end = datetime.datetime.now()
-
-    print 'total_acc: ' + str(log_time_end - log_time_start)
-    print 'resource: ' + str(log_time_resource)
-
-    return accuracy
+        #metrics.add_accuracy({
+        #    'format': p_f[package.id],
+        #    'mime_type': p_m[package.id],
+        #    'language': p_l[package.id],
+        #    'encoding': p_e[package.id],
+        #    'size': p_s[package.id],
+        #    'time_span': max_time_span.total_seconds()
+        #})
 
 
-def quality(portal, dbm, start, end):
-    global logger
-    logger = logging.getLogger(__name__)
-    logger.info("(%s) Getting meta data statistics for the packages", portal.url)
-    for snapshot in portal.snapshots:
-        if (start < 0 or snapshot >= start) and (end < 0 or snapshot <= end):
-            logger.info("Accuracy calculation for snapshot %s", snapshot)
-            # get the portal meta data
-            PMD = dbm.getPortalMetaData(portal.url, snapshot)
+if __name__ == '__main__':
 
-            accuracy = compute_accuracy(dbm, portal, snapshot)
+    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    sn = 1533
+    id = 'data_wu_ac_at'
 
-            PMD.update_accuracy(accuracy)
-            dbm.storePortalMetaData(PMD)
+    portals = dbm.getPortals(software='CKAN')
+    path = 'tmp/accuracy/accr.pkl'
+    with open(path, 'r') as f:
+        accr_dict = pickle.load(f)
 
-            logger.info("(%s) computed accuracy for snapshot %s", portal.url, snapshot)
+    for i, p in enumerate(Portal.iter(portals)):
+        if p.id not in accr_dict:
+            accuracy = {}
+            ds_analyser = AnalyserSet()
+            a = ds_analyser.add(AccuracyAnalyser(dbm))
+
+            ds = dbm.getDatasets(portalID=p.id, snapshot=sn)
+            ds_iter = Dataset.iter(ds)
+            process_all(ds_analyser, ds_iter)
+
+            print i, 'accuracy calculated: ', p.id
+            accuracy[p.id] = a.getResult()
+
+            with open('tmp/accuracy/' + p.id + '.pkl', 'wb') as f:
+                pickle.dump(accuracy, f)
