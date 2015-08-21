@@ -4,6 +4,7 @@ Created on Jul 30, 2015
 @author: jumbrich
 '''
 from collections import defaultdict
+import itertools
 import numpy as np
 from odpw.analysers import Analyser
 from odpw.analysers.core import HistogramAnalyser
@@ -195,3 +196,58 @@ class AccuracyHistogram(MultiHistogramAnalyser):
                 self.data['qas'].append(quality['size']['header']['score'])
                 self.counts['qas'].append(quality['size']['header']['count'])
 
+
+class FormatHistogram(MultiHistogramAnalyser):
+    def __init__(self, formats, **nphistparams):
+        super(FormatHistogram, self).__init__(**nphistparams)
+        self.formats = formats
+
+    def analyse_PortalMetaData(self, pmd):
+
+        if pmd.resources and pmd.general_stats and 'formats' in pmd.general_stats:
+            pmd_formats = pmd.general_stats['formats']
+
+            for f in self.formats:
+                format = f.upper()
+                f_list = defaultdict(int)
+                for x in pmd_formats:
+                    f_list[x.upper()] += pmd_formats[x]
+                if format in f_list:
+                    self.data[format].append(f_list[format]/float(pmd.resources))
+                else:
+                    self.data[format].append(0)
+
+
+class FormatDistribution(MultiHistogramAnalyser):
+    def __init__(self, formats, bins=None):
+        super(FormatDistribution, self).__init__()
+        self.formats = formats
+        self.bins = bins
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.resources and pmd.general_stats and 'formats' in pmd.general_stats:
+            pmd_formats = pmd.general_stats['formats']
+
+            for f in self.formats:
+                format = f.upper()
+                f_list = defaultdict(int)
+                for x in pmd_formats:
+                    f_list[x.upper()] += pmd_formats[x]
+                if format in f_list:
+                    self.data[format].append((pmd.datasets, f_list[format]))
+
+    def getResult(self):
+        result = {}
+        for d in self.data:
+            ds_list = [item[0] for item in self.data[d]]
+            max_value = float(max(ds_list))
+            if self.bins is None:
+                self.bins = np.arange(0, 1.1, 0.1)
+            full_ds = []
+            for ds, res in self.data[d]:
+                for _ in xrange(res):
+                    full_ds.append(ds/max_value)
+
+            hist, bin_edges = np.histogram(np.array(full_ds), self.bins)
+            result[d] = {'hist': hist, 'bin_edges': bin_edges}
+        return result

@@ -12,7 +12,7 @@ from odpw.analysers.count_analysers import DatasetCount, ResourceCount, CKANForm
     CKANLicenseIDCount
 from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
-    ContactabilityHistogram, OpennessHistogram, UsageHistogram, AccuracyHistogram
+    ContactabilityHistogram, OpennessHistogram, UsageHistogram, AccuracyHistogram, FormatHistogram, FormatDistribution
 from odpw.analysers.resource_analysers import ResourceOverlapAnalyser, ResourceOccurrenceCountAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCount, ResourceStatusCode
 from odpw.db.dbm import PostgressDBM
@@ -70,7 +70,7 @@ class MultiScatterReporter(Reporter, PlotReporter):
         plotting.scatterplotComb(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, colors=self.colors)
 
 class MultiHistogramReporter(Reporter, PlotReporter):
-    def __init__(self, data, labels, xlabel, ylabel, filename, bins=None, colors=None):
+    def __init__(self, data, labels, xlabel, ylabel, filename, bins=None, colors=None, legend='upper right'):
         super(MultiHistogramReporter, self).__init__()
         self.data = data
         self.labels = labels
@@ -79,9 +79,23 @@ class MultiHistogramReporter(Reporter, PlotReporter):
         self.filename = filename
         self.bins = bins
         self.colors = colors
+        self.legend = legend
 
     def plotreport(self, dir):
-        plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, colors=self.colors)
+        plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, colors=self.colors, legend=self.legend)
+
+class HistogramReporter(Reporter, PlotReporter):
+    def __init__(self, data, xlabel, ylabel, filename, bins=None, color=None):
+        super(HistogramReporter, self).__init__()
+        self.data = data
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.filename = filename
+        self.bins = bins
+        self.color = color
+
+    def plotreport(self, dir):
+        plotting.histplot(self.data, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, color=self.color)
 
 
 def overlap_report(dbm, sn, portal_filter=None):
@@ -381,12 +395,39 @@ def intersec_report(dbm, sn, p_id):
     pprint.pprint(ogd.getResult())
 
 
+def format_dist_report(dbm, sn):
+
+    analyser = AnalyserSet()
+
+    pmd = dbm.getPortalMetaDatas(snapshot=sn)
+
+    formats = ['CSV', 'PDF', 'HTML']
+    form_hist = analyser.add(FormatHistogram(formats))
+
+    #bins = np.linspace(0, 1000000, 10)
+    form_dist = analyser.add(FormatDistribution(formats))
+
+    process_all(analyser, PortalMetaData.iter(pmd))
+
+
+    col = ['black', 'red', 'blue', 'green', 'yellow']
+    labels = {f: f for f in formats}
+    res = form_hist.getResult()
+    data = OrderedDict([(f, res[f]) for f in formats])
+    rep = MultiHistogramReporter(data, labels=labels, xlabel="Ratio of specified format", ylabel="Portals", filename='formats_hist.pdf', colors=col)
+
+    res2 = form_dist.getResult()
+    data2 = OrderedDict([(f, res2[f]) for f in formats])
+    dist_rep = MultiHistogramReporter(data2, bins=data2['CSV']['bin_edges'], legend='upper left', labels=labels, xlabel="Number of Datasets on Portal", ylabel="Resources", filename='formats_dist.pdf', colors=col)
+
+    re = Report([rep, dist_rep])
+    return re
+
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
 
-    intersec_report(dbm, sn, 'data_gv_at')
-    #report = accuracy_report(dbm)
+    report = format_dist_report(dbm, sn)
 
-    #report.plotreport('tmp/quality')
+    report.plotreport('tmp/formats')

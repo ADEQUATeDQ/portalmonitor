@@ -41,7 +41,7 @@ def to_percent(y, position):
     else:
         return s + '%'
 
-def histplotComp(data, labels, xlabel, ylabel, dir, filename, bins=None, colors=None):
+def histplotComp(data, labels, xlabel, ylabel, dir, filename, bins=None, colors=None, legend='upper right'):
     if bins is None:
         bins = np.linspace(0,1,11)
 
@@ -100,7 +100,7 @@ def histplotComp(data, labels, xlabel, ylabel, dir, filename, bins=None, colors=
             col = colors[i]
         bars = plt.bar( bins[:-1]+(width/2)+(width*i),hist.astype(np.float32)/hist.sum(), width = width, color=col, label=labels[d])
     plt.ylim([0,m+0.05])
-    plt.legend(loc='upper right')
+    plt.legend(loc=legend)
 
     createDir(dir)
 
@@ -156,5 +156,59 @@ def scatterplotComb(data, labels, xlabel, ylabel, dir, filename, colors=None):
                ncol=4,
                fontsize=10)
 
+    print "Saving figure to ", os.path.join(dir, filename)
+    plt.savefig(os.path.join(dir, filename), bbox_inches="tight")
+
+
+def histplot(hist, xlabel, ylabel, dir, filename, bins=np.linspace(0,1,11), color=None):
+    # You typically want your plot to be ~1.33x wider than tall.
+    # Common sizes: (10, 7.5) and (12, 9)
+    plt.figure(figsize=(8, 6))
+
+    # Remove the plot frame lines. They are unnecessary chartjunk.
+    ax = plt.subplot(111)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+
+    plt.ylim([0,1.05])
+    plt.xticks(fontsize=14)
+    ax.set_xticks(bins)
+
+    #Labels
+    plt.xlabel(xlabel, fontsize=16)
+    plt.ylabel(ylabel, fontsize=16)
+
+    #plt.title(title)
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
+    width = 1 * (bins[1] - bins[0])
+    center = (bins[:-1] + bins[1:]) / 2
+    formatter = FuncFormatter(to_percent)
+
+    # Set the formatter
+    plt.gca().yaxis.set_major_formatter(formatter)
+
+    # plt.bar(center, hist, align='center', width=width)
+    # plt.hist(data, bins= bins, normed=1, cumulative=0)
+    bars = plt.bar(bins[:-1],hist.astype(np.float32)/hist.sum(), width=width, color=color)
+
+    def autolabel(rects):
+        # attach some text labels
+        for rect in rects:
+            height = rect.get_height()
+            #print format_percent(height)
+            ax.text(rect.get_x()+rect.get_width()/2., 1.02*height, format_percent(height),
+                ha='center', va='bottom')
+
+    autolabel(bars)
+
+    createDir(dir)
     print "Saving figure to ", os.path.join(dir, filename)
     plt.savefig(os.path.join(dir, filename), bbox_inches="tight")
