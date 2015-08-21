@@ -198,7 +198,7 @@ class AccuracyAnalyser(Analyser):
             data = dataset.data
             for res in data.get('resources', []):
                 url = res['url']
-                resource = res_dict.get(url, None)
+                resource = self.res_dict.get(url, None)
                 if resource:
                     resource['url'] = url
                     resources.append(resource)
@@ -252,25 +252,6 @@ class AccuracyAnalyser(Analyser):
 
 
 if __name__ == '__main__':
-    ###################### www_data_gc_ca #############################
-    path = 'tmp/accuracy/all_res.pkl'
-    with open(path, 'r') as f:
-        res_dict = pickle.load(f)
-
-    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1533
-    id = 'www_data_gc_ca'
-    accuracy = {}
-    ds_analyser = AnalyserSet()
-    a = ds_analyser.add(AccuracyAnalyser(res_dict))
-
-    process_all(ds_analyser, Dataset.iter(dbm.getDatasetsAsStream(portalID=id, snapshot=sn)))
-
-    print 'accuracy calculated'
-    with open('tmp/accuracy/' + id + '.pkl', 'wb') as f:
-        pickle.dump(accuracy, f)
-    exit()
-    ##########################################################
 
     path = 'tmp/accuracy/all_res.pkl'
     with open(path, 'r') as f:
@@ -287,18 +268,18 @@ if __name__ == '__main__':
 
     for i, p in enumerate(Portal.iter(portals)):
         pkl_path = path + p.id + '.pkl'
-        if os.path.exists(pkl_path):
+        if os.path.isfile(pkl_path):
             with open(pkl_path, 'r') as f:
                 pkl_file = pickle.load(f)
                 for k in pkl_file:
-                    accr_dict[k] = True
+                    accr_dict[k] = pkl_file[k]
 
         if p.id not in accr_dict:
             accuracy = {}
             ds_analyser = AnalyserSet()
             a = ds_analyser.add(AccuracyAnalyser(res_dict))
 
-            ds = dbm.getDatasets(portalID=p.id, snapshot=sn)
+            ds = dbm.getDatasetsAsStream(portalID=p.id, snapshot=sn)
             ds_iter = Dataset.iter(ds)
             process_all(ds_analyser, ds_iter)
 

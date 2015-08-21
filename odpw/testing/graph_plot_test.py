@@ -26,4 +26,4 @@ if __name__ == '__main__':
 
     # draw graph
     df = pd.DataFrame.from_csv(path='tmp/overlap/resourceoverlapreporter.csv')
-    graph_plot.draw_graph(df, node_labels=p_urls_dict)
+    graph_plot.draw_graph(df, node_labels=p_urls_dict, min_node_label=0, min_edge_label=0)

@@ -30,9 +30,9 @@ def normalized_dict(dict, x, y):
     return normalized
 
 
-def draw_graph(dataframe, min_ds=-1, node_labels=None, graph_layout='spring', font_color='blue',
+def draw_graph(dataframe, min_node_label=5000, node_labels=None, graph_layout='spring', font_color='blue',
                node_max_size=6000, node_min_size=50, node_color='grey', node_alpha=0.5,
-               node_text_size=12, edge_text_size=8,
+               node_text_size=12, edge_text_size=8, min_edge_label=100,
                edge_color='grey', edge_alpha=0.8, edge_tickness=10,
                edge_text_pos=0.3,
                text_font='sans-serif'):
@@ -50,18 +50,7 @@ def draw_graph(dataframe, min_ds=-1, node_labels=None, graph_layout='spring', fo
 
     # remove isolated ones
     G.remove_nodes_from(nx.isolates(G))
-    # remove nodes with degree 1
-    if min_ds > 0:
-        to_remove = []
-        for n in G.nodes():
-            rem = True
-            for u, v, d in G.edges(n, data=True):
-                if d['weight'] > min_ds:
-                    rem = False
-                    break
-            if rem:
-                to_remove.append(n)
-        G.remove_nodes_from(to_remove)
+
     # normalize node size in range
     nodes_res = []
     for n in G.nodes():
@@ -70,7 +59,7 @@ def draw_graph(dataframe, min_ds=-1, node_labels=None, graph_layout='spring', fo
     node_sizes = normalized(nodes_res, node_min_size, node_max_size)
 
     # remove labels for small ones
-    node_labels = {n: node_labels[n] if num_of_resources[n] > 5000 else '' for n in G.nodes()}
+    node_labels = {n: node_labels[n] if num_of_resources[n] > min_node_label else '' for n in G.nodes()}
 
     # these are different layouts for the network you may try
     # shell seems to work best
@@ -84,7 +73,7 @@ def draw_graph(dataframe, min_ds=-1, node_labels=None, graph_layout='spring', fo
         graph_pos=nx.shell_layout(G)
 
 
-    edge_labels = dict([((u, v,), int(d['weight']) if d['weight'] > 100 else '') for u, v, d in G.edges(data=True)])
+    edge_labels = dict([((u, v,), int(d['weight']) if d['weight'] > min_edge_label else '') for u, v, d in G.edges(data=True)])
     #edge_opac = edge_labels.copy()
     #edge_opac = normalized_dict(edge_opac, 0.2, 1)
 

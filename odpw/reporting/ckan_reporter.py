@@ -98,11 +98,15 @@ class HistogramReporter(Reporter, PlotReporter):
         plotting.histplot(self.data, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, color=self.color)
 
 
-def overlap_report(dbm, sn, portal_filter=None):
+def overlap_report(dbm, sn, portals=None, portal_filter=None):
     res_analyser = AnalyserSet()
     overlap = res_analyser.add(ResourceOverlapAnalyser(portal_filter))
     mult_occur = res_analyser.add(ResourceOccurrenceCountAnalyser())
-    process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn, portalID=portal_filter)))
+    if portals:
+        for p in portals:
+            process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn, portalID=p)))
+    else:
+        process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn)))
 
     occur_dict = mult_occur.getResult()
     print 'mult occurences:', sum(occur_dict[k] for k in occur_dict if k != 1)
@@ -427,7 +431,7 @@ def format_dist_report(dbm, sn):
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
-
-    report = overlap_report(dbm, sn)
+    aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
+    report = overlap_report(dbm, sn, portals=aut_portals)
 
     report.csvreport('tmp/overlap')

@@ -282,12 +282,14 @@ class PostgressDBM(object):
                 return Portal.fromResult(dict(res))
             return None
     
-    def getPortals(self, software=None):
+    def getPortals(self, software=None, iso3=None):
         with Timer(key="getPortals") as t:
             
             s = select([self.portals])
             if software:
                 s=s.where(self.portals.c.software == software)
+            if iso3:
+                s=s.where(self.portals.c.iso3 == iso3)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             
