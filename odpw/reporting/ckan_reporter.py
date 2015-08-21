@@ -428,6 +428,6 @@ if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
 
-    report = format_dist_report(dbm, sn)
+    report = overlap_report(dbm, sn)
 
-    report.plotreport('tmp/formats')
+    report.csvreport('tmp/overlap')

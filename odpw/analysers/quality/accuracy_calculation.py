@@ -1,4 +1,5 @@
 import mimetypes
+import os
 import pickle
 
 from odpw.analysers import Analyser, AnalyserSet, process_all
@@ -21,8 +22,8 @@ def format(resource_meta_datas, resource):
             meta = rmd['format'].lower()
 
             # check file extensions
-            if resource.url is not None:
-                file_extension = analyze_resource_format.get_file_extension(resource.url)
+            if resource['url'] is not None:
+                file_extension = analyze_resource_format.get_file_extension(resource['url'])
                 # assuming no file extension is longer than 10 characters
                 if 0 < len(file_extension) < 10:
                     ext = file_extension[1:].lower()
@@ -32,8 +33,8 @@ def format(resource_meta_datas, resource):
                         score_extension += 1
 
             # check mime type
-            if resource.mime:
-                cont_type = resource.mime
+            if resource['mime']:
+                cont_type = resource['mime']
 
                 header_mime_type = cont_type.split(';')[0]
                 guessed_extensions = mimetypes.guess_all_extensions(header_mime_type)
@@ -61,8 +62,8 @@ def mime_type(resource_meta_datas, resource):
     result = {'content': {'count': 0, 'score': None},
               'header': {'count': 0, 'score': None}}
 
-    if resource.mime:
-        cont_type = resource.mime
+    if resource['mime']:
+        cont_type = resource['mime']
     else:
         return result
 
@@ -87,16 +88,18 @@ def size(resource_meta_datas, resource):
     result = {'content': {'count': 0, 'score': None},
               'header': {'count': 0, 'score': None}}
 
-    if resource.size:
-        header_field = resource.size
+    if resource['size']:
+        header_field = resource['size']
     else:
         return result
 
     try:
         cont_length = float(header_field)
+        if cont_length <= 0:
+            return result
     except Exception:
         log.warn("(%s) Cannot read content length in header of resource: %s",
-                     resource.url, header_field)
+                     resource['url'], header_field)
         return result
 
     score = 0.0
@@ -168,11 +171,12 @@ def _compute_dict_accuracy(acc_dict):
 
 
 class AccuracyAnalyser(Analyser):
-    def __init__(self, dbm):
-        self.dbm = dbm
+    def __init__(self, res_dict):
+        self.res_dict = res_dict
         self.p_f = {}
         self.p_m = {}
         self.p_s = {}
+        self.count = 0
 
     def analyse_Dataset(self, dataset):
         self.compute_accuracy(dataset)
@@ -191,40 +195,41 @@ class AccuracyAnalyser(Analyser):
         s = {}
         resources = []
         if dataset.data:
-            data =dataset.data
+            data = dataset.data
             for res in data.get('resources', []):
-                resource = self.dbm.getResource(Resource(res['url'], dataset.snapshot))
+                url = res['url']
+                resource = res_dict.get(url, None)
                 if resource:
+                    resource['url'] = url
                     resources.append(resource)
 
             for resource in resources:
-                    # calculate resource accuracy
-                    package_resources = data.get('resources', [])
-                    if len(package_resources) > 0:
-                        try:
-                            f[resource.url] = format(package_resources, resource)
-                        except Exception as ex:
-                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
-                        try:
-                            m[resource.url] = mime_type(package_resources, resource)
-                        except Exception as ex:
-                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
-                        try:
-                            s[resource.url] = size(package_resources, resource)
-                        except Exception as ex:
-                            log.warn("(%s) during url %s: %s", dataset.portal_id, resource.url, ex.message)
+                # calculate resource accuracy
+                package_resources = data.get('resources', [])
+                if len(package_resources) > 0:
+                    try:
+                        f[resource['url']] = format(package_resources, resource)
+                    except Exception as ex:
+                        log.warn("(%s) during url %s: %s", dataset.portal_id, resource['url'], ex.message)
+                    try:
+                        m[resource['url']] = mime_type(package_resources, resource)
+                    except Exception as ex:
+                        log.warn("(%s) during url %s: %s", dataset.portal_id, resource['url'], ex.message)
+                    try:
+                        s[resource['url']] = size(package_resources, resource)
+                    except Exception as ex:
+                        log.warn("(%s) during url %s: %s", dataset.portal_id, resource['url'], ex.message)
 
-
-                            # store accuracy per resource
-                            #resource.add_accuracy({
-                            #    'format': f.get(resource.url, None),
-                            #    'mime_type': m.get(resource.url, None),
-                            #    'language': l.get(resource.url, None),
-                            #    'encoding': e.get(resource.url, None),
-                            #    'size': s.get(resource.url, None),
-                            #    'time_span': (dt - resource.time).total_seconds()
-                            #})
-                            #dbm.storeResource(resource)
+                    # store accuracy per resource
+                    #resource.add_accuracy({
+                    #    'format': f.get(resource.url, None),
+                    #    'mime_type': m.get(resource.url, None),
+                    #    'language': l.get(resource.url, None),
+                    #    'encoding': e.get(resource.url, None),
+                    #    'size': s.get(resource.url, None),
+                    #    'time_span': (dt - resource.time).total_seconds()
+                    #})
+                    #dbm.storeResource(resource)
 
 
         # calcluate package accuracy
@@ -241,23 +246,57 @@ class AccuracyAnalyser(Analyser):
         #    'time_span': max_time_span.total_seconds()
         #})
 
+        self.count += 1
+        if self.count % 10000 == 0:
+            print 'processed:', self.count
+
 
 if __name__ == '__main__':
+    ###################### www_data_gc_ca #############################
+    path = 'tmp/accuracy/all_res.pkl'
+    with open(path, 'r') as f:
+        res_dict = pickle.load(f)
+
+    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    sn = 1533
+    id = 'www_data_gc_ca'
+    accuracy = {}
+    ds_analyser = AnalyserSet()
+    a = ds_analyser.add(AccuracyAnalyser(res_dict))
+
+    process_all(ds_analyser, Dataset.iter(dbm.getDatasetsAsStream(portalID=id, snapshot=sn)))
+
+    print 'accuracy calculated'
+    with open('tmp/accuracy/' + id + '.pkl', 'wb') as f:
+        pickle.dump(accuracy, f)
+    exit()
+    ##########################################################
+
+    path = 'tmp/accuracy/all_res.pkl'
+    with open(path, 'r') as f:
+        res_dict = pickle.load(f)
 
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
     id = 'data_wu_ac_at'
 
     portals = dbm.getPortals(software='CKAN')
-    path = 'tmp/accuracy/accr.pkl'
-    with open(path, 'r') as f:
+    path = 'tmp/accuracy/'
+    with open(path + 'accr.pkl', 'r') as f:
         accr_dict = pickle.load(f)
 
     for i, p in enumerate(Portal.iter(portals)):
+        pkl_path = path + p.id + '.pkl'
+        if os.path.exists(pkl_path):
+            with open(pkl_path, 'r') as f:
+                pkl_file = pickle.load(f)
+                for k in pkl_file:
+                    accr_dict[k] = True
+
         if p.id not in accr_dict:
             accuracy = {}
             ds_analyser = AnalyserSet()
-            a = ds_analyser.add(AccuracyAnalyser(dbm))
+            a = ds_analyser.add(AccuracyAnalyser(res_dict))
 
             ds = dbm.getDatasets(portalID=p.id, snapshot=sn)
             ds_iter = Dataset.iter(ds)

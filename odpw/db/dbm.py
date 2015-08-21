@@ -610,7 +610,36 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)    
             
             return s.execute()
-  
+
+
+    def getDatasetsAsStream(self,portalID=None, snapshot=None, software=None, status=None, page=1000):
+
+       start=0
+       limit=page
+       while True:
+            s = select([self.datasets])
+
+            if snapshot:
+                s= s.where(self.datasets.c.snapshot == snapshot)
+            if portalID:
+                s= s.where(self.datasets.c.portal_id == portalID)
+            if software:
+                s= s.where(self.datasets.c.software == software)
+            if status:
+                s= s.where(self.datasets.c.status == status)
+            s=s.limit(limit).offset(start)
+
+            self.log.debug(query=s.compile(), params=s.compile().params)
+
+            c =0
+            for res in s.execute():
+                c+=1
+                yield res
+            if c==0:
+                break
+
+            start+=limit
+
     def countDatasets(self, portalID=None, snapshot=None, software=None):
         with Timer(key="countDatasets") as t:
             s = select([func.count(self.datasets.c.id)])
@@ -744,6 +773,18 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
             #return self.conn.execute(s)
+
+    def getResourcesMimeSize(self, snapshot=None, portalID=None, status =None):
+        with Timer(key="getResourcesMimeSize") as t:
+            s = select([self.resources.c.url, self.resources.c.mime, self.resources.c.size])
+            if snapshot:
+                s =s.where(self.resources.c.snapshot== snapshot)
+            if portalID:
+                s= s.where(self.resources.c.origin[portalID]!=None)
+            if status:
+                s= s.where(self.resources.c.status==status)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
         
     def getProcessedResources(self, snapshot=None, portalID=None):
         with Timer(key="getProcessedResources") as t:
