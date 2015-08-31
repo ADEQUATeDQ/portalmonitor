@@ -29,7 +29,7 @@ class Retrievability(HistogramAnalyser):
                     'total': { 'qrd': available/t if t>0 else 0, 'total':t, '2xx':available },
                     'avgP': { 
                              'qrd': q, 'total':len(self.list),
-                             'hist':sures['hist'],'bin_edges':sures['bin_edges']
+                             'hist':sures['hist'].tolist(),'bin_edges':sures['bin_edges'].tolist()
                              }
                     }
                 }

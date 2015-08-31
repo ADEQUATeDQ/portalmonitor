@@ -37,12 +37,12 @@
             <div id="selectPortal" class="dropd">
                 <div class="units-row end">
                     <div class="unit-100">
-                        <span>{{ portalID }}</span>
+                        <span id="curPortalID">{{ portalID }}</span>
                     </div>
                 </div>
                 <div class="units-row units-split dd">
                     <div class="input-groups filter">
-                        <span class="label label-white btn-append">filter:</span>
+                        <span class=" filter btn-append">filter:</span>
                         <input class="search">
                     </div>
                     <ul class="select"> </ul>
@@ -53,12 +53,12 @@
             <div id="selectSN" class="dropd">
                 <div class="units-row end">
                     <div class="unit-100">
-                        <span>{{ snapshot }}</span>
+                        <span id="curSnapshot">{{ snapshot }}</span>
                     </div>
                 </div>
                 <div class="units-row units-split dd">
                     <div class="input-groups filter">
-                        <span class="label label-white btn-append">filter:</span>
+                        <span class="filter btn-append">filter:</span>
                         <input class="search">
                     </div>
                     <ul  class="select">    </ul>
@@ -82,7 +82,7 @@
                         </div>
                         <div class="units-row units-split dd">
                             <div class="input-groups filter">
-                                <span class="label label-white btn-append">filter:</span>
+                                <span class="filter btn-append">filter:</span>
                                 <input class="search">
                             </div>
                             <ul class="select"> </ul>
@@ -98,7 +98,7 @@
                         </div>
                         <div class="units-row units-split dd">
                             <div class="input-groups filter">
-                                <span class="label label-white btn-append">filter:</span>
+                                <span class="filter btn-append">filter:</span>
                                 <input class="search">
                             </div>
                             <ul  class="select">    </ul>
@@ -133,7 +133,7 @@
                         </div>
                         <div class="units-row units-split dd">
                             <div class="input-groups filter">
-                                <span class="label label-white btn-append">filter:</span>
+                                <span class="filter btn-append">filter:</span>
                                 <input class="search">
                             </div>
                             <ul  class="select">    </ul>
@@ -328,9 +328,9 @@
     var software=[];
 
     for (var item in portals){
-        s = '<span class="pid label">'+item+'</span>'
-        s = s+'<span class="label iso3 right"><i class="fa fa-globe fa-fw"></i>'+portals[item].iso3+'</span>'
-        s = s+'<span class="label software right"><i class="fa fa-cog fa-fw"></i>'+portals[item].software+'</span>'
+        s = '<span class="pid ">'+item+'</span>'
+        s = s+'<span class=" iso3 right"><i class="fa fa-globe fa-fw"></i>'+portals[item].iso3+'</span>'
+        s = s+'<span class=" software right"><i class="fa fa-cog fa-fw"></i>'+portals[item].software+'</span>'
 
         if ($.inArray(portals[item].iso3, iso3) ==-1){
             iso3.push(portals[item].iso3)

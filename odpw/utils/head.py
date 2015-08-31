@@ -2,6 +2,7 @@ from multiprocessing.process import Process
 import multiprocessing
 import time
 import sys
+from odpw.utils.head_stats import headStats
 __author__ = 'jumbrich'
 
 from odpw.db.models import Portal, Dataset, PortalMetaData, Resource
@@ -129,55 +130,32 @@ def setupCLI(pa):
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
 
 def cli(args,dbm):
-
+    dbm.engine.dispose()
     sn = getSnapshot(args)
     if not sn:
         return
 
-    resources=[]
-    #total = dbm.getResourceWithoutHeadCount(snapshot=sn)
-    for res in dbm.getResourceWithoutHead(snapshot=sn):
-        try:
-            url=urlnorm.norm(res['url'])
-            R = Resource.fromResult(dict(res))
-            resources.append(R)    
-        except Exception as e:
-            log.debug('Drop head lookup', exctype=type(e), excmsg=e.message, url=url, snapshot=sn)
-
+    resources= getResources(dbm, sn)
     
-    pool = ThreadPool(processes=args.processors,) 
-    mgr = multiprocessing.Manager()
-    seen = mgr.dict()
+    while len(resources) >0:
+        
+        pool = ThreadPool(processes=args.processors,) 
+        mgr = multiprocessing.Manager()
+        seen = mgr.dict()
     
-    for pmd in PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn)):
-        seen[pmd.portal_id]= {'resources':pmd.resources, 'processed':0}
+        for pmd in PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn)):
+            seen[pmd.portal_id]= {'resources':pmd.resources, 'processed':0}
     
-    log.info("Starting head lookups", count=len(resources), cores=args.processors)
+        log.info("Starting head lookups", count=len(resources), cores=args.processors)
     
-    head_star = partial(head, dbm, sn, seen)
+        head_star = partial(head, dbm, sn, seen)
     
-    start = time.time()
-    results = pool.imap_unordered(head_star, resources)
-    pool.close()
+        results = pool.imap_unordered(head_star, resources)
+        pool.close()
     
-    c=0
-    total=len(resources)
-    steps= total/100 if total/100 !=0 else 1
+        pool.join()
+        for portalID,v in seen.items():
+            if v['processed']>0:
+                headStats(dbm, sn, portalID)
     
-    for res in results:
-        c+=1
-        if c%steps==0:
-            elapsed = (time.time() - start)
-            progressIndicator(c, total, elapsed=elapsed, label="Resources Progress")
-   
-    progressIndicator(c, total, elapsed=elapsed, label="Resources Progress")
-    pool.join()
-    
-    for p in seen.keys():
-        print p, seen[p]
-        ## get the pmd for this job
-        #pmd = dbm.getPortalMetaData(portalID=p, snapshot=sn)
-        #if not pmd:
-        #    break
-        #pmd.headend()
-        #dbm.updatePortalMetaData(pmd)
+        resources= getResources(dbm, sn)

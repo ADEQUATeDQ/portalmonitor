@@ -30,11 +30,13 @@ class ResourceStatusCode(ElementCountAnalyser):
         self.add(res.status)
 
     def analyse_PortalMetaData(self, pmd):
+        resp_codes= {}
         if pmd.res_stats and 'respCodes' in pmd.res_stats:
             resp_codes = pmd.res_stats['respCodes']
             for code in resp_codes:
                 self.add(code, resp_codes[code])
-        return resp_codes if resp_codes else {}
+                
+        return resp_codes
     
     def update_PortalMetaData(self, pmd):
         if not pmd.res_stats:

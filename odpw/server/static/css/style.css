@@ -135,7 +135,7 @@ aside{
     float:left;}
 
 #nav-side ul {
-    margin-top:20px;
+    margin-top:51px;
 }
 
 #nav-side li {
@@ -211,34 +211,7 @@ table#softdist tbody tr:hover{
     background-color: black;
 }
 
-#portalinfo{
-    /*border-top: 5px solid rgba(0,0,0,0.3);
-    border-bottom: 5px solid rgba(0,0,0,0.3); */
-    /*background: rgba(0,0,0,0.4);*/
-    border-radius: 5px 5px 0px 0px;
-}
 
-#portalinfo #portal{
-    -webkit-font-smoothing: antialiased;
-    line-height: 30px;
-    font-size: 30px;
-    padding:0px;
-    text-decoration: none;
-    text-shadow: 0px 1px 1px #000;
-    font-family: 'Source Code Pro';
-    text-transform:capitalize;
-    font-variant:small-caps;
-
-
-    -moz-border-radius: 0px;
-    -webkit-border-radius: 5px 5px 0px 0px;
-
-    letter-spacing: .1em;
-    color:  rgba(0,0,0,0.7);
-}
-#portalinfo .dropd{
-    padding-left: 30px;
-}
 
 h2{
     -webkit-font-smoothing: antialiased;
@@ -246,7 +219,7 @@ h2{
     margin-right: 20px;
     margin-top:10px;
     line-height: 40px;
-    font-size: 30px;
+    font-size: 25px;
     text-decoration: none;
     text-shadow: 0px 1px 1px #000;
     font-family: 'Source Code Pro';
@@ -254,8 +227,8 @@ h2{
     font-variant:small-caps;
     font-weight: normal;
     padding-left: 10px;
-
 }
+
 
 ul#portalList {
     list-style: none;
@@ -424,6 +397,41 @@ table tbody tr:last-child td {
 }
 
 
+#portalinfo{
+    /*border-top: 5px solid rgba(0,0,0,0.3);
+    border-bottom: 5px solid rgba(0,0,0,0.3); */
+    background: rgba(0,0,0,0.1);
+    border-radius: 5px 5px 0px 0px;
+    height:50px;
+    border-bottom: solid 1.5px rgba(0,0,0,0.2);
+}
+
+#portalinfo .dropd{
+    padding-left:30px;
+}
+
+
+#portalinfo span#curPortalID,#portalinfo span#curSnapshot{
+
+     -webkit-font-smoothing: antialiased;
+    line-height: 50px;
+    font-size: 30px;
+    padding:0px;
+    text-decoration: none;
+    text-shadow: 0px 1px 1px #000;
+    font-family: 'Source Code Pro';
+    text-transform:capitalize;
+    font-variant:small-caps;
+
+
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 5px 5px 0px 0px;
+
+    letter-spacing: .1em;
+    color:  rgba(0,0,0,0.2);
+}
+
+
 .dropd {
     /* Size & position */
     position: relative;
@@ -431,7 +439,6 @@ table tbody tr:last-child td {
     margin: 0 auto;
     cursor: pointer;
     outline: none;
-    border-radius: 5px 5px 0px 0px;
 }
 
 
@@ -443,7 +450,7 @@ table tbody tr:last-child td {
     position: absolute;
     top: 13px;
     right: 15px;
-    margin-top: -3px;
+    margin-top:6px;
     border-width: 6px 6px 0 6px;
     border-style: solid;
     border-color: black transparent;
@@ -452,7 +459,8 @@ table tbody tr:last-child td {
 
 .dropd .dd {
     padding: 10px;
-    background: #cdcdcd;
+    background: rgba(0,0,0,0.1);
+    border-radius: 0px 0px 10px 10px;
 }
 .dropd .dd .filter{
     height: 30px;
@@ -487,7 +495,7 @@ table tbody tr:last-child td {
     overflow-y: scroll
 }
 
-ul.select li {
+ul.select li a{
     width:100%;
     display:block;
     text-decoration:none;

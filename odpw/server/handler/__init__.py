@@ -201,7 +201,6 @@ class DataHandler(RequestHandler):
         return self.application.db
     
     def get(self, source):
-        print source
         if source == 'datasets':
             d=['portalID','limit','snapshot','software','status','statuspre']
             props={}
@@ -211,6 +210,21 @@ class DataHandler(RequestHandler):
             res=[]
             print props
             for d in Dataset.iter(self.db.getDatasets(**props)):
+                res.append({'id':d.id,'status':d.status,'portalID':d.portal_id})
+            
+            
+            self.set_header('Content-Type', 'application/json')
+            self.write(json_encode(res))
+            
+        elif source == 'resources':
+            d=['portalID','limit','snapshot','software','status','statuspre']
+            props={}
+            for k in d:
+                props[k]=self.get_argument(k, None)
+            
+            res=[]
+            print props
+            for d in Dataset.iter(self.db.getResources(**props)):
                 res.append({'id':d.id,'status':d.status,'portalID':d.portal_id})
             
             

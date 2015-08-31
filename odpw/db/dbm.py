@@ -157,8 +157,8 @@ class PostgressDBM(object):
             
             self.datasets = Table('datasets',self.metadata,
                             Column('id', String,primary_key=True),
-                            Column('snapshot', SmallInteger,primary_key=True,index=True),
-                            Column('portal_id', String(70),primary_key=True,index=True),
+                            Column('snapshot', SmallInteger,primary_key=True),
+                            Column('portal_id', String(70),primary_key=True),
                             
                             Column('data', JSONB),
                             Column('status', SmallInteger),
@@ -176,14 +176,14 @@ class PostgressDBM(object):
                             )
             
             self.resources = Table('resources',self.metadata,
-                             Column('url', String,primary_key=True,index=True),
-                             Column('snapshot', SmallInteger,primary_key=True,index=True),
+                             Column('url', String,primary_key=True),
+                             Column('snapshot', SmallInteger,primary_key=True),
                              
                              Column('timestamp', TIMESTAMP),
-                             Column('status', SmallInteger,index=True),
+                             Column('status', SmallInteger),
                              Column('exception', String),
                              Column('header', JSONB),
-                             Column('mime', String,index=True),
+                             Column('mime', String),
                              Column('size', BigInteger),
                              Column('origin', JSONB)
                              )
@@ -773,7 +773,7 @@ class PostgressDBM(object):
                 s= s.where(self.resources.c.status==status)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().scalar()
-    def getResources(self, snapshot=None, portalID=None, status =None):
+    def getResources(self, snapshot=None, portalID=None, status =None,limit=None,statuspre=None):
         with Timer(key="getResources") as t:
             s = select([self.resources])
             if snapshot:
@@ -782,9 +782,15 @@ class PostgressDBM(object):
                 s= s.where(self.resources.c.origin[portalID]!=None)
             if status:
                 s= s.where(self.resources.c.status==status)
+            elif statuspre:
+                sp=int(statuspre[0])
+                s= s.where(self.resources.c.status >= sp*100)
+                s= s.where(self.resources.c.status <= (sp+1)*100)
+            if limit:
+                s=s.limit(limit)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
-            #return self.conn.execute(s)
+
 
     def getResourcesMimeSize(self, snapshot=None, portalID=None, status =None):
         with Timer(key="getResourcesMimeSize") as t:
@@ -850,6 +856,8 @@ class PostgressDBM(object):
             if res:
                 return Resource.fromResult( dict( res))
             return None
+        
+
         
     def updateResource(self, Resource):
         with Timer(key="updateResource") as t:

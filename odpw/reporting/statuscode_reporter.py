@@ -59,15 +59,9 @@ class StatusCodeReporter(Reporter,UIReporter, CLIReporter, CSVReporter):
         #d1=pd.concat([d,dfpref])
         #d.update(dfpref)
         
-        #print d1
-        print "D",d
-        dfpref.update(d)
         
         
-        
-        print dfpref
-        
-        return { self.name():DFtoListDict(addPercentageCol(self.getDataFrame())),
+        return { self.name():DFtoListDict(addPercentageCol(df)),
                 self.name()+"_chart":DFtoListDict(addPercentageCol(d))
                 }
         
