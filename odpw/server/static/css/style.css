@@ -53,9 +53,10 @@ header a {
 }
 
 
-.units-row{
+/*.units-row{
     border:solid 1px red;
 }
+*/
 
 .seperator div:not(:first-child){
     border-left: 1px solid rgb(180,180,180);
@@ -431,9 +432,8 @@ table tbody tr:last-child td {
     cursor: pointer;
     outline: none;
     border-radius: 5px 5px 0px 0px;
-
-
 }
+
 
 
 .dropd:after { /* Little arrow */
@@ -452,6 +452,7 @@ table tbody tr:last-child td {
 
 .dropd .dd {
     padding: 10px;
+    background: #cdcdcd;
 }
 .dropd .dd .filter{
     height: 30px;
@@ -486,17 +487,41 @@ table tbody tr:last-child td {
     overflow-y: scroll
 }
 
-.dropd .dd ul li a{
+ul.select li {
     width:100%;
     display:block;
     text-decoration:none;
     background: rgba(220,220,220,1);
-
+    height: 25px;
+    float:left;
     text-align: center;
     border-radius: 5px;
     margin-top:8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.19), 0 1px 1px rgba(0,0,0,0.23);
 }
+ul.select li label{
+    line-height:25px;
+}
+#selectAll{
+    bacground: #cdcdcd;
+}
+
+#selectAll ul li input{
+    float:left;
+    display: inline-block;
+    width:20%;
+    margin:0px;
+    margin-top:5px;
+    padding:0px;
+}
+#selectAll ul li label{
+    display:block;
+}
+#selectAll{
+    background:rgba(0,0,0,0.13); !important
+    border-radius: 5px; !important
+}
+
 #selectedPortals ul{
     max-height: 250px;
     overflow-y: scroll
@@ -516,6 +541,9 @@ table tbody tr:last-child td {
     border-left: solid 1px;
 
 }
+
+
+
 
 .quality_chart .quality{
     float:left;

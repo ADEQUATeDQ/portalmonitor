@@ -130,7 +130,7 @@ class PortalHandler(BaseHandler):
             a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
             rep = SnapshotsPerPortalReporter(a,None)
         
-            r = portalevolution(self.db, snapshot, portalID,portals)
+            r = portalevolution(self.db, snapshot, portalID)
             rep = Report([rep,r])
             self.render('portal_evolution.jinja', portal=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
         
