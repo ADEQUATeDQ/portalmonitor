@@ -1,6 +1,6 @@
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
-from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.analysers.dbm_handlers import DatasetInserter,\
     DCATDistributionInserter
 from odpw.analysers.core import DCATConverter
@@ -52,7 +52,7 @@ def fetching(obj):
         
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
-        ae.add(DatasetStatusCount())
+        ae.add(DatasetStatusCode())
 
         #ae.add(DCATConverter(Portal))
         #ae.add(DCATDistributionCount(withDistinct=True))

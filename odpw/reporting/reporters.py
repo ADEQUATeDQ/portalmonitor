@@ -170,7 +170,7 @@ class PortalListReporter(DBReporter,UIReporter,CLIReporter,CSVReporter):
         return {'portallist':DFtoListDict(self.getDataFrame())}
 
     
-class SoftWareDistReporter(DBReporter,UIReporter, CLIReporter,CSVReporter):
+class SoftWareDistReporter(DBReporter, UIReporter, CLIReporter,CSVReporter):
     def __init__(self, analyser):
         super(SoftWareDistReporter,self).__init__(analyser)
         
@@ -248,6 +248,7 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
         if  self.df is None:
             
             res = self.analyser.getResult()
+            print res
             self.df = pd.DataFrame(res['rows'])
             
             #self.df.columns = res['columns']
@@ -267,12 +268,12 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
             print "  portalID:",self.portalID
         print "--------------"
         print "Fetching"
-        for i in ['done', 'failed', 'running','missing']: 
-            print "  ",i,'-',summary['fetch_'+i]
+        #for i in ['done', 'failed', 'running','missing']: 
+        print "  fetch",summary['fetch']
             
         print "Resource Headers"
-        for i in ['done','missing']: 
-            print "  ",i,'-',summary['head_'+i]
+        #for i in ['done','missing']: 
+        print "  head",summary['head']
 
 class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
     def __init__(self, analyser, columns=None, topK=None):

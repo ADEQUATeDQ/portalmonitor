@@ -12,7 +12,7 @@ from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
     ContactabilityHistogram, OpennessHistogram, UsageHistogram
 from odpw.analysers.resource_analysers import ResourceOverlapAnalyser, ResourceOccurrenceCountAnalyser
-from odpw.analysers.statuscodes import DatasetStatusCount, ResourceStatusCode
+from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData, Resource
 from odpw.reporting import plotting
@@ -153,7 +153,7 @@ def retr_report(dbm, sn):
     # retrievability
     ds_count = pmd_analyser.add(DatasetCount())
     res_count = pmd_analyser.add(ResourceCount())
-    retr_distr = pmd_analyser.add(DatasetStatusCount())
+    retr_distr = pmd_analyser.add(DatasetStatusCode())
     res_retr_distr = pmd_analyser.add(ResourceStatusCode())
 
     pmds = dbm.getPortalMetaDatasBySoftware(software='CKAN', snapshot=sn)

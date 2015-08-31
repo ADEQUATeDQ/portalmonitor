@@ -1,39 +1,15 @@
-from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.fetching import CKANLicenseConformance
-from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser,\
-    PMDActivityAnalyser
+from odpw.reporting.quality_reports import portalquality
+__author__ = 'jumbrich'
 
-from odpw.db.models import PortalMetaData, Dataset, Portal
-from odpw.reporting.reporters import SystemActivityReporter, Report, SoftWareDistReporter,\
-    ISO3DistReporter, SnapshotsPerPortalReporter, TagReporter, LicensesReporter,\
-    OrganisationReporter, FormatCountReporter, DatasetSumReporter, ResourceSumReporter,\
-    ResourceCountReporter, ResourceSizeReporter, PortalListReporter,\
-    SystemEvolutionReport
-from odpw.analysers.core import DBAnalyser
-from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, PMDResourceStatsCount, DatasetCount
-from odpw.analysers.resource_analysers import ResourceSize
-from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
-    SystemSoftwareEvolution
-from odpw.reporting.evolution_reporter import EvolutionReporter,\
-    DatasetEvolutionReporter, ResourcesEvolutionReporter,\
-    SystemSoftwareEvolutionReporter
 import os
 from odpw.reporting.activity_reports import systemactivity
-from odpw.reporting.info_reports import systeminfo, portalinfo
+from odpw.reporting.info_reports import systeminfoall, portalinfo
 from odpw.reporting.evolution_reports import systemevolution, portalevolution
-
-
-__author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot
 
 import structlog
 log =structlog.get_logger()
-
-
-
-
 
 
 def name():
@@ -55,6 +31,7 @@ def setupCLI(pa):
     
     focus = pa.add_argument_group("Views")
     focus.add_argument("-p",  help='Portal id ', dest='portal')
+    
     focus.add_argument("-s",  help='Portal id ', dest='system', action='store_true')
     
     out = pa.add_argument_group("Output")
@@ -69,33 +46,35 @@ def cli(args,dbm):
         print "No output dir "
         return
     
-    
+    reports=[]
+    sn=None
     if args.info:
         if args.system:
-            report = systeminfo(dbm) 
-            output( report , args) 
-        
+            reports.append( systeminfoall(dbm) ) 
+            
         if args.portal:
-            sn = getSnapshot(args)
-            report = portalinfo(dbm,sn , args.portal)
-            output( report , args, snapshot=sn)
+            reports.append( portalinfo(dbm, getSnapshot(args) , args.portal) )
         
     if args.activity:
         
         if args.system:
-            report = systemactivity(dbm, sn)
-            output(report, args)
+            reports.append( systemactivity(dbm, sn) )
             
     if args.evolution:
         if args.system:
-            report = systemevolution(dbm) 
-            output( report , args) 
+            reports.append( systemevolution(dbm) ) 
+            
             
         if args.portal:
             sn = getSnapshot(args)
-            report = portalevolution(dbm,sn , args.portal)
-            output( report , args, snapshot=sn)
-
+            reports.append( portalevolution(dbm,sn , args.portal) )
+            
+    if args.quality:
+        #if args.portal:
+        sn = getSnapshot(args)
+        reports.append( portalquality(dbm,sn , args.portal) )
+    for r in reports:
+        output( r , args, snapshot=sn)
         
 
 #===============================================================================
@@ -207,9 +186,9 @@ def cli(args,dbm):
 def output(rE, args,  snapshot=None):
     
     rE.clireport()
-    
+    import pprint
     if args.csv:
         outdir= os.path.join(args.out, snapshot ) if snapshot else args.out 
         print rE.csvreport(outdir )
     if args.ui:
-        print rE.uireport()
+        pprint.pprint( rE.uireport() )

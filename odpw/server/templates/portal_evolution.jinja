@@ -1,0 +1,183 @@
+<!{% extends "_base.jinja" %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ static_url('js/list.min.js') }}" ></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+{% endblock %}
+
+
+{% block sidenav %}
+    <li class="active">
+        <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-info fa-2x"></i>
+            <p>Info</p>
+        </a>
+    </li>
+    <li>
+        <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-eye fa-2x"></i>
+            <p>Details</p>
+        </a>
+    </li>
+    <li>
+        <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-star-o fa-2x"></i>
+            <p>Quality</p>
+        </a>
+    </li>
+    <li>
+        <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-heartbeat fa-2x"></i>
+            <p>Activities</p>
+        </a>
+    </li>
+    <li>
+        <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-line-chart  fa-2x"></i>
+            <p>Evolution</p>
+        </a>
+    </li>
+{% endblock %}
+    
+{% block section %}
+    <div class="units-row units-split end" id="portalInfo">
+        <div class="unit-70">
+            <div id="fd" class="dropd" tabindex="1">
+              <input type="text">
+              <ul class="dd">
+                    <li><a href="/portal/data_wu_ac_at/info/1518">data_wu_ac_at</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="unit-20">
+            <div id="dd" class="dropd" tabindex="1">
+              snapshot:
+              <span>{{ snapshot}}</span>
+              <ul class="dd">
+                 {% for sn in data.portalSnapshots[portalID] %}
+                    <li><a href="/portal/{{portalID}}/info/{{sn}}">{{sn}}</a></li>
+                 {% endfor %}
+              </ul>
+           </div>
+        </div>
+    </div>
+   
+   <div class="units-row end">
+        <div class="unit-50 card">
+            <div class="card_header">
+                <h3 class="text-centered">Datasets</h3>
+            </div>
+            <div class="card_cnt">
+                <div class="chart" id="evolution_chart"> </div>
+                <div class="data_table">
+                    <table id="snapshotsstatus">
+                        <thead>
+                            <tr>
+                                <th>Snapshot</th>
+                                <th>Count</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="card_footer">
+                <button class="btn btn-smaller btn_show_chart width-100"><i class="fa fa-pie-chart fa-fw"></i>Chart
+                </button>
+                <button class="btn btn-smaller btn_show_data width-100"><i class="fa fa-table fa-fw"></i>Table
+                </button>
+            </div>
+        </div> 
+        <div class="unit-50 card">
+            <div class="card_header">
+                <h3 class="text-centered">Resources</h3>
+            </div>
+            <div class="card_cnt">
+                <div class="chart" id="evolution_chart"> </div>
+                <div class="data_table">
+                    <table id="snapshotsstatus">
+                        <thead>
+                            <tr>
+                                <th>Snapshot</th>
+                                <th>Count</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="card_footer">
+                <button class="btn btn-smaller btn_show_chart width-100"><i class="fa fa-pie-chart fa-fw"></i>Chart
+                </button>
+                <button class="btn btn-smaller btn_show_data width-100"><i class="fa fa-table fa-fw"></i>Table
+                </button>
+            </div>
+        </div>                
+    </div>
+{% endblock %}
+
+{% block pageScripts %}
+    <script>
+    var spec_evolution="/static/vega_spec/portal_evolution.json";
+     
+    var data = {{ data | tojson| safe }};
+    console.log("SERVER DATA")
+    console.log(data)
+    function showData(el){
+         console.log("SHow data")
+        var $this = el
+        var parent= $this.parent()
+        parent.siblings().find(".chart").hide()
+        parent.siblings().find(".data_table").show()
+        $this.siblings(".btn_show_chart").show()
+        $this.hide()       
+    }
+    function showChart(el){
+        var $this = el
+        var parent= $this.parent()
+        parent.siblings().find(".chart").show()
+        parent.siblings().find(".data_table").hide()
+        $this.siblings(".btn_show_data").show()
+        $this.hide()   
+    }
+     
+    function parse(spec, div_id, values) {
+        vg.parse.spec(spec, function(chart) { 
+            console.log("init")
+            console.log(spec)
+            console.log("VEGA DATA")
+            console.log(values)
+            vega = chart({el:div_id, renderer: "svg"});
+            vega.update();
+            vega.data("table").remove(function(d) { return true; }); // Remove all current values in "table"
+            vega.data("table").insert(values); 
+            //vis.data(data);
+            vega.update();
+            vega.render();
+            
+        });
+    }
+    $(document).ready(function() {
+     console.log("Doc ready")
+                
+     /*
+        //INIT Soft dist
+        var t_softdist = $('#softdist').DataTable({
+              "paging":   false,
+              "info":     false,
+                bFilter: false
+        } );
+     
+    
+    data.softdist.forEach(function(item){
+        t_softdist.row.add([item.software, item.count, item.perc]).draw();
+    });
+    */
+    showChart( $('.btn_show_chart') )
+    $('.btn_show_chart').click(function() {
+        showChart($(this))
+    });
+    $('.btn_show_data').click(function() {
+        showData($(this))
+    });
+ 
+    parse(spec_evolution,"#evolution_chart",data.datasetevolutionreporter)
+    })
+    </script>
+{% endblock %}

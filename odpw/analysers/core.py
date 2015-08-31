@@ -52,31 +52,7 @@ class ElementCountAnalyser(Analyser):
     
     def getResult(self):
         return self.getDist()
-    
-class StatusCodeAnalyser(ElementCountAnalyser):
-    dist={
-                '2':'ok',
-                '3':'redirect-loop (3xx)',
-                '4':'offline (4xx)',
-                '5':'server-error (5xx)',
-                '6':'other-error',
-                '7':'connection-error',
-                '8':'value-error',
-                '9':'uri-error',
-                '-':'unknown',
-                'total':'total'
-    }
-    
-    def add(self, value, count=1):
-        status = sstr=str(value)[0]
-        super(StatusCodeAnalyser,self).add(status,count=count)
-        super(StatusCodeAnalyser,self).add('total',count=count)
-
-    def getDist(self):
-        d={}
-        for k,v in dict(self.dist).iteritems():
-            d[k]={'count':v, 'label': self.__class__.dist[k]}
-        return d
+ 
     
 class DistinctElementCount(Analyser):
     def __init__(self, withDistinct=None):
@@ -128,11 +104,11 @@ class DCATConverter(Analyser):
     
     def analyse_Dataset(self, dataset):
         if dataset.data: 
-            #import pprint
             #print "----"
             #pprint.pprint(dataset.data)
             #print ">DCAT"
             dcat_dict = dict_to_dcat(dataset.data, self.Portal)
-            #pprint.pprint(dcat_dict)
             dataset.dcat=dcat_dict
+            
+            
         

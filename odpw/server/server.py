@@ -34,14 +34,14 @@ class ODPWApplication(tornado.web.Application):
             (r'/', IndexHandler),
             
             (r'/activity/?(?P<snapshot>[^\/]+)?',SystemActivityHandler),
-            (r'/portals', PortalList),
+            (r'/list', PortalList),
             
             #(r'/portal/?', PortalSelectionHandler),
             
             url(r'/portal/?(?P<portalID>[^\/]+)?/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalHandler),
             
             (r'/static/(.*)', StaticFileHandler),
-            (r'/data/(.*)/(.*)', DataHandler),
+            (r'/d/?(?P<source>[datasets|resources]+)?', DataHandler),
             (r'/.*$', NoDestinationHandler)
         ]
 
@@ -75,11 +75,9 @@ def cli(args,dbm):
     http_server = tornado.httpserver.HTTPServer(ODPWApplication(db=dbm, printHtml=True))
     http_server.listen(args.port)
     
-    print('Starting Tornado on http://localhost:{}/'.format(args.port))
+    print('Starting OPDW Dashboard on http://localhost:{}/'.format(args.port))
     try:
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         sys.exit(0)
-    
-        
     

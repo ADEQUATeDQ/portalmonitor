@@ -6,11 +6,12 @@
             <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 {% endblock %}
 
+{% block title %}
+<h2>Portal selection</h2>
+{% endblock %}
+
 {% block section %}
-     
-                <div class="units-row">
-                    <h2>Portal selection</h2>
-                </div>
+
                 <div class="units-row">
                     <div class="unit-90 unit-centered">
                         <div class="unit-33">
@@ -31,24 +32,34 @@
                                 <legend>Select single portal</legend>
                                 <div class="units-row">
                                     <div class="unit-70">
+                                        <div id="fbp" class="dropd">
+                                            <input type="text">
+                                            <div class="dd">
+                                                <ul>
+                                                    {% for portal in data.portalSnapshots %}
+                                                        <li><a href="#{{portal}}">{{portal}}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+
+                                        </div>
                                         <label>Portal</label>
-                                        <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                                            {% for portal in data.portalSnapshots %}
-                                                <option value="{{portal}}">{{portal}}</option>
-                                            {% endfor %}
-                                        </select>
                                     </div>
                                     <div class="unit-20">
-                                        <label>Snapshot</label>
-                                        <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                                        
-                                    </select>
+                                        <div id="fbs" class="dropd">
+                                            <input type="text">
+                                            <div class="dd">
+                                                <ul>
+                                                </ul>
+                                            </div>
 
-
+                                        </div>
+                                        <label>Portal</label>
                                     </div>
                                     <div class="unit-10">
-                                        <label>-</label>
                                         <button class="btn">go</button>
+                                        <label>&nbs;</label>
+
                                     </div>
                                 </div>
                             </fieldset>

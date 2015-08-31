@@ -24,7 +24,6 @@ class PMDResourceStatsCount(Analyser):
             for k,v in pmd.res_stats.items():
                 if k in ['total', 'distinct']:
                     if not isinstance(v, list) and not isinstance(v, dict):
-                        print k,v
                         self.aggs[k]+=v
         
     def getResult(self):
@@ -43,14 +42,14 @@ class ResourceCount(DistinctElementCount):
 
     def update_PortalMetaData(self, pmd):
         exists=True
-        if not pmd.res_stats:
+        if pmd.res_stats is None:
             pmd.res_stats = {}
             exists=False
         
         if self.updateAll:
             pmd.res_stats['total']= self.getResult()['count']
         if 'distinct' in self.getResult():
-            if exists and pmd.res_stats['distinct'] !=  self.getResult()['distinct']:
+            if exists and 'distinct' in pmd.res_stats and pmd.res_stats['distinct'] !=  self.getResult()['distinct']:
                 print "mismatch between distinct",pmd.res_stats['distinct'],  self.getResult()['distinct']
             else:
                 pmd.res_stats['distinct']= self.getResult()['distinct']

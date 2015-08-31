@@ -5,6 +5,7 @@ from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.resource_analysers import  ResourceSize
 from odpw.analysers.count_analysers import ResourceCount
 from odpw.analysers.statuscodes import ResourceStatusCode
+from odpw.analysers.process_period_analysers import HeadPeriod
 __author__ = 'jumbrich'
 
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
@@ -35,6 +36,7 @@ def headStats(dbm, sn, portalID):
     rsc= aset.add(ResourceStatusCode())
     rsize= aset.add(ResourceSize())
     rc= aset.add(ResourceCount(withDistinct=True))
+    ha= aset.add(HeadPeriod())
     
     process_all(aset, iter)
     

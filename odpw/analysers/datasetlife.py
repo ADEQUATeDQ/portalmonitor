@@ -6,7 +6,7 @@ Created on Aug 18, 2015
 from odpw.analysers import Analyser
 from odpw.db.models import DatasetLife, PortalMetaData
 from odpw.utils.dataset_converter import DCAT, DCT
-import datetime
+
 import dateutil
 
 from datetime import datetime, timedelta, date
@@ -167,7 +167,7 @@ class DatasetLifeAnalyser(Analyser):
                         except Exception as e:
                             pass
             if created is None:
-                created = datetime.datetime(2014, 6, 1)
+                created = datetime(2014, 6, 1)
                 print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
             df.updateSnapshot(created.isoformat(),dataset.snapshot )
             if insert:

@@ -1,12 +1,12 @@
 from odpw.db.dbm import PostgressDBM
 from odpw.analysers import AnalyseEngine, QualityAnalyseEngine, Analyser
 
-from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDS,\
-    DatasetCount, CKANResourceInserter, DatasetStatusCount, CKANDatasetAge,\
-    CKANResourceInDSAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter,\
-    DatasetFetchUpdater
+#from odpw.analysers.fetching import MD5DatasetAnalyser,  CKANResourceInDS,\
+#    DatasetCount, CKANResourceInserter, DatasetStatusCode, CKANDatasetAge,\
+#    CKANResourceInDSAge, CKANKeyAnalyser, CKANFormatCount, DatasetFetchInserter,\
+#    DatasetFetchUpdater
 import ckanapi
-import odpw.util as util
+import odpw.utils as util
 
 from odpw.fetch import generateFetchDatasetIter
 from odpw.util import getExceptionCode, getPackageList
@@ -38,7 +38,7 @@ def scan(dbm, Portal, sn):
     ae.add(DatasetCount())
     ae.add(CKANResourceInDS(withDistinct=True))
 
-    ae.add(DatasetStatusCount())
+    ae.add(DatasetStatusCode())
     ae.add(CKANResourceInDSAge())
     ae.add(CKANDatasetAge())
     ae.add(CKANKeyAnalyser())
@@ -82,7 +82,7 @@ def fetching(dbm, Portal , sn):
     ae.add(DatasetCount())
     ae.add(CKANResourceInDS(withDistinct=True))
     ae.add(CKANResourceInserter(dbm))
-    ae.add(DatasetStatusCount())
+    ae.add(DatasetStatusCode())
     ae.add(CKANResourceInDSAge())
     ae.add(CKANDatasetAge())
     ae.add(CKANKeyAnalyser())

@@ -11,7 +11,7 @@ from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATDatasetAge,\
     DCATResourceInDSAge, CKANKeyAnalyser, CKANDatasetAge, CKANResourceInDSAge,\
     UsageAnalyser
-from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATLicenseCount, DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, CKANLicenseIDCount, CKANTagsCount, \
     CKANFormatCount, CKANLicenseCount, CKANOrganizationsCount
@@ -112,7 +112,7 @@ def simulateFetching(dbm, job):
         ae = SAFEAnalyserSet()
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
-        ae.add(DatasetStatusCount())
+        ae.add(DatasetStatusCode())
         
         if Portal.software == 'CKAN':
             ka= ae.add(CKANKeyAnalyser())
