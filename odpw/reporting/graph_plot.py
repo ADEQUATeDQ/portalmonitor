@@ -30,10 +30,10 @@ def normalized_dict(dict, x, y):
     return normalized
 
 
-def draw_graph(dataframe, min_ds=5000, node_labels=None, graph_layout='shell',
-               node_size=13000, node_color='grey', node_alpha=0.5,
-               node_text_size=9,
-               edge_color='grey', edge_alpha=0.5, edge_tickness=10,
+def draw_graph(dataframe, min_node_label=5000, node_labels=None, graph_layout='spring', font_color='blue',
+               node_max_size=6000, node_min_size=50, node_color='grey', node_alpha=0.5,
+               node_text_size=12, edge_text_size=8, min_edge_label=100,
+               edge_color='grey', edge_alpha=0.8, edge_tickness=10,
                edge_text_pos=0.3,
                text_font='sans-serif'):
 
@@ -42,31 +42,29 @@ def draw_graph(dataframe, min_ds=5000, node_labels=None, graph_layout='shell',
     num_of_resources = np.diagonal(array).copy()
     np.fill_diagonal(array, 0)
     G = nx.from_numpy_matrix(array)
+    # add labels
+    if node_labels is None:
+        node_labels = {i: dataframe.index.values[i] for i in G.nodes()}
+    else:
+        node_labels = {i: node_labels[dataframe.index.values[i]] for i in G.nodes()}
 
     # remove isolated ones
     G.remove_nodes_from(nx.isolates(G))
-    # remove nodes with degree 1
-    to_remove = []
-    for n in G.nodes():
-        rem = True
-        for u, v, d in G.edges(n, data=True):
-            if d['weight'] > min_ds:
-                rem = False
-                break
-        if rem:
-            to_remove.append(n)
-    G.remove_nodes_from(to_remove)
-    # normalize node size in range
-    nodes = []
-    for n in G.nodes():
-        nodes.append(num_of_resources[n])
 
-    node_sizes = normalized(nodes, 5000, node_size)
+    # normalize node size in range
+    nodes_res = []
+    for n in G.nodes():
+        nodes_res.append(num_of_resources[n])
+
+    node_sizes = normalized(nodes_res, node_min_size, node_max_size)
+
+    # remove labels for small ones
+    node_labels = {n: node_labels[n] if num_of_resources[n] > min_node_label else '' for n in G.nodes()}
 
     # these are different layouts for the network you may try
     # shell seems to work best
     if graph_layout == 'spring':
-        graph_pos=nx.spring_layout(G)
+        graph_pos=nx.spring_layout(G, iterations=100, k=0.81, weight=None)
     elif graph_layout == 'spectral':
         graph_pos=nx.spectral_layout(G)
     elif graph_layout == 'random':
@@ -74,26 +72,23 @@ def draw_graph(dataframe, min_ds=5000, node_labels=None, graph_layout='shell',
     else:
         graph_pos=nx.shell_layout(G)
 
-    if node_labels is None:
-        node_labels = {i: dataframe.index.values[i] for i in G.nodes()}
-    else:
-        node_labels = {i: node_labels[i] for i in G.nodes()}
 
-    edge_labels = dict([((u, v,), int(d['weight'])) for u, v, d in G.edges(data=True)])
-    #width_dict = edge_labels.copy()
-    #width_dict = normalized_dict(width_dict, 0, edge_tickness)
+    edge_labels = dict([((u, v,), int(d['weight']) if d['weight'] > min_edge_label else '') for u, v, d in G.edges(data=True)])
+    #edge_opac = edge_labels.copy()
+    #edge_opac = normalized_dict(edge_opac, 0.2, 1)
 
-    plt.figure(1,figsize=(14, 12))
+    fig = plt.figure(1, figsize=(14, 12))
     # draw graph
     nx.draw_networkx_nodes(G,graph_pos,node_size=node_sizes,
                            alpha=node_alpha, node_color=node_color)
-    nx.draw_networkx_edges(G,graph_pos, #edge_width=width_dict,
-                           alpha=edge_alpha,edge_color=edge_color)
+    nx.draw_networkx_edges(G,graph_pos,
+                           alpha=edge_alpha, edge_color=edge_color)
     nx.draw_networkx_labels(G, graph_pos, node_labels, font_size=node_text_size,
-                            font_family=text_font)
+                            font_family=text_font, font_color=font_color)
 
     nx.draw_networkx_edge_labels(G, graph_pos, edge_labels=edge_labels,
-                                 label_pos=edge_text_pos)
+                                 label_pos=edge_text_pos, font_size=edge_text_size)
 
     # show graph
+    plt.axis('off')
     plt.show()

@@ -1,20 +1,22 @@
 from collections import OrderedDict
-
+import pprint
 import operator
 import os
 import numpy as np
 import pandas as pd
+import pickle
 from odpw.analysers import AnalyserSet, process_all
+from odpw.analysers.compare_analyser import CKANKeyIntersectionAnalyser, OGDMetadatenAnalyser
 from odpw.analysers.core import ElementCountAnalyser, HistogramAnalyser, StatusCodeAnalyser
 from odpw.analysers.count_analysers import DatasetCount, ResourceCount, CKANFormatCount, CKANTagsCount, CKANKeysCount, \
     CKANLicenseIDCount
 from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
-    ContactabilityHistogram, OpennessHistogram, UsageHistogram
+    ContactabilityHistogram, OpennessHistogram, UsageHistogram, AccuracyHistogram, FormatHistogram, FormatDistribution
 from odpw.analysers.resource_analysers import ResourceOverlapAnalyser, ResourceOccurrenceCountAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.db.dbm import PostgressDBM
-from odpw.db.models import Dataset, PortalMetaData, Resource
+from odpw.db.models import Dataset, PortalMetaData, Resource, Portal
 from odpw.reporting import plotting
 from odpw.reporting.reporters import Report, Reporter, PlotReporter, FormatCountReporter, TagReporter, \
     ElementCountReporter, CSVReporter, ResourceOverlapReporter
@@ -68,7 +70,7 @@ class MultiScatterReporter(Reporter, PlotReporter):
         plotting.scatterplotComb(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, colors=self.colors)
 
 class MultiHistogramReporter(Reporter, PlotReporter):
-    def __init__(self, data, labels, xlabel, ylabel, filename, bins=None, colors=None):
+    def __init__(self, data, labels, xlabel, ylabel, filename, bins=None, colors=None, legend='upper right'):
         super(MultiHistogramReporter, self).__init__()
         self.data = data
         self.labels = labels
@@ -77,16 +79,34 @@ class MultiHistogramReporter(Reporter, PlotReporter):
         self.filename = filename
         self.bins = bins
         self.colors = colors
+        self.legend = legend
 
     def plotreport(self, dir):
-        plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, colors=self.colors)
+        plotting.histplotComp(self.data, self.labels, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, colors=self.colors, legend=self.legend)
+
+class HistogramReporter(Reporter, PlotReporter):
+    def __init__(self, data, xlabel, ylabel, filename, bins=None, color=None):
+        super(HistogramReporter, self).__init__()
+        self.data = data
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.filename = filename
+        self.bins = bins
+        self.color = color
+
+    def plotreport(self, dir):
+        plotting.histplot(self.data, self.xlabel, self.ylabel, dir, self.filename, bins=self.bins, color=self.color)
 
 
-def overlap_report(dbm, sn, portal_filter=None):
+def overlap_report(dbm, sn, portals=None, portal_filter=None):
     res_analyser = AnalyserSet()
     overlap = res_analyser.add(ResourceOverlapAnalyser(portal_filter))
     mult_occur = res_analyser.add(ResourceOccurrenceCountAnalyser())
-    process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn, portalID=portal_filter)))
+    if portals:
+        for p in portals:
+            process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn, portalID=p)))
+    else:
+        process_all(res_analyser, Resource.iter(dbm.getResources(snapshot=sn)))
 
     occur_dict = mult_occur.getResult()
     print 'mult occurences:', sum(occur_dict[k] for k in occur_dict if k != 1)
@@ -148,24 +168,38 @@ def key_report(dbm, sn):
     report = Report([key_rep, core_rep, extra_rep, res_rep])
     return report
 
+def res_retr_report(dbm, sn):
+    res_an = AnalyserSet()
+    res_count = res_an.add(ResourceCount())
+    res_retr_distr = res_an.add(ResourceStatusCode())
+
+    res = dbm.getResources(snapshot=sn)
+    res_iter = Resource.iter(res)
+    process_all(res_an, res_iter)
+
+    print 'total res', res_count.getResult()
+    res_retr_rep = ElementCountReporter(res_retr_distr, columns=['Retrievable', 'Count'])
+    re = Report([res_retr_rep])
+    return re
+
+
 def retr_report(dbm, sn):
     pmd_analyser = AnalyserSet()
     # retrievability
     ds_count = pmd_analyser.add(DatasetCount())
-    res_count = pmd_analyser.add(ResourceCount())
+#    res_count = pmd_analyser.add(ResourceCount())
+#    retr_distr = pmd_analyser.add(DatasetStatusCode())
+#    res_retr_distr = pmd_analyser.add(ResourceStatusCode())
     retr_distr = pmd_analyser.add(DatasetStatusCode())
-    res_retr_distr = pmd_analyser.add(ResourceStatusCode())
 
     pmds = dbm.getPortalMetaDatasBySoftware(software='CKAN', snapshot=sn)
     pmd_iter = PortalMetaData.iter(pmds)
     process_all(pmd_analyser, pmd_iter)
 
     print 'total ds', ds_count.getResult()
-    print 'total res', res_count.getResult()
 
     retr_rep = ElementCountReporter(retr_distr, columns=['Retrievable', 'Count'])
-    res_retr_rep = StatusCodeReporter(res_retr_distr, columns=['Retrievable', 'Count'])
-    re = Report([retr_rep, res_retr_rep])
+    re = Report([retr_rep])
 
     return re
 
@@ -254,7 +288,8 @@ def obd_report(dbm, sn):
 
 
     # histogram reporting
-    col = ['black', 'white', 'dimgrey', 'lightgrey']
+    #col = ['black', 'white', 'dimgrey', 'lightgrey']
+    col = ['black', 'red', 'blue', 'green']
     keys_labels = {
         'total': "$\mathcal{K}$",
         'res': "$\mathcal{K^R}$",
@@ -270,7 +305,7 @@ def obd_report(dbm, sn):
 
     res = usage_histogram.getResult()
     data = OrderedDict([('total', res['total']), ('core', res['core']), ('extra', res['extra']), ('res', res['res'])])
-    usage_rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename="$Q_c$", colors=col)
+    usage_rep = MultiHistogramReporter(data, labels=keys_labels, xlabel="$Q_u$", ylabel=ylabel, filename='qu.pdf', colors=col)
 
     labels = {'email': "$Q_i^{e}$", 'url': "$Q_i^u$", 'total': "$Q_i^v$"}
     res = cont_histogram.getResult()
@@ -284,18 +319,122 @@ def obd_report(dbm, sn):
 
     # x, y tuples for scatter plot
     data = OrderedDict([(g, (compl_histogram.data[g], usage_histogram.data[g])) for g in ['total', 'res', 'core', 'extra']])
-    colors = ['black', 'red', 'blue', 'green']
-    scatter = MultiScatterReporter(data, keys_labels, "$Q_c$", "$Q_u$", "cvude.pdf", colors=colors)
+    scatter = MultiScatterReporter(data, keys_labels, "$Q_c$", "$Q_u$", "cvude.pdf", colors=col)
 
-    re = Report([con_rep, compl_rep, open_rep, scatter])
-    re.plotreport('tmp')
+    re = Report([con_rep, compl_rep, open_rep, usage_rep, scatter])
+    return re
 
+def openness_report(dbm, sn):
+    pmd_analyser = AnalyserSet()
+
+    format_count = pmd_analyser.add(CKANFormatCount())
+    lid_count = pmd_analyser.add(CKANLicenseIDCount(total_count=False))
+
+    pmds = dbm.getPortalMetaDatasBySoftware(software='CKAN', snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
+    process_all(pmd_analyser, pmd_iter)
+
+    format_rep = FormatCountReporter(format_count,topK=500)
+    lid_rep = ElementCountReporter(lid_count, columns=['License ID', 'Count'])
+
+    re = Report([lid_rep, format_rep])
+    return re
+
+def accuracy_report(dbm):
+    path = 'tmp/accuracy/accr.pkl'
+
+    accr_res = []
+    with open(path, 'r') as f:
+        accr_res.append(pickle.load(f))
+
+    col = ['black', 'red', 'blue', 'green']
+    portals = dbm.getPortals(software='CKAN')
+    for p in Portal.iter(portals):
+        pkl_file = path + p.id + '.pkl'
+        if os.path.exists(pkl_file):
+            with open(pkl_file, 'r') as f:
+                accr_res.append(pickle.load(f))
+
+    analyser = AnalyserSet()
+    bins = np.arange(0.0, 1.1, 0.1)
+    histogram = analyser.add(AccuracyHistogram(bins=bins))
+    process_all(analyser, accr_res)
+
+
+    counts = histogram.getCounts()
+
+    print 'qaf:', sum(counts['qaf']), len(counts['qaf'])
+    print 'qam:', sum(counts['qam']), len(counts['qam'])
+    print 'qas:', sum(counts['qas']), len(counts['qas'])
+
+    labels = {'format': "$Q_a (format)$", 'mime_type': "$Q_a (mime\_type)$", 'size': "$Q_a (size)$"}
+
+    res = histogram.getResult()
+    data = OrderedDict([('format', res['qaf']), ('mime_type', res['qam']), ('size', res['qas'])])
+
+    rep = MultiHistogramReporter(data, labels=labels, xlabel="$Q_a$", ylabel="Portals", filename="qa.pdf", colors=col)
+    return Report([rep])
+
+
+def intersec_report(dbm, sn, p_id):
+
+    analyser = AnalyserSet()
+
+    pmd = dbm.getPortalMetaData(portalID=p_id, snapshot=sn)
+    ka = analyser.add(CKANKeyAnalyser())
+
+    ds = dbm.getDatasets(portalID=p_id, snapshot=sn)
+    process_all(analyser, Dataset.iter(ds))
+
+    ka.update(pmd)
+
+    # inter = analyser.add(CKANKeyIntersectionAnalyser())
+    ogd = analyser.add(OGDMetadatenAnalyser())
+
+    process_all(analyser, [pmd])
+
+#    dict = inter.getResult()
+
+#    print 'total', dict['total']
+#    print 'intersection', dict['intersection']
+#    print 'sym_diff', dict['sym_diff']
+
+    pprint.pprint(ogd.getResult())
+
+
+def format_dist_report(dbm, sn):
+
+    analyser = AnalyserSet()
+
+    pmd = dbm.getPortalMetaDatas(snapshot=sn)
+
+    formats = ['CSV', 'PDF', 'HTML']
+    form_hist = analyser.add(FormatHistogram(formats))
+
+    #bins = np.linspace(0, 1000000, 10)
+    form_dist = analyser.add(FormatDistribution(formats))
+
+    process_all(analyser, PortalMetaData.iter(pmd))
+
+
+    col = ['black', 'red', 'blue', 'green', 'yellow']
+    labels = {f: f for f in formats}
+    res = form_hist.getResult()
+    data = OrderedDict([(f, res[f]) for f in formats])
+    rep = MultiHistogramReporter(data, labels=labels, xlabel="Ratio of specified format", ylabel="Portals", filename='formats_hist.pdf', colors=col)
+
+    res2 = form_dist.getResult()
+    data2 = OrderedDict([(f, res2[f]) for f in formats])
+    dist_rep = MultiHistogramReporter(data2, bins=data2['CSV']['bin_edges'], legend='upper left', labels=labels, xlabel="Number of Datasets on Portal", ylabel="Resources", filename='formats_dist.pdf', colors=col)
+
+    re = Report([rep, dist_rep])
+    return re
 
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
+    aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
+    report = overlap_report(dbm, sn, portals=aut_portals)
 
-    report = retr_report(dbm, sn)
-
-    report.csvreport('tmp/retr')
+    report.csvreport('tmp/overlap')
