@@ -32,17 +32,20 @@
                                 <legend>Select single portal</legend>
                                 <div class="units-row">
                                     <div class="unit-70">
-                                        <div id="fbp" class="dropd">
-                                            <input type="text">
-                                            <div class="dd">
-                                                <ul>
-                                                    {% for portal in data.portalSnapshots %}
-                                                        <li><a href="#{{portal}}">{{portal}}</a></li>
-                                                    {% endfor %}
-                                                </ul>
+                                        <div id="selectPortal" class="dropd">
+                                            <div class="units-row end">
+                                                <div class="unit-100">
+                                                    <span id="curPortalID">{{ portalID }}</span>
+                                                   </div>
+                                                </div>
+                                                <div class="units-row units-split dd">
+                                                    <div class="input-groups filter">
+                                                        <span class=" filter btn-append">filter:</span>
+                                                        <input class="search">
+                                                    </div>
+                                                    <ul class="select"> </ul>
+                                                </div>
                                             </div>
-
-                                        </div>
                                         <label>Portal</label>
                                     </div>
                                     <div class="unit-20">
@@ -80,6 +83,15 @@
     
     $(document).ready(function () {
         console.log("Ready")
+        
+        var ul= $("#selectPortal .dd ul");
+        console.log(data.portalSnapshots)
+        $.each(data.portalSnapshots, function(v){
+            ul.append('<li><span>'+v+'</span></li>')
+        })
+        
+        
+        var dd = new DropDown($('#selectPortal'));
         $('#selectportal').on('select.tools.filterbox', function(sel)
         {
             console.log(sel.id);

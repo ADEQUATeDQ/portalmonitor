@@ -1,4 +1,5 @@
-from odpw.reporting.quality_reports import portalquality
+from odpw.reporting.quality_reports import portalquality, portalsquality
+from odpw.db.models import Portal
 __author__ = 'jumbrich'
 
 import os
@@ -31,8 +32,11 @@ def setupCLI(pa):
     
     focus = pa.add_argument_group("Views")
     focus.add_argument("-p",  help='Portal id ', dest='portal')
+    focus.add_argument("-s",  help='System', dest='system', action='store_true')
+    focus.add_argument("--portals",  help='Specify a set of portals', dest='portals', nargs='+')
+    focus.add_argument("--software",  help='Specify a set of portals', dest='software', nargs='+')
+    focus.add_argument("--iso3",  help='Specify a set of portals', dest='iso3', nargs='+')
     
-    focus.add_argument("-s",  help='Portal id ', dest='system', action='store_true')
     
     out = pa.add_argument_group("Output")
     out.add_argument("-o",  help='outputfolder to write the reports', dest='outdir')
@@ -56,7 +60,6 @@ def cli(args,dbm):
             reports.append( portalinfo(dbm, getSnapshot(args) , args.portal) )
         
     if args.activity:
-        
         if args.system:
             reports.append( systemactivity(dbm, sn) )
             
@@ -70,9 +73,20 @@ def cli(args,dbm):
             reports.append( portalevolution(dbm,sn , args.portal) )
             
     if args.quality:
-        #if args.portal:
         sn = getSnapshot(args)
-        reports.append( portalquality(dbm,sn , args.portal) )
+        if args.portal:
+            reports.append( portalquality(dbm,sn , args.portal) )
+        if args.portals:
+            pid= args.portals
+            reports.append( portalsquality(dbm,sn , pid) )
+        elif args.iso3:
+            pid=[]
+            for iso3 in args.iso3: 
+                for P in Portal.iter( dbm.getPortals(iso3=iso3)):
+                    if P.id not in pid:
+                        pid.append(P.id)
+            reports.append( portalsquality(dbm,sn , pid) )
+    
     for r in reports:
         output( r , args, snapshot=sn)
         

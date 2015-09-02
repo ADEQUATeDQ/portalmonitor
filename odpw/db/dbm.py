@@ -1,5 +1,6 @@
 from __future__ import generators
 
+
 __author__ = 'jumbrich'
 
 from sqlalchemy.sql.expression import join, exists
@@ -340,13 +341,15 @@ class PostgressDBM(object):
             
             return s.execute()
         
-    def getPortalMetaDatas(self, snapshot=None, portalID=None):
+    def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None):
         with Timer(key="getPortalMetaDatas") as t:
             s = select([self.pmd])
             if snapshot:
                 s=s.where(self.pmd.c.snapshot == snapshot)
             if portalID:
                 s= s.where(self.pmd.c.portal_id == portalID)
+            if portals:
+                s= s.where(self.pmd.c.portal_id.in_(portals))
                 
             self.log.debug(query=s.compile(), params=s.compile().params)
                
@@ -775,6 +778,7 @@ class PostgressDBM(object):
             return s.execute().scalar()
     def getResources(self, snapshot=None, portalID=None, status =None,limit=None,statuspre=None):
         with Timer(key="getResources") as t:
+            print "query"
             s = select([self.resources])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)
@@ -1012,6 +1016,24 @@ class PostgressDBM(object):
 
         self.log.debug(query=s.compile(), params=s.compile().params)
         return s.execute()
+    
+    def getDatasetsDiff(self,portalID=None, snapshot=None, computeAdds=True):
+        if computeAdds:
+            snapshotFrom=snapshot
+            snapshotTo=nextWeek(snapshot)
+        else:
+            snapshotFrom=prevWeek(snapshot)
+            snapshotTo=snapshot
+        
+        ssub = select( [self.datasets.c.id] ).where(self.datasets.c.snapshot == snapshotTo)
+        ssub= ssub.where(self.datasets.c.portal_id == portalID)
+        
+        s= select( [self.datasets.c.id] ).where(self.datasets.c.snapshot == snapshotFrom)
+        s= s.where(~self.datasets.c.id.in_(ssub))
+        
+        self.log.debug(query=s.compile(), params=s.compile().params)
+        return s.execute()
+
     
 def name():
     return 'DB'

@@ -222,8 +222,8 @@
                                     <td>{{ portal.fetch_start }}</td>
                                     <td>{{ portal.fetch_end }}</td>
                                     <td>{{ portal.head }}</td>
-                                    <td></td>
-                                    <td></td>
+                                    <td>{{ portal.head_start }}</td>
+                                    <td>{{ portal.head_end }}</td>
                                     <td></td>
                                 </tr>
                             {% endfor %}
@@ -270,26 +270,26 @@
      });
      t_sysacttable.draw();
     $('#fetch_done').click(function() {
-         showRows(t_sysacttable, 1, 'done',[0,6])
+         showRows(t_sysacttable, 1, 'done',[0,3,4])
     }); 
     $('#fetch_running').click(function() {
-        showRows(t_sysacttable, 1,'running', [0,5])
+        showRows(t_sysacttable, 1,'running', [0,3])
     });
     $('#fetch_failed').click(function() {
-         showRows(t_sysacttable, 1,'failed', [0,3])
+         showRows(t_sysacttable, 1,'failed', [0,4])
     });
     $('#fetch_missing').click(function() {
-         showRows(t_sysacttable, 1,'missing', [0,4])
+         showRows(t_sysacttable, 1,'missing', [0])
     });
 
     $('#head_done').click(function() {
-         showRows(t_sysacttable, 4, 'done',[0,6])
+         showRows(t_sysacttable, 5, 'done',[0,7])
     });
     $('#head_running').click(function() {
-        showRows(t_sysacttable, 4,'running', [0,5])
+        showRows(t_sysacttable, 5,'running', [0,6])
     });
     $('#head_missing').click(function() {
-         showRows(t_sysacttable, 4,'missing', [0,4])
+         showRows(t_sysacttable, 5,'missing', [0,6])
     });
      
     $('#btn_all').click(function() {

@@ -1,11 +1,27 @@
 #from distutils.core import setup
-from setuptools import setup
+from setuptools import setup,find_packages
 files = ["resources/*"]
+server_files=[  'static/css/*','static/js/*','static/data/*',
+                'static/fonts/EOT/*','static/fonts/OTF/*','static/fonts/TTF/*','static/fonts/*.*',
+                'static/fonts/WOFF/OTF/*','static/fonts/WOFF/TTF/*','static/fonts/WOFF2/OTF/*','static/fonts/WOFF2/TTF/*',
+                'static/images/*','static/vega_spec/*','templates/*']
+
+p= find_packages()
+p.append('odpw.resources')
+print p
 setup(
     name='odpw',
     version='0.1',
-    packages=['odpw', 'odpw.db','odpw.analysers','odpw.analysers.quality.analysers','odpw.analysers.quality','odpw.reporting','odpw.server','odpw.server.handler', 'odpw.utils','odpw.resources', 'odpw.analysers.quality.new' ],
-    package_data={'odpw.resources':['*']},
+    packages = p,
+    #package_dir={'':'odpw'},
+    #packages=[  'odpw', 
+    #            'odpw.db',
+    #            'odpw.analysers','odpw.analysers.quality.analysers','odpw.analysers.quality','odpw.analysers.quality.new',
+    #            'odpw.reporting',
+    #            'odpw.server','odpw.server.handler',
+    #             'odpw.utils','odpw.resources',  ],
+    package_data={'odpw.resources':['*'],'odpw.server':server_files},
+    include_package_data = True,
     url='',
     license='',
     author='jumbrich',

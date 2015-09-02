@@ -1,0 +1,318 @@
+{
+  "width": 300,
+  "height": 150,
+  "padding": {
+    "top": 30,
+    "left": 50,
+    "bottom": 30,
+    "right": 100
+  },
+  "signals": [
+    {
+      "name": "tooltip",
+      "init": {},
+      "streams": [
+        {
+          "type": "rect:mouseover",
+          "expr": "datum"
+        },
+        {
+          "type": "rect:mouseout",
+          "expr": "{}"
+        }
+      ]
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {
+          "bin": 0,
+          "perc": 0.06694560669456066,
+          "value": 16
+        },
+        {
+          "bin": 1,
+          "perc": 0,
+          "value": 0
+        },
+        {
+          "bin": 2,
+          "perc": 0.0041841004184100415,
+          "value": 1
+        },
+        {
+          "bin": 3,
+          "perc": 0,
+          "value": 0
+        },
+        {
+          "bin": 4,
+          "perc": 0,
+          "value": 0
+        },
+        {
+          "bin": 5,
+          "perc": 0,
+          "value": 0
+        },
+        {
+          "bin": 6,
+          "perc": 0.0041841004184100415,
+          "value": 1
+        },
+        {
+          "bin": 7,
+          "perc": 0.008368200836820083,
+          "value": 2
+        },
+        {
+          "bin": 8,
+          "perc": 0.008368200836820083,
+          "value": 2
+        },
+        {
+          "bin": 9,
+          "perc": 0.9079497907949791,
+          "value": 217
+        }
+      ]
+    }
+  ],
+  "predicates": [
+    {
+      "name": "tooltip",
+      "type": "==",
+      "operands": [
+        {
+          "signal": "tooltip._id"
+        },
+        {
+          "arg": "id"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "ordinal",
+      "range": "width",
+      "domain": {
+        "data": "table",
+        "field": "bin"
+      }
+    },
+    {
+      "name": "xlabels",
+      "type": "ordinal",
+      "domain": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "range": [
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten"
+      ]
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "domain": {
+        "data": "table",
+        "field": "perc"
+      },
+      "nice": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "data": "table",
+        "field": "bin"
+      },
+      "range": "category20"
+    }
+  ],
+  "axes": [
+    {
+      "type": "x",
+      "scale": "x",
+      "tickSize": 0,
+      "tickPadding": 8,
+      "properties": {
+        "majorTicks": {
+          "strokeWidth": {
+            "value": 2
+          }
+        },
+        "title": {
+          "fontSize": {
+            "value": 16
+          }
+        },
+        "axis": {
+          "strokeWidth": {
+            "value": 0
+          }
+        },
+        "labels": {
+          
+          "fontSize": {
+            "value": 14
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "dx": {
+            "value": 3
+          }
+        }
+      }
+    },
+    {
+      "type": "y",
+      "scale": "y",
+      "tickSize": 2,
+      "tickPadding": 5,
+      "offset": 10,
+      "properties": {
+        "majorTicks": {
+          "strokeWidth": {
+            "value": 2
+          }
+        },
+        "title": {
+          "fontSize": {
+            "value": 16
+          }
+        },
+        "axis": {
+          "stroke": {
+            "value": "#333"
+          },
+          "strokeWidth": {
+            "value": 1
+          }
+        }
+      }
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "properties": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "bin"
+          },
+          "width": {
+            "scale": "x",
+            "band": true,
+            "offset": -1
+          },
+          "y": {
+            "scale": "y",
+            "field": "perc"
+          },
+          "y2": {
+            "scale": "y",
+            "value": 0
+          }
+        },
+        "update": {
+          "fill": {
+            "rule": [
+              {
+                "predicate": {
+                  "name": "tooltip",
+                  "id": {
+                    "field": "_id"
+                  }
+                },
+                "value": "red"
+              },
+              {
+                "value": "black"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "enter": {
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "#333"
+          }
+        },
+        "update": {
+          "x": {
+            "scale": "x",
+            "signal": "tooltip.bin"
+          },
+          "dx": {
+            "scale": "x",
+            "band": true,
+            "mult": 0.5
+          },
+          "y": {
+            "scale": "y",
+            "signal": "tooltip.perc",
+            "offset": -1
+          },
+          "text": {
+            "signal": "tooltip.value"
+          },
+          "fillOpacity": {
+            "rule": [
+              {
+                "predicate": {
+                  "name": "tooltip",
+                  "id": {
+                    "value": null
+                  }
+                },
+                "value": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

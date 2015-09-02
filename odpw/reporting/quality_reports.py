@@ -15,6 +15,31 @@ from odpw.reporting.quality_reporters import DatasetRetrievabilityReporter,\
     ResourceRetrievabilityReporter
 
 
+
+def portalsquality(dbm, sn , portals_id):
+    aset = AnalyserSet()
+    
+    dr=DatasetStatusCode()
+    rr=ResourceStatusCode()
+    
+    drq=aset.add(DatasetRetrievability(dr))
+    rrq=aset.add(ResourceRetrievability(rr))
+    
+    
+    it = dbm.getPortalMetaDatas(snapshot=sn, portals=portals_id)
+    aset = process_all(aset, PortalMetaData.iter(it))
+    
+    
+    rep = Report([
+                    DatasetStatusCodeReporter(dr),
+                    ResourcesStatusCodeReporter(rr),
+                    DatasetRetrievabilityReporter(drq),
+                    ResourceRetrievabilityReporter(rrq),
+                    
+                ])
+   
+    return rep
+
 def portalquality(dbm, sn , portal_id):
     
     aset = AnalyserSet()

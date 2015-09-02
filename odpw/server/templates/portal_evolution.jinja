@@ -1,62 +1,11 @@
-<!{% extends "_base.jinja" %}
-
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript" src="{{ static_url('js/list.min.js') }}" ></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!{% extends "_portal_base.jinja" %}
+{% block subtitle %}
+    <h2>Evolution</h2>
 {% endblock %}
 
 
-{% block sidenav %}
-    <li class="active">
-        <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-info fa-2x"></i>
-            <p>Info</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-eye fa-2x"></i>
-            <p>Details</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-star-o fa-2x"></i>
-            <p>Quality</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-heartbeat fa-2x"></i>
-            <p>Activities</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-line-chart  fa-2x"></i>
-            <p>Evolution</p>
-        </a>
-    </li>
-{% endblock %}
-    
-{% block section %}
-    <div class="units-row units-split end" id="portalInfo">
-        <div class="unit-70">
-            <div id="fd" class="dropd" tabindex="1">
-              <input type="text">
-              <ul class="dd">
-                    <li><a href="/portal/data_wu_ac_at/info/1518">data_wu_ac_at</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="unit-20">
-            <div id="dd" class="dropd" tabindex="1">
-              snapshot:
-              <span>{{ snapshot}}</span>
-              <ul class="dd">
-                 {% for sn in data.portalSnapshots[portalID] %}
-                    <li><a href="/portal/{{portalID}}/info/{{sn}}">{{sn}}</a></li>
-                 {% endfor %}
-              </ul>
-           </div>
-        </div>
-    </div>
+{% block portalcontent %}
+
    
    <div class="units-row end">
         <div class="unit-50 card">
@@ -112,8 +61,7 @@
     </div>
 {% endblock %}
 
-{% block pageScripts %}
-    <script>
+{% block portalScripts %}
     var spec_evolution="/static/vega_spec/portal_evolution.json";
      
     var data = {{ data | tojson| safe }};
@@ -179,5 +127,5 @@
  
     parse(spec_evolution,"#evolution_chart",data.datasetevolutionreporter)
     })
-    </script>
+    
 {% endblock %}

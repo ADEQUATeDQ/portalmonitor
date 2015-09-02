@@ -10,8 +10,8 @@ from odpw.analysers.core import HistogramAnalyser
 
 
 class Retrievability(HistogramAnalyser):
-    def __init__(self, analyser):
-        super(Retrievability, self).__init__()
+    def __init__(self, analyser, **kwargs):
+        super(Retrievability, self).__init__(**kwargs)
         self.a=analyser
     
     def getResult(self):
@@ -55,14 +55,13 @@ class Retrievability(HistogramAnalyser):
         pmd.qa_stats[self.name()]=self.getResult()
         
 class ResourceRetrievability(Retrievability):
-    pass
-        
     
-   
-    
-   
+    def __init__(self, analyser):
+        super(ResourceRetrievability,self).__init__(analyser, funct=None, range=[0,1])
         
 class DatasetRetrievability(Retrievability):
-    pass
+    def __init__(self, analyser):
+        super(DatasetRetrievability,self).__init__(analyser, funct=None, range=[0,1])
+    
     
     

@@ -5,7 +5,7 @@ from tornado.web import RequestHandler, HTTPError, asynchronous
 from jinja2.exceptions import TemplateNotFound
 from tornado.escape import json_encode
 
-from odpw.db.models import Portal, PortalMetaData, Dataset
+from odpw.db.models import Portal, PortalMetaData, Dataset, Resource
 from odpw.utils  import util
 from collections import defaultdict
 from urlparse import urlparse 
@@ -33,7 +33,7 @@ from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.activity_reports import systemactivity
 from odpw.reporting.evolution_reports import portalevolution
 from odpw.reporting.info_reports import portalinfo, SystemPortalInfoReporter
-from odpw.reporting.quality_reports import portalquality
+from odpw.reporting.quality_reports import portalquality, portalsquality
 
 
 
@@ -95,6 +95,38 @@ class PortalSelectionHandler(BaseHandler):
         rep = Report([SnapshotsPerPortalReporter(a,None)])
         self.render('portal_empty.jinja',portals=True, data=rep.uireport())
     
+class PortalsHandler(BaseHandler):
+    def get(self, view=None, snapshot=None):
+        print "HERE"
+        d=['portals','iso3', 'software']
+        props={}
+        for k in d:
+            arg=self.get_argument(k, None)
+            props[k]=arg.split(",") if arg is not None else None
+            
+        pid=[]    
+        if props['portals']:
+            pid= props['portals']
+        elif props['iso3']:
+            for iso3 in props['iso3']: 
+                for P in Portal.iter( self.db.getPortals(iso3=iso3)):
+                    if P.id not in pid:
+                        pid.append(P.id)
+        elif props['software']:
+            for software in props['software']: 
+                for P in Portal.iter( self.db.getPortals(software=software)):
+                    if P.id not in pid:
+                        pid.append(P.id)
+        
+        function= getattr(self, view+"rendering")
+        function( snapshot,pid)    
+        
+    def qualityrendering(self, snapshot, portals):
+        print portals
+        r = portalsquality(self.db, snapshot , portals)
+        print r.uireport()
+        self.render('portals_quality.jinja', portal=True, data=r.uireport(), snapshot=snapshot,portals=portals) 
+        
 class PortalHandler(BaseHandler):
     def get(self, view=None, portalID=None, snapshot=None):
         
@@ -125,14 +157,14 @@ class PortalHandler(BaseHandler):
             r = portalinfo(self.db, snapshot, portalID)
             self.render('portal_info.jinja', portal=True, data=r.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
     
-    def evolutionrendering(self, portalID, snapshot,portals):      
+    def evolutionrendering(self, portalID, snapshot, portals):      
         with Timer(key="evolutionrendering", verbose=True) as t:
             a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
             rep = SnapshotsPerPortalReporter(a,None)
         
             r = portalevolution(self.db, snapshot, portalID)
             rep = Report([rep,r])
-            self.render('portal_evolution.jinja', portal=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
+            self.render('portal_evolution.jinja', portal=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
         
     def qualityrendering(self, portalID, snapshot,portals):
         with Timer(key="qualityrendering", verbose=True) as t:
@@ -178,6 +210,18 @@ class IndexHandler(BaseHandler):
             }    
             self.render('index.jinja',**args)
         
+        
+class SystemEvolutionHandler(BaseHandler):
+    def get(self):
+        pass
+        #report = systemevolution(self.db)
+            
+        args={'index':True,
+        #       'data':report.uireport()
+               
+        }    
+        self.render('system_activity.jinja',**args)
+    
 class SystemActivityHandler(BaseHandler):
     def get(self, snapshot=None):
         with Timer(key='SystemActivityHandler', verbose=True) as t:
@@ -208,7 +252,7 @@ class DataHandler(RequestHandler):
                 props[k]=self.get_argument(k, None)
             
             res=[]
-            print props
+            print "D",props
             for d in Dataset.iter(self.db.getDatasets(**props)):
                 res.append({'id':d.id,'status':d.status,'portalID':d.portal_id})
             
@@ -217,16 +261,19 @@ class DataHandler(RequestHandler):
             self.write(json_encode(res))
             
         elif source == 'resources':
-            d=['portalID','limit','snapshot','software','status','statuspre']
-            props={}
-            for k in d:
-                props[k]=self.get_argument(k, None)
-            
-            res=[]
-            print props
-            for d in Dataset.iter(self.db.getResources(**props)):
-                res.append({'id':d.id,'status':d.status,'portalID':d.portal_id})
-            
-            
-            self.set_header('Content-Type', 'application/json')
-            self.write(json_encode(res))
+            try:
+                d=['portalID','limit','snapshot','status','statuspre']
+                props={}
+                for k in d:
+                    props[k]=self.get_argument(k, None)
+                
+                res=[]
+                print "R",props
+                for d in Resource.iter(self.db.getResources(**props)):
+                    res.append({'id':d.url,'status':d.status,'portalID':props['portalID']})
+                
+                print "query resources"
+                self.set_header('Content-Type', 'application/json')
+                self.write(json_encode(res))
+            except Exception as e:
+                print e

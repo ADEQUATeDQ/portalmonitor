@@ -21,7 +21,18 @@ class RetrievabilityReporter(Reporter, UIReporter, CLIReporter):
             self.df= pd.DataFrame(self.a.getResult().items())
 
     def uireport(self):
-        return {self.name():self.a.getResult()}
+        res = self.a.getResult()
+        
+        hist = res[self.a.name()]['avgP']['hist']
+        res[self.a.name()]['avgP']['histui']=[]
+        t=sum(hist)
+        i=0
+        for h in hist:
+            res[self.a.name()]['avgP']['histui'].append({ 'bin':i,'value':h, 'perc': h/(t*1.0)
+                                                          })
+            i+=1
+        
+        return {self.name():res}
 
 class DatasetRetrievabilityReporter(RetrievabilityReporter):
     pass

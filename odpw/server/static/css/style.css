@@ -376,21 +376,26 @@ table thead th{
     font-variant: small-caps;
     font-weight: normal;
     text-transform: lowercase;
+    text-align: right;
 }
-table thead tr:first-child th {
+/*table thead tr:first-child th {
   border-top: solid 2px;
-}
+}*/
 table thead tr:last-child th {
   border-bottom: solid 1px;
 }
 table thead tr th {
   padding-left: 10px;
   padding-left: 20px;
-    line-height: 1;
+  line-height: 1;
+}
+table tbody tr{
+height:15px;
 }
 table tbody tr td {
   padding: 5px;
-    text-align: right;
+  text-align: right;
+
 }
 table tbody tr:last-child td {
   border-bottom: solid 1.5px;
@@ -454,32 +459,35 @@ table tbody tr:last-child td {
     border-width: 6px 6px 0 6px;
     border-style: solid;
     border-color: black transparent;
+    z-index: 10000;
 }
 
 
 .dropd .dd {
-    padding: 10px;
-    background: rgba(0,0,0,0.1);
+    padding:10px;
+    background: rgb(240,240,240);
     border-radius: 0px 0px 10px 10px;
+    position: absolute;
+    z-index: 10000;
+    border:2px solid #cdcdcd
 }
 .dropd .dd .filter{
     height: 30px;
-
 }
 .dropd .dd .filter span{
-    height: 18px;
-    background: white;
+    height: 30px;
+    vertical-align: bottom;
 }
 .dropd .dd input{
     width:100%;
     border:none;
     border-bottom: 1px solid;
-
+    background: inherit;
     padding:0px;
 
     font-size: 16px;
-    height: 18px;
-
+    height: 24px;
+    padding-left:10px;
     margin: 0px;
     margin-top:8px;
     outline: none;
@@ -487,16 +495,16 @@ table tbody tr:last-child td {
 }
 
 .dropd .dd ul{
-        list-style: none;
+    list-style: none;
     margin:0px;
-    background: white;
+    margin-left: 30px;
     padding:3px;
     max-height: 250px;
     overflow-y: scroll
 }
 
-ul.select li a{
-    width:100%;
+ul.select li a, ul.select li {
+    width:90%;
     display:block;
     text-decoration:none;
     background: rgba(220,220,220,1);
@@ -507,11 +515,15 @@ ul.select li a{
     margin-top:8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.19), 0 1px 1px rgba(0,0,0,0.23);
 }
+
 ul.select li label{
     line-height:25px;
 }
 #selectAll{
-    bacground: #cdcdcd;
+    background: rgb(240,240,240); !important;
+    border-radius: 0px 0px 10px 10px;
+    margin-right:40px;
+    padding: 5px;
 }
 
 #selectAll ul li input{
@@ -525,11 +537,18 @@ ul.select li label{
 #selectAll ul li label{
     display:block;
 }
-#selectAll{
-    background:rgba(0,0,0,0.13); !important
-    border-radius: 5px; !important
+
+.selectedPortals{
+    border-top:2px solid;
 }
 
+.submit{
+    vertical-align: middle;
+    display: inline-block;
+}
+#go{
+    vertical-align: middle;
+}
 #selectedPortals ul{
     max-height: 250px;
     overflow-y: scroll
@@ -547,9 +566,7 @@ ul.select li label{
 }
 #selectedPortals li span:not(:first-child){
     border-left: solid 1px;
-
 }
-
 
 
 

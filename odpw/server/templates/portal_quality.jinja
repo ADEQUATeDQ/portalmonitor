@@ -1,77 +1,95 @@
-<!{% extends "_base.jinja" %}
-
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript" src="{{ static_url('js/list.min.js') }}" ></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!{% extends "_portal_base.jinja" %}
+{% block subtitle %}
+    <h2>Quality</h2>
 {% endblock %}
 
 
-{% block sidenav %}
-    <li>
-        <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-info fa-2x"></i>
-            <p>Info</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-eye fa-2x"></i>
-            <p>Details</p>
-        </a>
-    </li>
-    <li class="active">
-        <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-star-o fa-2x"></i>
-            <p>Quality</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-heartbeat fa-2x"></i>
-            <p>Activities</p>
-        </a>
-    </li>
-    <li>
-        <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-line-chart  fa-2x"></i>
-            <p>Evolution</p>
-        </a>
-    </li>
-{% endblock %}
-    
-{% block section %}
-    <div class="units-row units-split end" id="portalInfo">
-        <div class="unit-70">
-            <div id="fd" class="dropd" tabindex="1">
-              <input type="text">
-              <ul class="dd">
-                    <li><a href="/portal/data_wu_ac_at/info/1518">data_wu_ac_at</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="unit-20">
-            <div id="dd" class="dropd" tabindex="1">
-              snapshot:
-              <span>{{ snapshot}}</span>
-              <ul class="dd">
-                 {% for sn in data.portalSnapshots[portalID] %}
-                    <li><a href="/portal/{{portalID}}/info/{{sn}}">{{sn}}</a></li>
-                 {% endfor %}
-              </ul>
-           </div>
-        </div>
-    </div>
-   
+{% block portalcontent %}
    <div class="units-row end">
         <div class="unit-100">
             <h3>Retrievability</h3>
         </div>
    </div>
    <div class="units-row end">
-        <div class="unit-50 card quality_chart">
+        <div class="unit-50 unit-padding card quality_chart">
             <div class="card_header">
                 <h3 class="text-centered">Datasets</h3>
             </div>
             <div class="quality">
                 <div class="card_cnt">
                     <p id="resources" class="card_value text-centered">
-                            {{ data.datasetretrievabilityreporter.qrd }}
+                        {{ data.datasetretrievabilityreporter.DatasetRetrievability.avgP.qrd }}
+                    </p>
+                </div>
+                <div class="card_header">
+                    <h3 class="text-centered">R</h3>
+                </div>
+            </div>
+            <div class="details">
+                <div class="card_cnt">
+                    <div class="chart" id="dataset_ret_chart"> </div>
+                    <div class="data_table">
+                        <table id="datasetRet">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                    <th>%</th>
+                                    <th>label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                 {% for ds in data.datasetstatuscodereporter %}
+                                    <tr>
+                                        <td>{{ ds.status }}</td>
+                                        <td>{{ ds.count }}</td>
+                                        <td>{{ ds.perc }}</td>
+                                        <td>{{ ds.label }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card_footer">
+                    <button class="btn btn-smaller btn_show_chart width-100"><i class="fa fa-pie-chart fa-fw"></i>Chart
+                    </button>
+                    <button class="btn btn-smaller btn_show_data width-100"><i class="fa fa-table fa-fw"></i>Table
+                    </button>
+                </div>
+            </div>
+            <div class="units-row">  
+                <div class="data" id="datasetsSample">
+                    <h4>Example Datasets</h4>
+                    <form class="forms forms-inline">  
+                        
+                            
+                                    <select>
+                                        <option>---</option>
+                                    </select>
+                                    <div class="forms-desc">Limit</div>
+                                
+                                    <select><option>---</option></select>
+                                    <div class="forms-desc">Status</div>
+                            <button class="btn btn-smaller">Load</button>                                                                      
+                    </form>
+                    <ul>
+                    
+                    </ul>
+                </div>
+            </div>
+        </div> 
+        
+        
+        <div class="unit-50 card quality_chart unit-padding">
+            <div class="card_header">
+                <h3 class="text-centered">Resources</h3>
+            </div>
+            <div class="quality">
+                <div class="card_cnt">
+                    <p id="resources" class="card_value text-centered">
+                            {{ data.resourceretrievabilityreporter.ResourceRetrievability.avgP.qrd }}
                     </p>
                     </div>
                     <div class="card_header">
@@ -80,7 +98,7 @@
                 </div>
                 <div class="details">
                     <div class="card_cnt">
-                        <div class="chart" id="dataset_ret_chart"> </div>
+                        <div class="chart" id="resource_ret_chart"> </div>
                         <div class="data_table">
                             <table id="datasetRet">
                                 <thead>
@@ -92,7 +110,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                     {% for ds in data.datasetstatuscodereporter %}
+                                     {% for ds in data.resourcesstatuscodereporter %}
                                         <tr>
                                             <td>{{ ds.status }}</td>
                                             <td>{{ ds.count }}</td>
@@ -113,68 +131,26 @@
                 </div>
                 </div>
               <div class="units-row">  
-                <div class="data">
+                <div class="data" id="resourcesSample">
                     <h4>Examples</h4>
                     <form class="forms forms-inline">  
-                        
-                            <ul class="forms-inline-list">
-                                <li>
-                                    <select>
-                                        <option>---</option>
-                                    </select>
-                                    <div class="forms-desc">Limit</div>
-                                </li>
-                                <li>
+                        <select>
+                            <option>---</option>
+                        </select>
+                        <div class="forms-desc">Limit</div>
                                     <select><option>---</option></select>
                                     <div class="forms-desc">Status</div>
-                                </li>
-                            </ul>
                             <button class="btn btn-smaller">Load</button>                                                                      
                     </form>
+                    <ul id="resSample>
+                    
+                    </ul>
                 </div>
                </div>
                 
             </div>
             <div class="card_footer">
                 
-            </div>
-        </div> 
-        
-        
-        <div class="unit-50 card">
-            <div class="card_header">
-                <h3 class="text-centered">Resources</h3>
-            </div>
-            <div class="card_cnt">
-                <div class="chart" id="resource_ret_chart"> </div>
-                <div class="data_table">
-                    <table id="resourceRet">
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th>Count</th>
-                                <th>%</th>
-                                <th>label</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                             {% for ds in data.resourcesstatuscodereporter %}
-                                <tr>
-                                    <td>{{ ds.status }}</td>
-                                    <td>{{ ds.count }}</td>
-                                    <td>{{ ds.perc }}</td>
-                                    <td>{{ ds.label }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card_footer">
-                <button class="btn btn-smaller btn_show_chart width-100"><i class="fa fa-pie-chart fa-fw"></i>Chart
-                </button>
-                <button class="btn btn-smaller btn_show_data width-100"><i class="fa fa-table fa-fw"></i>Table
-                </button>
             </div>
         </div>                
     </div>
@@ -187,8 +163,7 @@
                 
 {% endblock %}
 
-{% block pageScripts %}
-    <script>
+{% block portalScripts %}
     var spec_bar="/static/vega_spec/statuscode_bar.json";
      
     var data = {{ data | tojson| safe }};
@@ -198,7 +173,6 @@
     console.log(data)
     
     function showData(el){
-        console.log("SHow data")
         var $this = el
         var parent= $this.parent()
         parent.siblings().find(".chart").hide()
@@ -217,58 +191,25 @@
      
     function parse(spec, div_id, values, category) {
         vg.parse.spec(spec, function(chart) { 
-            console.log("init")
-            console.log(spec)
-            console.log("VEGA DATA")
-            console.log(values)
             vega = chart({el:div_id, renderer: "svg"});
             vega.update();
             vega.data("table").remove(function(d) { return true; }); // Remove all current values in "table"
             vega.data("table").insert(values); 
-            //vis.data(data);
             vega.update();
             vega.render();
             
             vega.on("click", function(e,item) { 
-                console.log(e);
-                console.log(item.datum.pre);
                 var target = $(this);
-                $( "#dialog" ).css({'top':e.pageY-50,'left':e.pageX, 'position':'absolute', 'border':'1px solid black', 'padding':'5px'});
+                $("#dialog" ).css({'top':e.pageY-50,'left':e.pageX, 'position':'absolute', 'border':'1px solid black', 'padding':'5px'});
                 $('#dialogstatus').text(item.datum.pre+"xx");
                 $('#dialogcategory').text(category);
                 $('#dialog').show();
-                
-                    
             });
-            
-            
-            
-            
-            vega.onSignal("tooltip",function(signal, value){
-                console.log(signal);
-                console.log("valueof")
-                console.log(value);
-                
-            })
-            
         });
     }
     $(document).ready(function() {
      console.log("Doc ready")
-                
-     /*
-        //INIT Soft dist
-        var t_softdist = $('#softdist').DataTable({
-              "paging":   false,
-              "info":     false,
-                bFilter: false
-        } );
-     
     
-    data.softdist.forEach(function(item){
-        t_softdist.row.add([item.software, item.count, item.perc]).draw();
-    });
-    */
     showChart( $('.btn_show_chart') )
     $('.btn_show_chart').click(function() {
         showChart($(this))
@@ -277,7 +218,6 @@
         showData($(this))
     });
  
-    
     $('#dialogclose').click(function() {
         $('#dialog').hide();
     });
@@ -287,11 +227,22 @@
         var status= $('#dialogstatus').text();
         
         
-        var url="/d/datasets?portalID="+portalID+"&snapshot="+snapshot+"&statuspre="+status+"&limit=5"        
+        var url="/d/"+cat+"?portalID="+portalID+"&snapshot="+snapshot+"&statuspre="+status+"&limit=5"        
         console.log(url)
+        var ul = $("#"+cat+"Sample ul")
         $.getJSON( url, function( data ) {
             console.log("received")
             console.log(data)
+            for(i in data){
+                ul.append(  "<li>"+
+                            "<span>"+data[i].id+"</span>"+
+                            "<span>"+data[i].portalID+"</span>"+
+                            "<span>"+data[i].status+"</span>"+
+                            "</li>")
+                }
+                        
+            
+              
         })
         $('#dialog').hide();
     });

@@ -81,6 +81,13 @@ class PMDActivityAnalyser(Analyser):
             tstats['head_done'] =  sum(resp.values()) == res_unique if resp else False
             if not tstats['head_done'] and resp:
                 print pmd.portal_id, sum(resp.values()) , res_unique
+            
+            if 'first_lookup' in pmd.res_stats:
+                stats['head_start']= pmd.res_stats['first_lookup']
+            if 'last_lookup' in pmd.res_stats:
+                stats['head_end']= pmd.res_stats['last_lookup']
+            
+            
         else:
             tstats['head_missing']=True
 

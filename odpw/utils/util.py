@@ -17,7 +17,7 @@ import requests.exceptions
 import exceptions
 import math
 from collections import defaultdict
-
+from datetime import datetime, timedelta, date
 
 import structlog
 log = structlog.get_logger()
@@ -54,6 +54,43 @@ class ErrorHandler():
                 print " ",exc, count
             print " -------------------------"
 
+def getSnapshotfromTime(now, delta=None,before=False):
+    if delta:
+        if before:
+            now -= delta
+        else:
+            now += delta
+            
+    y=now.isocalendar()[0]
+    w=now.isocalendar()[1]
+    sn=str(y)[2:]+'{:02}'.format(w)
+    return int(sn)
+
+
+def weekIter(startDate, endDate, delta=timedelta(days=7)):
+    currentDate = startDate
+        
+    while currentDate < endDate:
+        yield getSnapshotfromTime(currentDate)
+        currentDate += delta
+
+def tofirstdayinisoweek(yearweek):
+    year=int('20'+str(yearweek)[:2])
+    week=int(str(yearweek)[2:])
+    ret = datetime.strptime('%04d-%02d-1' % (year, week), '%Y-%W-%w')
+    if date(year, 1, 4).isoweekday() > 4:
+        ret -= timedelta(days=7)
+    return ret
+
+def getNextWeek(snapshot):
+    d = tofirstdayinisoweek(snapshot)
+    
+    return getSnapshotfromTime(d, timedelta(days=7), before=False)
+     
+    
+def getPreviousWeek(snapshot):
+    d = tofirstdayinisoweek(snapshot)
+    return getSnapshotfromTime(d, timedelta(days=7), before=True)
 
 def getPackage(apiurl, id):
     ex =None
