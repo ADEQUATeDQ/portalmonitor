@@ -47,7 +47,7 @@ class ODPWApplication(tornado.web.Application):
             url(r'/portals/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalsHandler),
             url(r'/portal/?(?P<portalID>[^\/]+)?/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalHandler),
             
-            (r'/static/(.*)', MyStaticFileHandler),
+            (r'/portalwatch2/static/(.*)', MyStaticFileHandler),
             (r'/d/?(?P<source>[datasets|resources]+)?', DataHandler),
             (r'/.*$', NoDestinationHandler)
         ]
@@ -66,7 +66,7 @@ class ODPWApplication(tornado.web.Application):
         self.db = db
         
         if printHtml:
-            self.printHtml = static_path
+            self.printHtml = join(here, 'static')
         
 
 
