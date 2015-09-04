@@ -9,7 +9,8 @@ from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.compare_analyser import CKANKeyIntersectionAnalyser, OGDMetadatenAnalyser
 from odpw.analysers.core import ElementCountAnalyser, HistogramAnalyser, StatusCodeAnalyser
 from odpw.analysers.count_analysers import DatasetCount, ResourceCount, CKANFormatCount, CKANTagsCount, CKANKeysCount, \
-    CKANLicenseIDCount
+    CKANLicenseIDCount, DCATTagsCount, DCATFormatCount
+from odpw.analysers.evolution import DatasetEvolution
 from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
     ContactabilityHistogram, OpennessHistogram, UsageHistogram, AccuracyHistogram, FormatHistogram, FormatDistribution
@@ -222,6 +223,90 @@ def tag_report(dbm, sn):
 #    report = Report([key_rep, core_rep, extra_rep, res_rep])
 #    return report
 
+def datasets_report(datasets_iter):
+    ds_analyser = AnalyserSet()
+
+    ds_count = ds_analyser.add(DatasetCount())
+    format_count = ds_analyser.add(CKANFormatCount())
+    tags_count = ds_analyser.add(CKANTagsCount())
+    lid_count = ds_analyser.add(CKANLicenseIDCount(total_count=True))
+
+    bins=np.arange(0.0,1.1,0.1)
+    compl_histogram = ds_analyser.add(CompletenessHistogram(bins=bins))
+    cont_histogram = ds_analyser.add(ContactabilityHistogram(bins=bins))
+    open_histogram = ds_analyser.add(OpennessHistogram(bins=bins))
+
+    process_all(ds_analyser, datasets_iter)
+
+    ################# RESULTS ###########################
+    print 'ds_count', ds_count.getResult()
+    print 'license ids', len(lid_count.getResult())
+    print 'file formats', len(format_count.getResult())
+    print 'tags', len(tags_count.getResult())
+
+    # top k reporter
+    format_rep = FormatCountReporter(format_count, topK=3)
+    tags_rep = TagReporter(tags_count, ds_count, topK=3)
+    lid_rep = ElementCountReporter(lid_count, columns=['License ID', 'Count'], topK=3)
+
+    # histogram reporting
+    #col = ['black', 'white', 'dimgrey', 'lightgrey']
+    col = ['black', 'red', 'blue', 'green']
+    keys_labels = {
+        'total': "$\mathcal{K}$",
+        'res': "$\mathcal{K^R}$",
+        'core': "$\mathcal{K^C}$",
+        'extra': "$\mathcal{K^E}$"
+    }
+
+    ylabel = "Datasets"
+    filename = "qc.pdf"
+    res = compl_histogram.getResult()
+    data = OrderedDict([('total', res['total']), ('core', res['core']), ('extra', res['extra']), ('res', res['res'])])
+    compl_rep = MultiHistogramReporter(data, labels=keys_labels, xlabel="$Q_c$", ylabel=ylabel, filename=filename, colors=col)
+
+    labels = {'email': "$Q_i^{e}$", 'url': "$Q_i^u$", 'total': "$Q_i^v$"}
+    res = cont_histogram.getResult()
+    data = OrderedDict([('total', res['total_total']), ('url', res['url_total']), ('email', res['email_total'])])
+    con_rep = MultiHistogramReporter(data, labels=labels, xlabel="$Q_i$", ylabel=ylabel, filename="qi.pdf", colors=col)
+
+    labels = {'license': "$Q_o^l$", 'format': "$Q_o^f$"}
+    res = open_histogram.getResult()
+    data = OrderedDict([('license', res['license']), ('format', res['format'])])
+    open_rep = MultiHistogramReporter(data, labels=labels, xlabel="$Q_o$", ylabel=ylabel, filename="qo.pdf", colors=col)
+
+    re = Report([con_rep, compl_rep, open_rep, format_rep, tags_rep, lid_rep])
+    return re
+
+def socrata_report(dbm, sn):
+    pmd_analyser = AnalyserSet()
+
+    # 1. STATS
+    ds_count = pmd_analyser.add(DatasetCount())
+    format_count = pmd_analyser.add(DCATFormatCount())
+    tags_count = pmd_analyser.add(DCATTagsCount())
+
+    # 2. Portal size distribution
+    bins = [0,50,100,500,1000,5000,10000,10000000]
+    ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
+
+    pmds = dbm.getPortalMetaDatasBySoftware(software='Socrata', snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
+    process_all(pmd_analyser, pmd_iter)
+
+    ################# RESULTS ###########################
+    print 'ds_count', ds_count.getResult()
+    print 'file formats', len(format_count.getResult())
+    print 'tags', len(tags_count.getResult())
+
+    # top k reporter
+    format_rep = FormatCountReporter(format_count, topK=10)
+    tags_rep = TagReporter(tags_count, ds_count, topK=10)
+    csv_re = Report([format_rep, tags_rep])
+    csv_re.csvreport('socrata')
+
+    print 'ds_histogram', ds_histogram.getResult()
+
 
 
 def obd_report(dbm, sn):
@@ -321,6 +406,7 @@ def obd_report(dbm, sn):
     re = Report([con_rep, compl_rep, open_rep, usage_rep, scatter])
     return re
 
+
 def openness_report(dbm, sn):
     pmd_analyser = AnalyserSet()
 
@@ -337,25 +423,30 @@ def openness_report(dbm, sn):
     re = Report([lid_rep, format_rep])
     return re
 
-def accuracy_report(dbm):
-    path = 'tmp/accuracy/accr.pkl'
+def accuracy_report(portals):
+    path = 'tmp/accuracy/'
+    with open(path + 'accr.pkl', 'r') as f:
+        accr_res = pickle.load(f)
 
-    accr_res = []
-    with open(path, 'r') as f:
-        accr_res.append(pickle.load(f))
+    p_ids = []
+    for i, p in enumerate(Portal.iter(portals)):
+        p_ids.append(p.id)
+        pkl_path = path + p.id + '.pkl'
+        if os.path.isfile(pkl_path):
+            with open(pkl_path, 'r') as f:
+                pkl_file = pickle.load(f)
+                for k in pkl_file:
+                    accr_res[k] = pkl_file[k]
+
+    # filter out portals
+    dicts = [{k: accr_res[k]} for k in accr_res if k in p_ids]
+
 
     col = ['black', 'red', 'blue', 'green']
-    portals = dbm.getPortals(software='CKAN')
-    for p in Portal.iter(portals):
-        pkl_file = path + p.id + '.pkl'
-        if os.path.exists(pkl_file):
-            with open(pkl_file, 'r') as f:
-                accr_res.append(pickle.load(f))
-
     analyser = AnalyserSet()
     bins = np.arange(0.0, 1.1, 0.1)
     histogram = analyser.add(AccuracyHistogram(bins=bins))
-    process_all(analyser, accr_res)
+    process_all(analyser, dicts)
 
 
     counts = histogram.getCounts()
@@ -428,10 +519,21 @@ def format_dist_report(dbm, sn):
     return re
 
 
+def evolution_report(pmd):
+    analyser = AnalyserSet()
+    evo = analyser.add(DatasetEvolution())
+
+
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
-    aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
-    report = overlap_report(dbm, sn, portals=aut_portals)
+    #aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
+    #datasets = []
+    #for id in aut_portals:
+    #    datasets += [ds for ds in Dataset.iter(dbm.getDatasets(id, sn))]
 
-    report.csvreport('tmp/overlap')
+    #report = datasets_report(datasets)
+    #report.plotreport('tmp/aut')
+    #report.csvreport('tmp/aut')
+
+    socrata_report(dbm, sn)
