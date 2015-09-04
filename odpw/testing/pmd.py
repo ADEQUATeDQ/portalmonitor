@@ -23,6 +23,14 @@ if __name__ == '__main__':
     #iter = Portal.iter(portals)
     iter = PortalMetaData.iter(pmd)
 
+
+    for pmd in iter:
+        import pprint
+        pprint.pprint(pmd.qa_stats)
+
+
+
+
     ae = AnalyserSet()
     #ca=ae.add(ElementCountAnalyser(funct=lambda portal: portal.iso3))
     bins = [0,50,100,500,1000,5000,10000,50000,100000,1000000]

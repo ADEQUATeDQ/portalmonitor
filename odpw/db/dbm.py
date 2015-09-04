@@ -4,6 +4,7 @@ from __future__ import generators
 __author__ = 'jumbrich'
 
 from sqlalchemy.sql.expression import join, exists
+from sqlalchemy import case
 import structlog
 log =structlog.get_logger()
 
@@ -229,15 +230,17 @@ class PostgressDBM(object):
     ####         
     def insertPortal(self, Portal):
         with Timer(key="insertPortal") as t:
-            ins = self.portals.insert().values(
+            with self.engine.begin() as con:
+                ins = self.portals.insert().values(
                                                id=Portal.id,
                                                url=Portal.url,
                                                apiurl= Portal.apiurl,
                                                software=Portal.software,
                                                iso3=Portal.iso3,
                                                )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            ins.execute()
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                con.execute(ins)
+            
     
     def updatePortal(self, Portal):
         with Timer(key="updatePortal") as t:
@@ -405,33 +408,35 @@ class PostgressDBM(object):
     
     def updatePortalMetaData(self, PortalMetaData):
         with Timer(key="updatePortalMetaData") as t:
-            fetch_stats=None
-            if PortalMetaData.fetch_stats:
-                fetch_stats=PortalMetaData.fetch_stats
-                #json.dumps(nested_json(PortalMetaData.fetch_stats),default=date_handler)
-            general_stats=None
-            if PortalMetaData.general_stats:
-                general_stats=PortalMetaData.general_stats
-                #json.dumps(nested_json(PortalMetaData.general_stats),default=date_handler)
-            qa_stats=None
-            if PortalMetaData.qa_stats:
-                qa_stats=PortalMetaData.qa_stats
-                #json.dumps(nested_json(PortalMetaData.qa_stats),default=date_handler)
-            res_stats=None
-            if PortalMetaData.res_stats:
-                res_stats=PortalMetaData.res_stats
-                #json.dumps(nested_json(PortalMetaData.res_stats),default=date_handler
-                
-            ins = self.pmd.update().where((self.pmd.c.snapshot==PortalMetaData.snapshot) & (self.pmd.c.portal_id== PortalMetaData.portal_id)).values(
-                                               fetch_stats=fetch_stats,
-                                               res_stats=res_stats,
-                                               qa_stats=qa_stats,
-                                               general_stats=general_stats,
-                                               resources=PortalMetaData.resources,
-                                               datasets=PortalMetaData.datasets
-                                               )
-            self.log.debug("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
-            ins.execute()
+            with self.engine.begin() as con:
+                fetch_stats=None
+                if PortalMetaData.fetch_stats:
+                    fetch_stats=PortalMetaData.fetch_stats
+                    #json.dumps(nested_json(PortalMetaData.fetch_stats),default=date_handler)
+                general_stats=None
+                if PortalMetaData.general_stats:
+                    general_stats=PortalMetaData.general_stats
+                    #json.dumps(nested_json(PortalMetaData.general_stats),default=date_handler)
+                qa_stats=None
+                if PortalMetaData.qa_stats:
+                    qa_stats=PortalMetaData.qa_stats
+                    #json.dumps(nested_json(PortalMetaData.qa_stats),default=date_handler)
+                res_stats=None
+                if PortalMetaData.res_stats:
+                    res_stats=PortalMetaData.res_stats
+                    #json.dumps(nested_json(PortalMetaData.res_stats),default=date_handler
+                    
+                ins = self.pmd.update().where((self.pmd.c.snapshot==PortalMetaData.snapshot) & (self.pmd.c.portal_id== PortalMetaData.portal_id)).values(
+                                                   fetch_stats=fetch_stats,
+                                                   res_stats=res_stats,
+                                                   qa_stats=qa_stats,
+                                                   general_stats=general_stats,
+                                                   resources=PortalMetaData.resources,
+                                                   datasets=PortalMetaData.datasets
+                                                   )
+                self.log.debug("updatePortalMetaData",query=ins.compile(), params=ins.compile().params)
+                con.execute(ins)
+            
 
 
     #####
@@ -612,17 +617,13 @@ class PostgressDBM(object):
             if status:
                 s= s.where(self.datasets.c.status == status)
             elif statuspre:
-                
                 sp=int(statuspre[0])
-                print sp
                 s= s.where(self.datasets.c.status >= sp*100)
                 s= s.where(self.datasets.c.status <= (sp+1)*100)
             if limit:
                 s=s.limit(limit)
             
-            print s
             self.log.debug(query=s.compile(), params=s.compile().params)    
-            
             
             return s.execute()
 
@@ -726,29 +727,30 @@ class PostgressDBM(object):
             
     def insertResource(self, Resource):
         with Timer(key="insertResource") as t:
-            origin=None
-            if Resource.origin:
-                origin=Resource.origin
-                #json.dumps(nested_json(Resource.origin),default=date_handler)
-            header=None
-            if Resource.header:
-                header=Resource.header
-                #json.dumps(nested_json(Resource.header),default=date_handler)
-            
-            ins = self.resources.insert().values(
-                                               status=Resource.status,
-                                               url = Resource.url,
-                                               snapshot = Resource.snapshot,
-                                               origin=origin,
-                                               header=header,
-                                               mime=Resource.mime,
-                                               size=Resource.size,
-                                               timestamp=Resource.timestamp,
-                                               exception=Resource.exception
-                                               )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            #self.conn.execute(ins)
-            ins.execute() 
+            with self.engine.begin() as con:
+                origin=None
+                if Resource.origin:
+                    origin=Resource.origin
+                    #json.dumps(nested_json(Resource.origin),default=date_handler)
+                header=None
+                if Resource.header:
+                    header=Resource.header
+                    #json.dumps(nested_json(Resource.header),default=date_handler)
+                
+                ins = self.resources.insert().values(
+                                                   status=Resource.status,
+                                                   url = Resource.url,
+                                                   snapshot = Resource.snapshot,
+                                                   origin=origin,
+                                                   header=header,
+                                                   mime=Resource.mime,
+                                                   size=Resource.size,
+                                                   timestamp=Resource.timestamp,
+                                                   exception=Resource.exception
+                                                   )
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                #self.conn.execute(ins)
+                con.execute(ins) 
   
     def countProcessedResources(self, snapshot=None,portalID=None):
         with Timer(key="countProcessedResources") as t:
@@ -831,8 +833,11 @@ class PostgressDBM(object):
     def getResourceWithoutHead(self, snapshot=None, status=-1, limit=None):
         with Timer(key="getResourceWithoutHead") as t:
             s=select([self.resources]).\
-                where(self.resources.c.snapshot==snapshot).\
-                where(self.resources.c.status == status)
+                where(self.resources.c.snapshot==snapshot)
+                
+            if status is not None:
+                s.where(self.resources.c.status == status)
+            
             if limit:
                 s=s.limit(limit)
             #if status:
@@ -844,6 +849,23 @@ class PostgressDBM(object):
             
             return s.execute()
             #return self.conn.execute(s)
+    
+    def getResourceByURL(self, url, snapshot):
+        with Timer(key="getResource") as t:
+            s = select([self.resources])
+        
+            s= s.where(self.resources.c.url == url)
+            s= s.where(self.resources.c.snapshot == snapshot)
+            
+            self.log.debug(query=s.compile(), params=s.compile().params)    
+            
+            
+            res = s.execute().fetchone()
+            #self.conn.execute(s).fetchone()
+            if res:
+                return Resource.fromResult( dict( res))
+            return None
+
             
     def getResource(self, Resource):
         with Timer(key="getResource") as t:
@@ -865,27 +887,28 @@ class PostgressDBM(object):
         
     def updateResource(self, Resource):
         with Timer(key="updateResource") as t:
-            origin=None
-            if Resource.origin:
-                origin=Resource.origin
-                #json.dumps(nested_json(Resource.origin),default=date_handler)
-            header=None
-            if Resource.header:
-                header=Resource.header
-                #json.dumps(nested_json(Resource.header),default=date_handler)
-            
-            ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
-                                               status=Resource.status,
-                                               origin=origin,
-                                               header=header,
-                                               mime=Resource.mime,
-                                               size=Resource.size,
-                                               timestamp=Resource.timestamp,
-                                               exception=Resource.exception
-                                               )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            ins.execute()
-            #self.conn.execute(ins) 
+            with self.engine.begin() as con:
+                origin=None
+                if Resource.origin:
+                    origin=Resource.origin
+                    #json.dumps(nested_json(Resource.origin),default=date_handler)
+                header=None
+                if Resource.header:
+                    header=Resource.header
+                    #json.dumps(nested_json(Resource.header),default=date_handler)
+                
+                ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
+                                                   status=Resource.status,
+                                                   origin=origin,
+                                                   header=header,
+                                                   mime=Resource.mime,
+                                                   size=Resource.size,
+                                                   timestamp=Resource.timestamp,
+                                                   exception=Resource.exception
+                                                   )
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                con.execute(ins)
+             
           
           
     ##############
@@ -897,8 +920,8 @@ class PostgressDBM(object):
             where(self.datasets.c.portal_id==portalID)
             if snapshot:
                 s=s.where(self.datasets.c.snapshot==snapshot)
-            
-            s=s.group_by(self.datasets.c.snapshot)
+            else:
+                s=s.group_by(self.datasets.c.snapshot)
             
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().scalar()
@@ -1033,6 +1056,25 @@ class PostgressDBM(object):
         
         self.log.debug(query=s.compile(), params=s.compile().params)
         return s.execute()
+    
+    def systemEvolution(self):
+        s= select([
+                self.pmd.c.snapshot, self.portals.c.software,
+                func.count(self.portals.c.id).label("portals"),
+                func.sum( case([(self.pmd.c.datasets>=0, self.pmd.c.datasets)], else_=0)).label("datasets"),
+                func.sum( case([(self.pmd.c.resources>=0, self.pmd.c.resources)], else_=0)).label("resources"),
+                func.sum( self.pmd.c.fetch_stats['accessed'].cast(Integer)).label("accessed"),
+                func.sum( self.pmd.c.fetch_stats['added_accessed'].cast(Integer)).label("added_accessed"),
+                func.sum( self.pmd.c.fetch_stats['added_mis_av'].cast(Integer)).label("added_mis_av"),
+                func.sum( self.pmd.c.fetch_stats['mis_av'].cast(Integer)).label("mis_av"),
+                func.sum( self.pmd.c.fetch_stats['dead'].cast(Integer)).label("dead")
+                
+                ]).select_from(self.pmd.join(self.portals, self.portals.c.id==self.pmd.c.portal_id)).group_by(self.pmd.c.snapshot,self.portals.c.software).order_by(self.pmd.c.snapshot)
+        
+        print s.compile()
+        print s.compile().params
+        return s.execute()
+        #select snapshot, software, count(portal_id), sum(datasets), sum(resources), sum( (pmd.fetch_stats->>'accessed')::int), sum( (pmd.fetch_stats->>'added_accessed')::int), sum( (pmd.fetch_stats->>'added_mis_av')::int),  sum( (pmd.fetch_stats->>'mis_av')::int),  sum( (pmd.fetch_stats->>'dead')::int) from pmd inner join portals on pmd.portal_id = portals.id group by snapshot, software order by snapshot
 
     
 def name():

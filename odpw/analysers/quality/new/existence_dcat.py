@@ -14,9 +14,6 @@ from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.utils import dcat_access
 ## Provenance 
 
-
-
-
 class ExistenceDCAT(DistinctElementCount):
     
     def __init__(self, accessFunct):
@@ -29,29 +26,95 @@ class ExistenceDCAT(DistinctElementCount):
         self.analyse_generic(e)
         print self.name(), value, all(value),e
         return e
-    
-class ProvCreationDCAT(ExistenceDCAT):
-    def __init__(self):
-        super(ProvCreationDCAT, self).__init__(dcat_access.getCreationDate)
+   
+class DescriptionDCAT(ExistenceDCAT):  
+     pass
 
-class ProvModificationDCAT(ExistenceDCAT):
-    def __init__(self):
-        super(ProvModificationDCAT, self).__init__(dcat_access.getModificationDate)
+class TemporalDCAT(DescriptionDCAT):  
+     pass
+
+class SpatialDCAT(DescriptionDCAT):  
+     pass
     
-class ProvContactDCAT(ExistenceDCAT):        
+class DatasetTitleDCAT(DescriptionDCAT):
     def __init__(self):
-        super(ProvContactDCAT, self).__init__(dcat_access.getContactPoint)
+        super(DatasetTitleDCAT, self).__init__(dcat_access.getTitle)
         
-class ProvKeywordsDCAT(ExistenceDCAT):
+class DatasetDescriptionDCAT(DescriptionDCAT):
     def __init__(self):
-        super(ProvKeywordsDCAT, self).__init__(dcat_access.getKeywords)
+        super(DatasetDescriptionDCAT, self).__init__(dcat_access.getDescription)
+ 
+class DatasetPublisherDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetPublisherDCAT, self).__init__(dcat_access.getPublisher)
     
-
-class ProvTitleDCAT(ExistenceDCAT):
+class DatasetCreationDCAT(DescriptionDCAT):
     def __init__(self):
-        super(ProvTitleDCAT, self).__init__(dcat_access.getTitle)
+        super(DatasetCreationDCAT, self).__init__(dcat_access.getCreationDate)
+
+class DatasetModificationDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetModificationDCAT, self).__init__(dcat_access.getModificationDate)
+    
+class DatasetContactDCAT(DescriptionDCAT):        
+    def __init__(self):
+        super(DatasetContactDCAT, self).__init__(dcat_access.getContactPoint)
+        
+class DatasetKeywordsDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetKeywordsDCAT, self).__init__(dcat_access.getKeywords)
+
+class DatasetIdentifierDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetIdentifierDCAT, self).__init__(dcat_access.getIdentifier)
+
+class DatasetTemporalDCAT(TemporalDCAT):
+    def __init__(self):
+        super(DatasetTemporalDCAT, self).__init__(dcat_access.getTemporal)    
+
+class DatasetSpatialDCAT(SpatialDCAT):
+    def __init__(self):
+        super(DatasetSpatialDCAT, self).__init__(dcat_access.getSpatial)      
+
+class DatasetThemeDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetThemeDCAT, self).__init__(dcat_access.getTheme)      
+                
+class DatasetAccrualPeriodicityDCAT(DescriptionDCAT):
+    def __init__(self):
+        super(DatasetAccrualPeriodicityDCAT, self).__init__(dcat_access.getFrequency)
+
+
+    
+class LocalDCAT(ExistenceDCAT):  
+     pass    
+    
+class DatasetLanguageDCAT(LocalDCAT):
+    def __init__(self):
+        super(DatasetLanguageDCAT, self).__init__(dcat_access.getLanguage)
+
+
+class RightDCAT(ExistenceDCAT):
+    pass
+    
+class ProvLicenseDCAT(RightDCAT):
+    def __init__(self):
+        super(ProvLicenseDCAT, self).__init__(dcat_access.getDistributionLicenses)
     
 
 
 def getAllProvAnalyser():
     return [cls() for cls in ExistenceDCAT.__subclasses__()]
+
+
+def getAllDescriptiveAnalyser():
+    return [cls() for cls in DescriptionDCAT.__subclasses__()]
+
+def getAllTemporalAnalyser():
+    return [cls() for cls in TemporalDCAT.__subclasses__()]
+
+def getAllSpatialAnalyser():
+    return [cls() for cls in SpatialDCAT.__subclasses__()]
+
+def getAllLocalAnalyser():
+    return [cls() for cls in LocalDCAT.__subclasses__()]

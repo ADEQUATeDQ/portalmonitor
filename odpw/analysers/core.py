@@ -61,7 +61,7 @@ class DistinctElementCount(Analyser):
         self.bloom=None
         self.set=None
         if withDistinct:
-            self.bloom=ScalableBloomFilter()
+            self.bloom=ScalableBloomFilter(error_rate=0.00001)
             self.distinct=0
             self.set=set([])
     

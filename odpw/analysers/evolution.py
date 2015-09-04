@@ -30,7 +30,7 @@ class DatasetEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.fetch_stats:
             for i in DatasetLifeStatsAnalyser.keys:
-                self.add(pmd.snapshot, i,pmd.fetch_stats.get(i,0))
+                self.add(pmd.snapshot, i, pmd.fetch_stats.get(i,0))
         else:
             self.add(pmd.snapshot,'no_stats', 1)
         

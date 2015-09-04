@@ -276,6 +276,7 @@ class DCATDistributionCount(DistinctElementCount):
                         url = urlnorm.norm(url.strip())
                         # props=util.head(url)
                     except Exception as e:
+                        print e
                         pass
                     
                     self.analyse_generic(url.strip())
