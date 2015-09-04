@@ -67,9 +67,11 @@
     console.log("SERVER DATA")
     console.log(data)
     
+
+
     $(document).ready(function () {
         console.log("Ready")
-        $('#selectportal').on('select.tools.filterbox', function(sel)
+        /*$('#selectportal').on('select.tools.filterbox', function(sel)
         {
             console.log(sel.id);
             var options = $("#selectsnapshot");
@@ -88,8 +90,12 @@
             $("#selectsnapshot").filterbox()
             
         });
+        */
      });
-     $(document).on('keyup','#selectportal-input', function (e) {
+
+
+
+   $(document).on('keyup','#selectportal-input', function (e) {
         var filter = $(this).val().toLowerCase().trim();
         
         var ul = $(this).siblings(".filterbox-list")

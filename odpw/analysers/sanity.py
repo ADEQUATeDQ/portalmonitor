@@ -98,7 +98,7 @@ class HeadSanity(Analyser):
             
             sanity={}
             
-            resp = pmd.res_stats.get('status',None)
+            resp = pmd.res_stats.get('respCodes',None)
             sanity['head_status'] =  sum(resp.values()) == res['idx_res'] if resp else False
             sanity['head_size'] = 'size' in pmd.res_stats
             

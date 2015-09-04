@@ -8,7 +8,6 @@ from sys import exc_info
 import structlog
 
 
-
 from sqlalchemy.exc import OperationalError
 import os
 import odpw
@@ -39,13 +38,14 @@ import odpw.utils.report as reportcli
 import odpw.utils.migrate as migratecli
 import odpw.utils.datset_life as datasetlifecli
 import odpw.utils.datset_life_stats as datasetlifestatscli
+import odpw.utils.quality as qualitycli
 submodules=[dbcli, initcli, fetchcli,  
             statuscli, servercli,
             reportcli, dmcli, 
             headcli, migratecli,
             headStatscli,fetchStatscli,
-            datasetlifecli,datasetlifestatscli
-            
+            datasetlifecli,datasetlifestatscli,
+            qualitycli
             ]
 
 
@@ -139,7 +139,6 @@ def start ():
                     for key in db:
                         if key in config['db']:
                             db[key]=config['db'][key]
-                    print db
         except Exception as e:
             print "Exception during config initialisation",e
             return

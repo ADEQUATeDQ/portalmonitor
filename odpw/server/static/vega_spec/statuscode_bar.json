@@ -1,0 +1,280 @@
+{
+  "width": 300,
+  "height": 150,
+  "padding": {
+    "top": 30,
+    "left": 50,
+    "bottom": 30,
+    "right": 100
+  },
+  "signals": [
+    {
+      "name": "tooltip",
+      "init": {},
+      "streams": [
+        {
+          "type": "rect:mouseover",
+          "expr": "datum"
+        },
+        {
+          "type": "rect:mouseout",
+          "expr": "{}"
+        }
+      ]
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {
+          "count": 0,
+          "pre": "3",
+          "perc": 0,
+          "label": "redirect-loop (3xx)"
+        },
+        {
+          "count": 109,
+          "pre": "2",
+          "perc": 100,
+          "label": "ok"
+        },
+        {
+          "count": 0,
+          "pre": "5",
+          "perc": 0,
+          "label": "server-error (5xx)"
+        },
+        {
+          "count": 10,
+          "pre": "4",
+          "perc": 10,
+          "label": "offline (4xx)"
+        },
+        {
+          "count": 0,
+          "pre": "7",
+          "perc": 0,
+          "label": "connection-error"
+        },
+        {
+          "count": 0,
+          "pre": "6",
+          "perc": 0,
+          "label": "other-error"
+        },
+        {
+          "count": 0,
+          "pre": "9",
+          "perc": 0,
+          "label": "uri-error"
+        },
+        {
+          "count": 0,
+          "pre": "8",
+          "perc": 0,
+          "label": "value-error"
+        },
+        {
+          "count": 0,
+          "pre": "-",
+          "perc": 0,
+          "label": "unknown"
+        }
+      ]
+    }
+  ],
+  "predicates": [
+    {
+      "name": "tooltip",
+      "type": "==",
+      "operands": [
+        {
+          "signal": "tooltip._id"
+        },
+        {
+          "arg": "id"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "ordinal",
+      "range": "width",
+      "domain": {
+        "data": "table",
+        "field": "pre"
+      }
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "domain": {
+        "data": "table",
+        "field": "perc"
+      },
+      "nice": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "data": "table",
+        "field": "pre"
+      },
+      "range": "category20"
+    }
+  ],
+ 
+  "axes": [
+    {
+      "type": "x",
+      "scale": "x",
+      "tickSize": 0,
+      "tickPadding": 8,
+       "properties": {
+        "majorTicks": {
+          "strokeWidth": {
+            "value": 2
+          }
+        },
+        "title": {
+          "fontSize": {
+            "value": 16
+          }
+        },
+        "axis": {
+          "strokeWidth": {
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "y",
+      "scale": "y",
+      "tickSize": 2,
+      "tickPadding": 5,
+      "offset": 10,
+      "properties": {
+        "majorTicks": {
+          "strokeWidth": {
+            "value": 2
+          }
+        },
+        "title": {
+          "fontSize": {
+            "value": 16
+          }
+        },
+        "axis": {
+          "stroke": {
+            "value": "#333"
+          },
+          "strokeWidth": {
+            "value": 1
+          }
+        }
+      }
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {
+        "data": "table"
+      },
+      "properties": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "pre"
+          },
+          "width": {
+            "scale": "x",
+            "band": true,
+            "offset": -1
+          },
+          "y": {
+            "scale": "y",
+            "field": "perc"
+          },
+          "y2": {
+            "scale": "y",
+            "value": 0
+          }
+        },
+        "update": {
+          "fill": {
+            "rule": [
+              {
+                "predicate": {
+                  "name": "tooltip",
+                  "id": {
+                    "field": "_id"
+                  }
+                },
+                "value": "red"
+              },
+              {
+                "scale": "color",
+                "field": "pre"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "enter": {
+          "align": {
+            "value": "center"
+          },
+          "fill": {
+            "value": "#333"
+          }
+        },
+        "update": {
+          "x": {
+            "scale": "x",
+            "signal": "tooltip.pre"
+          },
+          "dx": {
+            "scale": "x",
+            "band": true,
+            "mult": 0.5
+          },
+          "y": {
+            "scale": "y",
+            "signal": "tooltip.perc",
+            "offset": -1
+          },
+          "text": {
+            "signal": "tooltip.count"
+          },
+          "fillOpacity": {
+            "rule": [
+              {
+                "predicate": {
+                  "name": "tooltip",
+                  "id": {
+                    "value": null
+                  }
+                },
+                "value": 0
+              },
+              {
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

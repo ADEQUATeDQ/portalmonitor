@@ -7,7 +7,8 @@ Created on Aug 17, 2015
 from odpw.db.models import Dataset, DatasetLife, Portal
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.fetching import DCATDatasetAge
-from odpw.utils.util import getSnapshot, progressIterator, ErrorHandler
+from odpw.utils.util import getSnapshot, progressIterator, ErrorHandler,\
+    tofirstdayinisoweek, getSnapshotfromTime, weekIter
 from _collections import defaultdict
 from odpw.db.dbm import PostgressDBM
 
@@ -82,7 +83,6 @@ def cli(args,dbm):
         snapshots=set([])
         if not sn:
             for s in dbm.getSnapshots(portalID=p.id):
-                print s['snapshot']
                 snapshots.add(s['snapshot'])
         else:
             snapshots.add(sn)

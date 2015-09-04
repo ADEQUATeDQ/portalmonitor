@@ -6,38 +6,17 @@ Created on Aug 18, 2015
 from odpw.analysers import Analyser
 from odpw.db.models import DatasetLife, PortalMetaData
 from odpw.utils.dataset_converter import DCAT, DCT
-import datetime
+
 import dateutil
 
 from datetime import datetime, timedelta, date
 from _collections import defaultdict
+from odpw.utils.util import tofirstdayinisoweek, getSnapshotfromTime, weekIter
 
-def weekIter(startDate, endDate, delta=timedelta(days=7)):
-    currentDate = startDate
-        
-    while currentDate < endDate:
-        yield getSnapshotfromTime(currentDate)
-        currentDate += delta
 
-def tofirstdayinisoweek(yearweek):
-    year=int('20'+str(yearweek)[:2])
-    week=int(str(yearweek)[2:])
-    ret = datetime.strptime('%04d-%02d-1' % (year, week), '%Y-%W-%w')
-    if date(year, 1, 4).isoweekday() > 4:
-        ret -= timedelta(days=7)
-    return ret
 
-def getSnapshotfromTime(now, delta=None,before=False):
-    if delta:
-        if before:
-            now -= delta
-        else:
-            now += delta
-            
-    y=now.isocalendar()[0]
-    w=now.isocalendar()[1]
-    sn=str(y)[2:]+'{:02}'.format(w)
-    return int(sn)
+
+
 
 
 class DatasetLifeStatsAnalyser(Analyser):
@@ -161,13 +140,13 @@ class DatasetLifeAnalyser(Analyser):
                 if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                     for f in dcat_el.get(str(DCT.issued),[]):
                         try:
-                            created = datetime.datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            self.ages['created'].append(created)
+                            created = datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                            #self.ages['created'].append(created)
                             break
                         except Exception as e:
                             pass
             if created is None:
-                created = datetime.datetime(2014, 6, 1)
+                created = datetime(2014, 6, 1)
                 print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
             df.updateSnapshot(created.isoformat(),dataset.snapshot )
             if insert:

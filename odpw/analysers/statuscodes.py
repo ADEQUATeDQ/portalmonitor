@@ -6,7 +6,7 @@ Created on Aug 10, 2015
 from odpw.analysers.core import ElementCountAnalyser
 
 
-class DatasetStatusCount(ElementCountAnalyser):
+class DatasetStatusCode(ElementCountAnalyser):
 #    __metaclass__ = AnalyserFactory
     def analyse_Dataset(self, dataset):
         self.add(dataset.status)
@@ -21,6 +21,8 @@ class DatasetStatusCount(ElementCountAnalyser):
             resp_codes = pmd.fetch_stats['respCodes']
             for code in resp_codes:
                 self.add(code, resp_codes[code])
+            return resp_codes
+        return {}
         
         
 class ResourceStatusCode(ElementCountAnalyser):
@@ -28,12 +30,17 @@ class ResourceStatusCode(ElementCountAnalyser):
         self.add(res.status)
 
     def analyse_PortalMetaData(self, pmd):
+        resp_codes= {}
         if pmd.res_stats and 'respCodes' in pmd.res_stats:
             resp_codes = pmd.res_stats['respCodes']
             for code in resp_codes:
                 self.add(code, resp_codes[code])
+                
+        return resp_codes
     
     def update_PortalMetaData(self, pmd):
         if not pmd.res_stats:
             pmd.res_stats = {}
         pmd.res_stats['respCodes'] = self.getResult()
+        
+        

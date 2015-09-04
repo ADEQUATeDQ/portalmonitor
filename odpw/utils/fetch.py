@@ -1,9 +1,10 @@
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
-from odpw.analysers.statuscodes import DatasetStatusCount
+from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.analysers.dbm_handlers import DatasetInserter,\
-    DCATDistributionInserter
+    DCATDistributionInserter, DatasetFetchUpdater
 from odpw.analysers.core import DCATConverter
+from odpw.analysers.datasetlife import DatasetLifeAnalyser
 __author__ = 'jumbrich'
 
 
@@ -17,7 +18,7 @@ import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
 
-from odpw.analysers import  AnalyserSet, process_all
+from odpw.analysers import  AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATResourceInDSAge,\
     DCATDatasetAge
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
@@ -48,11 +49,11 @@ def fetching(obj):
         return
 
     try: 
-        ae = AnalyserSet(timing=True)
+        ae = SAFEAnalyserSet()
         
         ae.add(MD5DatasetAnalyser())
         ae.add(DatasetCount())
-        ae.add(DatasetStatusCount())
+        ae.add(DatasetStatusCode())
 
         #ae.add(DCATConverter(Portal))
         #ae.add(DCATDistributionCount(withDistinct=True))
@@ -91,6 +92,7 @@ def fetching(obj):
         ae.add(DCATDatasetAge())
         
         ae.add(DatasetInserter(dbm))
+        ae.add(DatasetLifeAnalyser(dbm))
         
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)

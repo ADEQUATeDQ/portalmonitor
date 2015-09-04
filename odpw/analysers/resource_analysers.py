@@ -41,7 +41,6 @@ class ResourceSize(Analyser):
             self.elements+=1
     
     def analyse_PortalMetaData(self, element):
-        print element.res_stats
         if element.res_stats and 'size' in element.res_stats:
             self.size += element.res_stats['size']['size']
             self.elements+=element.res_stats['size']['count']

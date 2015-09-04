@@ -37,47 +37,73 @@ class PMDActivityAnalyser(Analyser):
     def __init__(self):
         self.stats=[]
         self.stats_key=['fetch_done','fetch_failed','fetch_running','fetch_missing',
-                        'head_missing','head_done','head_running'
+                        'head_missing','head_running','head_done',
                         'quality_done']
         self.sum={}
         for k in self.stats_key:
             self.sum[k]=0
     
     def analyse_PortalMetaData(self, pmd):
-        stats={ 'pid':pmd.portal_id, 'snapshot':pmd.snapshot,'fetch_error':''}
+        stats={ 'pid':pmd.portal_id, 'snapshot':pmd.snapshot,'fetch_error':'', 'fetch':'missing', 'head':'missing'}
+        tstats={}
+        
         for k in self.stats_key:
-            stats[k]=None
+            tstats[k]=False
         
         if pmd.fetch_stats:
-            stats['fetch_done']=all(pmd.fetch_stats.get(k) for k in PMDActivityAnalyser.times) and pmd.fetch_stats.get('exception')==None
-            stats['fetch_failed'] = all( pmd.fetch_stats.get(k) for k in ['fetch_start', 'exception'])
+            tstats['fetch_done']=all(pmd.fetch_stats.get(k) for k in PMDActivityAnalyser.times) and pmd.fetch_stats.get('exception')==None
+            tstats['fetch_failed'] = all( pmd.fetch_stats.get(k) for k in ['fetch_start', 'exception'])
             for t in PMDActivityAnalyser.times:
                 if t in pmd.fetch_stats:
                     stats[t]= pmd.fetch_stats[t]
             
-            if stats['fetch_failed']:
+            if tstats['fetch_failed']:
                 stats['fetch_error']= pmd.fetch_stats['exception'].split(":")[0].replace("<class '","").replace("'>","").replace("<type '","")
                 
-            stats['fetch_running'] = not stats['fetch_done'] and not stats['fetch_failed'] and  pmd.fetch_stats.get('fetch_start',None) != None
+            tstats['fetch_running'] = not tstats['fetch_done'] and not tstats['fetch_failed'] and  pmd.fetch_stats.get('fetch_start',None) != None
         else:
-            stats['fetch_missing']=True
-            
+            tstats['fetch_missing']=True
+        
+        if tstats['fetch_done']:
+            stats['fetch']="done"
+        if tstats['fetch_failed']:
+            stats['fetch']="failed"
+        if tstats['fetch_running']:
+            stats['fetch']="running"
+        if tstats['fetch_missing']:
+            stats['fetch']="missing"
+        
         if pmd.res_stats:
-            res_total = pmd.res_stats.get('total',-1)
-            res_unique = pmd.res_stats.get('unique',-1)
+            res_unique = pmd.res_stats.get('distinct',-1)
             
-            stats['head_done']=bool(pmd.res_stats['respCodes']) if 'respCodes' in pmd.res_stats else False
-            stats['head_missing']= not stats['head_done']  
+            resp = pmd.res_stats.get('respCodes',None)
+            tstats['head_started'] = sum(resp.values())>0 if resp else False
+            tstats['head_done'] =  sum(resp.values()) == res_unique if resp else False
+            if not tstats['head_done'] and resp:
+                print pmd.portal_id, sum(resp.values()) , res_unique
+            
+            if 'first_lookup' in pmd.res_stats:
+                stats['head_start']= pmd.res_stats['first_lookup']
+            if 'last_lookup' in pmd.res_stats:
+                stats['head_end']= pmd.res_stats['last_lookup']
+            
+            
         else:
-            stats['head_missing']=True
-            
-        #if pmd.qa_stats:
-            
+            tstats['head_missing']=True
+
+        
+        if tstats.get('head_done',False):
+            stats['head']='done'
+        elif tstats.get('head_started',False):
+            stats['head']='running'
+        else: 
+            stats['head']='missing'
+                        
         self.stats.append(stats)
         
-        for k in self.stats_key:
-            if stats[k]:
-                self.sum[k] += 1    
+        
+        self.sum['fetch_'+stats['fetch']] += 1
+        self.sum['head_'+stats['head']] += 1    
         
     
     def done(self):

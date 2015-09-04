@@ -1,117 +1,49 @@
-<!{% extends "_base.jinja" %}
-
-{% block scripts %}
-{{ super() }}
-            <script type="text/javascript" src="{{ static_url('js/list.min.js') }}" ></script>
-            <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<!{% extends "_portal_base.jinja" %}
+{% block subtitle %}
+    <h2>Overview</h2>
 {% endblock %}
 
-
-{% block sidenav %}
-                <li class="active">
-                    <a href="/portal/{{portalID}}/info/{{snapshot}}" > <i class="fa fa-info fa-2x"></i>
-                        <p>Info</p>
-                    </a>
-                </li>
-                <li>
-                    <a href="/portal/{{portalID}}/details/{{snapshot}}"> <i class="fa fa-eye fa-2x"></i>
-                        <p>Details</p>
-                    </a>
-                </li>
-                <li>
-                    <a href="/portal/{{portalID}}/quality/{{snapshot}}"> <i class="fa fa-star-o fa-2x"></i>
-                        <p>Quality</p>
-                    </a>
-                </li>
-                <li>
-                    <a href="/portal/{{portalID}}/activity/{{snapshot}}"> <i class="fa fa-heartbeat fa-2x"></i>
-                        <p>Activities</p>
-                    </a>
-                </li>
-                <li>
-                    <a href="/portal/{{portalID}}/evolution/{{snapshot}}" class="cur"> <i class="fa fa-line-chart  fa-2x"></i>
-                        <p>Evolution</p>
-                    </a>
-                </li>
-{% endblock %}
+{% block portalcontent %}
     
-{% block section %}
-    <div class="units-row units-split end" id="portalInfo">
-                        <div class="unit-70 label-red">
-                            <label>
-                            {{portalID}}
-                            </label>
-                        </div>
-                        <div class="unit-20 label-red">
-                            <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal...">
-                            <option value="{{snapshot}}" >{{snapshot}}</option>
-                                </select>
-                        </div>
-                        <div class="unit-10 label-red">
-                            <span>select</span>
-                        </div>
-                    </div>
-    <div class="units-row">
-            <form onsubmit="this.action='/portal/'+this.selectportal.value+'/details/'+this.selectsnapshot.value;">
-                <div class="unit-70">
-                    <select id="selectportal" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                        {% for portal in data.portalSnapshots %}
-                            <option value="{{portalID}}">{{portalID}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="unit-20">
-                    <select id="selectsnapshot" data-tools="filterbox" data-placeholder="Select portal..." class="width-100">
-                    </select>
-                </div>
-                <div class="unit-10">
-                    <button class="btn">go</button>
-                </div>
-            </form>
+                                
+    <div class="units-row end">
+        <div class="unit-33 card unit-padding">
+            <div class="card_cnt">
+                <p id="datasets" class="card_value text-centered">
+                    {{ data.datasetsumreporter[0]['Value'] }}
+                </p>
             </div>
-            <h2>General Overview</h2>
-            <div class="units-row end">
-                
-                
-                <div class="unit-33 card unit-padding">
-                    <div class="card_header">
-                        <h3 class="text-centered">Datasets</h3>
-                    </div>
-                    <div class="card_cnt">
-                        <p id="datasets" class="card_value text-centered">
-                        {{ data.datasetsumreporter[0]['Value'] }}
-                        </p>
-                    </div>
-                    <div class="card_footer"></div>
-                </div>
-                
-                <div class="unit-33 card unit-padding">
-                    <div class="card_header">
-                        <h3 class="text-centered">Resources</h3>
-                    </div>
-                    <div class="card_cnt">
-                        <p id="resources" class="card_value text-centered">
-                            {{ data.resourcecountreporter.total }}
-                        </p>
-                    </div>
-                    <div class="card_footer">
-                        of which are <span class="label label-white">{{data.resourcecountreporter.urls}}</span><span class="">unique URLs</span>
-                        
-                    </div>
-                </div>
-                <div class="unit-33 card unit-padding">
-                    <div class="card_header"><h3 class="text-centered">Size</h3></div>
-                    <div class="card_cnt">
-                        <p id="resources" class="card_value text-centered">
-                            {{ data.resourcesizereporter.contentlength }}
-                        </p>
-                    </div>
-                    <div class="card_footer">
-                    based on HTTP HEAD content-length information of {{data.resourcesizereporter.count}} resources
-                        
-                    </div>
-                </div>
+            <div class="card_header">
+                <h3 class="text-centered">Datasets</h3>
             </div>
+            <div class="card_footer"></div>
+        </div>
+
+        <div class="unit-33 card unit-padding">
+            <div class="card_cnt">
+                <p id="resources" class="card_value text-centered">
+                    {{ data.resourcecountreporter.total }}
+                </p>
+            </div>
+            <div class="card_header">
+                <h3 class="text-centered">Resources</h3>
+            </div>
+            <div class="card_footer">
+                of which are <span class="label label-white">{{data.resourcecountreporter.urls}}</span><span class="">unique URLs</span>
+            </div>
+        </div>
+        <div class="unit-33 card unit-padding">
+            <div class="card_cnt">
+                <p id="resources" class="card_value text-centered">
+                    {{ data.resourcesizereporter.contentlength }}
+                </p>
+            </div>
+            <div class="card_header"><h3 class="text-centered">Size</h3></div>
+            <div class="card_footer">
+            based on <code>HTTP HEAD content-length</code> information of {{data.resourcesizereporter.count}} resources
+            </div>
+        </div>
+    </div>
             <div class="units-row end">
                 <div class="unit-50 card unit-padding">
                     <div class="card_header"><h3 class="text-centered">Licenses</h3></div>
@@ -159,7 +91,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for l in data.formatcountreporter %}
+                                    {% for l in data.dcatformatcount %}
                                     <tr>
                                         <td> {{ l.Format}}</td>
                                         <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
@@ -172,7 +104,6 @@
                     <div class="card_footer">
                     </div>
                 </div>
-                
             </div>
             <div class="units-row end">  
                 <div class="unit-50 unit-padding card">
@@ -191,7 +122,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for l in data.organisationreporter %}
+                                    {% for l in data.dcatorganizationscount %}
                                     <tr>
                                         <td> {{ l.Organisation}}</td>
                                         <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
@@ -220,7 +151,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for l in data.tagreporter %}
+                                    {% for l in data.dcattagscount %}
                                     <tr>
                                         <td> {{ l.Tag}}</td>
                                         <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
@@ -239,10 +170,6 @@
     </div>
 {% endblock %}
 
-{% block pageScripts %}
-    <script>
-   var data = {{ data | tojson| safe }};
-    console.log("SERVER DATA")
-    console.log(data)
-    </script>
+{% block portalScripts %}
+
 {% endblock %}

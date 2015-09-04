@@ -1,5 +1,6 @@
 from __future__ import generators
 
+
 __author__ = 'jumbrich'
 
 from sqlalchemy.sql.expression import join, exists
@@ -110,7 +111,7 @@ class DMManager(object):
         return sel.execute()
     
 class PostgressDBM(object):
-    def __init__(self, db='portalwatch', host="localhost", port=5433, password='0pwu', user='opwu'):
+    def __init__(self, db='portalwatch', host="localhost", port=5433, password=None, user='opwu'):
         
             #Define our connection string
             self.log = log.new()
@@ -126,7 +127,7 @@ class PostgressDBM(object):
                 conn_string += ":"+str(port)
             conn_string += "/"+db
             
-            print conn_string
+            
             self.engine = create_engine(conn_string, pool_size=20)
             self.engine.connect()
             
@@ -157,8 +158,8 @@ class PostgressDBM(object):
             
             self.datasets = Table('datasets',self.metadata,
                             Column('id', String,primary_key=True),
-                            Column('snapshot', SmallInteger,primary_key=True,index=True),
-                            Column('portal_id', String(70),primary_key=True,index=True),
+                            Column('snapshot', SmallInteger,primary_key=True),
+                            Column('portal_id', String(70),primary_key=True),
                             
                             Column('data', JSONB),
                             Column('status', SmallInteger),
@@ -176,14 +177,14 @@ class PostgressDBM(object):
                             )
             
             self.resources = Table('resources',self.metadata,
-                             Column('url', String,primary_key=True,index=True),
-                             Column('snapshot', SmallInteger,primary_key=True,index=True),
+                             Column('url', String,primary_key=True),
+                             Column('snapshot', SmallInteger,primary_key=True),
                              
                              Column('timestamp', TIMESTAMP),
-                             Column('status', SmallInteger,index=True),
+                             Column('status', SmallInteger),
                              Column('exception', String),
                              Column('header', JSONB),
-                             Column('mime', String,index=True),
+                             Column('mime', String),
                              Column('size', BigInteger),
                              Column('origin', JSONB)
                              )
@@ -340,13 +341,15 @@ class PostgressDBM(object):
             
             return s.execute()
         
-    def getPortalMetaDatas(self, snapshot=None, portalID=None):
+    def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None):
         with Timer(key="getPortalMetaDatas") as t:
             s = select([self.pmd])
             if snapshot:
                 s=s.where(self.pmd.c.snapshot == snapshot)
             if portalID:
                 s= s.where(self.pmd.c.portal_id == portalID)
+            if portals:
+                s= s.where(self.pmd.c.portal_id.in_(portals))
                 
             self.log.debug(query=s.compile(), params=s.compile().params)
                
@@ -596,7 +599,7 @@ class PostgressDBM(object):
             #self.conn.execute(ins)
             ins.execute()
 
-    def getDatasets(self,portalID=None, snapshot=None, software=None, status=None):
+    def getDatasets(self,portalID=None, snapshot=None, software=None, status=None, limit=None,statuspre=None):
         with Timer(key="getDatasets") as t:
             s = select([self.datasets])
             
@@ -608,8 +611,18 @@ class PostgressDBM(object):
                 s= s.where(self.datasets.c.software == software)
             if status:
                 s= s.where(self.datasets.c.status == status)
+            elif statuspre:
+                
+                sp=int(statuspre[0])
+                print sp
+                s= s.where(self.datasets.c.status >= sp*100)
+                s= s.where(self.datasets.c.status <= (sp+1)*100)
+            if limit:
+                s=s.limit(limit)
             
+            print s
             self.log.debug(query=s.compile(), params=s.compile().params)    
+            
             
             return s.execute()
 
@@ -763,8 +776,9 @@ class PostgressDBM(object):
                 s= s.where(self.resources.c.status==status)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute().scalar()
-    def getResources(self, snapshot=None, portalID=None, status =None):
+    def getResources(self, snapshot=None, portalID=None, status =None,limit=None,statuspre=None):
         with Timer(key="getResources") as t:
+            print "query"
             s = select([self.resources])
             if snapshot:
                 s =s.where(self.resources.c.snapshot== snapshot)
@@ -772,9 +786,15 @@ class PostgressDBM(object):
                 s= s.where(self.resources.c.origin[portalID]!=None)
             if status:
                 s= s.where(self.resources.c.status==status)
+            elif statuspre:
+                sp=int(statuspre[0])
+                s= s.where(self.resources.c.status >= sp*100)
+                s= s.where(self.resources.c.status <= (sp+1)*100)
+            if limit:
+                s=s.limit(limit)
             self.log.debug(query=s.compile(), params=s.compile().params)
             return s.execute()
-            #return self.conn.execute(s)
+
 
     def getResourcesMimeSize(self, snapshot=None, portalID=None, status =None):
         with Timer(key="getResourcesMimeSize") as t:
@@ -840,6 +860,8 @@ class PostgressDBM(object):
             if res:
                 return Resource.fromResult( dict( res))
             return None
+        
+
         
     def updateResource(self, Resource):
         with Timer(key="updateResource") as t:
@@ -928,7 +950,6 @@ class PostgressDBM(object):
             latest= select([self.pmd.c.portal_id.label('portal_id'), func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id).alias()
             t1=self.pmd.alias()
             
-            
             s=  select([t1]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
             
             return s.execute()
@@ -948,6 +969,11 @@ class PostgressDBM(object):
                 return PortalMetaData.fromResult(dict( res))
             return None
             
+    def getSystemPortalInfo(self):
+        with Timer(key="getSoftwareDist") as t:
+            s=  select([self.portals.c.software, self.portals.c.iso3, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software,self.portals.c.iso3)
+            self.log.debug(query=s.compile(), params=s.compile().params)
+            return s.execute()
     
     def getSoftwareDist(self):
         with Timer(key="getSoftwareDist") as t:
@@ -991,6 +1017,24 @@ class PostgressDBM(object):
         self.log.debug(query=s.compile(), params=s.compile().params)
         return s.execute()
     
+    def getDatasetsDiff(self,portalID=None, snapshot=None, computeAdds=True):
+        if computeAdds:
+            snapshotFrom=snapshot
+            snapshotTo=nextWeek(snapshot)
+        else:
+            snapshotFrom=prevWeek(snapshot)
+            snapshotTo=snapshot
+        
+        ssub = select( [self.datasets.c.id] ).where(self.datasets.c.snapshot == snapshotTo)
+        ssub= ssub.where(self.datasets.c.portal_id == portalID)
+        
+        s= select( [self.datasets.c.id] ).where(self.datasets.c.snapshot == snapshotFrom)
+        s= s.where(~self.datasets.c.id.in_(ssub))
+        
+        self.log.debug(query=s.compile(), params=s.compile().params)
+        return s.execute()
+
+    
 def name():
     return 'DB'
 def help():
@@ -1017,112 +1061,3 @@ def cli(args,dbm):
                 sys.stdout.write("Please respond with 'y' or 'n' \n")                
                 
                 
-#if __name__ == '__main__':
-#    logging.basicConfig()
- #   p= PostgressDBM(host="bandersnatch.ai.wu.ac.at", port=5433)
-#    
- #   d = DBAnalyser(p.getPMDStatusDist)
- #   d.analyse()
-    
-  #  df= d.getDataFrame()
-   # print df
-    
-    #print dftopk(df, column="count", k=3)
-    
-    #print dftopk(df, column="count", k=3, otherrow=True)
-    
-    
-    #print dftopk(df, column="count", k=3, otherrow=True, percentage=True)
-    #print DFtoListDict(dftopk(df, column="count", k=3, otherrow=True, percentage=True))
-    
-    #print top10pp.append(top10pp.sum(numeric_only=True), ignore_index=True)
-    #print DFtoListDict(df)
-    #print res.keys()
-    
-    
-    
-    #===========================================================================
-    # for r in p.getResourceWithoutHead(snapshot="2015-30", status=None):
-    #     print r
-    # print "end loop"
-    #     
-    # exit
-    #===========================================================================
-    #===========================================================================
-    # c=0
-    # for res in p.getResources(snapshot='2015-28'):
-    #     r = Resource.fromResult( dict( res))
-    #     p.updateResource(r)
-    #     c+=1
-    #     if c%1000 == 0:
-    #         print c
-    #===========================================================================
-        
-
-    #r = p.getResource(url='http://data.gov.au/storage/f/2013-12-02T03:04:43.895Z/agil20131129.kmz', snapshot='2015-24')
-    #print r.url    
-    
-    #===========================================================================
-    # dataset = p.getDataset(snapshot='2015-28', portal='data.wu.ac.at', datasetID='all_campus_rooms')
-    # 
-    # por=p.getUnprocessedPortals(snapshot="2015-30")
-    # for po in por:
-    #     portal = Portal.fromResult(dict(po))
-    # print len(por)
-    #===========================================================================
-        
-    
-    #===========================================================================
-    # r = Resource.newInstance(url="http://data.wu.ac.at/dataset/169e2d7c-41f6-493b-b229-88fac2a0321a/resource/5150029d-d4c9-472f-8d8a-4e28f456ae41/download/allcoursesandevents01s.csv", snapshot='2015-29')
-    # res = p.getResource(r)
-    # print r.url
-    # 
-    # print res
-    #===========================================================================
-    
-    
-    #print p.getPortal(url='http://www.test.com/')
-    #po = Portal.newInstance(url='http://www.test.com/', apiurl='http://test')
-     
-    #p.insertPortal(po)
-    
-#===============================================================================
-#     r = Resource(url="http://example.org", snapshot="2015-29")
-#     r.updateOrigin(pid='test', did='test')
-#     
-#     #p.insertResource(r)
-# 
-#     r1 = p.getResource(url="http://example.org", snapshot="2015-29")
-#      
-#     r2 = p.getResource(url="http://data.wu.ac.at/dataset/fed3bae6-397c-4f4c-9c14-15aa8443d268/resource/d17a0d32-562a-4b37-9f32-ce06c4482583/download/allcampusrooms.csv" , snapshot="2015-28")
-#     
-#     print r2
-#     r1.updateOrigin(pid='test', did='test2')
-#     p.updateResource(r2)
-#     
-#     print "r2:",type(r2.origin)
-#===============================================================================
-    
-    
-    #po.datasets=10
-    #p.updatePortal(po)
-    #for res in p.getPortals(maxDS=50, status=200):
-    #    print res
-    #p.initPortalsTable()
-    #p.initSnapshotStatusTable()
-#     p.initDatasetsTable()
-#     p.initPortalMetaDataTable()
-#     p.initResourceTable()
-    #P = p.getPortal(url='http://dados.gov.br')
-    #p.upsertPortal(P)
-    #p.initTables()
-    #P= Portal.newInstance(apiurl='http://data.glasgow.gov.uk/api', url='http://data.edostate.gov.ng/')
-    #p.insertPortal(P)
-    #p.printSize()
-
-    #p.initTables()
-
-
-
-
-

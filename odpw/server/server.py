@@ -10,7 +10,8 @@ import tornado.ioloop
 
 
 from os.path import dirname, join, isfile
-from odpw.server.handler import SystemActivityHandler, PortalSelectionHandler
+from odpw.server.handler import SystemActivityHandler, PortalSelectionHandler,\
+    PortalsHandler, SystemEvolutionHandler
 
 
 here = dirname(__file__)
@@ -25,6 +26,10 @@ def tojson_filter(obj, **kwargs):
     # https://github.com/mitsuhiko/flask/blob/master/flask/json.py
     return Markup(json.dumps(obj, **kwargs))
 
+class MyStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 class ODPWApplication(tornado.web.Application):
     def __init__(self, db=None, printHtml=False):
         
@@ -34,14 +39,16 @@ class ODPWApplication(tornado.web.Application):
             (r'/', IndexHandler),
             
             (r'/activity/?(?P<snapshot>[^\/]+)?',SystemActivityHandler),
-            (r'/portals', PortalList),
+            (r'/evolution',SystemEvolutionHandler),
+            (r'/list', PortalList),
             
             #(r'/portal/?', PortalSelectionHandler),
             
+            url(r'/portals/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalsHandler),
             url(r'/portal/?(?P<portalID>[^\/]+)?/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalHandler),
             
-            (r'/static/(.*)', StaticFileHandler),
-            (r'/data/(.*)/(.*)', DataHandler),
+            (r'/portalwatch2/static/(.*)', MyStaticFileHandler),
+            (r'/d/?(?P<source>[datasets|resources]+)?', DataHandler),
             (r'/.*$', NoDestinationHandler)
         ]
 
@@ -59,7 +66,7 @@ class ODPWApplication(tornado.web.Application):
         self.db = db
         
         if printHtml:
-            self.printHtml = static_path
+            self.printHtml = join(here, 'static')
         
 
 
@@ -75,11 +82,9 @@ def cli(args,dbm):
     http_server = tornado.httpserver.HTTPServer(ODPWApplication(db=dbm, printHtml=True))
     http_server.listen(args.port)
     
-    print('Starting Tornado on http://localhost:{}/'.format(args.port))
+    print('Starting OPDW Dashboard on http://localhost:{}/'.format(args.port))
     try:
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         sys.exit(0)
-    
-        
     

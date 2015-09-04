@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tornado.web import RequestHandler, HTTPError
+from tornado.web import RequestHandler, HTTPError, asynchronous
 from jinja2.exceptions import TemplateNotFound
 from tornado.escape import json_encode
 
-from odpw.db.models import Portal, PortalMetaData
+from odpw.db.models import Portal, PortalMetaData, Dataset, Resource
 from odpw.utils  import util
 from collections import defaultdict
 from urlparse import urlparse 
@@ -15,7 +15,7 @@ from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,
     Report, ISO3DistReporter, SoftWareDistReporter,\
     SystemActivityReporter, SnapshotsPerPortalReporter, LicensesReporter,\
     TagReporter, OrganisationReporter, FormatCountReporter, DatasetSumReporter,\
-    ResourceSumReporter, ResourceSizeReporter, ResourceCountReporter
+    ResourceSumReporter, ResourceSizeReporter, ResourceCountReporter, DBReporter
 from odpw.utils.timer import Timer
 from odpw.analysers import process_all, AnalyserSet
 
@@ -32,6 +32,10 @@ from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.activity_reports import systemactivity
 from odpw.reporting.evolution_reports import portalevolution
+from odpw.reporting.info_reports import portalinfo, SystemPortalInfoReporter
+from odpw.reporting.quality_reports import portalquality, portalsquality
+
+
 
 
 class BaseHandler(RequestHandler):
@@ -65,11 +69,13 @@ class BaseHandler(RequestHandler):
         if self.printHtml:
             try:
                 import codecs
-                with codecs.open(os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html'), 'wb', 'utf-8') as f:
+                file=os.path.join(os.path.dirname(self.printHtml) ,templateName+'.html')
+                with codecs.open(file, 'wb', 'utf-8') as f:
+                    print "write render file to ",file
                     f.write(template.render( kwargs ))
+                    print "done"
             except TemplateNotFound as e:
                 print e
-        
         
         self.write(template.render(kwargs))
         
@@ -83,80 +89,104 @@ class NoDestinationHandler(RequestHandler):
         raise HTTPError(503)
 
 class PortalSelectionHandler(BaseHandler):
+    
     def get(self, **params):
         a= process_all( DBAnalyser(), self.db.getSnapshots( portalID=None,apiurl=None))
         rep = Report([SnapshotsPerPortalReporter(a,None)])
-            
         self.render('portal_empty.jinja',portals=True, data=rep.uireport())
     
+class PortalsHandler(BaseHandler):
+    def get(self, view=None, snapshot=None):
+        print "HERE"
+        d=['portals','iso3', 'software']
+        props={}
+        for k in d:
+            arg=self.get_argument(k, None)
+            props[k]=arg.split(",") if arg is not None else None
+            
+        pid=[]    
+        if props['portals']:
+            pid= props['portals']
+        elif props['iso3']:
+            for iso3 in props['iso3']: 
+                for P in Portal.iter( self.db.getPortals(iso3=iso3)):
+                    if P.id not in pid:
+                        pid.append(P.id)
+        elif props['software']:
+            for software in props['software']: 
+                for P in Portal.iter( self.db.getPortals(software=software)):
+                    if P.id not in pid:
+                        pid.append(P.id)
+        
+        function= getattr(self, view+"rendering")
+        function( snapshot,pid)    
+        
+    def qualityrendering(self, snapshot, portals):
+        print portals
+        r = portalsquality(self.db, snapshot , portals)
+        print r.uireport()
+        self.render('portals_quality.jinja', portal=True, data=r.uireport(), snapshot=snapshot,portals=portals) 
+        
 class PortalHandler(BaseHandler):
     def get(self, view=None, portalID=None, snapshot=None):
         
-        a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
-        rep = SnapshotsPerPortalReporter(a,None)
+        
+        portals= {}
+        for P in Portal.iter(self.db.getPortals()):
+            portals[P.id]={"url":P.url, "software":P.software, "iso3":P.iso3}
+        
         if not portalID:
-            self.render('portal_empty.jinja', portals=True, data=rep.uireport())
-    
+            print 'portal emtpy'
+            a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD(portalID=None))
+            rep = SnapshotsPerPortalReporter(a, None)
+        
+            self.render('portal_empty.jinja', portal=True, data=rep.uireport(),portals=portals)
         
         if portalID:
             if len(portalID.split(",")) ==1:
-                Portal = self.db.getPortal(portalID=portalID)
+                #Portal = self.db.getPortal(portalID=portalID)
                 
                 fun= getattr(self, view+"rendering")
-                fun(portalID, snapshot, rep)
+                fun(portalID, snapshot,portals)
             else:
-                self.render('portals_detail.jinja', portals=True)
+                self.render('portals_detail.jinja', portal=True)
             
     
-    def inforendering(self, portalID, snapshot, rep):      
+    def inforendering(self, portalID, snapshot, portals):      
         with Timer(key="viewrendering", verbose=True) as t:
-            aset = AnalyserSet()
-            #lc=aset.add(CKANLicenseCount())# how many licenses
-            #lcc=aset.add(CKANLicenseConformance())
+            r = portalinfo(self.db, snapshot, portalID)
+            self.render('portal_info.jinja', portal=True, data=r.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
     
-            tc= aset.add(DCATTagsCount())   # how many tags
-            oc= aset.add(DCATOrganizationsCount())# how many organisations
-            fc= aset.add(DCATFormatCount())# how many formats
-    
-            resC= aset.add(PMDResourceStatsCount())   # how many resources
-            dsC=dc= aset.add(DatasetCount())    # how many datasets
-            rsize=aset.add(ResourceSize())
-    
-            #use the latest portal meta data object
-            if not snapshot:
-                pmd = self.db.getLatestPortalMetaData(portalID=portalID)
-            else:
-                pmd = self.db.getPortalMetaData(portalID=portalID, snapshot=snapshot)
-            aset = process_all(aset, [pmd])
-    
-            rep = Report([rep,
-            DatasetSumReporter(dsC),
-            ResourceCountReporter(resC),
-            ResourceSizeReporter(rsize),
-            #LicensesReporter(lc,lcc,topK=3),
-            TagReporter(tc,dc, topK=3),
-            OrganisationReporter(oc, topK=3),
-            FormatCountReporter(fc, topK=3)])
-    
-            self.render('portal_info.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
-    
-    def evolutionrendering(self, portalID, snapshot, rep):      
+    def evolutionrendering(self, portalID, snapshot, portals):      
         with Timer(key="evolutionrendering", verbose=True) as t:
-            
+            a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
+            rep = SnapshotsPerPortalReporter(a,None)
+        
             r = portalevolution(self.db, snapshot, portalID)
             rep = Report([rep,r])
-            import pprint
-            pprint.pprint(r.uireport())
-            self.render('portal_evolution.jinja', portals=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot)
+            self.render('portal_evolution.jinja', portal=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
+        
+    def qualityrendering(self, portalID, snapshot,portals):
+        with Timer(key="qualityrendering", verbose=True) as t:
+            a= process_all( DBAnalyser(), self.db.getSnapshotsFromPMD( portalID=None))
+            rep = SnapshotsPerPortalReporter(a,None)
+        
+            r = portalquality(self.db, snapshot, portalID)
+            rep = Report([rep,r])
+            self.render('portal_quality.jinja', portal=True, data=rep.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
+        
+        
         
 class PortalList(BaseHandler):
     def get(self):
-        #with Timer(verbose=True) as t:
+        with Timer(verbose=True) as t:
             try:
                 p={}
+                print "getting portals"
                 for por in self.db.getPortals():
                     p[por['id']]={'iso3':por['iso3'],'software':por['software']}
                 portals=[]
+                print "getting latest meta data" 
                 for pRes in self.db.getLatestPortalMetaDatas():
                     rdict= dict(pRes)
                     if rdict['portal_id'] in p:
@@ -165,21 +195,33 @@ class PortalList(BaseHandler):
             
                     portals.append(rdict)
         
-                self.render('portalevol.jinja',index=True, data=portals)
+                self.render('portallist.jinja',index=True, data=portals)
             except Exception as e:print e
 
 class IndexHandler(BaseHandler):
     def get(self):
-            a = process_all(DBAnalyser(),self.db.getSoftwareDist())
-            ab = process_all(DBAnalyser(),self.db.getCountryDist())
-            r = Report([SoftWareDistReporter(a),
-                 ISO3DistReporter(ab)])
+            a = process_all(DBAnalyser(),self.db.getSystemPortalInfo())
+            r = SystemPortalInfoReporter(a)
+                        
+            r = Report([r])
             args={
                   'index':True,
-                  'data':r.uireport()
+                  'data':r.uireport(),
             }    
             self.render('index.jinja',**args)
         
+        
+class SystemEvolutionHandler(BaseHandler):
+    def get(self):
+        pass
+        #report = systemevolution(self.db)
+            
+        args={'index':True,
+        #       'data':report.uireport()
+               
+        }    
+        self.render('system_activity.jinja',**args)
+    
 class SystemActivityHandler(BaseHandler):
     def get(self, snapshot=None):
         with Timer(key='SystemActivityHandler', verbose=True) as t:
@@ -187,7 +229,7 @@ class SystemActivityHandler(BaseHandler):
                 sn = util.getCurrentSnapshot()
             else:
                 sn = snapshot
-        
+            
             report = systemactivity(self.db, sn)
             
             args={'index':True,
@@ -202,11 +244,36 @@ class DataHandler(RequestHandler):
     def db(self):
         return self.application.db
     
-    def get(self, method, snapshot):
-        if method == 'overview':
-            print self.db
-            res = self.db.selectQuery("SELECT * FROM snapshot_stats WHERE snapshot=%s",tuple=(snapshot,))
-            print res
+    def get(self, source):
+        if source == 'datasets':
+            d=['portalID','limit','snapshot','software','status','statuspre']
+            props={}
+            for k in d:
+                props[k]=self.get_argument(k, None)
+            
+            res=[]
+            print "D",props
+            for d in Dataset.iter(self.db.getDatasets(**props)):
+                res.append({'id':d.id,'status':d.status,'portalID':d.portal_id})
+            
             
             self.set_header('Content-Type', 'application/json')
-            self.write(json_encode(res[0]))
+            self.write(json_encode(res))
+            
+        elif source == 'resources':
+            try:
+                d=['portalID','limit','snapshot','status','statuspre']
+                props={}
+                for k in d:
+                    props[k]=self.get_argument(k, None)
+                
+                res=[]
+                print "R",props
+                for d in Resource.iter(self.db.getResources(**props)):
+                    res.append({'id':d.url,'status':d.status,'portalID':props['portalID']})
+                
+                print "query resources"
+                self.set_header('Content-Type', 'application/json')
+                self.write(json_encode(res))
+            except Exception as e:
+                print e

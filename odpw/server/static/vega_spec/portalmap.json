@@ -1,106 +1,95 @@
 {
-  "height": 200, 
-  "width": 260, 
-  "axes": [],
-  "data": [
-    {
-      "name": "table",
-      "values": []
+    "height": 250,
+    "width": 400,
+    "padding": {
+        "top": 150,
+        "left": 50,
+        "bottom": 50,
+        "right": 50
     },
-    {
-      "format": {
-        "feature": "world-countries",
-        "type": "topojson"
-      },
-      "name": "countries",
-      "transform": [
+    "axes": [],
+    "data": [
         {
-          "as": "value",
-          "default": "noval",
-          "key": "id",
-          "type": "zip",
-          "with": "table",
-          "withKey": "iso3"
-        },
+            "name": "table",
+            "values": []
+    },
         {
-          "test": "datum.path!='noval' && datum.value!='noval'",
-          "type": "filter"
-        },
-        {
-          "projection": "mercator",
-          "scale": 50,
-          "translate": [
-            150,
-            100
-          ],
-          "type": "geopath",
-          "value": "data"
-        }
-      ],
-      "url": "static/data/world-countries.topo.json"
-    }
-  ],
-  
-  "legends": [],
-  "marks": [
-    {
-      "from": {
-        "data": "countries"
-      },
-      "properties": {
-        "enter": {
-          "path": {
-            "field": "layout_path"
-          },
-          "stroke": {
-            "value": "#000000"
-          },
-          "strokeOpacity": {
-            "value": 0.25
-          }
-        },
-        "update": {
-          "fill": {
-            "field": "value.count",
-            "scale": "color"
-          }
-        }
-      },
-      "type": "path"
-    }
-  ],
-  "padding": "auto",
-  "scales": [
-    {
-            "domain": {
-                "data": "table",
-                "field": "count"
+            "format": {
+                "feature": "world-countries",
+                "type": "topojson"
             },
-            "name": "color",
-            "range": "category20c",
-            "type": "ordinal"
-    },
-    {
-      "domain": [
-        0.0,
-        10.0
+            "name": "countries",
+            "transform": [
+                {
+                    "as": "value",
+                    "default": "noval",
+                    "key": "id",
+                    "type": "zip",
+                    "with": "table",
+                    "withKey": "iso3"
+        },
+                {
+                    "test": "datum.path!='noval' && datum.value!='noval'",
+                    "type": "filter"
+        },
+                {
+                    "projection": "mercator",
+                    "scale": 60,
+                    "translate": [
+            150,
+            150
+          ],
+
+                    "type": "geopath",
+                    "value": "data"
+        }
       ],
-      "name": "color1",
-      "range": [
-        "#cdcdcd",
-        "#f4f4f4",
-        "#000"
-      ],
-      
-      "type": "quantize"
+            "url": "static/data/world-countries.topo.json"
     }
   ],
-  "legends": [
+
+    "marks": [
         {
-            "fill": "color",
-            "offset": 0,
-            "properties": {},
-            "title": "Size"
+            "from": {
+                "data": "countries"
+            },
+            "properties": {
+                "enter": {
+                    "path": {
+                        "field": "layout_path"
+                    },
+                    "stroke": {
+                        "value": "#000000"
+                    },
+                    "strokeOpacity": {
+                        "value": 0.5
+                    }
+                },
+                "update": {
+                    "fill": {
+                        "field": "value.count",
+                        "scale": "legend"
+                    }
+                }
+            },
+            "type": "path"
+    }
+  ],
+    "scales": [
+        {
+            "points": true,
+            "name": "legend",
+            "range": "category20",
+            "type": "ordinal",
+            "domain":{"data": "countries", "field": "value.count"}
+        }
+    ],
+"legends": [
+    {
+        "fill": "legend",
+        "offset": 0,
+        "properties": {},
+        "title": "Size"
     }
   ]
 }

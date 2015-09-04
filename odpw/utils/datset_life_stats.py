@@ -89,7 +89,6 @@ def cli(args,dbm):
         snapshots=set([])
         if not sn:
             for s in dbm.getSnapshots(portalID=p.id):
-                print s['snapshot']
                 snapshots.add(int(s['snapshot']))
         else:
             snapshots.add(int(sn))
