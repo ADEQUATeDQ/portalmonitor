@@ -9,21 +9,21 @@
         
         {% block css %}
             <!--<link rel="stylesheet" href="{{ static_url('css/kube.min.css') }}" />-->
-            <link rel="stylesheet" href="static/css/kube.min.css" />
-            <link rel="stylesheet" href="static/css/style.css" />
-            <link rel="stylesheet" href="static/css/font-awesome.min.css">
-            <link rel="stylesheet" href="static/fonts/source-code-pro.css">
+            <link rel="stylesheet" href="{{ static_url('css/kube.min.css') }}" />
+            <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
+            <link rel="stylesheet" href="{{ static_url('css/font-awesome.min.css') }}">
+            <link rel="stylesheet" href="{{ static_url('fonts/source-code-pro.css') }}">
         {% endblock %}
         
         {% block scripts %}
             
-            <script type="text/javascript" src="static/js/jquery.js" ></script>
-            <script type="text/javascript" src="static/js/d3.min.js" ></script>
-            <script type="text/javascript" src="static/js/topojson.js.1" ></script>
-            <script type="text/javascript" src="static/js/vega.min.js.1" ></script>
-            <script type="text/javascript" src="static/js/kube.min.js" ></script>
-            <script type="text/javascript" src="static/js/jquery.dataTables.min.js" ></script>
-            <script type="text/javascript" src="static/js/odpw.js" ></script>
+            <script type="text/javascript" src="{{ static_url('js/jquery.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/d3.min.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/topojson.js.1') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/vega.min.js.1') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/kube.min.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/jquery.dataTables.min.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/odpw.js') }}" ></script>
         {% endblock %}
     </head>
         

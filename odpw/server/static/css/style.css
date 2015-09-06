@@ -542,12 +542,10 @@ ul.select li label{
     border-top:2px solid;
 }
 
-.submit{
-    vertical-align: middle;
-    display: inline-block;
-}
+
 #go{
     vertical-align: middle;
+    
 }
 #selectedPortals ul{
     max-height: 250px;

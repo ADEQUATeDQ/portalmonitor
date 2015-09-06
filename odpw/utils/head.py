@@ -67,9 +67,10 @@ def head (dbm, sn, seen, resource):
     except Exception as e:
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 
-def getResources(dbm, snapshot):
+def getResources(dbm, snapshot, status=-1):
     resources =[]
-    for res in dbm.getResourceWithoutHead(snapshot=snapshot):
+    
+    for res in dbm.getResourceWithoutHead(snapshot=snapshot, status=status):
         try:
             
             url=urlnorm.norm(res['url'])
@@ -128,14 +129,14 @@ def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
-
+    pa.add_argument('--status', dest='status' , help="status ", type=int, default=-1)
 def cli(args,dbm):
     dbm.engine.dispose()
     sn = getSnapshot(args)
     if not sn:
         return
 
-    resources= getResources(dbm, sn)
+    resources= getResources(dbm, sn, status=args.status)
     
     while len(resources) >0:
         
@@ -158,4 +159,4 @@ def cli(args,dbm):
             if v['processed']>0:
                 headStats(dbm, sn, portalID)
     
-        resources= getResources(dbm, sn)
+        resources= getResources(dbm, sn, status=args.status)

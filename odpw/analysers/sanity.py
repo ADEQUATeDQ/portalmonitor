@@ -35,7 +35,8 @@ class FetchSanity(Analyser):
                     4) pmd_ds = pmd_ds <= indexed
                     5) 
                 """
-                
+                if pmd.portal_id == 'data_taxpayer_net':
+                    pass
                 #1
                 ds['ds'] = pmd.fetch_stats['datasets'] if 'datasets' in pmd.fetch_stats else -1
                 sanity['fetch_indexed'] = ds['ds'] == ds['idx_ds']
@@ -73,7 +74,6 @@ class HeadSanity(Analyser):
              }
         
         if pmd.res_stats:
-            
             """
                 fetch process report is right
                 1) urls, total, distinct
@@ -84,22 +84,31 @@ class HeadSanity(Analyser):
                 1) status = resp codes are availabe and sum matches
                 2) size = size object and all keys are available
             """
+            if pmd.portal_id== 'data_linz_gv_at':
+                pass
+
 
             res['total'] = pmd.res_stats['total'] if 'total' in pmd.res_stats else -1
             res['distinct'] = pmd.res_stats['distinct'] if 'distinct' in pmd.res_stats else -1
             res['status'] = bool(pmd.res_stats['status']) if 'status' in pmd.res_stats else False
             
-            sanity['head_keys'] = set(['urls', 'total', 'distinct']).issubset(pmd.res_stats)
-            sanity['head_card'] = sanity['head_keys'] and  pmd.res_stats['total']>=pmd.res_stats['distinct']>=pmd.res_stats['urls']
+            if pmd.resources==-1 and 'exception' in pmd.fetch_stats:
+                sanity['head_keys'] = True
+                sanity['head_card'] = True
+            else:
+                sanity['head_keys'] = set(['urls', 'total', 'distinct']).issubset(pmd.res_stats) 
+                sanity['head_card'] = sanity['head_keys'] and  pmd.res_stats['total']>=pmd.res_stats['distinct']>=pmd.res_stats['urls']
+            
             sanity['head_indexed'] = sanity['head_keys'] and res['idx_res'] == pmd.res_stats['distinct']
-                
+                    
+            
             row['head_processed_fetch'] = all(sanity.values())
             row.update(sanity)
             
             sanity={}
             
-            resp = pmd.res_stats.get('respCodes',None)
-            sanity['head_status'] =  sum(resp.values()) == res['idx_res'] if resp else False
+            resp = pmd.res_stats.get('respCodes',{})
+            sanity['head_status'] =  sum(resp.values()) == res['idx_res']
             sanity['head_size'] = 'size' in pmd.res_stats
             
             row['head_processed'] = all(sanity.values())

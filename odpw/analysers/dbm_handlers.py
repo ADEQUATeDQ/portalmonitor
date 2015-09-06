@@ -60,6 +60,7 @@ class CKANResourceInserter(Analyser):
 class DCATDistributionInserter(Analyser):
     def __init__(self, dbm):
         self.dbm = dbm
+        self.inserted=[]
     
     def analyse_Dataset(self, dataset):
         for dcat_el in getattr(dataset,'dcat',[]):
@@ -81,12 +82,17 @@ class DCATDistributionInserter(Analyser):
                             break
                         url = au.get('@id',None)
                 if url:
+                    self.inserted.append(url)
                     tR =  Resource.newInstance(url=url, snapshot=dataset.snapshot)
                     R = self.dbm.getResource(tR)
                     if not R:
                         tR.updateOrigin(pid=dataset.portal_id, did=dataset.id)
                         self.dbm.insertResource(tR)
+                        
                     else:
                         R.updateOrigin(pid=dataset.portal_id, did=dataset.id)
                         self.dbm.updateResource(R)
         
+    
+    def getResult(self):
+        return self.inserted

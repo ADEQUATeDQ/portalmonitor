@@ -72,7 +72,7 @@ def setupCLI(pa):
     
 def cli(args,dbm):
     sn = getSnapshot(args)
-    
+    print sn
     portals=[]
     if args.url:
         p = dbm.getPortal(apiurl=args.url)
@@ -87,14 +87,17 @@ def cli(args,dbm):
     jobs=[]
     for p in portals:
         snapshots=set([])
-        if not sn:
+        if sn is None:
             for s in dbm.getSnapshots(portalID=p.id):
                 snapshots.add(int(s['snapshot']))
         else:
             snapshots.add(int(sn))
-        
-        for sn in sorted(snapshots):
-            jobs.append({'Portal':p, 'snapshot':sn})
+            
+        for snap in sorted(snapshots):
+            for s in dbm.getPortalMetaDatas(portalID=p.id, snapshot=snap):
+                if s.portal_id==p.id:
+                    print "adding ",p.id, snap
+                    jobs.append({'Portal':p, 'snapshot':snap})
             
     
     

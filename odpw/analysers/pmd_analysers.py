@@ -86,8 +86,6 @@ class PMDActivityAnalyser(Analyser):
                 stats['head_start']= pmd.res_stats['first_lookup']
             if 'last_lookup' in pmd.res_stats:
                 stats['head_end']= pmd.res_stats['last_lookup']
-            
-            
         else:
             tstats['head_missing']=True
 

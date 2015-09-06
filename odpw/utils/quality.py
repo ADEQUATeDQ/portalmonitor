@@ -3,7 +3,8 @@ import time
 import odpw.utils.util as util
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.core import DCATConverter
-from odpw.analysers.quality.new.completeness_dcat import CompletenessDCATAnalyser
+from odpw.analysers.quality.new.completeness_dcat import CompletenessDCATAnalyser,\
+    DescriptiveDCATAnalyser
 
 __author__ = 'jumbrich'
 
@@ -33,12 +34,13 @@ def quality(dbm, sn, portal):
     aset = AnalyserSet()
     
     dcat = aset.add(DCATConverter(portal))
-    conf= aset.add(CompletenessDCATAnalyser())
+    
+    desc= aset.add(DescriptiveDCATAnalyser())
     
     process_all(aset, iter)
     
-    
-    print conf.getResult()
+    from pprint import pprint
+    pprint(desc.getResult())
     pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portal.id)
     
     aset.update(pmd)
