@@ -30,10 +30,10 @@ def normalized_dict(dict, x, y):
     return normalized
 
 
-def draw_graph(dataframe, min_node_label=5000, node_labels=None, graph_layout='spring', font_color='blue',
+def draw_graph(dataframe, filter_portals=None, min_node_label=5000, node_labels=None, graph_layout='spring', font_color='blue',
                node_max_size=6000, node_min_size=50, node_color='grey', node_alpha=0.5,
                node_text_size=12, edge_text_size=8, min_edge_label=100,
-               edge_color='grey', edge_alpha=0.8, edge_tickness=10,
+               edge_color='grey', edge_alpha=0.8,
                edge_text_pos=0.3,
                text_font='sans-serif'):
 
@@ -48,8 +48,14 @@ def draw_graph(dataframe, min_node_label=5000, node_labels=None, graph_layout='s
     else:
         node_labels = {i: node_labels[dataframe.index.values[i]] for i in G.nodes()}
 
-    # remove isolated ones
-    G.remove_nodes_from(nx.isolates(G))
+    if filter_portals:
+        filter_nodes = [i for i in G.nodes() if dataframe.index.values[i] not in filter_portals]
+        G.remove_nodes_from(filter_nodes)
+    else:
+        # remove isolated ones
+        G.remove_nodes_from(nx.isolates(G))
+
+
 
     # normalize node size in range
     nodes_res = []
