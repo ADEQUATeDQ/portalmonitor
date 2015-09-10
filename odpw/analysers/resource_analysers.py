@@ -58,6 +58,9 @@ class ResourceSize(Analyser):
 
 
 class ResourceOverlapAnalyser(Analyser):
+    """
+    Builds a matrix (2-dimensional dictionary) with counts of overlapping resources
+    """
     def __init__(self, filter_portal=None):
         super(ResourceOverlapAnalyser, self).__init__()
         self.filter_portal =filter_portal
@@ -86,6 +89,11 @@ class ResourceOverlapAnalyser(Analyser):
 
 
 class ResourceOccurrenceCountAnalyser(ElementCountAnalyser):
+    """
+    Count Analyser, counting the number of occurrences for resources.
+    E.g., 100 resources occur in 1500 datasets, ...
+    Single Portal occurrences: number of resources occurring within a single portal (no overlap)
+    """
     def __init__(self, portal_id=None):
         super(ResourceOccurrenceCountAnalyser, self).__init__()
         self.portal_id = portal_id

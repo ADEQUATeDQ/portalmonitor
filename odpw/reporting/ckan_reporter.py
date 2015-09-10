@@ -156,7 +156,7 @@ def key_report(dbm, sn):
     sorted_keys = sorted(keys.items(), key=operator.itemgetter(1), reverse=True)
     print 'max extra keys:', sorted_keys[0]
     print '2nd max extra keys:', sorted_keys[1]
-    print '3nd max extra keys:', sorted_keys[2]
+    print 'third max extra keys:', sorted_keys[2]
 
     print 'core', len(core_key_count.getResult())
     print 'res', len(res_key_count.getResult())
@@ -324,24 +324,10 @@ def obd_report(dbm, sn):
 
     lid_count = pmd_analyser.add(CKANLicenseIDCount(total_count=True))
 
-    # 2. Portal size distribution
     bins = [0,100,500,1000,10000,50000,100000,1000000,10000000]
     ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
     res_histogram = pmd_analyser.add(PMDResourceCountAnalyser(bins=bins))
 
-    # 3. total num of values in url field (num of resources) vs unique and valid urls
-    # 4. Portal Overlap: num of unique resources more then once -> datasets in same portal vs different portals
-    # TODO resource analyser
-
-
-
-    # 7. same for tags
-    # TODO
-
-    # TODO resource resp code distribution
-
-
-    #np.arange(0,1,0.1)
 
     bins=np.arange(0.0,1.1,0.1)
     compl_histogram = pmd_analyser.add(CompletenessHistogram(bins=bins))
@@ -369,8 +355,6 @@ def obd_report(dbm, sn):
 
     print 'ds_histogram', ds_histogram.getResult()
     print 'res_histogram', res_histogram.getResult()
-
-
 
     # histogram reporting
     #col = ['black', 'white', 'dimgrey', 'lightgrey']
