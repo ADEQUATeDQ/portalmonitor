@@ -340,7 +340,13 @@
         "countryCode": "GBR", 
         "software": "CKAN", 
         "url": "http://data.gov.uk/"
-    }, 
+    },
+    "data_go_id": {
+        "api": "",
+        "countryCode": "IDN",
+        "software": "CKAN",
+        "url": "http://data.go.id/"
+    },
     "data_graz_gv_at": {
         "api": "http://ckan.data.graz.gv.at/", 
         "countryCode": "AUT", 
