@@ -100,7 +100,13 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "https://controllerdata.lacity.org"
-    }, 
+    },
+    "dados_al_gov_br": {
+        "api": "",
+        "countryCode": "BRA",
+        "software": "CKAN",
+        "url": "http://dados.al.gov.br/"
+    },
     "dados_gov_br": {
         "api": "http://dados.gov.br/", 
         "countryCode": "BRA", 
@@ -124,7 +130,13 @@
         "countryCode": "BRA", 
         "software": "CKAN", 
         "url": "http://dadosabertos.senado.gov.br/"
-    }, 
+    },
+    "danepubliczne_gov_pl": {
+        "api": "",
+        "countryCode": "POL",
+        "software": "CKAN",
+        "url": "https://danepubliczne.gov.pl/"
+    },
     "dartportal_leeds_ac_uk": {
         "api": "", 
         "countryCode": "GBR", 
@@ -310,13 +322,31 @@
         "countryCode": "AUS", 
         "software": "CKAN", 
         "url": "http://data.gov.au/"
-    }, 
+    },
+    "data_gov_bf": {
+        "api": "",
+        "countryCode": "BFA",
+        "software": "CKAN",
+        "url": "http://data.gov.bf/"
+    },
     "data_gov_hk_en_": {
         "api": "https://data.gov.hk/en-data/", 
         "countryCode": "HKG", 
         "software": "CKAN", 
         "url": "https://data.gov.hk/en/"
-    }, 
+    },
+    "data_gov_gr": {
+        "api": "",
+        "countryCode": "GRC",
+        "software": "CKAN",
+        "url": "https://data.gov.gr/"
+    },
+    "data_gov_hr": {
+        "api": "",
+        "countryCode": "HRV",
+        "software": "CKAN",
+        "url": "http://data.gov.hr/"
+    },
     "data_gov_ie": {
         "api": "", 
         "countryCode": "IRL", 
@@ -742,7 +772,13 @@
         "countryCode": "AUT", 
         "software": "CKAN", 
         "url": "http://data.wu.ac.at/"
-    }, 
+    },
+    "data_zagreb_hr": {
+        "api": "",
+        "countryCode": "HRV",
+        "software": "CKAN",
+        "url": "http://data.zagreb.hr/"
+    },
     "datacatalog_cookcountyil_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -766,7 +802,7 @@
         "countryCode": "USA",
         "software": "CKAN", 
         "url": "http://datahub.io/"
-    }, 
+    },
     "datameti_go_jp_data_": {
         "api": "", 
         "countryCode": "JPN", 
@@ -1084,13 +1120,19 @@
         "countryCode": "ITA", 
         "software": "CKAN", 
         "url": "http://opendata.comune.bari.it/"
-    }, 
+    },
     "opendata_go_ke": {
         "api": "", 
         "countryCode": "KEN", 
         "software": "Socrata", 
         "url": "http://opendata.go.ke"
-    }, 
+    },
+    "opendata_go_tz": {
+        "api": "",
+        "countryCode": "TZA",
+        "software": "CKAN",
+        "url": "http://opendata.go.tz/"
+    },
     "opendata_hu": {
         "api": "", 
         "countryCode": "HUN", 
@@ -1336,7 +1378,7 @@
         "countryCode": "GBR", 
         "software": "CKAN", 
         "url": "http://www.datagm.org.uk"
-    }, 
+    },
     "www_daten_rlp_de": {
         "api": "", 
         "countryCode": "DEU", 
@@ -1414,7 +1456,13 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "http://www.opendatanyc.com"
-    }, 
+    },
+    "www_opendataphilly_org": {
+        "api": "",
+        "countryCode": "USA",
+        "software": "CKAN",
+        "url": "https://www.opendataphilly.org/"
+    },
     "www_opendataportal_at": {
         "api": "http://data.opendataportal.at/", 
         "countryCode": "AUT", 
@@ -1438,5 +1486,11 @@
         "countryCode": "GBR", 
         "software": "CKAN", 
         "url": "http://www.yorkopendata.org/"
+    },
+    "LWBIN_Data_HUB": {
+        "api": "",
+        "countryCode": "CAN",
+        "software": "CKAN",
+        "url": "http://130.179.67.140/"
     }
 }
