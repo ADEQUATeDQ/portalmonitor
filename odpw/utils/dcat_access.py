@@ -3,6 +3,7 @@ Created on Aug 26, 2015
 
 @author: jumbrich
 '''
+from rdflib.namespace import RDFS
 from odpw.utils.dataset_converter import DCAT, DCT
 
 
@@ -73,12 +74,13 @@ def accessDistribution(dataset, key ):
     for dcat_el in getattr(dataset,'dcat',[]):
         if str(DCAT.Distribution) in dcat_el.get('@type',[]):
             for f in dcat_el.get(key,[]):
-                print key,f
+                #print key,f
                 if '@value' in f:
                     v = f['@value']
+                    value.append(v)
                 elif '@id' in f:
                     v = f['@id']
-                value.append(v)
+                    value.append(v)
     return value
 
 def getDistributionTitles(dataset):
@@ -96,6 +98,15 @@ def getDistributionModificationDates(dataset):
 def getDistributionLicenses(dataset):
     return accessDistribution(dataset, DCT.license)
 
+def getDistributionLicenseTriples(dataset):
+    values = accessDistribution(dataset, DCT.license)
+    triples = []
+    for v in values:
+        id = accessById(dataset, v, DCT.identifier)
+        label = accessById(dataset, v, RDFS.label)
+        triples.append((id, label, str(v)))
+    return triples
+
 def getDistributionRights(dataset):
     return accessDistribution(dataset, DCT.rights)
 
@@ -108,7 +119,17 @@ def getDistributionDownloadURLs(dataset):
 def getDistributionMediaTypes(dataset):
     return accessDistribution(dataset, DCAT.mediaType)
 
-def getDistributionFormatss(dataset):
-    return accessDistribution(dataset, DCT.format)
+def getDistributionFormats(dataset):
+    return accessDistribution(dataset, DCT['format'])
 
-
+def accessById(dataset, id, key):
+    key = str(key)
+    for dcat_el in getattr(dataset, 'dcat', []):
+        if str(id) in dcat_el.get('@id', []):
+            for f in dcat_el.get(key, []):
+                v = None
+                if '@value' in f:
+                    v = f['@value']
+                elif '@id' in f:
+                    v = f['@id']
+                return v

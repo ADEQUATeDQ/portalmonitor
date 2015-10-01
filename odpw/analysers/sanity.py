@@ -4,7 +4,7 @@ Created on Aug 14, 2015
 @author: jumbrich
 '''
 from odpw.analysers import Analyser
-from test.test_zlib import ChecksumTestCase
+#from test.test_zlib import ChecksumTestCase
 
 
 

@@ -138,6 +138,7 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
         except Exception as e:
             pass
 
+# TODO disallows whitespaces
 VALID_URL = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -147,7 +148,8 @@ VALID_URL = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 def is_valid_url(references):
-    return bool(VALID_URL.match(references))
+    res = urlparse.urlparse(references)
+    return bool(res.scheme and res.netloc)
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):

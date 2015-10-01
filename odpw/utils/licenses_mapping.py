@@ -143,3 +143,22 @@ class LicensesOpennessMapping:
         if id in self.licenses_list:
             return self.licenses_list[id].get('od_conformance', 'not found')
         return 'not found'
+
+
+if __name__ == '__main__':
+    import csv
+    import pprint
+    from collections import defaultdict
+    mapping = LicensesOpennessMapping()
+
+    with open('/home/sebastian/licence_ids.csv') as f:
+        mapped = defaultdict(int)
+        csvr = csv.reader(f, delimiter=';')
+        for row in csvr:
+            try:
+                mapped[mapping.get_od_conformance(row[0][:-2])] += 1
+            except:
+                mapped['not readable'] += 1
+
+
+    pprint.pprint(mapped)

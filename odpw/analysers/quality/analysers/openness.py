@@ -2,6 +2,7 @@ import os
 import string
 
 from odpw.analysers import Analyser
+from odpw.analysers.quality.analysers import ODM_formats
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 
 __author__ = 'jumbrich'
@@ -12,18 +13,10 @@ import analyze_resource_format
 
 LICENSES_PATH = '/usr/local/opendatawu/resources/licenses.json'
 
-# http://en.wikipedia.org/wiki/Open_format
-OPEN_FORMATS = ['csv', 'html', 'latex', 'dvi',
-                'postscript', 'json', 'rdf',
-                'xml', 'txt', 'ical', 'rss',
-                'geojson',
-                'ods', 'ttf', 'otf'
-                              'svg', 'gif', 'png']
+OPEN_FORMATS = ['dvi', 'svg'] + ODM_formats.get_non_proprietary()
 
-MACHINE_FORMATS=[]
 
-# what about
-#svg geotiff otf xls
+MACHINE_FORMATS = ODM_formats.get_machine_readable()
 
 class OpennessAnalyser(Analyser):
     
@@ -96,7 +89,8 @@ class OpennessAnalyser(Analyser):
         if 'resources' in data:
             for res in data['resources']:
                 fv = res.get("format", str(None))
-                format = analyze_resource_format.get_format(fv).lower()
+                #format = analyze_resource_format.get_format(fv).lower()
+                format = fv.lower()
                 if format in OPEN_FORMATS:
                     open = True
                     break
