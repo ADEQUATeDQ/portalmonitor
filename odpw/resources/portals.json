@@ -352,7 +352,13 @@
         "countryCode": "IRL", 
         "software": "CKAN", 
         "url": "http://data.gov.ie/"
-    }, 
+    },
+    "data_gov_md": {
+        "api": "http://data.gov.md/ckan/api/",
+        "countryCode": "MDA",
+        "software": "CKAN",
+        "url": "http://data.gov.md/"
+    },
     "data_gov_ro": {
         "api": "", 
         "countryCode": "ROU", 
@@ -1054,7 +1060,13 @@
         "countryCode": "LUX", 
         "software": "CKAN", 
         "url": "http://open-data.europa.eu/"
-    }, 
+    },
+    "open_nrw": {
+        "api": "https://open.nrw/api/",
+        "countryCode": "DEU",
+        "software": "CKAN",
+        "url": "https://open.nrw/"
+    },
     "open_whitehouse_gov": {
         "api": "", 
         "countryCode": "USA", 
@@ -1114,12 +1126,24 @@
         "countryCode": "ESP", 
         "software": "CKAN", 
         "url": "http://opendata.caceres.es/"
-    }, 
+    },
+    "opendata_cnmc_es": {
+        "api": "",
+        "countryCode": "ESP",
+        "software": "CKAN",
+        "url": "http://opendata.cnmc.es/"
+    },
     "opendata_comune_bari_it": {
         "api": "", 
         "countryCode": "ITA", 
         "software": "CKAN", 
         "url": "http://opendata.comune.bari.it/"
+    },
+    "opendata_government_bg": {
+        "api": "",
+        "countryCode": "BGR",
+        "software": "CKAN",
+        "url": "https://opendata.government.bg/"
     },
     "opendata_go_ke": {
         "api": "", 
@@ -1180,7 +1204,7 @@
         "countryCode": "ESP", 
         "software": "CKAN", 
         "url": "http://opendatacanarias.es/"
-    }, 
+    },
     "opendatadc_org": {
         "api": "", 
         "countryCode": "USA", 
@@ -1198,7 +1222,13 @@
         "countryCode": "GRC", 
         "software": "CKAN", 
         "url": "http://opendatahub.gr/"
-    }, 
+    },
+    "www_opendatamalta_org": {
+        "api": "http://www.opendatamalta.org/ckan/api/",
+        "countryCode": "MLT",
+        "software": "CKAN",
+        "url": "http://www.opendatamalta.org/"
+    },
     "opendatareno_org": {
         "api": "", 
         "countryCode": "USA", 
@@ -1312,7 +1342,13 @@
         "countryCode": "FRA", 
         "software": "OpenDataSoft", 
         "url": "http://tourisme62.opendatasoft.com"
-    }, 
+    },
+    "transparenz_hamburg_de": {
+        "api": "http://suche.transparenz.hamburg.de/api/",
+        "countryCode": "DEU",
+        "software": "CKAN",
+        "url": "http://transparenz.hamburg.de/"
+    },
     "udct-data_aigid_jp": {
         "api": "http://udct-data.aigid.jp/", 
         "countryCode": "JPN", 
