@@ -75,9 +75,8 @@ if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1537
     software = 'CKAN'
-    portal = 'data_gv_at'
 
-    d = dbm.getDatasetsAsStream(snapshot=sn, software=software, portalID=portal)
+    d = dbm.getDatasetsAsStream(snapshot=sn, software=software)
     a_set = AnalyserSet()
     d1 = a_set.add(LicenseTripleExtractor())
     d2 = a_set.add(FormatOpennessMapping())
