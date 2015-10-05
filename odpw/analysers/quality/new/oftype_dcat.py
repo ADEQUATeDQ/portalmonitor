@@ -48,6 +48,10 @@ class OfTypeDCAT(ElementCountAnalyser):
         if len(values) == 0:
             self.analyse_generic('no values')
         for v in values:
+            v = str(v).strip()
+            v = v.lower()
+            if v.startswith('.'):
+                v = v[1:]
             # resource level
             if v in self.type_set:
                 self.analyse_generic(True)
