@@ -82,7 +82,13 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "http://cdph.data.ca.gov"
-    }, 
+    },
+    "ckanau_org": {
+        "api": "",
+        "countryCode": "AUS",
+        "software": "CKAN",
+        "url": "http://ckanau.org/"
+    },
     "ckan_gsi_go_jp": {
         "api": "", 
         "countryCode": "JPN", 
