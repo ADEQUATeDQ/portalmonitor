@@ -4,27 +4,24 @@
     </div>
 
     <nav id="nav-main" class="nav-tabs fullwidth end">
+        {% set navigation_bar = [
+            ('/', 'index', 'System', 'fa-laptop'),
+            ('/portal/', 'portal', 'Portal(s)','fa-server'),
+            ('/data/', 'data', 'Data & API', 'fa-server'),
+            ('/doc/', 'doc', 'Documentation', 'fa-info'),
+            ('/about/', 'about', 'About', 'fa-info')
+        ] -%}
+        {% set active_page = active_page|default('index') -%}
         <ul>
-            <li {% if index%} class="active" {% endif %}>
-                <a href="/">
-                    <i class="fa fa-laptop"></i> System
-                </a>
-            </li>
-            <li {% if portal%} class="active" {% endif %}>
-                <a href="/portal/">
-                    <i class="fa fa-server fa-fw"></i>
-                    Portal(s) Stats
-                </a>
-            </li>
-            <li>
-                <a href="/data/" class="cur">Data</a>
-            </li>
-            <li>
-                <a href="/metrics/">Metrics</a>
-            </li>
-            <li>
-                <a href="/about/">About</a>
-            </li>
+        
+            {% for href, id, caption, icon in navigation_bar %}
+                <li{% if id == active_page %} class="active" {% endif%}>
+                    <a href="{{ href|e }}">
+                        <i class="fa {{ icon }}"></i>
+                        {{ caption|e }}
+                    </a>
+                </li>
+            {% endfor %}    
         </ul>
     </nav>
 </div>

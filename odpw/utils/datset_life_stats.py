@@ -82,8 +82,6 @@ def cli(args,dbm):
         for p in Portal.iter(dbm.getPortals()):
             portals.append(p)
     
-    
-    
     jobs=[]
     for p in portals:
         snapshots=set([])

@@ -11,7 +11,10 @@ import tornado.ioloop
 
 from os.path import dirname, join, isfile
 from odpw.server.handler import SystemActivityHandler, PortalSelectionHandler,\
-    PortalsHandler, SystemEvolutionHandler
+    PortalsHandler, SystemEvolutionHandler, ViewRenderer
+from lru import LRUCacheDict
+
+
 
 
 here = dirname(__file__)
@@ -29,7 +32,8 @@ def tojson_filter(obj, **kwargs):
 class MyStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        #self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        pass
 class ODPWApplication(tornado.web.Application):
     def __init__(self, db=None, printHtml=False):
         
@@ -46,6 +50,8 @@ class ODPWApplication(tornado.web.Application):
             
             url(r'/portals/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalsHandler),
             url(r'/portal/?(?P<portalID>[^\/]+)?/?(?P<view>[info|details|activity|quality|evolution]+)?/?(?P<snapshot>[^\/]+)?', PortalHandler),
+            
+            (r'/?(?P<view>[data|dumps|api]+)?/', ViewRenderer),
             
             (r'/static/(.*)', MyStaticFileHandler),
             (r'/d/?(?P<source>[datasets|resources]+)?', DataHandler),
@@ -65,6 +71,8 @@ class ODPWApplication(tornado.web.Application):
         
         self.db = db
         
+        #self.cache= LRUCacheDict(max_size=100, expiration=60*10,thread_clear=True)
+        self.cache= LRUCacheDict(max_size=100, expiration=6,thread_clear=True)
         if printHtml:
             self.printHtml = join(here, 'static')
         

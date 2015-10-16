@@ -1,16 +1,19 @@
 <!{% extends "_portal_base.jinja" %}
-{% block subtitle %}
-    <h2>Overview</h2>
-{% endblock %}
+
+{% import '_helpers.jinja' as helper %}
+
+
+
 
 {% block portalcontent %}
-    
+        {{helper.title("Overview") }}
+        
                                 
     <div class="units-row end">
         <div class="unit-33 card unit-padding">
             <div class="card_cnt">
                 <p id="datasets" class="card_value text-centered">
-                    {{ data.datasetsumreporter[0]['Value'] }}
+                    {{ "{:,}".format(data.datasetsumreporter[0]['Value']) }}
                 </p>
             </div>
             <div class="card_header">
@@ -22,7 +25,7 @@
         <div class="unit-33 card unit-padding">
             <div class="card_cnt">
                 <p id="resources" class="card_value text-centered">
-                    {{ data.resourcecountreporter.total }}
+                    {{ "{:,}".format(data.resourcecountreporter.total) }}
                 </p>
             </div>
             <div class="card_header">
@@ -43,6 +46,9 @@
             based on <code>HTTP HEAD content-length</code> information of {{data.resourcesizereporter.count}} resources
             </div>
         </div>
+
+
+
     </div>
             <div class="units-row end">
                 <div class="unit-50 card unit-padding">
@@ -61,10 +67,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+
                                     {% for l in data.licensesreporter %}
                                     <tr>
                                         <td> {{ l.LicenseID}}</td>
-                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc*100)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -79,7 +86,9 @@
                     <div class="card_header"><h3 class="text-centered">Formats</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="formats" class="card_value text-centered">1</p>
+                            <p id="formats" class="card_value text-centered">
+                            {{ data.dcatformatcount_dist }}
+                            </p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
@@ -94,7 +103,7 @@
                                     {% for l in data.dcatformatcount %}
                                     <tr>
                                         <td> {{ l.Format}}</td>
-                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
+                                        <td> {{ l.Count}} ({{"{0:0.2f}".format(l.perc*100)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -110,7 +119,7 @@
                     <div class="card_header"><h3 class="text-centered">Organisation</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="tags" class="card_value text-centered">1</p>
+                            <p id="tags" class="card_value text-centered">{{ data.dcatorganizationscount_dist }}</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
@@ -125,7 +134,7 @@
                                     {% for l in data.dcatorganizationscount %}
                                     <tr>
                                         <td> {{ l.Organisation}}</td>
-                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc)}} %)</td>
+                                        <td> {{ l.Count}} ({{ "{0:0.2f}".format(l.perc*100)}} %)</td>
                                     </tr>
                                     {% endfor %}    
                                 </tbody>
@@ -139,7 +148,7 @@
                     <div class="card_header"><h3 class="text-centered">Tags</h3></div>
                     <div class="card_cnt units-row">
                         <div class=" unit-30">
-                            <p id="tags" class="card_value text-centered">1</p>
+                            <p id="tags" class="card_value text-centered">{{data.dcattagscount_dist}}</p>
                             <label>distinct</label>
                         </div>
                         <div class="topk_table unit-70">
@@ -172,4 +181,7 @@
 
 {% block portalScripts %}
 
+    var data = {{ data | tojson| safe }};
+    console.log("DATA")
+    console.log(data)
 {% endblock %}

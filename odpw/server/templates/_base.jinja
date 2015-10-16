@@ -13,6 +13,7 @@
             <link rel="stylesheet" href="{{ static_url('css/style.css') }}" />
             <link rel="stylesheet" href="{{ static_url('css/font-awesome.min.css') }}">
             <link rel="stylesheet" href="{{ static_url('fonts/source-code-pro.css') }}">
+            <link rel="stylesheet" href="{{ static_url('css/multiple-select.css') }}">
         {% endblock %}
         
         {% block scripts %}
@@ -23,6 +24,7 @@
             <script type="text/javascript" src="{{ static_url('js/vega.min.js.1') }}" ></script>
             <script type="text/javascript" src="{{ static_url('js/kube.min.js') }}" ></script>
             <script type="text/javascript" src="{{ static_url('js/jquery.dataTables.min.js') }}" ></script>
+            <script type="text/javascript" src="{{ static_url('js/jquery.multiple.select.js') }}" ></script>
             <script type="text/javascript" src="{{ static_url('js/odpw.js') }}" ></script>
         {% endblock %}
     </head>
@@ -34,7 +36,32 @@
                 {% include "_header.jinja" %}
 
                 <!--  Navigation Bar -->
-                {% include "_mainnav.jinja" %}
+                <div class="units-row end" id="nav">
+                    <div class="navigation-toggle" data-tools="navigation-toggle" data-target="#nav_main">
+                        <span>Menu</span>
+                    </div>
+
+                    <nav id="nav-main" class="nav-tabs fullwidth end">
+                        {% set navigation_bar = [
+                            ('/', 'index', 'System', 'fa-laptop'),
+                            ('/portal/', 'portal', 'Portal(s)','fa-server'),
+                            ('/data/', 'data', 'Data & API', 'fa-server'),
+                            ('/doc/', 'doc', 'Documentation', 'fa-info'),
+                            ('/about/', 'about', 'About', 'fa-info')
+                        ] -%}
+                        {% set active_page = active_page|default('index') -%}
+                        <ul>
+                            {% for href, id, caption, icon in navigation_bar %}
+                                <li{% if id == active_page %} class="active" {% endif%}>
+                                    <a href="{{ href|e }}">
+                                        <i class="fa {{ icon }}"></i>
+                                        {{ caption|e }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                </div>
 
                 <!-- Content -->
                 <div id="main" class="units-row">
@@ -49,11 +76,6 @@
                     </aside>
                     
                     <section class="unit-90 unit-role-left">
-                        <div class="units-row end" >
-                            <div class="unit-100">
-                                {% block title %}{% endblock %}
-                            </div>
-                        </div>
                         {% block section %}
                     
                         {% endblock %}  

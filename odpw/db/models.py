@@ -5,7 +5,8 @@ from sqlalchemy.engine.result import RowProxy
 
 import urlnorm
 import odpw.utils.util as util
-from odpw.utils.util import ErrorHandler as eh
+from odpw.utils.util import ErrorHandler as eh, getSnapshotfromTime,\
+    getPreviousWeek, getNextWeek
 
 from datetime import datetime
 
@@ -154,12 +155,37 @@ class DatasetLife(Model):
             setattr(self, key, value)
     
     def updateSnapshot(self, created,sn ):
+        c_sn=getSnapshotfromTime(created)
         if self.snapshots is None:
-            self.snapshots={}
-        if created not in self.snapshots:
-            self.snapshots[created]=[]
-        if sn not in self.snapshots[created]: 
-            self.snapshots[created].append(sn)
+            self.snapshots={'created':[c_sn], 'indexed':[(sn,sn)]}
+        else:
+            if c_sn not in self.snapshots['created']:
+                self.snapshots['created'].append(c_sn)
+            
+            sns=self.snapshots['indexed']
+            #sort sn tuples by start date
+            sns=sorted(sns, key=lambda tup: tup[0])
+            
+            min = sns[0][0]
+            max= sns[-1][1]
+            
+            new =[]
+            
+            for t in sns:
+                if sn < t[0]: #ds_sn is before earliest tuple
+                    if sn == getPreviousWeek(t[0]): #just one week before, 
+                        t[0] = sn
+                    elif min == t[0]: # more then one week before
+                        new.append((sn,sn))
+                elif sn > t[1]:
+                    if sn == getNextWeek(t[1]):
+                        t[1] = sn
+                    elif max == t[1]: # more then one week before
+                        new.append((sn,sn))
+            
+            for t in new:
+                self.snapshots['indexed'].append(t)
+            
 
 class PortalMetaData(Model):
 

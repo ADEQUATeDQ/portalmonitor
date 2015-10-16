@@ -196,6 +196,13 @@ class PostgressDBM(object):
     def initDatasetsLife(self):
         self.datasetslife.create(self.engine)
         
+        
+    def getUniqueSnapshots(self):
+         with Timer(key="getUniqueSnapshots") as t:
+             s = select([self.pmd.c.snapshot]).distinct()
+             
+             return s.execute()
+        
     def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
             
@@ -973,14 +980,19 @@ class PostgressDBM(object):
             latest= select([self.pmd.c.portal_id.label('portal_id'), func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id).alias()
             t1=self.pmd.alias()
             
-            s=  select([t1]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
+            s=  select([t1.c.portal_id,
+                        t1.c.snapshot,
+                        t1.c.resources,
+                        t1.c.datasets]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
             
+            print s.compile()
             return s.execute()
     
     def getLatestPortalMetaData(self, portalID=None):
         with Timer(key="getLatestPortalMetaData") as t:
             
             latest= select([func.max(self.pmd.c.snapshot).label('max')]).where(self.pmd.c.portal_id==portalID).alias()
+            
             t1=self.pmd.alias()
             
             s=  select([t1]).select_from(join(t1,latest,and_(portalID==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
@@ -1071,11 +1083,10 @@ class PostgressDBM(object):
                 
                 ]).select_from(self.pmd.join(self.portals, self.portals.c.id==self.pmd.c.portal_id)).group_by(self.pmd.c.snapshot,self.portals.c.software).order_by(self.pmd.c.snapshot)
         
-        print s.compile()
-        print s.compile().params
         return s.execute()
         #select snapshot, software, count(portal_id), sum(datasets), sum(resources), sum( (pmd.fetch_stats->>'accessed')::int), sum( (pmd.fetch_stats->>'added_accessed')::int), sum( (pmd.fetch_stats->>'added_mis_av')::int),  sum( (pmd.fetch_stats->>'mis_av')::int),  sum( (pmd.fetch_stats->>'dead')::int) from pmd inner join portals on pmd.portal_id = portals.id group by snapshot, software order by snapshot
 
+#select mime, count(*), sum(size) from resources where snapshot=1537 and (origin->>'data_gv_at') is not null group by mime order by sum(size) desc
     
 def name():
     return 'DB'

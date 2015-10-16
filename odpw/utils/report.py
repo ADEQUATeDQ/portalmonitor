@@ -24,7 +24,8 @@ def setupCLI(pa):
     pa.add_argument("-ns","--nosnap",  help='no snapshot', dest='snapshotignore', action='store_true')
     
     tasks = pa.add_argument_group("Views")
-    tasks.add_argument("-i",  help='generate the overview report', dest='info', action='store_true')
+    tasks.add_argument("-i",  help='generate the info report', dest='info', action='store_true')
+    tasks.add_argument("-d",  help='generate the detailed report', dest='details', action='store_true')
     tasks.add_argument("-a",  help='generate the activity report', dest='activity', action='store_true')
     tasks.add_argument("-e",  help='generate the evolution report', dest='evolution', action='store_true')
     tasks.add_argument("-q",  help='generate the quality report', dest='quality', action='store_true')
@@ -39,13 +40,13 @@ def setupCLI(pa):
     
     
     out = pa.add_argument_group("Output")
-    out.add_argument("-o",  help='outputfolder to write the reports', dest='outdir')
+    out.add_argument("-o",  help='outputfolder to write the reports', dest='out')
     out.add_argument("-c",  help='generate the system activity report', dest='csv', action='store_true')
     out.add_argument("-u",  help='generate the system activity report', dest='ui', action='store_true')
     
 def cli(args,dbm):
     
-    outdir= args.outdir
+    outdir= args.out
     if not outdir and any([args.csv]):
         print "No output dir "
         return
@@ -58,11 +59,16 @@ def cli(args,dbm):
             
         if args.portal:
             reports.append( portalinfo(dbm, getSnapshot(args) , args.portal) )
-        
+    
+    if args.details:
+         if args.portal:
+            reports.append( portaldetails(dbm, getSnapshot(args) , args.portal) )   
+    
     if args.activity:
         if args.system:
             reports.append( systemactivity(dbm, sn) )
             
+    
     if args.evolution:
         if args.system:
             reports.append( systemevolution(dbm) ) 

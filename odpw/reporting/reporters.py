@@ -24,8 +24,10 @@ log = structlog.get_logger()
 
 class Reporter(object):
     
-    def __init__(self):
+    def __init__(self, analyser):
+        self.a = analyser
         self.df=None
+
     
     def name(self):
         return self.__class__.__name__.lower()
@@ -68,9 +70,9 @@ def addPercentageCol(df, column='count', total=None):
         tsum=total
     
     if tsum==0:
-        dfc['perc'] = 100*dfc[column]/100
+        dfc['perc'] = dfc[column]
     else:
-        dfc['perc'] = 100*dfc[column]/tsum
+        dfc['perc'] = dfc[column]/tsum
     return dfc
 
 def DFtoListDict(df):
@@ -89,10 +91,6 @@ def DFtoListDict(df):
 
 class DBReporter(Reporter):
     
-    def __init__(self, analyser):
-        self.a = analyser
-        self.df=None
-
     def getDataFrame(self):
         if self.df is None:
             res = self.a.getResult()
@@ -136,8 +134,13 @@ class PlotReporter(object):
 
     def plotreport(self, dir):
         pass
+    
+        
 
+class TexTableReporter(object):
 
+    def textablereport(self, dir):
+        pass
 
 class SnapshotsPerPortalReporter(DBReporter,UIReporter,CLIReporter):
     
@@ -200,7 +203,7 @@ class ISO3DistReporter(DBReporter,UIReporter,CSVReporter,CLIReporter):
         with open(file, "w") as f:
             df.to_csv(f,index=False)
 
-class Report(UIReporter,CSVReporter,CLIReporter, PlotReporter):
+class Report(UIReporter,CSVReporter,CLIReporter, PlotReporter, TexTableReporter):
     
     def __init__(self, reporters):
         self.rs = reporters
@@ -232,6 +235,11 @@ class Report(UIReporter,CSVReporter,CLIReporter, PlotReporter):
             if isinstance(r, PlotReporter):
                 r.plotreport(dir)
 
+    def textablereport(self, dir):
+        for r in self.rs:
+            if isinstance(r, TexTableReporter):
+                r.textablereport(dir)
+        
 
 class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
     def __init__(self,analyser, snapshot=None,portalID=None, dbds=0, dbres=0,dbresproc=0):
@@ -248,7 +256,6 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
         if  self.df is None:
             
             res = self.analyser.getResult()
-            print res
             self.df = pd.DataFrame(res['rows'])
             
             #self.df.columns = res['columns']
@@ -276,18 +283,19 @@ class SystemActivityReporter(Reporter,CLIReporter, UIReporter, CSVReporter):
         print "  head",summary['head']
 
 class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
-    def __init__(self, analyser, columns=None, topK=None):
-        self.analyser= analyser
+    
+    def __init__(self, analyser, columns=None, topK=None,distinct=False):
+        super(ElementCountReporter,self).__init__(analyser)
         self.topK=topK
-        self.df = None
         self.columns=columns
+        self.distinct=distinct
 
     def name(self):
-        return self.analyser.name().lower()
+        return self.a.name().lower()
 
     def getDataFrame(self):
         if self.df is None:
-            self.df = pd.DataFrame(self.analyser.getResult().items(), columns=self.columns)
+            self.df = pd.DataFrame(self.a.getResult().items(), columns=self.columns)
             if self.topK:
                 self.df=dftopk(self.df,column='Count', k=self.topK, percentage=True, otherrow=True)
             else:
@@ -295,7 +303,13 @@ class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
         return self.df
 
     def uireport(self):
-        return {self.name(): DFtoListDict(self.getDataFrame())}
+        res= {self.name(): DFtoListDict(self.getDataFrame())}
+        if self.distinct:
+            res[self.name()+"_dist"]= len(self.a.getResult().keys())
+        
+        print res
+        print self.distinct
+        return res
 
     def clireport(self):
         print self.name()
@@ -304,37 +318,36 @@ class ElementCountReporter(Reporter,CSVReporter,UIReporter, CLIReporter):
         print 
     
 class TagReporter(ElementCountReporter, CSVReporter):
-    def __init__(self, analyser, datasetcount,topK=None):
-        super(TagReporter, self).__init__(analyser, columns=['Tag', 'Count'], topK=topK)
+    def __init__(self, analyser, datasetcount,topK=None, distinct=False):
+        super(TagReporter, self).__init__(analyser, columns=['Tag', 'Count'], topK=topK,distinct=distinct)
         self.total= datasetcount.getResult()['count']
 
     
     def getDataFrame(self):
         #override, since we need to total dataset as extra parameter
         if self.df is None:
-            self.df = pd.DataFrame(self.analyser.getResult().items(), columns=self.columns)
+            self.df = pd.DataFrame(self.a.getResult().items(), columns=self.columns)
             if self.topK:
                 self.df=dftopk(self.df,column='Count', k=self.topK)
             self.df=addPercentageCol(self.df,column='Count', total=self.total)
         return self.df
     
-    
 class OrganisationReporter(ElementCountReporter, CSVReporter):
-    def __init__(self, analyser, topK=None):
-        super(OrganisationReporter, self).__init__(analyser,columns=['Organisation', 'Count'], topK=topK)
+    def __init__(self, analyser, topK=None, distinct=False):
+        super(OrganisationReporter, self).__init__(analyser,columns=['Organisation', 'Count'], topK=topK,distinct=distinct)
 
         
 class FormatCountReporter(ElementCountReporter, CSVReporter):
-    def __init__(self, analyser, topK=None):
-        super(FormatCountReporter, self).__init__(analyser,columns=['Format', 'Count'], topK=topK)
+    def __init__(self, analyser, topK=None, distinct=False):
+        super(FormatCountReporter, self).__init__(analyser,columns=['Format', 'Count'], topK=topK,distinct=distinct)
 
         
 class LicensesReporter(ElementCountReporter, CSVReporter, UIReporter):
-    def __init__(self, licenseCount, licenseConform, topK=None):
+    def __init__(self, licenseCount, licenseConform, topK=None, distinct=False):
         if isinstance(licenseCount, CKANLicenseCount) and isinstance(licenseConform, CKANLicenseConformance):
             self.licenseCount = licenseCount
             self.licenseConform = licenseConform
-        super(LicensesReporter,self).__init__(None, topK=topK)
+        super(LicensesReporter,self).__init__(None, topK=topK,distinct=distinct)
         self.df = None
 
     def getDataFrame(self):

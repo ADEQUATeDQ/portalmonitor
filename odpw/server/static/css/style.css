@@ -207,10 +207,6 @@ section{
 }
 
 
-table#softdist tbody tr:hover{
-    background-color: black;
-}
-
 
 
 h2{
@@ -298,21 +294,26 @@ border: solid #ddd;
 border-width: 1px 0 0;
 }
 
-.card {
-    border-radius: 5px;
-}
-
 #sysacttable{
     width: 100% !Important;
 }
 
-.card_header h3{
+/***************
+*** CARDS
+****************/
+
+.card {
+    border-radius: 5px;
+}
+
+
+.card h3{
     -webkit-font-smoothing: antialiased;
-    height:40px;
-    line-height: 40px;
+    height:30px;
+    line-height: 30px;
     margin: 0px;
-    font-size: 25px;
-    color: rgba(45,45,45,0.8);
+    font-size: 20px;
+    color:dimgrey;
     font-family: "League Gothic";
 }
 
@@ -324,12 +325,6 @@ border-width: 1px 0 0;
 .card_value{
     font-family: 'Junction';
     font-size: 40px;
-}
-.card label{
-    text-align: center;
-    width: 100%;
-    float:right;
-    color:dimgrey;
 }
 
 .card_cnt li:not(:first-child) {
@@ -359,46 +354,74 @@ border-width: 1px 0 0;
 
 
 
-table {
+table{
   margin-left: auto;
   margin-right: auto;
   border-collapse: collapse;
   text-align: right;
-font-family: 'Source Code Pro';
-    border-collapse: separate;
-        border-spacing: 0 5px;
-     -webkit-font-feature-settings: 'tnum'; /* This is technically redundant */
-        -moz-font-feature-settings: 'tnum';
-        -ms-font-feature-settings: 'tnum'; 
+  font-family: 'Source Code Pro';
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  -webkit-font-feature-settings: 'tnum'; /* This is technically redundant */
+  -moz-font-feature-settings: 'tnum';
+  -ms-font-feature-settings: 'tnum';
 }
-table thead th{
-    text-align: right;
+
+table thead th,table thead td{
     font-variant: small-caps;
     font-weight: normal;
     text-transform: lowercase;
     text-align: right;
 }
-/*table thead tr:first-child th {
-  border-top: solid 2px;
-}*/
+
+table tfoot th{
+    text-align: right;
+    font-weight: normal;
+    color:inherit;
+}
+
 table thead tr:last-child th {
   border-bottom: solid 1px;
 }
-table thead tr th {
+table thead tr th,table thead tr td{
   padding-left: 10px;
   padding-left: 20px;
   line-height: 1;
 }
-table tbody tr{
+table tbody tr, table tfoot tr{
 height:15px;
 }
-table tbody tr td {
+
+table tbody tr td{
   padding: 5px;
   text-align: right;
-
 }
+
+table tfoot tr th{
+  padding: 5px;
+  text-align: right;
+}
+
 table tbody tr:last-child td {
   border-bottom: solid 1.5px;
+}
+
+table#softdist tbody tr:hover,table#softdist tfoot tr:hover{
+    background-color: LightSteelBlue;
+}
+
+#portalInfos_length{
+    float: left;
+}
+#portalInfos_filter{
+    float: right;
+}
+#portalInfos_filter input{
+    height: 20px;
+    border-radius:3px;
+    margin-top: 3px;
+    float:right;
+    font-size:12px;
 }
 
 

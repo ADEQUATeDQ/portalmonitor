@@ -12,8 +12,8 @@ class RetrievabilityReporter(Reporter, UIReporter, CLIReporter):
     
     
     def __init__(self, analyser):
-        super(RetrievabilityReporter,self).__init__()
-        self.a=analyser
+        super(RetrievabilityReporter,self).__init__(analyser)
+        
         
         
     def getDataFrame(self):

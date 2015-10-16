@@ -12,6 +12,7 @@ import dateutil
 from datetime import datetime, timedelta, date
 from _collections import defaultdict
 from odpw.utils.util import tofirstdayinisoweek, getSnapshotfromTime, weekIter
+from odpw.utils.dcat_access import getCreationDate
 
 
 
@@ -31,83 +32,110 @@ class DatasetLifeStatsAnalyser(Analyser):
     
     def __init__(self, dbm, snapshot, portal):
         self.snasphot = snapshot
-        self.counts={}
         
-        self.pmd_snapshots=[]
-        for res in dbm.getSnapshotsFromPMD(portalID=portal.id):
-            self.pmd_snapshots.append(res['snapshot'])
-        self.pmd_snapshots= sorted(self.pmd_snapshots)
+        self.counts={self.ACC:0,
+                     self.ADDACC:0,
+                     self.ADDMISAV:0,
+                     self.MISAV:0,
+                     self.DEAD:0}
         
-        self.pmd_startDate= tofirstdayinisoweek(sorted(self.pmd_snapshots)[0])
-        self.pmd_endDate= tofirstdayinisoweek(sorted(self.pmd_snapshots)[-1])
-        
-        self.toupdate=set([])
+        #=======================================================================
+        # self.pmd_snapshots=[]
+        # for res in dbm.getSnapshotsFromPMD(portalID=portal.id):
+        #     self.pmd_snapshots.append(res['snapshot'])
+        # self.pmd_snapshots= sorted(self.pmd_snapshots)
+        # 
+        # self.pmd_startDate= tofirstdayinisoweek(sorted(self.pmd_snapshots)[0])
+        # self.pmd_endDate= tofirstdayinisoweek(sorted(self.pmd_snapshots)[-1])
+        # 
+        # self.toupdate=set([])
+        #=======================================================================
     
     def analyse_DatasetLife(self,df):
+        try:
         
-        #get information
-        snapshots = df.snapshots
-         
-        if len(snapshots)>1:
-            print df.id, len(snapshots)
-        else:
-            created = snapshots.iterkeys().next()
-            ds_snap = snapshots.itervalues().next()
+            #get information
+            created = sorted(df.snapshots['created'])[0]
             
-            ds_start=sorted(ds_snap)[0]
-            ds_end=sorted(ds_snap)[-1]
+            sns=df.snapshots['indexed']
+            #sort sn tuples by start date
+            sns=sorted(sns, key=lambda tup: tup[0])
+                
+            ds_start = sns[0][0]
+            ds_end= sns[-1][1]
+                
             
-            created=getSnapshotfromTime(dateutil.parser.parse(created))
-            if created > ds_start: 
-                # that is stange, we have the ds in the DB, ut the creation date was updated
-                created=getSnapshotfromTime(tofirstdayinisoweek(ds_start), delta=timedelta(days=7), before=True)
-                
-                
-            #if created!=ds_start:
-            #    created_n=getSnapshotfromTime(datasetLife[ds]['created'][0], delte=timedelta(days=7))
-            #    if created_n!=ds_start:
-            #        print "DAMN, created is not indexed", created_n, ds_start
-            #    else:
-            #        created=created_n
-            #print ds_start, ds_end, created
-            
-            for pmd_sn in weekIter(self.pmd_startDate, self.pmd_endDate):
-                if pmd_sn not in self.counts:
-                    self.counts[pmd_sn]=defaultdict(int)
-                self.counts[pmd_sn]['pmd']= pmd_sn in snapshots
-                
-                if pmd_sn < created:
-                    #DS did not exist for this pmd sn
-                    pass
-                else:
-                    if pmd_sn in ds_snap:
-                        if pmd_sn == created: 
-                            self.counts[ pmd_sn ][ self.ADDACC ]+=1
-                        else:
-                            self.counts[pmd_sn][ self.ACC ]+=1
-                            if pmd_sn == self.snasphot:
-                                #get prev ds snapshot
-                                if ds_snap.index(pmd_sn)>=1:
-                                    ds_prev_sn= ds_snap[ds_snap.index(pmd_sn)-1]
-                                    #get one week back
-                                    prev_week= getSnapshotfromTime(tofirstdayinisoweek(self.snasphot), delta=timedelta(days=7), before=True)
-                                    if ds_prev_sn != prev_week: 
-                                        start= tofirstdayinisoweek(ds_prev_sn)
-                                        end=tofirstdayinisoweek(prev_week)
-                                        for sn in weekIter(start,end):
-                                            self.toupdate.add(sn)
-                                        ##check if we need to update the older snapshots
-                            
-                    elif pmd_sn == created:
-                        self.counts[pmd_sn][  self.ADDMISAV ]+=1
-                    elif ds_start <= pmd_sn <=ds_end:
-                        self.counts[pmd_sn][self.MISAV]+=1
-                    elif pmd_sn > ds_end:
-                        self.counts[pmd_sn][self.DEAD]+=1
-    
-    
-    def done(self):
-        print self.toupdate
+            idx=False
+            for t in sns:
+                if t[0] <= self.snasphot <= t[1]:
+                    #snapshot is between/equals start and end
+                    #-> we accessed the dataset
+                    if created == self.snasphot:
+                        self.counts[ self.ADDACC ]+=1
+                        idx=True
+                    else:
+                        self.counts[self.ACC]+=1
+                        idx=True
+        
+            if not idx:
+                if ds_start <= self.snasphot <= ds_end:
+                    if self.snasphot == created:
+                        self.counts[  self.ADDMISAV ]+=1
+                    else:
+                        self.counts[self.MISAV]+=1
+                    # snapshot is in the lifespan of the ds but not indexed
+                if self.snasphot > ds_end:
+                    self.counts[self.DEAD]+=1
+        except Exception as e:
+            print e
+        
+    #===========================================================================
+    #     #created = snapshots.iterkeys().next()
+    #     #ds_snap = snapshots.itervalues().next()
+    #     
+    #     
+    #     created=getSnapshotfromTime(dateutil.parser.parse(created))
+    #     if created > ds_start: 
+    #         # that is stange, we have the ds in the DB, ut the creation date was updated
+    #         created=getSnapshotfromTime(tofirstdayinisoweek(ds_start), delta=timedelta(days=7), before=True)
+    #         
+    #         
+    #     
+    #     for pmd_sn in weekIter(self.pmd_startDate, self.pmd_endDate):
+    #         if pmd_sn not in self.counts:
+    #             self.counts[pmd_sn]=defaultdict(int)
+    #         self.counts[pmd_sn]['pmd']= pmd_sn in snapshots
+    #         
+    #         if pmd_sn < created:
+    #             #DS did not exist for this pmd sn
+    #             pass
+    #         else:
+    #             if pmd_sn in ds_snap:
+    #                 if pmd_sn == created: 
+    #                     self.counts[ pmd_sn ][ self.ADDACC ]+=1
+    #                 else:
+    #                     self.counts[pmd_sn][ self.ACC ]+=1
+    #                     if pmd_sn == self.snasphot:
+    #                         #get prev ds snapshot
+    #                         if ds_snap.index(pmd_sn)>=1:
+    #                             ds_prev_sn= ds_snap[ds_snap.index(pmd_sn)-1]
+    #                             #get one week back
+    #                             prev_week= getSnapshotfromTime(tofirstdayinisoweek(self.snasphot), delta=timedelta(days=7), before=True)
+    #                             if ds_prev_sn != prev_week: 
+    #                                 start= tofirstdayinisoweek(ds_prev_sn)
+    #                                 end=tofirstdayinisoweek(prev_week)
+    #                                 for sn in weekIter(start,end):
+    #                                     self.toupdate.add(sn)
+    #                                 ##check if we need to update the older snapshots
+    #                     
+    #             elif pmd_sn == created:
+    #                 self.counts[pmd_sn][  self.ADDMISAV ]+=1
+    #             elif ds_start <= pmd_sn <=ds_end:
+    #                 self.counts[pmd_sn][self.MISAV]+=1
+    #             elif pmd_sn > ds_end:
+    #                 self.counts[pmd_sn][self.DEAD]+=1
+    # 
+    #===========================================================================
     
     def getResult(self):
         return self.counts
@@ -115,7 +143,7 @@ class DatasetLifeStatsAnalyser(Analyser):
     def update_PortalMetaData(self, pmd):
         if not pmd.fetch_stats:
             pmd.fetch_stats={} 
-        for k, v in dict(self.getResult()[self.snasphot]).items():
+        for k, v in dict(self.getResult()).items():
             if k != 'pmd': 
                 pmd.fetch_stats[k]=v
         
@@ -127,29 +155,28 @@ class DatasetLifeAnalyser(Analyser):
         self.dbm=dbm
     
     def analyse_Dataset(self, dataset):
-            
+        try:
             did= dataset.id
+            print did
+            #check if we have this dataset already indexed
             df = self.dbm.getDatasetLife(id=did, portalID= dataset.portal_id)
             insert=False
             if df is None:
                 insert=True
                 df = DatasetLife(did=did, portalID= dataset.portal_id)
             
-            created=None     
-            for dcat_el in getattr(dataset,'dcat',[]):
-                if str(DCAT.Dataset) in dcat_el.get('@type',[]):
-                    for f in dcat_el.get(str(DCT.issued),[]):
-                        try:
-                            created = datetime.strptime(f['@value'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                            #self.ages['created'].append(created)
-                            break
-                        except Exception as e:
-                            pass
+            created=None
+            
+            c_date=getCreationDate(dataset)
+            created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             if created is None:
                 created = datetime(2014, 6, 1)
                 print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
-            df.updateSnapshot(created.isoformat(),dataset.snapshot )
+            
+            df.updateSnapshot(created, dataset.snapshot )
             if insert:
                 self.dbm.insertDatasetLife(df)
             else:
-                self.dbm.updateDatasetLife(df)            
+                self.dbm.updateDatasetLife(df) 
+        except Exception as e:
+            print e           

@@ -1,0 +1,1070 @@
+<!<!<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+    <head>
+    
+        <title>Open Data Portal Watch</title>
+        
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        
+            <!--<link rel="stylesheet" href="/static/css/kube.min.css?v=d3ff0073cd62024ed35f0d587b8e2bd4" />-->
+            <link rel="stylesheet" href="/static/css/kube.min.css?v=d3ff0073cd62024ed35f0d587b8e2bd4" />
+            <link rel="stylesheet" href="/static/css/style.css?v=76f40c2760aeb5d1af16efd894e8eea7" />
+            <link rel="stylesheet" href="/static/css/font-awesome.min.css?v=04425bbdc6243fc6e54bf8984fe50330">
+            <link rel="stylesheet" href="/static/fonts/source-code-pro.css?v=de6bc8e423f99d13871b09f8aaf2fdd6">
+            <link rel="stylesheet" href="/static/css/multiple-select.css?v=f4445e081eff955e7e2f47ea75e24445">
+        
+        
+        
+            
+            <script type="text/javascript" src="/static/js/jquery.js?v=7403060950f4a13be3b3dfde0490ee05" ></script>
+            <script type="text/javascript" src="/static/js/d3.min.js?v=f3ba03784f98e7e7985fc96413714837" ></script>
+            <script type="text/javascript" src="/static/js/topojson.js.1?v=37096b98f3f4c1f1b1ed451f9a32ec1e" ></script>
+            <script type="text/javascript" src="/static/js/vega.min.js.1?v=2bee96841ad2710aaaeeb1ff73ca92e2" ></script>
+            <script type="text/javascript" src="/static/js/kube.min.js?v=04d25a3fef0ad1272158305655c4ba10" ></script>
+            <script type="text/javascript" src="/static/js/jquery.dataTables.min.js?v=280ff6aaaba888ccb486e669fd200b8e" ></script>
+            <script type="text/javascript" src="/static/js/jquery.multiple.select.js?v=8af9a9f69a8883d5a716c988b4dacfb9" ></script>
+            <script type="text/javascript" src="/static/js/odpw.js?v=e924ebb3e05a6d477322cca5a11e5eee" ></script>
+        
+    </head>
+        
+    <body>
+        <div class="units-row">
+            <div class="unit-100 unit-centered">
+                <!-- Header -->
+                <!-- Header -->
+<header class="units-row">
+    <div class="unit-80">
+        <h1>
+            <a href=".">Open Data Portal Watch</a>
+        </h1>
+    </div>
+    <div class="unit-20">
+        <img src="/static/images/wu.png" alt="WU Logo" />
+    </div>
+</header>
+
+                <!--  Navigation Bar -->
+                <div class="units-row end" id="nav">
+                    <div class="navigation-toggle" data-tools="navigation-toggle" data-target="#nav_main">
+                        <span>Menu</span>
+                    </div>
+
+                    <nav id="nav-main" class="nav-tabs fullwidth end">
+                        <ul>
+                            
+                                <li>
+                                    <a href="/">
+                                        <i class="fa fa-laptop"></i>
+                                        System
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <a href="/portal/">
+                                        <i class="fa fa-server"></i>
+                                        Portal(s)
+                                    </a>
+                                </li>
+                            
+                                <li class="active" >
+                                    <a href="/data/">
+                                        <i class="fa fa-server"></i>
+                                        Data &amp; API
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <a href="/doc/">
+                                        <i class="fa fa-info"></i>
+                                        Documentation
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <a href="/about/">
+                                        <i class="fa fa-info"></i>
+                                        About
+                                    </a>
+                                </li>
+                            
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- Content -->
+                <div id="main" class="units-row">
+                    <aside class="unit-10">
+                        <nav id="nav-side" class="nav">
+                            <ul>
+                                
+    
+    
+        <li class="text-centered ">
+            <a href="/data/">
+                <i class="fa fa-info fa-fw"></i>
+                <p>Info</p>
+            </a>
+        </li>
+    
+        <li class="text-centered ">
+            <a href="/dumps/">
+                <i class="fa fa-server fa-fw"></i>
+                <p>Dumps</p>
+            </a>
+        </li>
+    
+        <li class="text-centered  active ">
+            <a href="/apis/">
+                <i class="fa fa-cubes fa-fw"></i>
+                <p>APIs</p>
+            </a>
+        </li>
+            
+    
+                            </ul>
+                        </nav>
+                    </aside>
+                    
+                    <section class="unit-90 unit-role-left">
+                        
+    <div class="units-row end" >
+        <div class="unit-100">
+            <h2>Available APIs </h2>
+        </div>
+    </div>
+    
+    <div class="units-row">
+        <div class="unit-90 unit-centered">
+            <fieldset>
+                <legend>Portals</legend>
+                <div class="units-row end">
+                    <div>
+                        <span class="label label-green">GET</span>
+                        <code>/api/portals</code>
+                        <span class="right italic">full list of all portals</span>
+
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <div class="left unit-20 unit-push-10">
+                        <code>?software=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="portalApi" id="ss" multiple="multiple">
+                                
+                                <option value="CKAN">CKAN</option>            
+                            
+                                <option value="OpenDataSoft">OpenDataSoft</option>            
+                            
+                                <option value="Socrata">Socrata</option>            
+                            
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by software</span>
+                    </div>
+                </div>
+                <div class="units-row">
+                    <div class="left unit-20 unit-push-10">
+                        <code>?iso3=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="portalApi" id="siso" multiple="multiple">
+                            
+                                <option value="DEU">DEU</option>            
+                            
+                                <option value="BEL">BEL</option>            
+                            
+                                <option value="ITA">ITA</option>            
+                            
+                                <option value="TZA">TZA</option>            
+                            
+                                <option value="GBR">GBR</option>            
+                            
+                                <option value="HUN">HUN</option>            
+                            
+                                <option value="LUX">LUX</option>            
+                            
+                                <option value="ESP">ESP</option>            
+                            
+                                <option value="ECU">ECU</option>            
+                            
+                                <option value="IRL">IRL</option>            
+                            
+                                <option value="NLD">NLD</option>            
+                            
+                                <option value="FIN">FIN</option>            
+                            
+                                <option value="TWN">TWN</option>            
+                            
+                                <option value="CAN">CAN</option>            
+                            
+                                <option value="BGR">BGR</option>            
+                            
+                                <option value="MDA">MDA</option>            
+                            
+                                <option value="AUT">AUT</option>            
+                            
+                                <option value="JPN">JPN</option>            
+                            
+                                <option value="BFA">BFA</option>            
+                            
+                                <option value="USA">USA</option>            
+                            
+                                <option value="KEN">KEN</option>            
+                            
+                                <option value="CHE">CHE</option>            
+                            
+                                <option value="FRA">FRA</option>            
+                            
+                                <option value="MLT">MLT</option>            
+                            
+                                <option value="SRB">SRB</option>            
+                            
+                                <option value="GRC">GRC</option>            
+                            
+                                <option value="BRA">BRA</option>            
+                            
+                                <option value="AUS">AUS</option>            
+                            
+                                <option value="URY">URY</option>            
+                            
+                                <option value="ROU">ROU</option>            
+                            
+                                <option value="SVK">SVK</option>            
+                            
+                                <option value="IDN">IDN</option>            
+                            
+                                <option value="ARG">ARG</option>            
+                            
+                                <option value="POL">POL</option>            
+                            
+                                <option value="IOT">IOT</option>            
+                            
+                                <option value=""></option>            
+                            
+                                <option value="MEX">MEX</option>            
+                            
+                                <option value="HRV">HRV</option>            
+                            
+                                <option value="HKG">HKG</option>            
+                            
+                                <option value="NGA">NGA</option>            
+                            
+                                <option value="DNK">DNK</option>            
+                            
+                                <option value="ISL">ISL</option>            
+                            
+                                <option value="UGA">UGA</option>            
+                            
+                                <option value="SWE">SWE</option>            
+                            
+                                <option value="RUS">RUS</option>            
+                            
+                        </select> 
+                    </div><div>
+                        <span class="right italic">filter by country</span>
+                    </div>
+                </div>
+                
+                <div class="units-row end">
+                    <span class="label label-green">GET</span>
+                    <code id="ssapi">/api/portals?software=CKAN&iso3=</code>
+                    <button class="submit btn btn-smaller right">submit</button>
+                </div>
+            </fieldset>
+            
+        </div>
+    </div>
+    <div class="units-row">
+        <div class="unit-90 unit-centered">
+            <fieldset>
+                <legend>Resource <code>HEAD</code> Information</legend>
+                <div class="units-row end">
+                    <div>
+                        <span class="label label-green">GET</span>
+                        <code>/api/resources</code>
+                        <span class="right italic">Get <code>HEAD</code> information for all resources</span>
+                    </div>
+                    
+                </div>
+                 <div class="units-row end">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?portal=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="headApi" id="portalHeadsel" multiple="multiple">
+                            
+                                <option value="data_noaa_gov_dataset">data_noaa_gov_dataset</option>            
+                            
+                                <option value="opendatareno_org">opendatareno_org</option>            
+                            
+                                <option value="bmgf_demo_socrata_com">bmgf_demo_socrata_com</option>            
+                            
+                                <option value="www_civicdata_io">www_civicdata_io</option>            
+                            
+                                <option value="rs_ckan_net">rs_ckan_net</option>            
+                            
+                                <option value="data_upf_edu_en_main">data_upf_edu_en_main</option>            
+                            
+                                <option value="dados_rs_gov_br">dados_rs_gov_br</option>            
+                            
+                                <option value="data_ok_gov">data_ok_gov</option>            
+                            
+                                <option value="data_murphytx_org">data_murphytx_org</option>            
+                            
+                                <option value="data_london_gov_uk">data_london_gov_uk</option>            
+                            
+                                <option value="data_iledefrance_fr">data_iledefrance_fr</option>            
+                            
+                                <option value="datos_alcobendas_org">datos_alcobendas_org</option>            
+                            
+                                <option value="donnees_ville_montreal_qc_ca">donnees_ville_montreal_qc_ca</option>            
+                            
+                                <option value="opendata_aberdeencity_gov_uk">opendata_aberdeencity_gov_uk</option>            
+                            
+                                <option value="opengov_es">opengov_es</option>            
+                            
+                                <option value="data_cityofdeleon_org">data_cityofdeleon_org</option>            
+                            
+                                <option value="data_providenceri_gov">data_providenceri_gov</option>            
+                            
+                                <option value="gavaobert_gavaciutat_cat">gavaobert_gavaciutat_cat</option>            
+                            
+                                <option value="healthdata_nj_gov">healthdata_nj_gov</option>            
+                            
+                                <option value="data_wellingtonfl_gov">data_wellingtonfl_gov</option>            
+                            
+                                <option value="www_opendatanyc_com">www_opendatanyc_com</option>            
+                            
+                                <option value="dadosabertos_senado_gov_br">dadosabertos_senado_gov_br</option>            
+                            
+                                <option value="data_cityofboston_gov">data_cityofboston_gov</option>            
+                            
+                                <option value="data_vermont_gov">data_vermont_gov</option>            
+                            
+                                <option value="data_cityofmadison_com">data_cityofmadison_com</option>            
+                            
+                                <option value="data_lexingtonky_gov">data_lexingtonky_gov</option>            
+                            
+                                <option value="data_datamontana_us">data_datamontana_us</option>            
+                            
+                                <option value="www_opendataportal_at">www_opendataportal_at</option>            
+                            
+                                <option value="www_opendataforum_info">www_opendataforum_info</option>            
+                            
+                                <option value="data_acgov_org">data_acgov_org</option>            
+                            
+                                <option value="data_gov_hk_en_">data_gov_hk_en_</option>            
+                            
+                                <option value="datos_codeandomexico_org">datos_codeandomexico_org</option>            
+                            
+                                <option value="reportcard_santamonicayouth_net">reportcard_santamonicayouth_net</option>            
+                            
+                                <option value="data_qld_gov_au">data_qld_gov_au</option>            
+                            
+                                <option value="data_rio_rj_gov_br">data_rio_rj_gov_br</option>            
+                            
+                                <option value="catalogue_datalocale_fr">catalogue_datalocale_fr</option>            
+                            
+                                <option value="opendata_brussels_be">opendata_brussels_be</option>            
+                            
+                                <option value="exploredata_gov_ro">exploredata_gov_ro</option>            
+                            
+                                <option value="data_kingcounty_gov">data_kingcounty_gov</option>            
+                            
+                                <option value="data_gv_at">data_gv_at</option>            
+                            
+                                <option value="udct-data_aigid_jp">udct-data_aigid_jp</option>            
+                            
+                                <option value="data_illinois_gov_champaign">data_illinois_gov_champaign</option>            
+                            
+                                <option value="data_hawaii_gov">data_hawaii_gov</option>            
+                            
+                                <option value="ckan_gsi_go_jp">ckan_gsi_go_jp</option>            
+                            
+                                <option value="data_gov_sk">data_gov_sk</option>            
+                            
+                                <option value="www_daten_rlp_de">www_daten_rlp_de</option>            
+                            
+                                <option value="data_cityofchicago_org">data_cityofchicago_org</option>            
+                            
+                                <option value="govdata_de">govdata_de</option>            
+                            
+                                <option value="dati_lombardia_it">dati_lombardia_it</option>            
+                            
+                                <option value="data_ohouston_org">data_ohouston_org</option>            
+                            
+                                <option value="oppnadata_se">oppnadata_se</option>            
+                            
+                                <option value="publicdata_eu">publicdata_eu</option>            
+                            
+                                <option value="data_linz_gv_at">data_linz_gv_at</option>            
+                            
+                                <option value="data_wa_gov">data_wa_gov</option>            
+                            
+                                <option value="data_bris_ac_uk_data_">data_bris_ac_uk_data_</option>            
+                            
+                                <option value="data_gov_uk">data_gov_uk</option>            
+                            
+                                <option value="data_ottawa_ca">data_ottawa_ca</option>            
+                            
+                                <option value="datosabiertos_ec">datosabiertos_ec</option>            
+                            
+                                <option value="performance_smcgov_org">performance_smcgov_org</option>            
+                            
+                                <option value="data_ny_gov">data_ny_gov</option>            
+                            
+                                <option value="finances_worldbank_org">finances_worldbank_org</option>            
+                            
+                                <option value="nycopendata_socrata_com">nycopendata_socrata_com</option>            
+                            
+                                <option value="data_kcmo_org">data_kcmo_org</option>            
+                            
+                                <option value="data_sa_gov_au">data_sa_gov_au</option>            
+                            
+                                <option value="opendata_socrata_com">opendata_socrata_com</option>            
+                            
+                                <option value="www_nosdonnees_fr">www_nosdonnees_fr</option>            
+                            
+                                <option value="data_cms_hhs_gov">data_cms_hhs_gov</option>            
+                            
+                                <option value="dati_veneto_it">dati_veneto_it</option>            
+                            
+                                <option value="data_redmond_gov">data_redmond_gov</option>            
+                            
+                                <option value="data_edostate_gov_ng">data_edostate_gov_ng</option>            
+                            
+                                <option value="data_buenosaires_gob_ar">data_buenosaires_gob_ar</option>            
+                            
+                                <option value="tourisme62_opendatasoft_com">tourisme62_opendatasoft_com</option>            
+                            
+                                <option value="data_burlingtonvt_gov">data_burlingtonvt_gov</option>            
+                            
+                                <option value="tourisme04_opendatasoft_com">tourisme04_opendatasoft_com</option>            
+                            
+                                <option value="edx_netl_doe_gov">edx_netl_doe_gov</option>            
+                            
+                                <option value="www_hri_fi">www_hri_fi</option>            
+                            
+                                <option value="portal_openbelgium_be">portal_openbelgium_be</option>            
+                            
+                                <option value="data_hartford_gov">data_hartford_gov</option>            
+                            
+                                <option value="www_offene-daten_me">www_offene-daten_me</option>            
+                            
+                                <option value="www_yorkopendata_org">www_yorkopendata_org</option>            
+                            
+                                <option value="data_kk_dk">data_kk_dk</option>            
+                            
+                                <option value="parisdata_opendatasoft_com">parisdata_opendatasoft_com</option>            
+                            
+                                <option value="dati_lazio_it">dati_lazio_it</option>            
+                            
+                                <option value="datapilot_american_edu">datapilot_american_edu</option>            
+                            
+                                <option value="www_opendata_provincia_roma_it">www_opendata_provincia_roma_it</option>            
+                            
+                                <option value="data_albanyny_gov">data_albanyny_gov</option>            
+                            
+                                <option value="opendata_hu">opendata_hu</option>            
+                            
+                                <option value="data_somervillema_gov">data_somervillema_gov</option>            
+                            
+                                <option value="dati_trentino_it">dati_trentino_it</option>            
+                            
+                                <option value="data_surrey_ca">data_surrey_ca</option>            
+                            
+                                <option value="dot_demo_socrata_com">dot_demo_socrata_com</option>            
+                            
+                                <option value="opendata_paris_fr_opendatasoft_com">opendata_paris_fr_opendatasoft_com</option>            
+                            
+                                <option value="dati_toscana_it">dati_toscana_it</option>            
+                            
+                                <option value="opendatagortynia_gr">opendatagortynia_gr</option>            
+                            
+                                <option value="scisf_opendatasoft_com">scisf_opendatasoft_com</option>            
+                            
+                                <option value="gisdata_mn_gov">gisdata_mn_gov</option>            
+                            
+                                <option value="data_wu_ac_at">data_wu_ac_at</option>            
+                            
+                                <option value="donnees_ville_sherbrooke_qc_ca">donnees_ville_sherbrooke_qc_ca</option>            
+                            
+                                <option value="data_wokingham_gov_uk">data_wokingham_gov_uk</option>            
+                            
+                                <option value="datosabiertos_malaga_eu">datosabiertos_malaga_eu</option>            
+                            
+                                <option value="daten_rlp_de">daten_rlp_de</option>            
+                            
+                                <option value="opendatacanarias_es">opendatacanarias_es</option>            
+                            
+                                <option value="health_data_ny_gov">health_data_ny_gov</option>            
+                            
+                                <option value="www_rotterdamopendata_nl">www_rotterdamopendata_nl</option>            
+                            
+                                <option value="data_austintexas_gov">data_austintexas_gov</option>            
+                            
+                                <option value="data_undp_org">data_undp_org</option>            
+                            
+                                <option value="annuario_comune_fi_it">annuario_comune_fi_it</option>            
+                            
+                                <option value="www_datagm_org_uk">www_datagm_org_uk</option>            
+                            
+                                <option value="data_nj_gov">data_nj_gov</option>            
+                            
+                                <option value="opendata_ayto-caceres_es">opendata_ayto-caceres_es</option>            
+                            
+                                <option value="opendata_go_ke">opendata_go_ke</option>            
+                            
+                                <option value="datagm_org_uk">datagm_org_uk</option>            
+                            
+                                <option value="datamx_io">datamx_io</option>            
+                            
+                                <option value="data_cityofsantacruz_com">data_cityofsantacruz_com</option>            
+                            
+                                <option value="www_edinburghopendata_info">www_edinburghopendata_info</option>            
+                            
+                                <option value="data_openva_com">data_openva_com</option>            
+                            
+                                <option value="data_edmonton_ca">data_edmonton_ca</option>            
+                            
+                                <option value="data_nsw_gov_au">data_nsw_gov_au</option>            
+                            
+                                <option value="data_honolulu_gov">data_honolulu_gov</option>            
+                            
+                                <option value="data_ct_gov">data_ct_gov</option>            
+                            
+                                <option value="datameti_go_jp_data_">datameti_go_jp_data_</option>            
+                            
+                                <option value="data_michigan_gov">data_michigan_gov</option>            
+                            
+                                <option value="data_oregon_gov">data_oregon_gov</option>            
+                            
+                                <option value="data_maryland_gov">data_maryland_gov</option>            
+                            
+                                <option value="data_mo_gov">data_mo_gov</option>            
+                            
+                                <option value="offenedaten_de">offenedaten_de</option>            
+                            
+                                <option value="data_gov">data_gov</option>            
+                            
+                                <option value="data_cityofnewyork_us">data_cityofnewyork_us</option>            
+                            
+                                <option value="www_data_gc_ca">www_data_gc_ca</option>            
+                            
+                                <option value="data_graz_gv_at">data_graz_gv_at</option>            
+                            
+                                <option value="geothermaldata_org">geothermaldata_org</option>            
+                            
+                                <option value="data_opencolorado_org">data_opencolorado_org</option>            
+                            
+                                <option value="data_ktn_gv_at">data_ktn_gv_at</option>            
+                            
+                                <option value="opendata_comune_bari_it">opendata_comune_bari_it</option>            
+                            
+                                <option value="performance_chattanooga_gov">performance_chattanooga_gov</option>            
+                            
+                                <option value="www_opengov-muenchen_de">www_opengov-muenchen_de</option>            
+                            
+                                <option value="www_consumerfinance_gov_complaintdatabase">www_consumerfinance_gov_complaintdatabase</option>            
+                            
+                                <option value="opendata_lisra_jp">opendata_lisra_jp</option>            
+                            
+                                <option value="data_salzburgerland_com">data_salzburgerland_com</option>            
+                            
+                                <option value="hampton_demo_socrata_com">hampton_demo_socrata_com</option>            
+                            
+                                <option value="www_metrochicagodata_com">www_metrochicagodata_com</option>            
+                            
+                                <option value="data_colorado_gov">data_colorado_gov</option>            
+                            
+                                <option value="dartportal_leeds_ac_uk">dartportal_leeds_ac_uk</option>            
+                            
+                                <option value="data_energystar_gov">data_energystar_gov</option>            
+                            
+                                <option value="inforegio_azure-westeurope-prod_socrata_com">inforegio_azure-westeurope-prod_socrata_com</option>            
+                            
+                                <option value="dados_gov_br">dados_gov_br</option>            
+                            
+                                <option value="data_montgomerycountymd_gov">data_montgomerycountymd_gov</option>            
+                            
+                                <option value="data_oaklandnet_com">data_oaklandnet_com</option>            
+                            
+                                <option value="data_dcpcsb_org">data_dcpcsb_org</option>            
+                            
+                                <option value="data_illinois_gov_rockford">data_illinois_gov_rockford</option>            
+                            
+                                <option value="data_stadt-zuerich_ch">data_stadt-zuerich_ch</option>            
+                            
+                                <option value="data_gov_ie">data_gov_ie</option>            
+                            
+                                <option value="catalogodatos_gub_uy">catalogodatos_gub_uy</option>            
+                            
+                                <option value="www_data_vic_gov_au">www_data_vic_gov_au</option>            
+                            
+                                <option value="public_opendatasoft_com">public_opendatasoft_com</option>            
+                            
+                                <option value="open_whitehouse_gov">open_whitehouse_gov</option>            
+                            
+                                <option value="ckan_okfn_gr">ckan_okfn_gr</option>            
+                            
+                                <option value="beta_avoindata_fi">beta_avoindata_fi</option>            
+                            
+                                <option value="hubofdata_ru">hubofdata_ru</option>            
+                            
+                                <option value="data_culvercity_org">data_culvercity_org</option>            
+                            
+                                <option value="data_medicare_gov">data_medicare_gov</option>            
+                            
+                                <option value="data_baltimorecity_gov">data_baltimorecity_gov</option>            
+                            
+                                <option value="drdsi_jrc_ec_europa_eu">drdsi_jrc_ec_europa_eu</option>            
+                            
+                                <option value="controllerdata_lacity_org">controllerdata_lacity_org</option>            
+                            
+                                <option value="opendata_admin_ch">opendata_admin_ch</option>            
+                            
+                                <option value="bermuda_io">bermuda_io</option>            
+                            
+                                <option value="africaopendata_org">africaopendata_org</option>            
+                            
+                                <option value="data_sfgov_org">data_sfgov_org</option>            
+                            
+                                <option value="data_eindhoven_nl">data_eindhoven_nl</option>            
+                            
+                                <option value="leedsdatamill_org">leedsdatamill_org</option>            
+                            
+                                <option value="data_nhm_ac_uk">data_nhm_ac_uk</option>            
+                            
+                                <option value="datahub_io">datahub_io</option>            
+                            
+                                <option value="data_openpolice_ru">data_openpolice_ru</option>            
+                            
+                                <option value="bronx_lehman_cuny_edu">bronx_lehman_cuny_edu</option>            
+                            
+                                <option value="data_winnipeg_ca">data_winnipeg_ca</option>            
+                            
+                                <option value="performance_westsussex_gov_uk">performance_westsussex_gov_uk</option>            
+                            
+                                <option value="opendatadc_org">opendatadc_org</option>            
+                            
+                                <option value="linkeddatacatalog_dws_informatik_uni-mannheim_de">linkeddatacatalog_dws_informatik_uni-mannheim_de</option>            
+                            
+                                <option value="opendatahub_gr">opendatahub_gr</option>            
+                            
+                                <option value="opendata_bayern_de">opendata_bayern_de</option>            
+                            
+                                <option value="bristol_azure-westeurope-prod_socrata_com">bristol_azure-westeurope-prod_socrata_com</option>            
+                            
+                                <option value="www_amsterdamopendata_nl">www_amsterdamopendata_nl</option>            
+                            
+                                <option value="data_gov_au">data_gov_au</option>            
+                            
+                                <option value="irs_demo_socrata_com">irs_demo_socrata_com</option>            
+                            
+                                <option value="data_cityoftacoma_org">data_cityoftacoma_org</option>            
+                            
+                                <option value="open-data_europa_eu">open-data_europa_eu</option>            
+                            
+                                <option value="data_hdx_rwlabs_org">data_hdx_rwlabs_org</option>            
+                            
+                                <option value="wfp_demo_socrata_com_login">wfp_demo_socrata_com_login</option>            
+                            
+                                <option value="www_opendata-hro_de">www_opendata-hro_de</option>            
+                            
+                                <option value="data_southbendin_gov">data_southbendin_gov</option>            
+                            
+                                <option value="data_illinois_gov_belleville">data_illinois_gov_belleville</option>            
+                            
+                                <option value="datos_gob_mx">datos_gob_mx</option>            
+                            
+                                <option value="data_gov_ro">data_gov_ro</option>            
+                            
+                                <option value="bistrotdepays_opendatasoft_com">bistrotdepays_opendatasoft_com</option>            
+                            
+                                <option value="dataratp_opendatasoft_com">dataratp_opendatasoft_com</option>            
+                            
+                                <option value="opendata_aragon_es">opendata_aragon_es</option>            
+                            
+                                <option value="www_criminalytics_org">www_criminalytics_org</option>            
+                            
+                                <option value="bythenumbers_sco_ca_gov">bythenumbers_sco_ca_gov</option>            
+                            
+                                <option value="datospublicos_org">datospublicos_org</option>            
+                            
+                                <option value="data_taxpayer_net">data_taxpayer_net</option>            
+                            
+                                <option value="datacatalog_cookcountyil_gov">datacatalog_cookcountyil_gov</option>            
+                            
+                                <option value="data_tainan_gov_tw">data_tainan_gov_tw</option>            
+                            
+                                <option value="westsacramento_demo_socrata_com">westsacramento_demo_socrata_com</option>            
+                            
+                                <option value="nats_demo_socrata_com_login">nats_demo_socrata_com_login</option>            
+                            
+                                <option value="opendata_lasvegasnevada_gov">opendata_lasvegasnevada_gov</option>            
+                            
+                                <option value="www_dati_friuliveneziagiulia_it">www_dati_friuliveneziagiulia_it</option>            
+                            
+                                <option value="cdph_data_ca_gov">cdph_data_ca_gov</option>            
+                            
+                                <option value="berkeley_demo_socrata_com">berkeley_demo_socrata_com</option>            
+                            
+                                <option value="dataforjapan_org">dataforjapan_org</option>            
+                            
+                                <option value="opingogn_is">opingogn_is</option>            
+                            
+                                <option value="rdw_azure-westeurope-prod_socrata_com">rdw_azure-westeurope-prod_socrata_com</option>            
+                            
+                                <option value="opendata_rubi_cat">opendata_rubi_cat</option>            
+                            
+                                <option value="data_glasgow_gov_uk">data_glasgow_gov_uk</option>            
+                            
+                                <option value="data_cdc_gov">data_cdc_gov</option>            
+                            
+                                <option value="opendata_opennorth_se">opendata_opennorth_se</option>            
+                            
+                                <option value="www_dallasopendata_com">www_dallasopendata_com</option>            
+                            
+                                <option value="pod_opendatasoft_com">pod_opendatasoft_com</option>            
+                            
+                                <option value="data_go_id">data_go_id</option>            
+                            
+                                <option value="data_nola_gov">data_nola_gov</option>            
+                            
+                                <option value="stat_cityofgainesville_org">stat_cityofgainesville_org</option>            
+                            
+                                <option value="data_grcity_us">data_grcity_us</option>            
+                            
+                                <option value="data_atf_gov">data_atf_gov</option>            
+                            
+                                <option value="data_raleighnc_gov">data_raleighnc_gov</option>            
+                            
+                                <option value="data_weatherfordtx_gov">data_weatherfordtx_gov</option>            
+                            
+                                <option value="iatiregistry_org">iatiregistry_org</option>            
+                            
+                                <option value="opencolorado_org">opencolorado_org</option>            
+                            
+                                <option value="datos_argentina_gob_ar">datos_argentina_gob_ar</option>            
+                            
+                                <option value="healthmeasures_aspe_hhs_gov">healthmeasures_aspe_hhs_gov</option>            
+                            
+                                <option value="data_illinois_gov">data_illinois_gov</option>            
+                            
+                                <option value="data_ug">data_ug</option>            
+                            
+                                <option value="www_odaa_dk">www_odaa_dk</option>            
+                            
+                                <option value="data_nfpa_org">data_nfpa_org</option>            
+                            
+                                <option value="data_act_gov_au">data_act_gov_au</option>            
+                            
+                                <option value="www_datos_misiones_gov_ar">www_datos_misiones_gov_ar</option>            
+                            
+                                <option value="opendata_awt_be">opendata_awt_be</option>            
+                            
+                                <option value="opendata_caceres_es">opendata_caceres_es</option>            
+                            
+                                <option value="data_overheid_nl">data_overheid_nl</option>            
+                            
+                                <option value="data_seattle_gov">data_seattle_gov</option>            
+                            
+                                <option value="www_opendatamalta_org">www_opendatamalta_org</option>            
+                            
+                                <option value="belohorizonte_azure-eastus-prod_socrata_com">belohorizonte_azure-eastus-prod_socrata_com</option>            
+                            
+                                <option value="dados_recife_pe_gov_br">dados_recife_pe_gov_br</option>            
+                            
+                                <option value="data_zagreb_hr">data_zagreb_hr</option>            
+                            
+                                <option value="www_opendataphilly_org">www_opendataphilly_org</option>            
+                            
+                                <option value="dados_al_gov_br">dados_al_gov_br</option>            
+                            
+                                <option value="opendata_go_tz">opendata_go_tz</option>            
+                            
+                                <option value="LWBIN_Data_HUB">LWBIN_Data_HUB</option>            
+                            
+                                <option value="data_gov_gr">data_gov_gr</option>            
+                            
+                                <option value="data_gov_bf">data_gov_bf</option>            
+                            
+                                <option value="danepubliczne_gov_pl">danepubliczne_gov_pl</option>            
+                            
+                                <option value="open_nrw">open_nrw</option>            
+                            
+                                <option value="transparenz_hamburg_de">transparenz_hamburg_de</option>            
+                            
+                                <option value="data_gov_md">data_gov_md</option>            
+                            
+                                <option value="opendata_government_bg">opendata_government_bg</option>            
+                            
+                                <option value="opendata_cnmc_es">opendata_cnmc_es</option>            
+                            
+                                <option value="ckanau_org">ckanau_org</option>            
+                            
+                                <option value="data_gov_hr">data_gov_hr</option>            
+                            
+                        </select>
+                    </div>
+                    <div class="right italic">
+                        <span class="right italic">filter by portal</span>    
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?status=</code>
+                    </div>
+                    
+                    <div class="unit-20 left">
+                        <select class="headApi" id="statusHeadsel" multiple="multiple">
+                            <option>200</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by status</span>    
+                    </div>
+                </div>
+                <div class="units-row">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?snapshot=</code>
+                    </div>
+                    
+                    <div class="unit-20 left">
+                        <select class="headApi" id="snHeadsel" multiple="multiple">
+                            
+                                <option value="1429">1429</option>            
+                            
+                                <option value="1430">1430</option>            
+                            
+                                <option value="1432">1432</option>            
+                            
+                                <option value="1433">1433</option>            
+                            
+                                <option value="1435">1435</option>            
+                            
+                                <option value="1436">1436</option>            
+                            
+                                <option value="1437">1437</option>            
+                            
+                                <option value="1438">1438</option>            
+                            
+                                <option value="1439">1439</option>            
+                            
+                                <option value="1440">1440</option>            
+                            
+                                <option value="1441">1441</option>            
+                            
+                                <option value="1442">1442</option>            
+                            
+                                <option value="1443">1443</option>            
+                            
+                                <option value="1445">1445</option>            
+                            
+                                <option value="1446">1446</option>            
+                            
+                                <option value="1447">1447</option>            
+                            
+                                <option value="1448">1448</option>            
+                            
+                                <option value="1449">1449</option>            
+                            
+                                <option value="1450">1450</option>            
+                            
+                                <option value="1451">1451</option>            
+                            
+                                <option value="1502">1502</option>            
+                            
+                                <option value="1503">1503</option>            
+                            
+                                <option value="1504">1504</option>            
+                            
+                                <option value="1505">1505</option>            
+                            
+                                <option value="1506">1506</option>            
+                            
+                                <option value="1507">1507</option>            
+                            
+                                <option value="1508">1508</option>            
+                            
+                                <option value="1509">1509</option>            
+                            
+                                <option value="1510">1510</option>            
+                            
+                                <option value="1511">1511</option>            
+                            
+                                <option value="1512">1512</option>            
+                            
+                                <option value="1513">1513</option>            
+                            
+                                <option value="1514">1514</option>            
+                            
+                                <option value="1515">1515</option>            
+                            
+                                <option value="1516">1516</option>            
+                            
+                                <option value="1517">1517</option>            
+                            
+                                <option value="1518">1518</option>            
+                            
+                                <option value="1519">1519</option>            
+                            
+                                <option value="1520">1520</option>            
+                            
+                                <option value="1521">1521</option>            
+                            
+                                <option value="1522">1522</option>            
+                            
+                                <option value="1524">1524</option>            
+                            
+                                <option value="1525">1525</option>            
+                            
+                                <option value="1526">1526</option>            
+                            
+                                <option value="1527">1527</option>            
+                            
+                                <option value="1528">1528</option>            
+                            
+                                <option value="1529">1529</option>            
+                            
+                                <option value="1530">1530</option>            
+                            
+                                <option value="1531">1531</option>            
+                            
+                                <option value="1532">1532</option>            
+                            
+                                <option value="1533">1533</option>            
+                            
+                                <option value="1534">1534</option>            
+                            
+                                <option value="1535">1535</option>            
+                            
+                                <option value="1536">1536</option>            
+                            
+                                <option value="1537">1537</option>            
+                            
+                                <option value="1538">1538</option>            
+                            
+                                <option value="1539">1539</option>            
+                            
+                                <option value="1540">1540</option>            
+                            
+                                <option value="1541">1541</option>            
+                            
+                                <option value="1542">1542</option>            
+                            
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by snapshot</span>    
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <span class="label label-green">GET</span>
+                    <code id="headapi">/api/portals?software=CKAN&iso3=</code>
+                    <button class="submit btn btn-smaller right">submit</button>
+                </div>
+                
+            </fieldset>
+        </div>
+    </div>
+    
+    
+  
+                    </section>
+                </div>
+                <footer id="footer" class="units-row">
+        <script language="JavaScript">
+            <!-- Hide JavaScript...
+            da = new Date(document.lastModified) // Create a Date Object set to the last modifed date
+            db = da.toGMTString() // Convert to a String in "predictable formt"
+            dc = db.split(" ") // Split the string on spaces
+            if (eval(dc[3]) < 1970) dc[3] = eval(dc[3]) + 100 // Correct any date purporting to be before 1970
+            db = dc[1] + " " + dc[2] + " " + dc[3] // Ignore day of week and combine date, month and year
+            document.writeln("Last Updated " + db)
+                // End Hiding -->
+        </script>
+        Copyright 2010 by Juergen Umbrich
+    </footer> 
+            </div>
+        </div>
+        
+ <script>
+    var data = {"portals": ["data_noaa_gov_dataset", "opendatareno_org", "bmgf_demo_socrata_com", "www_civicdata_io", "rs_ckan_net", "data_upf_edu_en_main", "dados_rs_gov_br", "data_ok_gov", "data_murphytx_org", "data_london_gov_uk", "data_iledefrance_fr", "datos_alcobendas_org", "donnees_ville_montreal_qc_ca", "opendata_aberdeencity_gov_uk", "opengov_es", "data_cityofdeleon_org", "data_providenceri_gov", "gavaobert_gavaciutat_cat", "healthdata_nj_gov", "data_wellingtonfl_gov", "www_opendatanyc_com", "dadosabertos_senado_gov_br", "data_cityofboston_gov", "data_vermont_gov", "data_cityofmadison_com", "data_lexingtonky_gov", "data_datamontana_us", "www_opendataportal_at", "www_opendataforum_info", "data_acgov_org", "data_gov_hk_en_", "datos_codeandomexico_org", "reportcard_santamonicayouth_net", "data_qld_gov_au", "data_rio_rj_gov_br", "catalogue_datalocale_fr", "opendata_brussels_be", "exploredata_gov_ro", "data_kingcounty_gov", "data_gv_at", "udct-data_aigid_jp", "data_illinois_gov_champaign", "data_hawaii_gov", "ckan_gsi_go_jp", "data_gov_sk", "www_daten_rlp_de", "data_cityofchicago_org", "govdata_de", "dati_lombardia_it", "data_ohouston_org", "oppnadata_se", "publicdata_eu", "data_linz_gv_at", "data_wa_gov", "data_bris_ac_uk_data_", "data_gov_uk", "data_ottawa_ca", "datosabiertos_ec", "performance_smcgov_org", "data_ny_gov", "finances_worldbank_org", "nycopendata_socrata_com", "data_kcmo_org", "data_sa_gov_au", "opendata_socrata_com", "www_nosdonnees_fr", "data_cms_hhs_gov", "dati_veneto_it", "data_redmond_gov", "data_edostate_gov_ng", "data_buenosaires_gob_ar", "tourisme62_opendatasoft_com", "data_burlingtonvt_gov", "tourisme04_opendatasoft_com", "edx_netl_doe_gov", "www_hri_fi", "portal_openbelgium_be", "data_hartford_gov", "www_offene-daten_me", "www_yorkopendata_org", "data_kk_dk", "parisdata_opendatasoft_com", "dati_lazio_it", "datapilot_american_edu", "www_opendata_provincia_roma_it", "data_albanyny_gov", "opendata_hu", "data_somervillema_gov", "dati_trentino_it", "data_surrey_ca", "dot_demo_socrata_com", "opendata_paris_fr_opendatasoft_com", "dati_toscana_it", "opendatagortynia_gr", "scisf_opendatasoft_com", "gisdata_mn_gov", "data_wu_ac_at", "donnees_ville_sherbrooke_qc_ca", "data_wokingham_gov_uk", "datosabiertos_malaga_eu", "daten_rlp_de", "opendatacanarias_es", "health_data_ny_gov", "www_rotterdamopendata_nl", "data_austintexas_gov", "data_undp_org", "annuario_comune_fi_it", "www_datagm_org_uk", "data_nj_gov", "opendata_ayto-caceres_es", "opendata_go_ke", "datagm_org_uk", "datamx_io", "data_cityofsantacruz_com", "www_edinburghopendata_info", "data_openva_com", "data_edmonton_ca", "data_nsw_gov_au", "data_honolulu_gov", "data_ct_gov", "datameti_go_jp_data_", "data_michigan_gov", "data_oregon_gov", "data_maryland_gov", "data_mo_gov", "offenedaten_de", "data_gov", "data_cityofnewyork_us", "www_data_gc_ca", "data_graz_gv_at", "geothermaldata_org", "data_opencolorado_org", "data_ktn_gv_at", "opendata_comune_bari_it", "performance_chattanooga_gov", "www_opengov-muenchen_de", "www_consumerfinance_gov_complaintdatabase", "opendata_lisra_jp", "data_salzburgerland_com", "hampton_demo_socrata_com", "www_metrochicagodata_com", "data_colorado_gov", "dartportal_leeds_ac_uk", "data_energystar_gov", "inforegio_azure-westeurope-prod_socrata_com", "dados_gov_br", "data_montgomerycountymd_gov", "data_oaklandnet_com", "data_dcpcsb_org", "data_illinois_gov_rockford", "data_stadt-zuerich_ch", "data_gov_ie", "catalogodatos_gub_uy", "www_data_vic_gov_au", "public_opendatasoft_com", "open_whitehouse_gov", "ckan_okfn_gr", "beta_avoindata_fi", "hubofdata_ru", "data_culvercity_org", "data_medicare_gov", "data_baltimorecity_gov", "drdsi_jrc_ec_europa_eu", "controllerdata_lacity_org", "opendata_admin_ch", "bermuda_io", "africaopendata_org", "data_sfgov_org", "data_eindhoven_nl", "leedsdatamill_org", "data_nhm_ac_uk", "datahub_io", "data_openpolice_ru", "bronx_lehman_cuny_edu", "data_winnipeg_ca", "performance_westsussex_gov_uk", "opendatadc_org", "linkeddatacatalog_dws_informatik_uni-mannheim_de", "opendatahub_gr", "opendata_bayern_de", "bristol_azure-westeurope-prod_socrata_com", "www_amsterdamopendata_nl", "data_gov_au", "irs_demo_socrata_com", "data_cityoftacoma_org", "open-data_europa_eu", "data_hdx_rwlabs_org", "wfp_demo_socrata_com_login", "www_opendata-hro_de", "data_southbendin_gov", "data_illinois_gov_belleville", "datos_gob_mx", "data_gov_ro", "bistrotdepays_opendatasoft_com", "dataratp_opendatasoft_com", "opendata_aragon_es", "www_criminalytics_org", "bythenumbers_sco_ca_gov", "datospublicos_org", "data_taxpayer_net", "datacatalog_cookcountyil_gov", "data_tainan_gov_tw", "westsacramento_demo_socrata_com", "nats_demo_socrata_com_login", "opendata_lasvegasnevada_gov", "www_dati_friuliveneziagiulia_it", "cdph_data_ca_gov", "berkeley_demo_socrata_com", "dataforjapan_org", "opingogn_is", "rdw_azure-westeurope-prod_socrata_com", "opendata_rubi_cat", "data_glasgow_gov_uk", "data_cdc_gov", "opendata_opennorth_se", "www_dallasopendata_com", "pod_opendatasoft_com", "data_go_id", "data_nola_gov", "stat_cityofgainesville_org", "data_grcity_us", "data_atf_gov", "data_raleighnc_gov", "data_weatherfordtx_gov", "iatiregistry_org", "opencolorado_org", "datos_argentina_gob_ar", "healthmeasures_aspe_hhs_gov", "data_illinois_gov", "data_ug", "www_odaa_dk", "data_nfpa_org", "data_act_gov_au", "www_datos_misiones_gov_ar", "opendata_awt_be", "opendata_caceres_es", "data_overheid_nl", "data_seattle_gov", "www_opendatamalta_org", "belohorizonte_azure-eastus-prod_socrata_com", "dados_recife_pe_gov_br", "data_zagreb_hr", "www_opendataphilly_org", "dados_al_gov_br", "opendata_go_tz", "LWBIN_Data_HUB", "data_gov_gr", "data_gov_bf", "danepubliczne_gov_pl", "open_nrw", "transparenz_hamburg_de", "data_gov_md", "opendata_government_bg", "opendata_cnmc_es", "ckanau_org", "data_gov_hr"], "iso3": ["DEU", "BEL", "ITA", "TZA", "GBR", "HUN", "LUX", "ESP", "ECU", "IRL", "NLD", "FIN", "TWN", "CAN", "BGR", "MDA", "AUT", "JPN", "BFA", "USA", "KEN", "CHE", "FRA", "MLT", "SRB", "GRC", "BRA", "AUS", "URY", "ROU", "SVK", "IDN", "ARG", "POL", "IOT", "", "MEX", "HRV", "HKG", "NGA", "DNK", "ISL", "UGA", "SWE", "RUS"], "snapshots": [1429, 1430, 1432, 1433, 1435, 1436, 1437, 1438, 1439, 1440, 1441, 1442, 1443, 1445, 1446, 1447, 1448, 1449, 1450, 1451, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1512, 1513, 1514, 1515, 1516, 1517, 1518, 1519, 1520, 1521, 1522, 1524, 1525, 1526, 1527, 1528, 1529, 1530, 1531, 1532, 1533, 1534, 1535, 1536, 1537, 1538, 1539, 1540, 1541, 1542], "software": ["CKAN", "OpenDataSoft", "Socrata"]};
+     console.log("SERVER DATA")
+     console.log(data)
+     
+      var apiString="/api"
+      var sssel=false
+      var apip_soft=""
+      
+      function displayAPI( api, map, search){
+            var q=""
+            
+            var q =[]
+            for(var i in map){
+                var list = $(map[i][1]).multipleSelect("getSelects", "text")    
+                if (list.length>0 && list.length != map[i][2]){
+                    q.push(map[i][0]+"="+list.join().replace(/ /g,""))
+                }
+                
+            }
+            var s = apiString+"/"+search
+            if (q.length>0)
+                s+="?"+q.join("&")
+            $(api).text(s)
+      }
+      
+ 
+      var portalMap = [ ["software", "#ss", data.software.length ],
+                        ["iso3", "#siso", data.iso3.length]
+                    ]  
+                    
+      var headMap = [ ["snapshot", "#ss" ,data.snapshots.length],
+                        ["portal", "#siso",data.portals.length],
+                        ["status", "#siso", 0]
+                    ]  
+      $('.portalApi').multipleSelect({ 
+            filter:true,
+            
+            onCheckAll: function() {
+                displayAPI("#ssapi", portalMap, "portals")
+            },
+            onUncheckAll: function() {
+                displayAPI("#ssapi", portalMap,"portals")
+            },
+            onClick: function(view) {
+                displayAPI("#ssapi", portalMap,"portals")
+            }
+      });
+      //$('.portalApi').multipleSelect("checkAll");
+      displayAPI("#ssapi", portalMap,"portals")
+      $('.headApi').multipleSelect({ 
+            filter:true,
+            onCheckAll: function() {
+                displayAPI("#headapi", headMap, "head")
+            },
+            onUncheckAll: function() {
+                displayAPI("#headapi", headMap, "head")
+            },
+            onClick: function(view) {
+                displayAPI("#headapi", headMap, "head")
+            }
+      });
+      displayAPI("#headapi", headMap,"head")
+     
+    $("button.submit").click(function(e) {
+        var c= $(this).siblings("code")
+        window.location = c.text();
+    });
+     
+     
+     
+ </script>
+
+    </body>
+</html>

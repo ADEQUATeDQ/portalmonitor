@@ -10,6 +10,18 @@ from odpw.utils.util import ErrorHandler
 import structlog
 log =structlog.get_logger()
 
+
+class TimeSpanAnalyser(Analyser):
+    def __init__(self):
+        self.deltas=[]
+        
+        
+    def add_delta(self, size, delta):
+        self.deltas.append( {'size':size, 'delta':delta})
+    
+    def getResult(self):
+        return self.deltas
+
 class PeriodAnalyser(Analyser):
     
     def __init__(self):
@@ -29,8 +41,103 @@ class PeriodAnalyser(Analyser):
     
     def getResult(self):
         return {'min':self.min, 'max':self.max}
-            
+   
+   
+class FetchProcessAnalyser(Analyser):
+    
+    def __init__(self, snapshot):
+        self.start=None
+        self.dict={}
+        self.sn=snapshot
+        self.total=0
+        self.processed=0
+        self.error=0
         
+        
+        
+        
+            
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.fetch_stats:
+            self.total += 1
+            if 'fetch_start' in pmd.fetch_stats and  'fetch_end' in pmd.fetch_stats:
+                self.processed += 1
+                
+                start= dateutil.parser.parse(pmd.fetch_stats['fetch_start'])
+                if self.start is None or self.start > start:
+                    self.start=start
+                    
+                end = dateutil.parser.parse(pmd.fetch_stats['fetch_end'])
+                delta=(end-start)
+                
+                if start not in self.dict:
+                    self.dict[start]=[]
+                self.dict[start].append( delta.total_seconds() )
+            elif all( pmd.fetch_stats.get(k) for k in ['fetch_start', 'exception']):
+                self.error += 1 
+    
+    def getBin(self, seconds):
+        bin = int(seconds/(60)) # convert to minutes
+        
+        if bin == 1:
+            return bin
+        
+        elif bin <30 :
+            return 30
+        
+        elif bin <60:
+            return 60
+        
+        else:
+            bin = int(bin/60)
+            return bin*60
+    
+    
+    def getResult(self):
+        
+        results={"sn":self.sn, "total":self.total, "fetched":self.processed,  "error":self.error}
+        
+        data=[]
+        for start, durations in self.dict.items():
+            for dur in durations:
+                delta=( start-self.start).total_seconds()+dur
+                data.append(delta)
+        
+        results['durations']=data
+        return results
+        
+class HeadProcessAnalyser(FetchProcessAnalyser):
+    
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.fetch_stats:
+            self.total += 1
+            
+            if 'first_lookup' in pmd.fetch_stats and  'last_lookup' in pmd.fetch_stats:
+                self.processed += 1
+                
+                start= dateutil.parser.parse(pmd.fetch_stats['first_lookup'])
+                if self.start is None or self.start > start:
+                    self.start=start
+                    
+                end = dateutil.parser.parse(pmd.fetch_stats['last_lookup'])
+                delta=(end-start)
+                
+                if start not in self.dict:
+                    self.dict[start]=[]
+                self.dict[start].append( delta.total_seconds() )
+            elif 'first_lookup' in pmd.fetch_stats and  'last_lookup' not in pmd.fetch_stats:
+                self.error += 1 
+
+        
+class FetchTimeSpanAnalyser(TimeSpanAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.fetch_stats:
+            if 'fetch_start' in pmd.fetch_stats and  'fetch_end' in pmd.fetch_stats:
+                start= dateutil.parser.parse(pmd.fetch_stats['fetch_start'])
+                end = dateutil.parser.parse(pmd.fetch_stats['fetch_end'])
+                delta=(end-start)
+                self.add_delta(pmd.datasets, delta.total_seconds())
+                
 
 class FetchPeriod(PeriodAnalyser):
     def analyse_PortalMetaData(self, pmd):
@@ -38,6 +145,18 @@ class FetchPeriod(PeriodAnalyser):
             for f in ['fetch_start', 'fetch_end']:
                 if f in pmd.fetch_stats:
                     self.add_time(dateutil.parser.parse(pmd.fetch_stats[f]))
+    
+
+class HeadTimeSpanAnalyser(TimeSpanAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.fetch_stats:
+            if 'first_lookup' in pmd.fetch_stats and  'last_lookup' in pmd.fetch_stats:
+                start= dateutil.parser.parse(pmd.fetch_stats['first_lookup'])
+                end = dateutil.parser.parse(pmd.fetch_stats['last_lookup'])
+                delta=(end-start)
+                self.add_delta(pmd.resources, delta.total_seconds())
+
+                
                 
 class HeadPeriod(PeriodAnalyser):
     

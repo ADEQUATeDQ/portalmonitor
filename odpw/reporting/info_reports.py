@@ -9,7 +9,8 @@ from odpw.reporting.reporters import SoftWareDistReporter, ISO3DistReporter,\
     PortalListReporter, SnapshotsPerPortalReporter, DatasetSumReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
-    CSVReporter, Reporter, DBReporter, DFtoListDict, addPercentageCol
+    CSVReporter, Reporter, DBReporter, DFtoListDict, addPercentageCol,\
+    TexTableReporter
 
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
     DCATFormatCount, PMDResourceStatsCount, DatasetCount
@@ -29,18 +30,26 @@ def systeminfoall(dbm):
         full list of portals
     """
     
-    a = process_all(DBAnalyser(),dbm.getSoftwareDist())
-    ab = process_all(DBAnalyser(),dbm.getCountryDist())
-    pa = process_all(DBAnalyser(),dbm.getPortals())
-    return  Report([    SoftWareDistReporter(a),
-                        ISO3DistReporter(ab),
-                        PortalListReporter(pa)
-                 ])
+    a = process_all(DBAnalyser(),dbm.getSystemPortalInfo())
+    r = SystemPortalInfoReporter(a)
+                        
+    r = Report([r])
+    return r        
+    #===========================================================================
+    # 
+    # a = process_all(DBAnalyser(),dbm.getSoftwareDist())
+    # ab = process_all(DBAnalyser(),dbm.getCountryDist())
+    # pa = process_all(DBAnalyser(),dbm.getPortals())
+    # return  Report([    SoftWareDistReporter(a),
+    #                     ISO3DistReporter(ab),
+    #                     PortalListReporter(pa)
+    #              ])
+    #===========================================================================
 
 
 def portalinfo(dbm, sn, portal_id):
     a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
-    r=SnapshotsPerPortalReporter(a,portal_id)
+    r=SnapshotsPerPortalReporter(a, portal_id)
 
         
     aset = AnalyserSet()
@@ -70,9 +79,10 @@ def portalinfo(dbm, sn, portal_id):
     ResourceCountReporter(resC),
     ResourceSizeReporter(rsize),
     #LicensesReporter(lc,lcc,topK=3),
-    TagReporter(tc,dc, topK=3),
-    OrganisationReporter(oc, topK=3),
-    FormatCountReporter(fc, topK=3),
+    TagReporter(tc,dc, distinct=True,topK=3),
+    OrganisationReporter(oc, distinct=True,topK=3),
+    FormatCountReporter(fc,  distinct=True,topK=3),
+    
     FetchTimePeriodReporter(fa),
     HeadTimePeriodReporter(ha)
     ]
@@ -80,19 +90,17 @@ def portalinfo(dbm, sn, portal_id):
     
     return rep
 
-class SystemPortalInfoReporter(DBReporter, UIReporter, CLIReporter, CSVReporter):
+class SystemPortalInfoReporter(DBReporter, UIReporter, CLIReporter, CSVReporter, TexTableReporter):
     
     
     def uireport(self):
         
         df = self.getDataFrame()
         
-        
-        
         dfsoftware=df.groupby("software",as_index=False)
         dfsoftwareSum= dfsoftware.aggregate(np.sum)
         t= dfsoftwareSum['count'].sum()
-        print t
+        
         res={ 
              'softwaredist':DFtoListDict(addPercentageCol(dfsoftwareSum)),
              'portals':t
@@ -105,14 +113,17 @@ class SystemPortalInfoReporter(DBReporter, UIReporter, CLIReporter, CSVReporter)
         dfd= df.groupby("iso3",as_index=False).aggregate(np.sum)
         res["allISOdist"]=DFtoListDict(addPercentageCol(dfd))
         
-       
-        
-            
         #sd= pd.DataFrame(dfsoftware.to_dict().items())
         #print sd
         
-        
-        
         return res
+        
+    def textablereport(self):
+        df = self.getDataFrame()
+        
+        dfsoftware=df.groupby("software",as_index=False)
+        dfsoftwareSum= dfsoftware.aggregate(np.sum)
+        t= dfsoftwareSum['count'].sum()
+        DFtoListDict(addPercentageCol(dfsoftwareSum))
         
         

@@ -25,8 +25,8 @@ class StatusCodeReporter(Reporter,UIReporter, CLIReporter, CSVReporter):
     
     
     def __init__(self, analyser):
-        super(StatusCodeReporter,self).__init__()
-        self.a=analyser
+        super(StatusCodeReporter,self).__init__(analyser)
+        
         
     def getDataFrame(self):
         

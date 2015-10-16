@@ -23,6 +23,7 @@ class CompletenessDCATAnalyser(Analyser):
         self.count=0
         self.sum=0
     def analyse_Dataset(self, dataset):
+        
         f=0.0
         t=0.0
         for c in self.checkers:
@@ -40,7 +41,9 @@ class CompletenessDCATAnalyser(Analyser):
         return {"C":c, 'count':self.count}
             
 
+
 class DescriptiveDCATAnalyser(CompletenessDCATAnalyser):
     def __init__(self):
         super(DescriptiveDCATAnalyser,self).__init__(getAllDescriptiveAnalyser())
-        
+   
+     

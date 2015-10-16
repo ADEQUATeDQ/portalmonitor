@@ -1,12 +1,14 @@
 <!{% extends "_system_base.jinja" %}
 
+{% set active_page = "index" -%}
+{% set active_sub_page = "activity" -%}
 
+{% import '_helpers.jinja' as helper %}
 
-{% block title %}
-    <h2>Portal Watch Activity for snapshot {{snapshot}}</h2>
-{% endblock %}
 
 {% block section %}
+    {{helper.title("Portal Watch Activity for snapshot", snapshot=snapshot) }}
+    
     <div class="units-row">
         <div class="unit-33 unit-padding card">
             <div class="card_header">
@@ -161,6 +163,7 @@
         </div>
     </div>
 
+    {{ helper.title("Portal List") }}
     <div class="units-row">
         <div class="unit-100 unit-padding card">
             <div class="card_header">

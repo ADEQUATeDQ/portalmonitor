@@ -5,6 +5,7 @@ from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.quality.new.completeness_dcat import CompletenessDCATAnalyser,\
     DescriptiveDCATAnalyser
+from odpw.analysers.quality.new.existence_dcat import getAllProvAnalyser
 
 __author__ = 'jumbrich'
 
@@ -35,7 +36,7 @@ def quality(dbm, sn, portal):
     
     dcat = aset.add(DCATConverter(portal))
     
-    desc= aset.add(DescriptiveDCATAnalyser())
+    desc= aset.add(CompletenessDCATAnalyser(getAllProvAnalyser()))
     
     process_all(aset, iter)
     

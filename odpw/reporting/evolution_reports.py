@@ -5,21 +5,23 @@ Created on Aug 14, 2015
 '''
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
-    ResourceAnalysedEvolution, SystemSoftwareEvolution
+    ResourceAnalysedEvolution, SystemSoftwareEvolution, SystemEvolutionAnalyser
 from odpw.db.models import PortalMetaData, Portal
 from odpw.reporting.reporters import Report, SystemEvolutionReport
 
 from odpw.reporting.reporters import Reporter, UIReporter, CLIReporter,\
     DFtoListDict, CSVReporter
 import pandas as pd
+from odpw.utils.timer import Timer
+from odpw.reporting.evolution_reporter import SystemEvolutionReporter
 
 
 
 class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
     
     def __init__(self, analyser):
-        super(EvolutionReporter, self).__init__()
-        self.a=analyser
+        super(EvolutionReporter, self).__init__(analyser)
+        
     
     def getDataFrame(self):
         if  self.df is None:
@@ -75,24 +77,40 @@ def systemevolution(dbm):
     
     """
     aset = AnalyserSet()
-    
-    p={}
-    for P in Portal.iter(dbm.getPortals()):
-        p[P.id]=P.software
+    sysev= aset.add(SystemEvolutionAnalyser())
 
-    de=aset.add(DatasetEvolution())
-    re= aset.add(ResourceEvolution())
-    se= aset.add(SystemSoftwareEvolution(p))
-    rae= aset.add(ResourceAnalysedEvolution())
+    process_all(aset, dbm.systemEvolution())
+
+    sysevre= SystemEvolutionReporter(sysev)
     
-    it = dbm.getPortalMetaDatas()
-    aset = process_all(aset, PortalMetaData.iter(it))
+    rep = SystemEvolutionReport([sysevre])
     
-    rep = SystemEvolutionReport([
-                                 DatasetEvolutionReporter(de),
-                                 ResourcesEvolutionReporter(re),
-                                 SystemSoftwareEvolutionReporter(se),
-                                 ResourceAnalyseReporter(rae)
-                                 ])
-   
     return rep
+    
+#===============================================================================
+#     
+#     with Timer(verbose=True) as t:
+#         p={}
+#         for P in Portal.iter(dbm.getPortals()):
+#             p[P.id]=P.software
+# 
+#             de=aset.add(DatasetEvolution())
+#             re= aset.add(ResourceEvolution())
+#             se= aset.add(SystemSoftwareEvolution(p))
+#             rae= aset.add(ResourceAnalysedEvolution())
+#     
+#             it = dbm.getPortalMetaDatas()
+#             aset = process_all(aset, PortalMetaData.iter(it))
+#     
+#     print "---" 
+#     print de.getResult()
+#     
+#     rep = SystemEvolutionReport([
+#                                  DatasetEvolutionReporter(de),
+#                                  ResourcesEvolutionReporter(re),
+#                                  SystemSoftwareEvolutionReporter(se),
+#                                  ResourceAnalyseReporter(rae)
+#                                  ])
+#    
+#     return rep
+#===============================================================================

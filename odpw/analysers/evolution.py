@@ -6,6 +6,11 @@ Created on Aug 12, 2015
 from odpw.analysers import Analyser
 from _collections import defaultdict
 from odpw.analysers.datasetlife import DatasetLifeStatsAnalyser
+from odpw.analysers.core import DBAnalyser
+
+
+class SystemEvolutionAnalyser(DBAnalyser):
+    pass
 
 
 class EvolutionCountAnalyser(Analyser):

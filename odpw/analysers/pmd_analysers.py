@@ -34,7 +34,8 @@ class PMDActivityAnalyser(Analyser):
     
     
     times=['fetch_start', 'fetch_end']
-    def __init__(self):
+    def __init__(self, snapshot):
+        self.snapshot=snapshot
         self.stats=[]
         self.stats_key=['fetch_done','fetch_failed','fetch_running','fetch_missing',
                         'head_missing','head_running','head_done',
@@ -109,7 +110,6 @@ class PMDActivityAnalyser(Analyser):
         
     def getResult(self):
         res= {'rows':self.stats, 'summary':self.sum, 'columns':self.stats_key+['pid','snapshot','fetch_error','fetch_end','fetch_start'], 'summary_columns':self.stats_key}
-        print res
         return res
 
 class MultiHistogramAnalyser(Analyser):

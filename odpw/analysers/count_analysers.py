@@ -22,13 +22,37 @@ class PMDResourceStatsCount(Analyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.res_stats:
             for k,v in pmd.res_stats.items():
-                if k in ['total', 'distinct']:
+                if k in ['total', 'distinct', 'urls']:
                     if not isinstance(v, list) and not isinstance(v, dict):
                         self.aggs[k]+=v
         
     def getResult(self):
         return dict(self.aggs)
         
+        
+class ResourceURLValidator(Analyser):
+    
+    def __init__(self):
+        self.valid=0
+        self.total=0
+        
+    def analyse_Resource(self, resource):
+        self.total+=1
+        try:
+            url = urlnorm.norm(resource.url)
+            self.valid+=1
+        except Exception as e:
+            pass
+    
+    def update_PortalMetaData(self, pmd):
+        if pmd.res_stats is None:
+            pmd.res_stats = {}
+        
+        pmd.res_stats['urls']= self.getResult()['validURLs']
+    
+    def getResult(self):
+        return {'validURLs':self.valid, 'total':self.total}
+    
 class ResourceCount(DistinctElementCount):
     
     def __init__(self,withDistinct=None, updateAll=False):
@@ -53,7 +77,7 @@ class ResourceCount(DistinctElementCount):
                 print "mismatch between distinct",pmd.res_stats['distinct'],  self.getResult()['distinct']
             else:
                 pmd.res_stats['distinct']= self.getResult()['distinct']
-                pmd.res_stats['urls']= self.getResult()['urls']
+                
         if self.updateAll:
             pmd.resources = self.getResult()['count']
             
@@ -62,14 +86,7 @@ class ResourceCount(DistinctElementCount):
     
     def getResult(self):
         res = super(ResourceCount,self).getResult()
-        if self.set is not None:
-            res['urls']=0
-            for r in self.set:
-                try:
-                    url = urlnorm.norm(r)
-                    res['urls']+=1
-                except Exception as e:
-                    pass
+        
         return res
 
 class DatasetCount(DistinctElementCount):

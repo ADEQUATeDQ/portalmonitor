@@ -1,26 +1,30 @@
 <!{% extends "_system_base.jinja" %}
-      
-{% block title %}
-    <h2>General Overview</h2>
-{% endblock %}
+
+{% set active_page = "index" -%}
+{% set active_sub_page = "portals" -%}
+
+{% import '_helpers.jinja' as helper %}
 
     {% block section %}
+        {{ helper.title("General Overview")}}
+    
     <div class="units-row">
         <div class="unit-100 card">
             <div class="units-row">
+                
                 <div class="unit-20">
                     <div class="card_cnt">
                         <p id="datasets" class="card_value text-centered">
-                            {{data.portals}}
+                            {{ data.portals }}
                         </p>
                     </div>
                     <div class="card_header">
                         <h3 class="text-centered">Portals</h3>
                     </div>
                 </div>
+                
                 <div class="unit-30">
                     <table id="softdist">
-
                         <thead>
                             <tr>
                                 <th>Software</th>
@@ -33,7 +37,7 @@
                                 <tr onclick=" test( '{{ l.software}}' )" >
                                 <td> {{ l.software}}</td>
                                 <td> {{ l.count}}</td>
-                                <td>{{ "{0:0.2f}".format(l.perc)}}%</td>
+                                <td>({{ "{0:0.2f}".format(l.perc*100)}})</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -46,9 +50,12 @@
                         </tfoot>
                     </table>
                 </div>
-                <div class="unit-50">
-                    <div class="cnt">
-                        Country distribution for <span class="label" id="country">all</span> portals
+                <div class="unit-50 unit-padding">
+                     <div class="card_header">
+                        <h3 class="text-centered">Country distribution for <span class="label" id="country">all</span> portals</h3>
+                        
+                    </div>
+                    <div class="card_cnt">
                         <div class="chart" id="country_chart"> </div>
                         <div class="data_table" >
                             <table id="portalInfos">
@@ -60,28 +67,97 @@
                                     </tr>
                                 </thead>
                             </table>
-
                         </div>
                     </div>
-
-                    <div class="card_footer">
-                        <button class="btn btn-smaller btn_show_chart width-100"><i class="fa fa-pie-chart fa-fw"></i>Chart
+                   <div class="card_footer">
+                     <button class="btn btn-smaller btn_show_chart width-20 right"><i class="fa fa-pie-chart fa-fw"></i>Chart
                         </button>
-                        <button class="btn btn-smaller btn_show_data width-100"><i class="fa fa-table fa-fw"></i>Table
-                        </button>
+                        <button class="btn btn-smaller btn_show_data width-20 right"><i class="fa fa-table fa-fw"></i>Table
+                        </button>   
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endblock %}
+    
+    {{ helper.title("List of portals")}}
+    
+    <div class="units-row">
+            <div class="unit-90 unit-centered">
+                <div class="units-row end">
+                    <div class="unit-30">
+                        <input type="search" name="q" placeholder="Filter" class="width-90" id="filter" />
+                    </div>
+                    <div class="unit-60">
+                        <span>sort: </span>
+                        <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_iso3">by iso3</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort " id="btn_sort_software">by software</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort num " id="btn_sort_datasets">by datasets</button>
+                        <button class="btn mobile-hide btn-smaller  btn_sort num " id="btn_sort_resources">by resources</button>
+                    </div>
+                    <div class="unit-10">
+                        
+                        <button class="btn mobile-hide btn-smaller right" id="btn_list"><i class="fa fa-list"></i>
+                        </button>
+                        <button class="btn mobile-hide btn-smaller right" id="btn_blocks"><i class="fa fa-th"></i>
+                        </button>
+                        <span class="text-right right">switch to:</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="units-row">
+            <div class="unit-90 unit-centered">
+                <ul class="blocks-mobile-33 list-flat" id="portalList">
+                    {% for portal in data.portalList %}
+                        <li class="btn width-100 ">
+                            <a href="/portal/{{ portal.portal_id}}/info/{{portal.snapshot}}">
+                        <div class="unit-row end">
+                            <div class="title unit-70">
+                                <i class="fa fa-circle-o fa-fw {{portal.software}}"></i>
+                                <h3 class="search text-left">{{ portal.portal_id}}</h3>
+                            </div>
+                            <div class="unit-20">
+                                <i class="fa fa-globe fa-fw"></i>
+                                <span class="search software {{portal.software}}">{{portal.software}}</span>
+                            </div>
+                            <div class="unit-10">
+                                <i class="fa fa-globe fa-fw"></i>
+                                <span class="search iso3">{{portal.iso3}}</span>
+                            </div>
+                        </div>
+                        <div class="unit-row seperator units-split">
+                            <div class="size unit-33 units-mobile-50">
+                                <i class="fa fa-cube fa-fw "></i>
+                                <span class="text ">datasets:</span>
+                                <span class="value datasets">{{portal.datasets}}</span>
+                            </div>
+                            <div class="size unit-33 units-mobile-50">
+                                <i class="fa fa-files-o fa-fw "></i>
+                                <span class="text ">resources:</span>
+                                <span class="value resources">{{portal.resources}}</span>
+                            </div>
+                            <div class="size unit-33 units-mobile-50">
+                                <span class="text"> latest snapshot:</span>
+                                <span class="value snapshot"> {{portal.snapshot}}</span>
+                            </div>
+                        </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    
+    
+{% endblock %}
 
 {% block pageScripts %}
  <script>
      
      var vega
-     //var spec_softwaredist="/static/vega_spec/softwaredist.json";
      var spec_countryMap="/static/vega_spec/portalmap.json";
+     var spec_countryBar="/static/vega_spec/soft_iso3_bar.json";
      
      var data = {{ data| tojson | safe }};
      console.log("SERVER DATA")
@@ -106,31 +182,23 @@
     }
     var vega,portalInfos;
 
-
     function parse(spec, div_id, values) {
         vg.parse.spec(spec, function(chart) { 
-            console.log("init")
-            console.log(spec)
             vega = chart({el:div_id, renderer: "svg"});
             vega.update();
             vega.data("table").remove(function(d) { return true; }); // Remove all current values in "table"
             vega.data("table").insert(values); 
-            //vis.data(data);
             vega.update();
             vega.render();
             
         });
     }
 
-
     function displayTable(table, tabledata){
-        console.log("Adding data")
-        console.log(tabledata)
         tabledata.forEach(function(item){
-            table.row.add([item.iso3, item.count, "("+ item.perc.toFixed(2)+" %)"]);
+            table.row.add([item.iso3, item.count, "("+ (item.perc *100).toFixed(2)+" )"]);
         })
         table.draw()
-
     }
 
     function test( software ){
@@ -138,7 +206,42 @@
         portalInfos.draw()
         displayTable(portalInfos, data[software+"ISOdist"])
         $("#country").text(software)
-        parse(spec_countryMap,"#country_chart",data[software+"ISOdist"])
+        parse(spec_countryBar,"#country_chart",data[software+"ISOdist"])
+    }
+    
+    function split(val) {
+         return val.split(/,\s*/);
+    }
+
+    function extractLast(term) {
+         return split(term).pop();
+    }
+    
+    
+    function sortList(btn,list, element, intValue){
+        var listitems = list.children('li').get();
+        listitems.sort(function(a, b) {
+            
+            var compA = $(a).find(element).text()
+            var compB = $(b).find(element).text()
+            if(intValue){
+                compA=parseInt(compA)
+                compB=parseInt(compB)
+            }
+            
+            if(btn.hasClass("asc"))
+                return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
+            else
+                return (compB < compA) ? -1 : (compB > compA) ? 1 : 0;
+            })
+            $.each(listitems, function(idx, itm) { list.append(itm); });
+            if (btn.hasClass("asc")){
+                btn.removeClass("asc")
+                btn.addClass("desc")
+            }else{
+                btn.removeClass("desc")
+                btn.addClass("asc")
+            }
     }
      
  $(document).ready(function() {
@@ -154,21 +257,73 @@
     });
  
     //parse(spec_softwaredist,"#softdist_chart",data.softdist)
-    parse(spec_countryMap,"#country_chart",data.totalISOdist)
+    parse(spec_countryBar,"#country_chart",data.totalISOdist)
  
     portalInfos=$('#portalInfos').DataTable({
-        "bFilter":   false,
         "lengthMenu": [[3, 10, -1], [3, 10, "All"]],
-        "order": [[ 1, "desc" ]]
+        "order": [[ 1, "desc" ]],
+        "dom": '<"top"lf>rt<"bottom"ip><"clear">'
+    
     });
-    $(".dataTables_scrollHeadInner").css({"width":"100%"});
-
-    $(".table ").css({"width":"100%"});
-    console.log("table ready")
     displayTable(portalInfos, data.allISOdist)
 
 
-     console.log('here1')
+     var mylist = $('#portalList');
+        $('#btn_list').hide()
+        $('#btn_list').click(function () {
+            console.log("Clicked")
+            $('#portalList').removeClass('blocks-4');
+            $(this).hide()
+            $('#btn_blocks').show()
+        });
+        $('#btn_blocks').click(function () {
+            console.log("Clicked")
+            $('#portalList').addClass('blocks-4');
+            $(this).hide()
+            $('#btn_list').show()
+        });
+        $('.btn_sort').click(function(){
+            id=$(this).attr('id')
+            
+            var index = id.lastIndexOf("_");
+            var result = id.substr(index+1);
+            
+            sortList($(this),mylist,'span.'+result,$(this).hasClass("num"))
+        });        
+        
+        
+     $('#filter').keyup(function (event) {
+         var filter = $(this).val().toLowerCase().trim();
+         var filter_tags = filter.split(" ");
+         var filter_tags_length = filter_tags.length;
+         $('#portalList>li').each(function () {
+             matches = [];
+             c = 0;
+             var $this = $(this);
+             
+             $this.find(".search").each(function () {
+                 var t = $(this);
+                 t.find("mark").each(function(index) {
+                    var text = $(this).text(); //get span content
+                    $(this).replaceWith(text); //replace all span with just content
+                 });
+                 $.each(filter_tags, function (i, a_filter) {
+                     if (t.text().toLowerCase().indexOf(a_filter) !== -1) {
+                         matches.push(a_filter)
+                         text =t.text()
+                         text =text.replace(new RegExp("("+a_filter+")", "ig") ,"<mark>$1</mark>")
+                         t.html(text)
+                     }
+                 });
+             });
+             m =  $.unique(matches)
+             if(m.length == filter_tags_length){
+                 $(this).show();
+                 
+             }else
+                 $(this).hide();
+         });
+     });
      })
  </script>
 {% endblock %}
