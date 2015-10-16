@@ -157,7 +157,7 @@ class DatasetLifeAnalyser(Analyser):
     def analyse_Dataset(self, dataset):
         try:
             did= dataset.id
-            print did
+            
             #check if we have this dataset already indexed
             df = self.dbm.getDatasetLife(id=did, portalID= dataset.portal_id)
             insert=False
