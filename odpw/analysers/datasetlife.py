@@ -168,10 +168,11 @@ class DatasetLifeAnalyser(Analyser):
             created=None
             
             c_date=getCreationDate(dataset)
-            created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-            if created is None:
+            if len(c_date) >0:
+                created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+            else:
                 created = datetime(2014, 6, 1)
-                print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
+                #print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
             
             df.updateSnapshot(created, dataset.snapshot )
             if insert:
