@@ -22,9 +22,10 @@ class ExistenceDCAT(DistinctElementCount):
         
     def analyse_Dataset(self, dataset):
         value = self.af(dataset)
-        e= all(value) if len(value)>0 else False
-        self.analyse_generic(e)
-        print self.name(), value, all(value),e
+        e = any(value) if len(value) > 0 else False
+        if e:
+            self.analyse_generic(e)
+        #print self.name(), value, all(value),e
         return e
    
 class DescriptionDCAT(ExistenceDCAT):  
@@ -68,14 +69,44 @@ class DatasetIdentifierDCAT(BasicDescriptionDCAT):
 
 class DatasetThemeDCAT(BasicDescriptionDCAT):
     def __init__(self):
-        super(DatasetThemeDCAT, self).__init__(dcat_access.getTheme)      
+        super(DatasetThemeDCAT, self).__init__(dcat_access.getTheme)
 
-##### 
+
+
+class DistributionTitleDCAT(BasicDescriptionDCAT):
+    def __init__(self):
+        super(DistributionTitleDCAT, self).__init__(dcat_access.getDistributionTitles)
+
+class DistributionDescriptionDCAT(BasicDescriptionDCAT):
+    def __init__(self):
+        super(DistributionDescriptionDCAT, self).__init__(dcat_access.getDistributionDescriptions)
+
+class DistributionIssuedDCAT(ExistenceDCAT):
+    def __init__(self):
+        super(DistributionIssuedDCAT, self).__init__(dcat_access.getDistributionCreationDates)
+
+class DistributionModifiedDCAT(ExistenceDCAT):
+    def __init__(self):
+        super(DistributionModifiedDCAT, self).__init__(dcat_access.getDistributionModificationDates)
+
+class DistributionFormatsDCAT(ExistenceDCAT):
+    def __init__(self):
+        super(DistributionFormatsDCAT, self).__init__(dcat_access.getDistributionFormats)
+
+class DistributionMediaTypesDCAT(ExistenceDCAT):
+    def __init__(self):
+        super(DistributionMediaTypesDCAT, self).__init__(dcat_access.getDistributionMediaTypes)
+
+class DistributionByteSizeDCAT(ExistenceDCAT):
+    def __init__(self):
+        super(DistributionByteSizeDCAT, self).__init__(dcat_access.getDistributionByteSize)
+
+#####
 #BASIC TEMPORAL
 #####  
 class DatasetTemporalDCAT(TemporalDCAT):
     def __init__(self):
-        super(DatasetTemporalDCAT, self).__init__(dcat_access.getTemporal)    
+        super(DatasetTemporalDCAT, self).__init__(dcat_access.getTemporal)
 
 ##### 
 #BASIC SPATIAL
@@ -92,7 +123,9 @@ class DatasetLanguageDCAT(LocalDCAT):
     def __init__(self):
         super(DatasetLanguageDCAT, self).__init__(dcat_access.getLanguage)
 
-    
+
+class AccessDCAT(ExistenceDCAT):
+    pass
 
 class AdministriativeDCAT(ExistenceDCAT):
     pass
@@ -112,6 +145,13 @@ class ProvLicenseDCAT(RightDCAT):
         super(ProvLicenseDCAT, self).__init__(dcat_access.getDistributionLicenses)
 
 
+class AccessUrlDCAT(AccessDCAT):
+    def __init__(self):
+        super(AccessUrlDCAT, self).__init__(dcat_access.getDistributionAccessURLs)
+
+class DownloadUrlDCAT(AccessDCAT):
+    def __init__(self):
+        super(DownloadUrlDCAT, self).__init__(dcat_access.getDistributionDownloadURLs)
 
 class DatasetCreationDCAT(PreservationTemporalDCAT):
     def __init__(self):

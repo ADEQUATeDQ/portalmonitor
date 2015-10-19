@@ -133,3 +133,7 @@ def accessById(dataset, id, key):
                 elif '@id' in f:
                     v = f['@id']
                 return v
+
+
+def getDistributionByteSize(dataset):
+    return accessDistribution(dataset, DCAT.byteSize)
