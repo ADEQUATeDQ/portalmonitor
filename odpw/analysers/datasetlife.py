@@ -169,7 +169,13 @@ class DatasetLifeAnalyser(Analyser):
             
             c_date=getCreationDate(dataset)
             if len(c_date) >0:
-                created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                try:
+                    created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                except Exception as e:
+                    try:
+                        created = datetime.strptime(c_date[0].split(".")[0], "%Y-%m-%d")
+                    except Exception as e:
+                        created = datetime(2014, 6, 1)
             else:
                 created = datetime(2014, 6, 1)
                 #print 'No creation date', dataset.portal_id, dataset.id, dataset.snapshot
