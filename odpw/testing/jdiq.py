@@ -2,6 +2,7 @@ from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
 from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser
+from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset
@@ -39,21 +40,43 @@ def general_stats(dbm, sn):
     print 'ds_histogram', ds_histogram.getResult()
 
 
+def conform(dbm, sn):
+    analyser = AnalyserSet()
+    p_id = 'data_wu_ac_at'
+    p = dbm.getPortal(portalID=p_id)
+    analyser.add(DCATConverter(p))
+    ds_count = analyser.add(DatasetCount())
+
+    # ACCESS
+    any = analyser.add(AnyMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()]))
+    #conformaccessURL = analyser.add(ConformAccessUrlDCAT())
+    #downloadURL = analyser.add(ConformDownloadUrlDCAT())
+
+    ds = dbm.getDatasets(snapshot=sn, portalID=p_id)
+    d_iter = Dataset.iter(ds)
+    process_all(analyser, d_iter)
+
+    print ds_count.getResult()
+    print any.getResult()
+
+
 def exists(dbm, sn):
     analyser = AnalyserSet()
-    p_id = 'data_gv_at'
+    p_id = 'www_opendataportal_at'
     p = dbm.getPortal(portalID=p_id)
     analyser.add(DCATConverter(p))
     ds_count = analyser.add(DatasetCount())
     # ACCESS
-    accessURL = analyser.add(AccessUrlDCAT())
-    downloadURL = analyser.add(DownloadUrlDCAT())
+    access = analyser.add(AnyMetric([AccessUrlDCAT(), DownloadUrlDCAT()]))
+    #accessURL = analyser.add(AccessUrlDCAT())
+    #downloadURL = analyser.add(DownloadUrlDCAT())
     # DISCOVERY
-    dataset_title = analyser.add(DatasetTitleDCAT())
-    dataset_description = analyser.add(DatasetDescriptionDCAT())
-    dataset_keyword = analyser.add(DatasetKeywordsDCAT())
-    distr_title = analyser.add(DistributionTitleDCAT())
-    distr_description = analyser.add(DistributionDescriptionDCAT())
+    discovery = analyser.add(AverageMetric([DatasetTitleDCAT(), DatasetDescriptionDCAT(), DatasetKeywordsDCAT(), DistributionTitleDCAT(), DistributionDescriptionDCAT()]))
+    #dataset_title = analyser.add(DatasetTitleDCAT())
+    #dataset_description = analyser.add(DatasetDescriptionDCAT())
+    #dataset_keyword = analyser.add(DatasetKeywordsDCAT())
+    #distr_title = analyser.add(DistributionTitleDCAT())
+    #distr_description = analyser.add(DistributionDescriptionDCAT())
     # CONTACT
     concact_point = analyser.add(DatasetContactDCAT())
     publisher = analyser.add(DatasetPublisherDCAT())
@@ -79,15 +102,11 @@ def exists(dbm, sn):
     process_all(analyser, d_iter)
 
     print ds_count.getResult()
-    print temporal.getResult()
-    print spatial.getResult()
-    print accrual.getResult()
-    print concact_point.getResult()
-    print publisher.getResult()
+    print access.getValue()
+    print discovery.getValue()
 
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1542
-    #general_stats(dbm, sn)
+    sn = 1541
     exists(dbm, sn)
