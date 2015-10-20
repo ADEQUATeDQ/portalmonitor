@@ -4,7 +4,7 @@ Created on Aug 26, 2015
 @author: jumbrich
 '''
 from rdflib.namespace import RDFS
-from odpw.utils.dataset_converter import DCAT, DCT
+from odpw.utils.dataset_converter import DCAT, DCT, VCARD, FOAF
 
 
 def accessDataset(dataset, key ):
@@ -18,7 +18,7 @@ def accessDataset(dataset, key ):
                     v = f['@value']
                 elif '@id' in f:
                     v = f['@id']
-                value.append(v)
+                value.append(v.strip())
     return value
 
 #http://www.w3.org/TR/vocab-dcat/#Class:_Dataset
@@ -80,7 +80,7 @@ def accessDistribution(dataset, key ):
                     value.append(v)
                 elif '@id' in f:
                     v = f['@id']
-                    value.append(v)
+                    value.append(v.strip())
     return value
 
 def getDistributionTitles(dataset):
@@ -132,8 +132,30 @@ def accessById(dataset, id, key):
                     v = f['@value']
                 elif '@id' in f:
                     v = f['@id']
-                return v
+                return v.strip()
 
 
 def getDistributionByteSize(dataset):
     return accessDistribution(dataset, DCAT.byteSize)
+
+def getContactPointValues(dataset):
+    points = accessDataset(dataset, DCAT.contactPoint)
+    values = []
+    for p in points:
+        fn = accessById(dataset, p, VCARD.fn)
+        if fn:
+            values.append(fn)
+        mail = accessById(dataset, p, VCARD.hasEmail)
+        if mail:
+            values.append(mail)
+    return values
+
+def getPublisherValues(dataset):
+    points = accessDataset(dataset, DCT.publisher)
+    values = []
+    for p in points:
+        for v in [FOAF.mbox, FOAF.homepage, FOAF.name]:
+            fn = accessById(dataset, p, v)
+            if fn:
+                values.append(fn)
+    return values

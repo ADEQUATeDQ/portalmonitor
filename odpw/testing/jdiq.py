@@ -42,27 +42,34 @@ def general_stats(dbm, sn):
 
 def conform(dbm, sn):
     analyser = AnalyserSet()
-    p_id = 'data_wu_ac_at'
+    p_id = 'data_gv_at'
     p = dbm.getPortal(portalID=p_id)
     analyser.add(DCATConverter(p))
     ds_count = analyser.add(DatasetCount())
 
     # ACCESS
-    any = analyser.add(AnyMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()]))
+    #anyAccess = analyser.add(AnyMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()]))
     #conformaccessURL = analyser.add(ConformAccessUrlDCAT())
     #downloadURL = analyser.add(ConformDownloadUrlDCAT())
+
+    # CONTACT
+    anyEmail = analyser.add(AnyMetric([EmailConformContactPoint(), EmailConformPublisher()]))
+    anyUrl = analyser.add(AnyMetric([UrlConformContactPoint(), UrlConformPublisher()]))
+
 
     ds = dbm.getDatasets(snapshot=sn, portalID=p_id)
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
 
     print ds_count.getResult()
-    print any.getResult()
+    #print anyAccess.getResult()
+    print anyEmail.getResult()
+    print anyUrl.getResult()
 
 
 def exists(dbm, sn):
     analyser = AnalyserSet()
-    p_id = 'www_opendataportal_at'
+    p_id = 'data_gv_at'
     p = dbm.getPortal(portalID=p_id)
     analyser.add(DCATConverter(p))
     ds_count = analyser.add(DatasetCount())
@@ -102,7 +109,7 @@ def exists(dbm, sn):
     process_all(analyser, d_iter)
 
     print ds_count.getResult()
-    print access.getValue()
+    print access.getResult()
     print discovery.getValue()
 
 

@@ -1,8 +1,8 @@
 from odpw.analysers import Analyser
 from odpw.analysers.core import DistinctElementCount
-from odpw.analysers.quality.interpret_meta_field import *
 from odpw.analysers.quality.new.existence_dcat import all_subclasses
 from odpw.utils import dcat_access
+from odpw.utils.data_utils import is_email, is_date
 from odpw.utils.dataset_converter import is_valid_url
 
 __author__ = 'sebastian'
@@ -26,6 +26,9 @@ class AnyMetric(Analyser):
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
+
+    def name(self):
+        return '_'.join([a.name() for a in self.analyser])
 
 class AverageMetric(DistinctElementCount):
     def __init__(self, analyser):
@@ -52,6 +55,9 @@ class AverageMetric(DistinctElementCount):
 
     def getValue(self):
         return sum(self.values)/self.total if self.total > 0 else 0
+
+    def name(self):
+        return '_'.join([a.name() for a in self.analyser])
 
 class ConformanceDCAT(DistinctElementCount):
 
@@ -80,3 +86,23 @@ class ConformDownloadUrlDCAT(ConformanceDCAT):
     def __init__(self):
         super(ConformDownloadUrlDCAT, self).__init__(dcat_access.getDistributionDownloadURLs, is_valid_url)
 
+
+class EmailConformContactPoint(ConformanceDCAT):
+    def __init__(self):
+        super(EmailConformContactPoint, self).__init__(dcat_access.getContactPointValues, is_email)
+
+class EmailConformPublisher(ConformanceDCAT):
+    def __init__(self):
+        super(EmailConformPublisher, self).__init__(dcat_access.getPublisherValues, is_email)
+
+class UrlConformContactPoint(ConformanceDCAT):
+    def __init__(self):
+        super(UrlConformContactPoint, self).__init__(dcat_access.getContactPointValues, is_valid_url)
+
+class UrlConformPublisher(ConformanceDCAT):
+    def __init__(self):
+        super(UrlConformPublisher, self).__init__(dcat_access.getPublisherValues, is_valid_url)
+
+class DateConform(ConformanceDCAT):
+    def __init__(self, access_function):
+        super(DateConform, self).__init__(access_function, is_date)
