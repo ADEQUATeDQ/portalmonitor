@@ -19,7 +19,7 @@ from multiprocessing.process import Process
 import time 
 
 #from odpw.utils.head import HeadProcess
-from odpw.db.models import Portal, PortalMetaData
+from odpw.db.models import Portal, PortalMetaData, Dataset
 import odpw.utils.util as util
 from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
     getExceptionString, TimeoutError
@@ -72,7 +72,7 @@ def fetching(obj, outfile):
             raise NotImplementedError(Portal.software + ' is not implemented')
 
         try:
-            iter = processor.generateFetchDatasetIter(Portal, sn)
+            iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
             process_all( ae, iter)
         except TimeoutError as exc:
             eh.handleError(log, "TimeoutError", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
@@ -97,12 +97,6 @@ def fetching(obj, outfile):
         
         rdq.update_PortalMetaData(pmd)
         rrq.update_PortalMetaData(pmd)
-        
-        
-        
-        
-       
-        
         
         p=[pmd.portal_id,
            str(pmd.qa_stats['Qa']['email']['total']),
