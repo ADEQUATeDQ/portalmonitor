@@ -14,19 +14,26 @@ from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.utils import dcat_access
 ## Provenance 
 
-class ExistenceDCAT(DistinctElementCount):
+class ExistenceDCAT(ElementCountAnalyser):
     
     def __init__(self, accessFunct):
         super(ExistenceDCAT, self).__init__()
         self.af=accessFunct
+        self.quality = None
         
     def analyse_Dataset(self, dataset):
         value = self.af(dataset)
         e = any(value) if len(value) > 0 else False
-        if e:
-            self.analyse_generic(e)
-        #print self.name(), value, all(value),e
+        self.analyse_generic(e)
         return e
+
+    def done(self):
+        dist = self.getDist()
+        exist = dist[True] if True in dist else 0
+        self.quality = exist/sum(dist.values()) if sum(dist.values()) > 0 else 0
+
+    def getResult(self):
+        return self.quality
    
 class DescriptionDCAT(ExistenceDCAT):  
      pass
@@ -108,6 +115,10 @@ class DatasetTemporalDCAT(TemporalDCAT):
     def __init__(self):
         super(DatasetTemporalDCAT, self).__init__(dcat_access.getTemporal)
 
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats['ExTe'] = self.quality
 ##### 
 #BASIC SPATIAL
 #####  
@@ -115,6 +126,10 @@ class DatasetSpatialDCAT(SpatialDCAT):
     def __init__(self):
         super(DatasetSpatialDCAT, self).__init__(dcat_access.getSpatial)      
 
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats['ExSp'] = self.quality
 ##### 
 #BASIC LOCAL
 #####    
@@ -143,6 +158,11 @@ class PreservationTemporalDCAT(PreservationDCAT):
 class ProvLicenseDCAT(RightDCAT):
     def __init__(self):
         super(ProvLicenseDCAT, self).__init__(dcat_access.getDistributionLicenses)
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats['ExRi'] = self.quality
 
 
 class AccessUrlDCAT(AccessDCAT):
@@ -203,11 +223,12 @@ def getAllLocalAnalyser():
 
 #### ANY and AVERAGE analyser
 class AnyMetric(Analyser):
-    def __init__(self, analyser):
+    def __init__(self, analyser, id):
         super(AnyMetric, self).__init__()
         self.analyser = analyser
         self.total = 0.0
         self.count = 0.0
+        self.id = id
 
     def analyse_Dataset(self, dataset):
         e = any([a.analyse_Dataset(dataset) for a in self.analyser])
@@ -225,12 +246,18 @@ class AnyMetric(Analyser):
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
 
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[self.id] = self.getValue()
+
 class AverageMetric(Analyser):
-    def __init__(self, analyser):
+    def __init__(self, analyser, id):
         super(AverageMetric, self).__init__()
         self.analyser = analyser
         self.total = 0
         self.values = []
+        self.id = id
 
     def analyse_Dataset(self, dataset):
         self.total += 1
@@ -253,3 +280,8 @@ class AverageMetric(Analyser):
 
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[self.id] = self.getValue()

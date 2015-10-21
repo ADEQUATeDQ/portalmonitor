@@ -7,11 +7,12 @@ from odpw.utils.dataset_converter import is_valid_url
 __author__ = 'sebastian'
 
 class AnyConformMetric(Analyser):
-    def __init__(self, analyser):
+    def __init__(self, analyser, id):
         super(AnyConformMetric, self).__init__()
         self.analyser = analyser
         self.total = 0.0
         self.count = 0.0
+        self.id = id
 
     def analyse_Dataset(self, dataset):
         conf_list = []
@@ -36,12 +37,18 @@ class AnyConformMetric(Analyser):
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
 
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[self.id] = self.getValue()
+
 class AverageConformMetric(Analyser):
-    def __init__(self, analyser):
+    def __init__(self, analyser, id):
         super(AverageConformMetric, self).__init__()
         self.analyser = analyser
         self.total = 0
         self.values = []
+        self.id = id
 
     def analyse_Dataset(self, dataset):
         count = 0.0
@@ -70,6 +77,11 @@ class AverageConformMetric(Analyser):
 
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats[self.id] = self.getValue()
 
 class ConformanceDCAT(DistinctElementCount):
 
@@ -153,3 +165,8 @@ class LicenseConform(DistinctElementCount):
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        pmd.qa_stats['CoLi'] = self.getValue()

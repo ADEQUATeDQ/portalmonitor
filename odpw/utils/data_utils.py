@@ -240,16 +240,24 @@ def is_digitsep(cell):
             is_digit = True
     return is_digit and is_sep
 
+# def is_date(cell):
+#     if date_pattern.match(cell):
+#         return True
+#     if date_pattern2.match(cell):
+#         return True
+#     if date_pattern3.match(cell):
+#         return True
+#     if date_pattern4.match(cell):
+#         return True
+#     return False
+
 def is_date(cell):
-    if date_pattern.match(cell):
+    import dateutil.parser
+    try:
+        dateutil.parser.parse(cell)
         return True
-    if date_pattern2.match(cell):
-        return True
-    if date_pattern3.match(cell):
-        return True
-    if date_pattern4.match(cell):
-        return True
-    return False
+    except Exception as e:
+        return False
 
 def is_numeric(text):
     pattern = re.compile("/^\d*\.?\d*$/")

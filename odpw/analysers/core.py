@@ -42,7 +42,7 @@ class ElementCountAnalyser(Analyser):
         if self.funct is not None:
             self.add(self.funct(element))
         else:
-            self.add((element))
+            self.add(element)
     
     def add(self, value, count=1): 
         self.dist[value]+=count
