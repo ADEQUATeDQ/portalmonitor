@@ -26,7 +26,7 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
 
 from odpw.analysers import  AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATResourceInDSAge,\
-    DCATDatasetAge, UsageAnalyser
+    DCATDatasetAge, UsageAnalyser, CKANKeyAnalyser
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
@@ -56,11 +56,11 @@ def fetching(obj, outfile):
         
         ae.add(MD5DatasetAnalyser())
         if Portal.software == 'CKAN':
-            
+            ka= ae.add(CKANKeyAnalyser())
             ae.add(CompletenessAnalyser())
             ae.add(ContactabilityAnalyser())
             ae.add(OpennessAnalyser())
-            ae.add(UsageAnalyser())
+            ae.add(UsageAnalyser(ka))
             #ae.add(OPQuastAnalyser())
             
 
