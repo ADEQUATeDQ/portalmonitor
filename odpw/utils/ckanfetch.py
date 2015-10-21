@@ -117,8 +117,6 @@ def fetching(obj, outfile):
            
            str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd']),
            str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
-            
-           
            ]
         s=",".join(p)
         outfile.write(s+"\n")
@@ -170,8 +168,8 @@ def cli(args,dbm):
     else:
         
         ps=[]
-        for p in Portal.iter(dbm.getPortals(software="CKAN", snapshot=1533)):
-            ps.append(p.id)
+        for p in PortalMetaData.iter(dbm.getPortalMetaData(snapshot=1533)):
+            ps.append(p.portal_id)
         
         
         pjobs={}
