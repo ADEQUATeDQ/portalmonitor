@@ -24,8 +24,7 @@ log = structlog.get_logger()
 
 class Reporter(object):
     
-    def __init__(self, analyser):
-        self.a = analyser
+    def __init__(self):
         self.df=None
 
     

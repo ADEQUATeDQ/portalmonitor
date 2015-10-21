@@ -199,3 +199,57 @@ def getAllSpatialAnalyser():
 
 def getAllLocalAnalyser():
     return [cls() for cls in LocalDCAT.__subclasses__()]
+
+
+#### ANY and AVERAGE analyser
+class AnyMetric(Analyser):
+    def __init__(self, analyser):
+        super(AnyMetric, self).__init__()
+        self.analyser = analyser
+        self.total = 0.0
+        self.count = 0.0
+
+    def analyse_Dataset(self, dataset):
+        e = any([a.analyse_Dataset(dataset) for a in self.analyser])
+        self.total += 1
+        if e:
+            self.count += 1
+        return e
+
+    def getResult(self):
+        return {'count': self.count, 'total': self.total}
+
+    def getValue(self):
+        return self.count/self.total if self.total > 0 else 0
+
+    def name(self):
+        return '_'.join([a.name() for a in self.analyser])
+
+class AverageMetric(Analyser):
+    def __init__(self, analyser):
+        super(AverageMetric, self).__init__()
+        self.analyser = analyser
+        self.total = 0
+        self.values = []
+
+    def analyse_Dataset(self, dataset):
+        self.total += 1
+
+        count = 0.0
+        t = 0.0
+        for a in self.analyser:
+            t += 1
+            if a.analyse_Dataset(dataset):
+                count += 1
+        v = count/t if t > 0 else 0
+        self.values.append(v)
+        return v
+
+    def getResult(self):
+        return {'values': self.values, 'total': self.total}
+
+    def getValue(self):
+        return sum(self.values)/self.total if self.total > 0 else 0
+
+    def name(self):
+        return '_'.join([a.name() for a in self.analyser])

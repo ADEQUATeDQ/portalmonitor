@@ -1,3 +1,5 @@
+from collections import OrderedDict
+import numpy as np
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
 from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount
@@ -6,6 +8,7 @@ from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset
+from odpw.reporting.plot_reporter import MultiHistogramReporter
 from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report
 
 __author__ = 'sebastian'
@@ -40,36 +43,45 @@ def general_stats(dbm, sn):
     print 'ds_histogram', ds_histogram.getResult()
 
 
-def conform(dbm, sn):
+def conform(dbm, sn, p_id):
     analyser = AnalyserSet()
-    p_id = 'data_gv_at'
     p = dbm.getPortal(portalID=p_id)
     analyser.add(DCATConverter(p))
     ds_count = analyser.add(DatasetCount())
 
     # ACCESS
-    #anyAccess = analyser.add(AnyMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()]))
+    anyAccess = analyser.add(AnyConformMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()]))
     #conformaccessURL = analyser.add(ConformAccessUrlDCAT())
     #downloadURL = analyser.add(ConformDownloadUrlDCAT())
 
     # CONTACT
-    anyEmail = analyser.add(AnyMetric([EmailConformContactPoint(), EmailConformPublisher()]))
-    anyUrl = analyser.add(AnyMetric([UrlConformContactPoint(), UrlConformPublisher()]))
+    anyEmail = analyser.add(AnyConformMetric([EmailConformContactPoint(), EmailConformPublisher()]))
+    anyUrl = analyser.add(AnyConformMetric([UrlConformContactPoint(), UrlConformPublisher()]))
 
+    # DATE
+    dateformat = analyser.add(AverageConformMetric([DateConform(dcat_access.getCreationDate),
+                                             DateConform(dcat_access.getModificationDate),
+                                             DateConform(dcat_access.getDistributionCreationDates),
+                                             DateConform(dcat_access.getDistributionModificationDates)]))
+
+    # LICENSE
+    license = analyser.add(LicenseConform())
 
     ds = dbm.getDatasets(snapshot=sn, portalID=p_id)
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
 
-    print ds_count.getResult()
-    #print anyAccess.getResult()
-    print anyEmail.getResult()
-    print anyUrl.getResult()
+    return {
+        'AccessURI': anyAccess.getValue(),
+        'ContactEmail': anyEmail.getValue(),
+        'ContactURI': anyUrl.getValue(),
+        'DateFormat': dateformat.getValue(),
+        'LicenseID': license.getValue()
+    }
 
 
-def exists(dbm, sn):
+def exists(dbm, sn, p_id):
     analyser = AnalyserSet()
-    p_id = 'data_gv_at'
     p = dbm.getPortal(portalID=p_id)
     analyser.add(DCATConverter(p))
     ds_count = analyser.add(DatasetCount())
@@ -85,20 +97,23 @@ def exists(dbm, sn):
     #distr_title = analyser.add(DistributionTitleDCAT())
     #distr_description = analyser.add(DistributionDescriptionDCAT())
     # CONTACT
-    concact_point = analyser.add(DatasetContactDCAT())
-    publisher = analyser.add(DatasetPublisherDCAT())
+    contact = analyser.add(AnyMetric([DatasetContactDCAT(), DatasetPublisherDCAT()]))
+    #concact_point = analyser.add(DatasetContactDCAT())
+    #publisher = analyser.add(DatasetPublisherDCAT())
     # LICENSE
     license = analyser.add(ProvLicenseDCAT())
     # PRESERVATION
-    accrual = analyser.add(DatasetAccrualPeriodicityDCAT())
-    format = analyser.add(DistributionFormatsDCAT())
-    mediaType = analyser.add(DistributionMediaTypesDCAT())
-    byteSize = analyser.add(DistributionByteSizeDCAT())
+    preservation = analyser.add(AverageMetric([DatasetAccrualPeriodicityDCAT(), DistributionFormatsDCAT(), DistributionMediaTypesDCAT(), DistributionByteSizeDCAT()]))
+    #accrual = analyser.add(DatasetAccrualPeriodicityDCAT())
+    #format = analyser.add(DistributionFormatsDCAT())
+    #mediaType = analyser.add(DistributionMediaTypesDCAT())
+    #byteSize = analyser.add(DistributionByteSizeDCAT())
     # DATE
-    issued = analyser.add(DatasetCreationDCAT())
-    modified = analyser.add(DatasetModificationDCAT())
-    distr_issued = analyser.add(DistributionIssuedDCAT())
-    distr_modified = analyser.add(DistributionModifiedDCAT())
+    date = analyser.add(AverageMetric([DatasetCreationDCAT(), DatasetModificationDCAT(), DistributionIssuedDCAT(), DistributionModifiedDCAT()]))
+    #issued = analyser.add(DatasetCreationDCAT())
+    #modified = analyser.add(DatasetModificationDCAT())
+    #distr_issued = analyser.add(DistributionIssuedDCAT())
+    #distr_modified = analyser.add(DistributionModifiedDCAT())
     # TEMPORAL
     temporal = analyser.add(DatasetTemporalDCAT())
     # SPATIAL
@@ -108,12 +123,69 @@ def exists(dbm, sn):
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
 
-    print ds_count.getResult()
-    print access.getResult()
-    print discovery.getValue()
+    return {
+        'access': access.getValue(),
+        'discovery': discovery.getValue(),
+        'contact': contact.getValue(),
+        'license': license.getResult()['count']/ds_count.getResult()['count'] if ds_count.getResult()['count'] > 0 else 0,
+        'preservation': preservation.getValue(),
+        'date': date.getValue(),
+        'temporal': temporal.getResult()['count']/ds_count.getResult()['count'] if ds_count.getResult()['count'] > 0 else 0,
+        'spatial': spatial.getResult()['count']/ds_count.getResult()['count'] if ds_count.getResult()['count'] > 0 else 0
+    }
+
+
+def exists_report(dbm, sn, metrics):
+    conf_values = {}
+    with open('tmp/test_portals.txt') as f:
+        for p_id in f:
+            v = exists(dbm, sn, p_id.strip())
+            conf_values[p_id] = v
+    col = ['black', 'red', 'blue', 'green']
+    keys_labels = {}
+    xlabel = "Existence"
+    ylabel = "Portals"
+    filename = "exist.pdf"
+
+    bins = np.arange(0.0, 1.1, 0.1)
+    data = OrderedDict()
+    for m in metrics:
+        keys_labels[m] = m.title()
+        hist, bin_edges = np.histogram(np.array([conf_values[d][m] for d in conf_values]), bins=bins)
+        data[m] = {'hist': hist, 'bin_edges': bin_edges}
+    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
+    re = Report([rep])
+    re.plotreport('tmp')
+
+
+def conform_report(dbm, sn, metrics):
+    conf_values = {}
+    with open('tmp/test_portals.txt') as f:
+        for p_id in f:
+            v = conform(dbm, sn, p_id.strip())
+            conf_values[p_id] = v
+    col = ['black', 'red', 'blue', 'green', 'grey']
+    keys_labels = {}
+    xlabel = "Conformance"
+    ylabel = "Portals"
+    filename = "conf.pdf"
+
+    bins = np.arange(0.0, 1.1, 0.1)
+    data = OrderedDict()
+    for m in metrics:
+        keys_labels[m] = m
+        hist, bin_edges = np.histogram(np.array([conf_values[d][m] for d in conf_values]), bins=bins)
+        data[m] = {'hist': hist, 'bin_edges': bin_edges}
+    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
+    re = Report([rep])
+    re.plotreport('tmp')
 
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1541
-    exists(dbm, sn)
+    sn = 1542
+
+    #metrics = ['access', 'discovery', 'contact', 'license']
+    metrics = ['AccessURI', 'ContactEmail', 'ContactURI', 'DateFormat', 'LicenseID']
+
+    conform_report(dbm, sn, metrics)
