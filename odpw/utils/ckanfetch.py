@@ -168,7 +168,7 @@ def cli(args,dbm):
     else:
         
         ps=[]
-        for p in PortalMetaData.iter(dbm.getPortalMetaData(snapshot=1533)):
+        for p in PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=1533)):
             ps.append(p.portal_id)
         
         
