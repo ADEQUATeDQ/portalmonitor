@@ -26,7 +26,7 @@ from odpw.utils.util import getSnapshot,getExceptionCode,ErrorHandler as eh,\
 
 from odpw.analysers import  AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.fetching import MD5DatasetAnalyser, DCATResourceInDSAge,\
-    DCATDatasetAge
+    DCATDatasetAge, UsageAnalyser
 from odpw.portal_processor import CKAN, Socrata, OpenDataSoft
 
 import argparse
@@ -60,7 +60,8 @@ def fetching(obj, outfile):
             ae.add(CompletenessAnalyser())
             ae.add(ContactabilityAnalyser())
             ae.add(OpennessAnalyser())
-            ae.add(OPQuastAnalyser())
+            ae.add(UsageAnalyser())
+            #ae.add(OPQuastAnalyser())
             
 
             processor = CKAN()
@@ -98,23 +99,24 @@ def fetching(obj, outfile):
         rdq.update_PortalMetaData(pmd)
         rrq.update_PortalMetaData(pmd)
         
+        #Qu(core), Qu(res), Qu(extra), Qc(core), Qc(res), Qc(extra), Qo(F), Qo(L), Qa(url), Qa(email), Qr(ds), Qr(res)
         p=[pmd.portal_id,
-           str(pmd.qa_stats['Qa']['email']['total']),
-           str(pmd.qa_stats['Qa']['url']['total']),
+           str(pmd.qa_stats['Qu']['core']),
+           str(pmd.qa_stats['Qu']['res']),
+           str(pmd.qa_stats['Qu']['extra']),
            
            str(pmd.qa_stats['Qc']['core']),
-           str(pmd.qa_stats['Qc']['extra']),
            str(pmd.qa_stats['Qc']['res']),
+           str(pmd.qa_stats['Qc']['extra']),
            
-           str(pmd.qa_stats['Qo']['license']),
            str(pmd.qa_stats['Qo']['format']),
+           str(pmd.qa_stats['Qo']['license']),
            
-           str(pmd.qa_stats['Qu']['core']),
-           str(pmd.qa_stats['Qu']['extra']),
-           str(pmd.qa_stats['Qu']['res']),
+           str(pmd.qa_stats['Qa']['url']['total']),
+           str(pmd.qa_stats['Qa']['email']['total']),
            
-           str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
            str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd'])
+           str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
             
            
            ]
@@ -166,30 +168,43 @@ def cli(args,dbm):
         log.info("Queuing", pid=p.id, apiurl=args.url)
         jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )
     else:
+        
+        ps=[]
+        for p in Portal.iter(dbm.getPortals(software="CKAN", snapshot=1533)):
+            ps.append(p.id)
+        
+        
+        pjobs={}
         for p in Portal.iter(dbm.getPortals(software="CKAN")):
-            pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
-            if not pmd:
-                pmd = PortalMetaData(portalID=p.id, snapshot=sn)
-                dbm.insertPortalMetaData(pmd)
+            if p.id in ps:
+                pjobs[p.id]={'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch }
                 
-            log.info("Queuing", pid=p.id)
-            jobs.append( {'portal':p, 'sn':sn, 'dbm':dbm, 'fullfetch':fetch } )        
+        
+        import collections
+        od = collections.OrderedDict(sorted(pjobs.items()))
+        
+        for p, job in od.items():
+            log.info("Queuing", pid=p)
+            jobs.append( job )        
     try:
         log.info("Start processing", portals=len(jobs), processors=args.processors, start = time.time())
         
-        
+             #Qu(core), Qu(res), Qu(extra), Qc(core), Qc(res), Qc(extra), Qo(F), Qo(L), Qa(url), Qa(email), Qr(ds), Qr(res)
         p=["portal_id",
-           'Qa(email)',
-           'Qa(url)'
-           'Qc(core)',
-           'Qc(res)',
-           'Qc(extra)',
-           'Qo(license)',
-           'Qc(format)',
-           
            'Qu(core)',
            'Qu(res)',
            'Qu(extra)',
+           
+           'Qc(core)',
+           'Qc(res)',
+           'Qc(extra)',
+           
+           'Qo(format)',
+           'Qo(license)',
+           
+           
+           'Qa(url)'
+           'Qa(email)',
            
            'Qr(ds)',
            'Qr(res)'
@@ -198,6 +213,7 @@ def cli(args,dbm):
         args.outfile.write(s+"\n")
         
         for job in jobs:
+            
             fetching(job, args.outfile)
         
         
