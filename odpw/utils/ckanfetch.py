@@ -115,7 +115,7 @@ def fetching(obj, outfile):
            str(pmd.qa_stats['Qa']['url']['total']),
            str(pmd.qa_stats['Qa']['email']['total']),
            
-           str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd'])
+           str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd']),
            str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
             
            
