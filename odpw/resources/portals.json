@@ -1246,7 +1246,13 @@
         "countryCode": "ESP", 
         "software": "CKAN", 
         "url": "http://opengov.es/"
-    }, 
+    },
+    "openresearchdata_ch": {
+        "api": "",
+        "countryCode": "CHE",
+        "software": "CKAN",
+        "url": "http://openresearchdata.ch/"
+    },
     "opingogn_is": {
         "api": "", 
         "countryCode": "ISL", 
