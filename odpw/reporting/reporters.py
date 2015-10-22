@@ -24,9 +24,12 @@ log = structlog.get_logger()
 
 class Reporter(object):
     
-    def __init__(self):
-        self.df=None
+    #def __init__(self):
+    #    self.df=None
 
+    def __init__(self, analyser=None):
+        self.df=None
+        self.a= analyser
     
     def name(self):
         return self.__class__.__name__.lower()
@@ -89,6 +92,8 @@ def DFtoListDict(df):
   
 
 class DBReporter(Reporter):
+    
+    
     
     def getDataFrame(self):
         if self.df is None:

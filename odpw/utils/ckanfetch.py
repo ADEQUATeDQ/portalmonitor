@@ -99,6 +99,9 @@ def fetching(obj, outfile):
         rdq.update_PortalMetaData(pmd)
         rrq.update_PortalMetaData(pmd)
         
+        
+        import pprint 
+        pprint.pprint(pmd.qa_stats)
         #Qu(core), Qu(res), Qu(extra), Qc(core), Qc(res), Qc(extra), Qo(F), Qo(L), Qa(url), Qa(email), Qr(ds), Qr(res)
         p=[pmd.portal_id,
            str(pmd.qa_stats['Qu']['core']),
