@@ -1,0 +1,22 @@
+<!{% extends "_base.jinja" %}
+
+{% block sidenav %}
+    
+    {% set navigation_bar = [
+        ('/data/', 'data', 'Info', 'fa-info'),
+        ('/dumps/', 'dumps', 'Dumps', 'fa-server'),
+        ('/apis/', 'api', 'APIs','fa-cubes'),        
+    ] -%}
+    {% set active_page = active_sub_page|default('portals') -%}
+    {% for href, id, caption, icon in navigation_bar %}
+        <li class="text-centered {% if id == active_page %} active {% endif%}">
+            <a href="{{ href|e }}">
+                <i class="fa {{ icon }} fa-fw"></i>
+                <p>{{ caption|e }}</p>
+            </a>
+        </li>
+    {% endfor %}        
+{% endblock %}
+        
+      
+

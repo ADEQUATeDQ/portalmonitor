@@ -1,0 +1,114 @@
+{
+  "width": 400,
+  "height": 200,
+  "padding": {"top": 10, "left": 60, "bottom": 50, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "values": [],
+        "transform":[
+         { "type": "sort", "by": "-perc"}
+        ]
+    }
+  ],
+  
+  "signals": [
+    {
+      "name": "tooltip",
+      "init": {},
+      "streams": [
+        {"type": "rect:mouseover", "expr": "datum"},
+        {"type": "rect:mouseout", "expr": "{}"}
+      ]
+    }
+  ],
+  "predicates": [
+    {
+      "name": "tooltip", "type": "==", 
+      "operands": [{"signal": "tooltip._id"}, {"arg": "id"}]
+    }
+  ],
+  
+  "scales": [
+    {
+      "name": "x",
+      "type": "ordinal",
+      "range": "width",
+      "domain": {"data": "table", "field": "iso3"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "domain": {"data": "table", "field": "perc"},
+      "nice": true
+    }
+  ],
+  "axes": [
+    {"type": "x", "scale": "x",
+      "properties": {
+            "labels": {
+              "angle": {"value": 290},
+              "align": {"value": "right"},
+              "baseline": {"value": "middle"}
+            }},
+             "layer": "back",
+          "titleOffset": 38,
+          "title": "iso3"
+      
+    },
+    {"type": "y", "scale": "y",
+        "format":"p",
+      "title": "#portals",
+      "titleOffset": 48
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "iso3"},
+          "width": {"scale": "x", "band": true, "offset": -1},
+          "y": {"scale": "y", "field": "perc"},
+          "y2": {"scale": "y", "value": 0}
+        },
+        "update": {
+          "fill": {"value": "steelblue"}
+        },
+        "hover": {
+          "fill": {"value": "red"}
+        }
+      }
+    }
+    ,
+    {
+      "type": "text",
+      "properties": {
+        "enter": {
+          "align": {"value": "center"},
+          "fill": {"value": "#333"}
+        },
+        "update": {
+          "x": {"scale": "x", "signal": "tooltip.iso3"},
+          "dx": {"scale": "x", "band": true, "mult": 0.5},
+          "y": {"scale": "y", "signal": "tooltip.perc", "offset": -5},
+          "text": {"signal": "tooltip.count"},
+          "fillOpacity": {
+            "rule": [
+              {
+                "predicate": {
+                  "name": "tooltip",
+                  "id": {"value": null}
+                },
+                "value": 0
+              },
+              {"value": 1}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

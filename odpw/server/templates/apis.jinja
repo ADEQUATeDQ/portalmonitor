@@ -1,0 +1,208 @@
+<!{% extends "_data_base.jinja" %}
+
+
+
+
+{% set active_page = "data" -%}
+{% set active_sub_page = "api" -%}
+
+{% import '_helpers.jinja' as helper %}
+
+{% block section %}
+    {{ helper.title("Available APIs")}}
+    
+    <div class="units-row">
+        <div class="unit-90 unit-centered">
+            <fieldset>
+                <legend>Portals</legend>
+                <div class="units-row end">
+                    <div>
+                        <span class="label label-green">GET</span>
+                        <code>/api/portals</code>
+                        <span class="right italic">full list of all portals</span>
+
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <div class="left unit-20 unit-push-10">
+                        <code>?software=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="portalApi" id="ss" multiple="multiple">
+                                {% for p in data.software %}
+                                <option value="{{ p }}">{{ p }}</option>            
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by software</span>
+                    </div>
+                </div>
+                <div class="units-row">
+                    <div class="left unit-20 unit-push-10">
+                        <code>?iso3=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="portalApi" id="siso" multiple="multiple">
+                            {% for p in data.iso3 %}
+                                <option value="{{ p }}">{{ p }}</option>            
+                            {% endfor %}
+                        </select> 
+                    </div><div>
+                        <span class="right italic">filter by country</span>
+                    </div>
+                </div>
+                
+                <div class="units-row end">
+                    <span class="label label-green">GET</span>
+                    <code id="ssapi">/api/portals?software=CKAN&iso3=</code>
+                    <button class="submit btn btn-smaller right">submit</button>
+                </div>
+            </fieldset>
+            
+        </div>
+    </div>
+    <div class="units-row">
+        <div class="unit-90 unit-centered">
+            <fieldset>
+                <legend>Resource <code>HEAD</code> Information</legend>
+                <div class="units-row end">
+                    <div>
+                        <span class="label label-green">GET</span>
+                        <code>/api/resources</code>
+                        <span class="right italic">Get <code>HEAD</code> information for all resources</span>
+                    </div>
+                    
+                </div>
+                 <div class="units-row end">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?portal=</code>
+                    </div>
+                    <div class="unit-20 left">
+                        <select class="headApi" id="portalHeadsel" multiple="multiple">
+                            {% for p in data.portals %}
+                                <option value="{{ p }}">{{ p }}</option>            
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="right italic">
+                        <span class="right italic">filter by portal</span>    
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?status=</code>
+                    </div>
+                    
+                    <div class="unit-20 left">
+                        <select class="headApi" id="statusHeadsel" multiple="multiple">
+                            <option>200</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by status</span>    
+                    </div>
+                </div>
+                <div class="units-row">
+                    <div class=" left unit-20 unit-push-10">
+                        <code>?snapshot=</code>
+                    </div>
+                    
+                    <div class="unit-20 left">
+                        <select class="headApi" id="snHeadsel" multiple="multiple">
+                            {% for p in data.snapshots %}
+                                <option value="{{ p }}">{{ p }}</option>            
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <span class="right italic">filter by snapshot</span>    
+                    </div>
+                </div>
+                <div class="units-row end">
+                    <span class="label label-green">GET</span>
+                    <code id="headapi">/api/portals?software=CKAN&iso3=</code>
+                    <button class="submit btn btn-smaller right">submit</button>
+                </div>
+                
+            </fieldset>
+        </div>
+    </div>
+    
+    
+{% endblock %}
+
+{% block pageScripts %}
+ <script>
+    var data = {{ data| tojson | safe }};
+     console.log("SERVER DATA")
+     console.log(data)
+     
+      var apiString="/api"
+      var sssel=false
+      var apip_soft=""
+      
+      function displayAPI( api, map, search){
+            var q=""
+            
+            var q =[]
+            for(var i in map){
+                var list = $(map[i][1]).multipleSelect("getSelects", "text")    
+                if (list.length>0 && list.length != map[i][2]){
+                    q.push(map[i][0]+"="+list.join().replace(/ /g,""))
+                }
+                
+            }
+            var s = apiString+"/"+search
+            if (q.length>0)
+                s+="?"+q.join("&")
+            $(api).text(s)
+      }
+      
+ 
+      var portalMap = [ ["software", "#ss", data.software.length ],
+                        ["iso3", "#siso", data.iso3.length]
+                    ]  
+                    
+      var headMap = [ ["snapshot", "#ss" ,data.snapshots.length],
+                        ["portal", "#siso",data.portals.length],
+                        ["status", "#siso", 0]
+                    ]  
+      $('.portalApi').multipleSelect({ 
+            filter:true,
+            
+            onCheckAll: function() {
+                displayAPI("#ssapi", portalMap, "portals")
+            },
+            onUncheckAll: function() {
+                displayAPI("#ssapi", portalMap,"portals")
+            },
+            onClick: function(view) {
+                displayAPI("#ssapi", portalMap,"portals")
+            }
+      });
+      //$('.portalApi').multipleSelect("checkAll");
+      displayAPI("#ssapi", portalMap,"portals")
+      $('.headApi').multipleSelect({ 
+            filter:true,
+            onCheckAll: function() {
+                displayAPI("#headapi", headMap, "head")
+            },
+            onUncheckAll: function() {
+                displayAPI("#headapi", headMap, "head")
+            },
+            onClick: function(view) {
+                displayAPI("#headapi", headMap, "head")
+            }
+      });
+      displayAPI("#headapi", headMap,"head")
+     
+    $("button.submit").click(function(e) {
+        var c= $(this).siblings("code")
+        window.location = c.text();
+    });
+     
+     
+     
+ </script>
+{% endblock %}
