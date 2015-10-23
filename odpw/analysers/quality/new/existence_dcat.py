@@ -30,7 +30,7 @@ class ExistenceDCAT(ElementCountAnalyser):
     def done(self):
         dist = self.getDist()
         exist = dist[True] if True in dist else 0
-        self.quality = exist/sum(dist.values()) if sum(dist.values()) > 0 else 0
+        self.quality = float(exist)/sum(dist.values()) if sum(dist.values()) > 0 else 0
 
     def getResult(self):
         return self.quality

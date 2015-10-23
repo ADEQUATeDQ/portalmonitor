@@ -1,12 +1,14 @@
 from collections import OrderedDict
 import numpy as np
-from odpw.analysers import AnalyserSet, process_all
+from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
 from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
-from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser
+from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, FormatOpennessDCATAnalyser, \
+    FormatMachineReadableDCATAnalyser
+from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset
 from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter
@@ -44,11 +46,10 @@ def general_stats(dbm, sn):
     print 'ds_histogram', ds_histogram.getResult()
 
 
-def analyse(dbm, sn, p_id):
-    analyser = AnalyserSet()
+def calculateMetrics(dbm, sn, p_id):
     p = dbm.getPortal(portalID=p_id)
+    analyser = AnalyserSet()
     analyser.add(DCATConverter(p))
-    ds_count = analyser.add(DatasetCount())
 
     ##################### EXISTS ######################################
     # ACCESS
@@ -85,9 +86,19 @@ def analyse(dbm, sn, p_id):
     # FORMAT
     formatConf = analyser.add(IANAFormatDCATAnalyser())
 
+    ####################### OPENNESS ###########################
+    formatOpen = analyser.add(FormatOpennessDCATAnalyser())
+    formatMachine = analyser.add(FormatMachineReadableDCATAnalyser())
+    licenseOpen = analyser.add(LicenseOpennessDCATAnalyser())
+
     ds = dbm.getDatasets(snapshot=sn, portalID=p_id)
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
+
+    pmd = dbm.getPortalMetaData(portalID=p_id, snapshot=sn)
+
+    analyser.update(pmd)
+    #dbm.updatePortalMetaData(pmd)
 
     return {
         'Access': access.getValue(),
@@ -103,7 +114,10 @@ def analyse(dbm, sn, p_id):
         'ContactURI': contactUri.getValue(),
         'DateFormat': dateformat.getValue(),
         'License': licenseConf.getValue(),
-        'FileFormat': formatConf.getResult()[IANAFormatDCATAnalyser.id]
+        'FileFormat': formatConf.getResult()[IANAFormatDCATAnalyser.id],
+        'OpenFormat': formatOpen.getResult()[FormatOpennessDCATAnalyser.id],
+        'MachineRead': formatMachine.getResult()[FormatMachineReadableDCATAnalyser.id],
+        'OpenLicense': licenseOpen.getResult()
     }
 
 
@@ -112,7 +126,7 @@ def exists_report(dbm, sn, metrics):
     conf_values = {}
     with open('tmp/test_portals.txt') as f:
         for p_id in f:
-            v = analyse(dbm, sn, p_id.strip())
+            v = calculateMetrics(dbm, sn, p_id.strip())
             conf_values[p_id] = v
     col = ['black', 'red', 'blue', 'green']
     keys_labels = {}
@@ -135,7 +149,7 @@ def conform_report(dbm, sn, metrics):
     conf_values = {}
     with open('tmp/test_portals.txt') as f:
         for p_id in f:
-            v = analyse(dbm, sn, p_id.strip())
+            v = calculateMetrics(dbm, sn, p_id.strip())
             conf_values[p_id] = v
     col = ['black', 'red', 'blue', 'green', 'grey']
     keys_labels = {}
@@ -158,7 +172,7 @@ def scatter_report(dbm, sn):
     values = {}
     with open('tmp/test_portals.txt') as f:
         for p_id in f:
-            v = analyse(dbm, sn, p_id.strip())
+            v = calculateMetrics(dbm, sn, p_id.strip())
             values[p_id] = v
     col = ['black', 'red', 'blue', 'green', 'grey']
     keys_labels = {}
@@ -174,10 +188,17 @@ def scatter_report(dbm, sn):
     #scatter = MultiScatterReporter(data, keys_labels, "$Q_c$", "$Q_u$", "cvude.pdf", colors=col)
 
 
+
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1542
 
-    metrics = ['DateFormat', 'License', 'FileFormat']
+    #metrics = ['DateFormat', 'License', 'FileFormat']
 
-    conform_report(dbm, sn, metrics)
+    #conform_report(dbm, sn, metrics)
+
+    #calculateMetrics(dbm, sn, 'data_gv_at')
+
+    with open('tmp/test_portals.txt') as f:
+        for p_id in f:
+            v = calculateMetrics(dbm, sn, p_id.strip())

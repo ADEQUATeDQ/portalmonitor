@@ -46,7 +46,7 @@ class AverageConformMetric(Analyser):
     def __init__(self, analyser, id):
         super(AverageConformMetric, self).__init__()
         self.analyser = analyser
-        self.total = 0
+        self.total = 0.0
         self.values = []
         self.id = id
 
