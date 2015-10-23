@@ -14,23 +14,30 @@ from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
 from odpw.utils import dcat_access
 ## Provenance 
 
-class ExistenceDCAT(ElementCountAnalyser):
+class ExistenceDCAT(Analyser):
     
     def __init__(self, accessFunct):
         super(ExistenceDCAT, self).__init__()
         self.af=accessFunct
         self.quality = None
+        self.values = []
+        self.total = 0.0
         
     def analyse_Dataset(self, dataset):
         value = self.af(dataset)
-        e = any(value) if len(value) > 0 else False
-        self.analyse_generic(e)
-        return e
+        t = 0.0
+        c = 0.0
+        for v in value:
+            t += 1
+            if v:
+                c += 1
+        self.total += 1
+        res = c/t if t > 0 else 0
+        self.values.append(res)
+        return res
 
     def done(self):
-        dist = self.getDist()
-        exist = dist[True] if True in dist else 0
-        self.quality = float(exist)/sum(dist.values()) if sum(dist.values()) > 0 else 0
+        self.quality = sum(self.values)/self.total if self.total > 0 else 0
 
     def getResult(self):
         return self.quality
@@ -227,7 +234,7 @@ class AnyMetric(Analyser):
         super(AnyMetric, self).__init__()
         self.analyser = analyser
         self.total = 0.0
-        self.count = 0.0
+        self.count = 1
         self.id = id
 
     def analyse_Dataset(self, dataset):
@@ -260,17 +267,17 @@ class AverageMetric(Analyser):
         self.id = id
 
     def analyse_Dataset(self, dataset):
-        self.total += 1
-
         count = 0.0
         t = 0.0
         for a in self.analyser:
+            v = a.analyse_Dataset(dataset)
             t += 1
-            if a.analyse_Dataset(dataset):
-                count += 1
-        v = count/t if t > 0 else 0
-        self.values.append(v)
-        return v
+            count += v
+        res = count/t if t > 0 else 0
+
+        self.total += 1
+        self.values.append(res)
+        return res
 
     def getResult(self):
         return {'values': self.values, 'total': self.total}

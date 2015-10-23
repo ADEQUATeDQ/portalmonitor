@@ -10,7 +10,7 @@ from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, 
     FormatMachineReadableDCATAnalyser
 from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
 from odpw.db.dbm import PostgressDBM
-from odpw.db.models import PortalMetaData, Dataset
+from odpw.db.models import PortalMetaData, Dataset, Portal
 from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter
 from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report
 
@@ -47,8 +47,7 @@ def general_stats(dbm, sn):
 
 
 def calculateMetrics(dbm, sn, p_id):
-    p = dbm.getPortal(portalID=p_id)
-    analyser = AnalyserSet()
+    analyser = SAFEAnalyserSet()
     analyser.add(DCATConverter(p))
 
     ##################### EXISTS ######################################
@@ -91,16 +90,18 @@ def calculateMetrics(dbm, sn, p_id):
     formatMachine = analyser.add(FormatMachineReadableDCATAnalyser())
     licenseOpen = analyser.add(LicenseOpennessDCATAnalyser())
 
-    ds = dbm.getDatasets(snapshot=sn, portalID=p_id)
+
+    ############## Iterate DS ################################
+    ds = dbm.getDatasetsAsStream(snapshot=sn, portalID=p_id)
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
 
+    ############# Update PMD #################################
     pmd = dbm.getPortalMetaData(portalID=p_id, snapshot=sn)
-
     analyser.update(pmd)
     #dbm.updatePortalMetaData(pmd)
 
-    return {
+    values = {
         'Access': access.getValue(),
         'Discovery': discovery.getValue(),
         'Contact': contact.getValue(),
@@ -119,6 +120,11 @@ def calculateMetrics(dbm, sn, p_id):
         'MachineRead': formatMachine.getResult()[FormatMachineReadableDCATAnalyser.id],
         'OpenLicense': licenseOpen.getResult()
     }
+    for k in values:
+        v = values[k]
+        if v > 1 or v < 0:
+            print p_id
+            print k + ': ' + str(v)
 
 
 
@@ -191,14 +197,14 @@ def scatter_report(dbm, sn):
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1542
 
     #metrics = ['DateFormat', 'License', 'FileFormat']
-
     #conform_report(dbm, sn, metrics)
-
     #calculateMetrics(dbm, sn, 'data_gv_at')
 
-    with open('tmp/test_portals.txt') as f:
-        for p_id in f:
-            v = calculateMetrics(dbm, sn, p_id.strip())
+    snapshots = [1542]#xrange(start=1533, stop=1543)
+    portals = dbm.getPortals()
+    for p in Portal.iter(portals):
+        for sn in snapshots:
+            print 'SNAPSHOT:', sn
+            v = calculateMetrics(dbm, sn, p.id)
