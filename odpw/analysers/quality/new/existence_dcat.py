@@ -234,7 +234,7 @@ class AnyMetric(Analyser):
         super(AnyMetric, self).__init__()
         self.analyser = analyser
         self.total = 0.0
-        self.count = 1
+        self.count = 0
         self.id = id
 
     def analyse_Dataset(self, dataset):

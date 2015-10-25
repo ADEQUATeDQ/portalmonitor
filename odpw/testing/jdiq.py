@@ -46,7 +46,7 @@ def general_stats(dbm, sn):
     print 'ds_histogram', ds_histogram.getResult()
 
 
-def calculateMetrics(dbm, sn, p_id):
+def calculateMetrics(dbm, sn, p):
     analyser = SAFEAnalyserSet()
     analyser.add(DCATConverter(p))
 
@@ -92,14 +92,14 @@ def calculateMetrics(dbm, sn, p_id):
 
 
     ############## Iterate DS ################################
-    ds = dbm.getDatasetsAsStream(snapshot=sn, portalID=p_id)
+    ds = dbm.getDatasetsAsStream(snapshot=sn, portalID=p.id)
     d_iter = Dataset.iter(ds)
     process_all(analyser, d_iter)
 
     ############# Update PMD #################################
-    pmd = dbm.getPortalMetaData(portalID=p_id, snapshot=sn)
+    pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
     analyser.update(pmd)
-    #dbm.updatePortalMetaData(pmd)
+    dbm.updatePortalMetaData(pmd)
 
     values = {
         'Access': access.getValue(),
@@ -120,11 +120,7 @@ def calculateMetrics(dbm, sn, p_id):
         'MachineRead': formatMachine.getResult()[FormatMachineReadableDCATAnalyser.id],
         'OpenLicense': licenseOpen.getResult()
     }
-    for k in values:
-        v = values[k]
-        if v > 1 or v < 0:
-            print p_id
-            print k + ': ' + str(v)
+    return values
 
 
 
@@ -200,11 +196,12 @@ if __name__ == '__main__':
 
     #metrics = ['DateFormat', 'License', 'FileFormat']
     #conform_report(dbm, sn, metrics)
-    #calculateMetrics(dbm, sn, 'data_gv_at')
+    #p = dbm.getPortal(portalID='www_opendatanyc_com')
+    #calculateMetrics(dbm, 1542, p)
 
-    snapshots = [1542]#xrange(start=1533, stop=1543)
-    portals = dbm.getPortals()
-    for p in Portal.iter(portals):
-        for sn in snapshots:
-            print 'SNAPSHOT:', sn
-            v = calculateMetrics(dbm, sn, p.id)
+    snapshots = xrange(1543, 1533, -1)
+    portals = [p for p in Portal.iter(dbm.getPortals())]
+    for sn in snapshots:
+        for p in portals:
+            print 'SNAPSHOT:', sn, 'PORTAL:', p.id
+            v = calculateMetrics(dbm, sn, p)
