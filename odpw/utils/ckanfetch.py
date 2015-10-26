@@ -73,7 +73,7 @@ def fetching(obj, outfile):
             raise NotImplementedError(Portal.software + ' is not implemented')
 
         try:
-            iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
+            iter = dbm.getDatasetsAsStream(portalID=Portal.id, snapshot=sn)
             process_all( ae, iter)
         except TimeoutError as exc:
             eh.handleError(log, "TimeoutError", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
