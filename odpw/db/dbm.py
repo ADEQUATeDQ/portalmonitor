@@ -657,6 +657,7 @@ class PostgressDBM(object):
             c =0
             for res in s.execute():
                 c+=1
+                
                 yield res
             if c==0:
                 break
