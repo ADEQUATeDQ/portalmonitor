@@ -94,7 +94,13 @@
         "countryCode": "JPN", 
         "software": "CKAN", 
         "url": "http://ckan.gsi.go.jp/"
-    }, 
+    },
+    "ckan_odp_jig_jp": {
+        "api": "",
+        "countryCode": "JPN",
+        "software": "CKAN",
+        "url": "http://ckan.odp.jig.jp/"
+    },
     "ckan_okfn_gr": {
         "api": "", 
         "countryCode": "GRC", 
@@ -1414,7 +1420,13 @@
         "countryCode": "CAN", 
         "software": "CKAN", 
         "url": "http://www.data.gc.ca/"
-    }, 
+    },
+    "www_data_go_jp": {
+        "api": "http://www.data.go.jp/data/",
+        "countryCode": "JPN",
+        "software": "CKAN",
+        "url": "http://www.data.go.jp/"
+    },
     "www_data_vic_gov_au": {
         "api": "", 
         "countryCode": "AUS", 
