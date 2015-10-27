@@ -3,7 +3,7 @@ import numpy as np
 from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
 from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount
-from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser
+from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, MultiHistogramAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
 from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, FormatOpennessDCATAnalyser, \
@@ -11,10 +11,39 @@ from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, 
 from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset, Portal
-from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter
+from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter, MultiScatterHistReporter
 from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report
 
 __author__ = 'sebastian'
+
+
+class PMDDCATMetricAnalyser(HistogramAnalyser):
+    def __init__(self, id, **nphistparams):
+        super(PMDDCATMetricAnalyser, self).__init__(**nphistparams)
+        self.id = id
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and self.id in pmd.qa_stats:
+            self.analyse_generic(pmd.qa_stats[self.id])
+
+    def name(self):
+        return self.id
+
+class PMDDCATSoftwareAnalyser(MultiHistogramAnalyser):
+    def __init__(self, id, dbm, **nphistparams):
+        super(PMDDCATSoftwareAnalyser, self).__init__(**nphistparams)
+        self.id = id
+        self.dbm = dbm
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats and self.id in pmd.qa_stats:
+            quality = pmd.qa_stats[self.id]
+            p = dbm.getPortal(portalID=pmd.portal_id)
+            self.data[p.software].append(quality)
+
+    def name(self):
+        return self.id
+
 
 def general_stats(dbm, sn):
     pmd_analyser = AnalyserSet()
@@ -44,7 +73,6 @@ def general_stats(dbm, sn):
     csv_re.csvreport('tmp')
 
     print 'ds_histogram', ds_histogram.getResult()
-
 
 def calculateMetrics(dbm, sn, p):
     analyser = SAFEAnalyserSet()
@@ -123,85 +151,96 @@ def calculateMetrics(dbm, sn, p):
     return values
 
 
+def getMetrics(dbm, sn, metrics, bins):
+    aSet = AnalyserSet()
+    analyser = {}
+    for id in metrics:
+        analyser[id] = aSet.add(PMDDCATMetricAnalyser(id, bins=bins))
+
+    pmds = dbm.getPortalMetaDatas(snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
+    process_all(aSet, pmd_iter)
+    return analyser
+
+
+def getMetricsBySoftware(dbm, sn, metrics, bins):
+    aSet = AnalyserSet()
+    analyser = {}
+    for id in metrics:
+        analyser[id] = aSet.add(PMDDCATSoftwareAnalyser(id, dbm, bins=bins))
+
+    pmds = dbm.getPortalMetaDatas(snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
+    process_all(aSet, pmd_iter)
+    return analyser
 
 def exists_report(dbm, sn, metrics):
-    conf_values = {}
-    with open('tmp/test_portals.txt') as f:
-        for p_id in f:
-            v = calculateMetrics(dbm, sn, p_id.strip())
-            conf_values[p_id] = v
+    bins = np.arange(0.0, 1.1, 0.1)
+    values = getMetrics(dbm, sn, metrics, bins)
+
     col = ['black', 'red', 'blue', 'green']
     keys_labels = {}
     xlabel = "Existence"
     ylabel = "Portals"
     filename = "exist.pdf"
 
-    bins = np.arange(0.0, 1.1, 0.1)
     data = OrderedDict()
     for m in metrics:
         keys_labels[m] = m
-        hist, bin_edges = np.histogram(np.array([conf_values[d][m] for d in conf_values]), bins=bins)
-        data[m] = {'hist': hist, 'bin_edges': bin_edges}
+        data[m] = values[m].getResult()
     rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
     re = Report([rep])
     re.plotreport('tmp')
 
 
 def conform_report(dbm, sn, metrics):
-    conf_values = {}
-    with open('tmp/test_portals.txt') as f:
-        for p_id in f:
-            v = calculateMetrics(dbm, sn, p_id.strip())
-            conf_values[p_id] = v
+    bins = np.arange(0.0, 1.1, 0.1)
+    values = getMetrics(dbm, sn, metrics, bins)
     col = ['black', 'red', 'blue', 'green', 'grey']
     keys_labels = {}
     xlabel = "Conformance"
     ylabel = "Portals"
     filename = "conf.pdf"
 
-    bins = np.arange(0.0, 1.1, 0.1)
     data = OrderedDict()
     for m in metrics:
         keys_labels[m] = m
-        hist, bin_edges = np.histogram(np.array([conf_values[d][m] for d in conf_values]), bins=bins)
-        data[m] = {'hist': hist, 'bin_edges': bin_edges}
+        data[m] = values[m].getResult()
     rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
     re = Report([rep])
     re.plotreport('tmp')
 
 def scatter_report(dbm, sn):
-    metrics = ['Rights' 'License']
-    values = {}
-    with open('tmp/test_portals.txt') as f:
-        for p_id in f:
-            v = calculateMetrics(dbm, sn, p_id.strip())
-            values[p_id] = v
-    col = ['black', 'red', 'blue', 'green', 'grey']
-    keys_labels = {}
+    metrics = ['ExRi', 'CoLi']
 
     bins = np.arange(0.0, 1.1, 0.1)
-    data = OrderedDict()
-    for m in metrics:
-        keys_labels[m] = m
-        hist, bin_edges = np.histogram(np.array([values[d][m] for d in values]), bins=bins)
-        data[m] = {'hist': hist, 'bin_edges': bin_edges}
+    values = getMetricsBySoftware(dbm, sn, metrics, bins)
 
-    #data = OrderedDict([(g, ()) for g in ['total', 'res', 'core', 'extra']])
-    #scatter = MultiScatterReporter(data, keys_labels, "$Q_c$", "$Q_u$", "cvude.pdf", colors=col)
+    col = ['red', 'blue', 'green', 'grey']
+    keys_labels = {}
 
+    data = {}
+    hist_data = {}
+    for s in ['CKAN', 'Socrata', 'OpenDataSoft']:
+        data[s] = (values['ExRi'].data[s], values['CoLi'].data[s])
+        for m in metrics:
+            hist_data[m] = values[m].getResult()
+        keys_labels[s] = s
+
+    scatter = MultiScatterHistReporter(data, hist_data, bins, keys_labels, "Existence", "Conformance", "rights.pdf", colors=col)
+    re = Report([scatter])
+    re.plotreport('tmp')
 
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    sn = 1542
+    #metrics = ['ExAc', 'ExDi', 'ExCo']
+    scatter_report(dbm, sn)
 
-    #metrics = ['DateFormat', 'License', 'FileFormat']
-    #conform_report(dbm, sn, metrics)
-    #p = dbm.getPortal(portalID='www_opendatanyc_com')
-    #calculateMetrics(dbm, 1542, p)
-
-    snapshots = xrange(1543, 1533, -1)
-    portals = [p for p in Portal.iter(dbm.getPortals())]
-    for sn in snapshots:
-        for p in portals:
-            print 'SNAPSHOT:', sn, 'PORTAL:', p.id
-            v = calculateMetrics(dbm, sn, p)
+    #snapshots = xrange(1543, 1533, -1)
+    #portals = [p for p in Portal.iter(dbm.getPortals())]
+    #for sn in snapshots:
+    #    for p in portals:
+    #        print 'SNAPSHOT:', sn, 'PORTAL:', p.id
+    #        v = calculateMetrics(dbm, sn, p)

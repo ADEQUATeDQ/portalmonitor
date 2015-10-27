@@ -160,7 +160,7 @@ def scatterplotComb(data, labels, xlabel, ylabel, dir, filename, colors=None):
     print "Saving figure to ", os.path.join(dir, filename)
     plt.savefig(os.path.join(dir, filename), bbox_inches="tight")
 
-def scatterplotHistplotComb(data, labels, xlabel, ylabel, dir, filename, colors=None):
+def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, filename, colors=None):
 
     # You typically want your plot to be ~1.33x wider than tall.
     # Common sizes: (10, 7.5) and (12, 9)
@@ -168,15 +168,72 @@ def scatterplotHistplotComb(data, labels, xlabel, ylabel, dir, filename, colors=
         colors = ['red', 'blue', 'green', 'black']
 
     plt.figure(figsize=(8, 6))
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
 
-    gs = GridSpec(2, 2, width_ratios=[1,2], height_ratios=[4,1])
-
+    gs = GridSpec(2, 2, width_ratios=[3,1], height_ratios=[1,3])
+    keys = hist_data.keys()
+    dim_1 = keys[0]
+    dim_2 = keys[1]
+    ########### TOP LEFT ##########################################
     ax1 = plt.subplot(gs[0])
-    ax2 = plt.subplot(gs[1])
-    ax = plt.subplot(gs[2])
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.set_xlim([-0.05, 1.05])
+    #ax1.set_ylim([-0.05, 1.05])
+    ax1.get_xaxis().tick_bottom()
+    ax1.get_yaxis().tick_left()
+    ax1.set_xticklabels([])
+    plt.yticks(fontsize=10)
+
+
+    width = 1 * (bins[1] - bins[0])/(len(data)+1)
+    center = (bins[:-1] + bins[1:]) / 2
+
+    m = 0
+    for i, d in enumerate(hist_data[dim_1]):
+        hist = hist_data[dim_1][d]['hist']
+
+        m =  max(hist.max()*1.0 / hist.sum(), m)
+
+        if colors is None:
+            col = (i*.3, i*.3, i*.3)
+        else:
+            col = colors[i]
+        bars = plt.bar( bins[:-1]+(width/2)+(width*i),hist.astype(np.float32)/hist.sum(), width = width, color=col)
+
+    ########### BOTTOM RIGHT ############################################################
     ax4 = plt.subplot(gs[3])
+    ax4.spines["top"].set_visible(False)
+    ax4.spines["right"].set_visible(False)
+    ax4.set_ylim([-0.05, 1.05])
+
+    ax4.get_xaxis().tick_bottom()
+    ax4.get_yaxis().tick_left()
+    ax4.set_yticklabels([])
+    plt.xticks(fontsize=10)
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
+    width = 1 * (bins[1] - bins[0])/(len(data)+1)
+    center = (bins[:-1] + bins[1:]) / 2
+
+    m = 0
+    for i, d in enumerate(hist_data[dim_2]):
+        hist = hist_data[dim_2][d]['hist']
+        #bin_edges = res[d]['bin_edges']
+
+        m =  max(hist.max()*1.0 / hist.sum(), m)
+        if colors is None:
+            col = (i*.3, i*.3, i*.3)
+        else:
+            col = colors[i]
+        bars = plt.barh( bins[:-1]+(width/2)+(width*i),hist.astype(np.float32)/hist.sum(), height = width, color=col)
 
 
+    ########### BOTTOM LEFT ########################################################
+    ax = plt.subplot(gs[2])
 
     # Remove the plot frame lines. They are unnecessary chartjunk.
     ax.spines["top"].set_visible(False)
@@ -189,32 +246,34 @@ def scatterplotHistplotComb(data, labels, xlabel, ylabel, dir, filename, colors=
     ax.set_xlim([-0.05, 1.05])
     ax.set_ylim([-0.05, 1.05])
 
-    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=10)
+    plt.xticks(fontsize=10)
 
     #Labels
     plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(ylabel, fontsize=16)
 
-    #plt.title(title)
-
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
-
-    formatter = FuncFormatter(to_percent)
-    # Set the formatter
-    #plt.gca().yaxis.set_major_formatter(formatter)
-    #plt.gca().xaxis.set_major_formatter(formatter)
-
 
     for i, d in enumerate(data):
         x = data[d][0]
         y = data[d][1]
-        sc_plt = plt.scatter(x, y, s=10, color=colors[i], label=labels[d])
+        sc_plt = ax.scatter(x, y, s=10, color=colors[i], label=labels[d])
 
-    plt.legend(scatterpoints=1,
-               loc='upper left',
-               ncol=4,
-               fontsize=10)
+    # TOP RIGHT PLOT
+    ax2 = plt.subplot(gs[1])
+    ax2.axis('off')
+    dummy_plots = []
+    for i, d in enumerate(data):
+        x = data[d][0]
+        y = data[d][1]
+        sc_plt = ax2.scatter(x, y, s=10, color=colors[i], label=labels[d])
+        dummy_plots.append(sc_plt)
+    ax2.legend(scatterpoints=1,
+               loc='upper right',
+               #ncol=4,
+               fontsize=12)
+    for sc_plt in dummy_plots:
+        sc_plt.set_visible(False)
 
     print "Saving figure to ", os.path.join(dir, filename)
     plt.savefig(os.path.join(dir, filename), bbox_inches="tight")

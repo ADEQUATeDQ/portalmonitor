@@ -5,6 +5,22 @@ __author__ = 'sebastian'
 from odpw.reporting.reporters import Reporter, PlotReporter
 
 
+class MultiScatterHistReporter(Reporter, PlotReporter):
+    def __init__(self, data, hist_data, bins, labels, xlabel, ylabel, filename, colors=None):
+        super(MultiScatterHistReporter, self).__init__()
+        self.data = data
+        self.hist_data = hist_data
+        self.bins = bins
+        self.labels = labels
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.filename = filename
+        self.colors = colors
+
+    def plotreport(self, dir):
+        plotting.scatterplotHistplotComb(self.data, self.hist_data, self.bins, self.labels, self.xlabel, self.ylabel, dir, self.filename, colors=self.colors)
+
+
 class MultiScatterReporter(Reporter, PlotReporter):
     def __init__(self, data, labels, xlabel, ylabel, filename, colors=None):
         super(MultiScatterReporter, self).__init__()
