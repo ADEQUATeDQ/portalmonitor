@@ -53,7 +53,7 @@ def head (dbm, sn, seen, resource):
                     d['start'] = time.time()
             
                 d['processed']+=1
-                if d['processed'] ==d['resources']:
+                if d['processed'] == d['resources']:
                     d['end'] = time.time()
                     pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
                     if not pmd:
@@ -70,7 +70,7 @@ def head (dbm, sn, seen, resource):
 def getResources(dbm, snapshot, status=-1):
     resources =[]
     
-    for res in dbm.getResourceWithoutHead(snapshot=snapshot, status=status):
+    for res in dbm.getResourceWithoutHead(snapshot=snapshot, status=status, limit=10000):
         try:
             
             url=urlnorm.norm(res['url'])
@@ -78,6 +78,8 @@ def getResources(dbm, snapshot, status=-1):
             resources.append(R)    
         except Exception as e:
             log.debug('DropHeadLookup', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot)
+    import random
+    random.shuffle(resources)
     return resources
         
 class HeadProcess(Process):
