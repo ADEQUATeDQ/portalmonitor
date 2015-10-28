@@ -15,7 +15,7 @@ if __name__ == '__main__':
     
     #snapshots we consider for now'
     snapshots=[1533, 1534, 1535, 1536, 1537, 1538, 1539, 1540, 1541,1542]
-    #snapshots=[1533]
+    #snapshots=[1533,1534]
     
     
     jdiq = "/Users/jumbrich/Documents/opodportal_docs/journal/jdiq"
@@ -26,6 +26,9 @@ if __name__ == '__main__':
     
     #PROCESSING
     report = fetch_process(dbm, snapshots)
+    
+    
+    
     
     report.plotreport(plot_folder)
     report.textablereport(table_folder)

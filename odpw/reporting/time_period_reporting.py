@@ -68,10 +68,33 @@ class FetchProcessReporter(Reporter,PlotReporter, TexTableReporter):
         #return "%d:%02d:%02d" % (h, m, s)
         return "%d:%02d" % (h, m)
         
+
+    def getDataFrame(self):
+        
+        df =None
+        for a in self.an:
+            res = a.getResult()
+            
+            res['time'] = self.getLabel(max(res['durations']))
+            del res['durations']
+            
+            df1 = pd.DataFrame(res,index=[0])
+            if df is None:
+                df = df1
+            else:
+                df = df.append(df1,ignore_index=True)
+            
+            
+            
+    
+        df.set_index("sn")
+        print df
     
     def plotreport(self, folder):
         if not os.path.exists(folder):
             os.makedirs(folder)
+            
+            
         fig=plt.figure(figsize=(14, 12)) 
         
         # These are the "Tableau 20" colors as RGB.    
@@ -148,6 +171,7 @@ class FetchProcessReporter(Reporter,PlotReporter, TexTableReporter):
             time     & 3:33
         """
         
+        df = self.getDataFrame()
         sn={}
         
         for a in self.an:

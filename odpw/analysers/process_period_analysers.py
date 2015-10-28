@@ -8,6 +8,7 @@ import dateutil.parser
 import pytz
 from odpw.utils.util import ErrorHandler
 import structlog
+from odpw.utils import fetch_stats
 log =structlog.get_logger()
 
 
@@ -52,13 +53,29 @@ class FetchProcessAnalyser(Analyser):
         self.total=0
         self.processed=0
         self.error=0
-        
+        self.ds={'accessed':0,
+                 'added_accessed':0,
+                 'added_mis_av':0,
+                 'mis_av':0
+                 }
+        self.mis_portals=0
         
         
         
             
     def analyse_PortalMetaData(self, pmd):
         if pmd.fetch_stats:
+            #sum up all the ds information
+            for k in self.ds:
+                self.ds[k] += pmd.fetch_stats.get(k,0)
+            if  pmd.fetch_stats.get('mis_av',0) >0:
+                
+                self.mis_portals +=1
+                print pmd.snapshot
+                print pmd.portal_id
+                
+            
+                
             self.total += 1
             if 'fetch_start' in pmd.fetch_stats and  'fetch_end' in pmd.fetch_stats:
                 self.processed += 1
@@ -104,6 +121,10 @@ class FetchProcessAnalyser(Analyser):
                 data.append(delta)
         
         results['durations']=data
+        
+        for k in self.ds:
+            results[k] = self.ds[k]
+        results['mis_portals'] = self.mis_portals 
         return results
         
 class HeadProcessAnalyser(FetchProcessAnalyser):
