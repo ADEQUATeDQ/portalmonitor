@@ -153,7 +153,7 @@ class LicenseConform(DistinctElementCount):
             if self.id_based:
                 status = self.lm.get_od_conformance(id)
             else:
-                mapped_id, status = self.lm.map_license(id, label, url)
+                mapped_id, status = self.lm.map_license(label, id, url)
 
             if status != 'not found':
                 eval.append(id)

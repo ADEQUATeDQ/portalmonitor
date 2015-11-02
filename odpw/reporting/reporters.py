@@ -345,6 +345,10 @@ class FormatCountReporter(ElementCountReporter, CSVReporter):
     def __init__(self, analyser, topK=None, distinct=False):
         super(FormatCountReporter, self).__init__(analyser,columns=['Format', 'Count'], topK=topK,distinct=distinct)
 
+class LicenseCountReporter(ElementCountReporter, CSVReporter):
+    def __init__(self, analyser, topK=None, distinct=False):
+        super(LicenseCountReporter, self).__init__(analyser,columns=['License', 'Count'], topK=topK,distinct=distinct)
+
         
 class LicensesReporter(ElementCountReporter, CSVReporter, UIReporter):
     def __init__(self, licenseCount, licenseConform, topK=None, distinct=False):
