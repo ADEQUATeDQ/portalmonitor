@@ -262,7 +262,7 @@ def scatter_report(dbm, sn, xMetric, yMetric, xlabel="Existence", ylabel="Confor
 
 
 def calculate_license_count(dbm, sn):
-    portals = [dbm.getPortal(portalID='data_gv_at')]#[p for p in Portal.iter(dbm.getPortals())]
+    portals = [p for p in Portal.iter(dbm.getPortals())]
     for p in portals:
         try:
             print 'SNAPSHOT:', sn, 'PORTAL:', p.id
