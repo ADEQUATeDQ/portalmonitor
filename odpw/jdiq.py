@@ -2,7 +2,7 @@ from collections import OrderedDict
 import numpy as np
 from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
-from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount
+from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount, DCATLicenseCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, MultiHistogramAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
@@ -50,11 +50,11 @@ def general_stats(dbm, sn):
 
     # 1. STATS
     ds_count = pmd_analyser.add(DatasetCount())
-    format_count = pmd_analyser.add(DCATFormatCount())
-    tags_count = pmd_analyser.add(DCATTagsCount())
+    #format_count = pmd_analyser.add(DCATFormatCount())
+    #tags_count = pmd_analyser.add(DCATTagsCount())
 
     # 2. Portal size distribution
-    bins = [0,50,100,500,1000,10000,100000,10000000]
+    bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
     ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
 
     pmds = dbm.getPortalMetaDatas(snapshot=sn)
@@ -63,14 +63,14 @@ def general_stats(dbm, sn):
 
     ################# RESULTS ###########################
     print 'ds_count', ds_count.getResult()
-    print 'file formats', len(format_count.getResult())
-    print 'tags', len(tags_count.getResult())
+    #print 'file formats', len(format_count.getResult())
+    #print 'tags', len(tags_count.getResult())
 
     # top k reporter
-    format_rep = FormatCountReporter(format_count, topK=10)
-    tags_rep = TagReporter(tags_count, ds_count, topK=10)
-    csv_re = Report([format_rep, tags_rep])
-    csv_re.csvreport('tmp')
+    #format_rep = FormatCountReporter(format_count, topK=10)
+    #tags_rep = TagReporter(tags_count, ds_count, topK=10)
+    #csv_re = Report([format_rep, tags_rep])
+    #csv_re.csvreport('tmp')
 
     print 'ds_histogram', ds_histogram.getResult()
 
@@ -151,6 +151,29 @@ def calculateMetrics(dbm, sn, p):
     return values
 
 
+col = ['#7fc97f', '#fdc086', '#386cb0', '#beaed4', '#ffff99']
+#col = ['#a6611a','#dfc27d','#80cdc1','#018571']
+
+keys_labels = {
+        'ExAc': 'Access',
+        'ExDi': 'Discovery',
+        'ExCo': 'Contact',
+        'ExRi': 'Rights',
+        'ExPr': 'Preservation',
+        'ExDa': 'Date',
+        'ExTe': 'Temporal',
+        'ExSp': 'Spatial',
+        'CoAc': 'AccessURI',
+        'CoCE': 'ContactEmail',
+        'CoCU': 'ContactURI',
+        'CoDa': 'DateFormat',
+        'CoLi': 'License',
+        'CoFo': 'FileFormat',
+        'OpFo': 'OpenFormat',
+        'OpMa': 'MachineRead',
+        'OpLi': 'OpenLicense'
+}
+
 def getMetrics(dbm, sn, metrics, bins):
     aSet = AnalyserSet()
     analyser = {}
@@ -178,15 +201,12 @@ def exists_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(dbm, sn, metrics, bins)
 
-    col = ['black', 'red', 'blue', 'green']
-    keys_labels = {}
     xlabel = "Existence"
     ylabel = "Portals"
     filename = "exist.pdf"
 
     data = OrderedDict()
     for m in metrics:
-        keys_labels[m] = m
         data[m] = values[m].getResult()
     rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
     re = Report([rep])
@@ -196,47 +216,93 @@ def exists_report(dbm, sn, metrics):
 def conform_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(dbm, sn, metrics, bins)
-    col = ['black', 'red', 'blue', 'green', 'grey']
-    keys_labels = {}
     xlabel = "Conformance"
     ylabel = "Portals"
     filename = "conf.pdf"
 
     data = OrderedDict()
     for m in metrics:
-        keys_labels[m] = m
         data[m] = values[m].getResult()
     rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
     re = Report([rep])
     re.plotreport('tmp')
 
-def scatter_report(dbm, sn):
-    metrics = ['ExRi', 'CoLi']
-
+def open_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
-    values = getMetricsBySoftware(dbm, sn, metrics, bins)
+    values = getMetrics(dbm, sn, metrics, bins)
+    xlabel = "Open Data"
+    ylabel = "Portals"
+    filename = "open.pdf"
 
-    col = ['red', 'blue', 'green', 'grey']
-    keys_labels = {}
+    data = OrderedDict()
+    for m in metrics:
+        data[m] = values[m].getResult()
+    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
+    re = Report([rep])
+    re.plotreport('tmp')
 
-    data = {}
-    hist_data = {}
-    for s in ['CKAN', 'Socrata', 'OpenDataSoft']:
-        data[s] = (values['ExRi'].data[s], values['CoLi'].data[s])
-        for m in metrics:
+def scatter_report(dbm, sn, xMetric, yMetric, xlabel="Existence", ylabel="Conformance", filename="rights.pdf"):
+    softw_col = ['#ca0020', '#f4a582', '#0571b0', '#92c5de']
+    bins = np.arange(0.0, 1.1, 0.1)
+    values = getMetricsBySoftware(dbm, sn, [xMetric, yMetric], bins)
+
+    labels = OrderedDict()
+
+    data = OrderedDict()
+    hist_data = OrderedDict()
+    for s in ['Socrata', 'OpenDataSoft','CKAN']:
+        data[s] = (values[xMetric].data[s], values[yMetric].data[s])
+        for m in [xMetric, yMetric]:
             hist_data[m] = values[m].getResult()
-        keys_labels[s] = s
+        labels[s] = s
 
-    scatter = MultiScatterHistReporter(data, hist_data, bins, keys_labels, "Existence", "Conformance", "rights.pdf", colors=col)
+    scatter = MultiScatterHistReporter(data, hist_data, bins, labels, xlabel, ylabel, filename, colors=softw_col)
     re = Report([scatter])
     re.plotreport('tmp')
+
+
+def calculate_license_count(dbm, sn):
+    portals = [dbm.getPortal(portalID='data_gv_at')]#[p for p in Portal.iter(dbm.getPortals())]
+    for p in portals:
+        try:
+            print 'SNAPSHOT:', sn, 'PORTAL:', p.id
+            analyser = SAFEAnalyserSet()
+            analyser.add(DCATConverter(p))
+            l = analyser.add(DCATLicenseCount())
+
+            ############## Iterate DS ################################
+            ds = dbm.getDatasetsAsStream(snapshot=sn, portalID=p.id)
+            d_iter = Dataset.iter(ds)
+            process_all(analyser, d_iter)
+
+            ############# Update PMD #################################
+            pmd = dbm.getPortalMetaData(portalID=p.id, snapshot=sn)
+            analyser.update(pmd)
+            dbm.updatePortalMetaData(pmd)
+        except Exception as e:
+            print 'EXCEPTION', e
 
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1542
+    calculate_license_count(dbm, sn)
+    #general_stats(dbm, sn)
     #metrics = ['ExAc', 'ExDi', 'ExCo']
-    scatter_report(dbm, sn)
+    #exists_report(dbm, sn, ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
+    #exists_report(dbm, sn, ['ExAc', 'ExDi', 'ExCo', 'ExRi'])
+    #open_report(dbm, sn, ['OpFo', 'OpMa', 'OpLi'])
+    #scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
+
+    #scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='Existence', ylabel='Openness', filename='sc_format_ex_op.pdf')
+    #scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='Existence', ylabel='Conformance', filename='sc_format_ex_co.pdf')
+    #scatter_report(dbm, sn, 'OpLi', 'CoLi', xlabel='Openness', ylabel='Conformance', filename='sc_license_co_op.pdf')
+    #scatter_report(dbm, sn, 'ExPr', 'OpMa', xlabel='Existence', ylabel='Machine Readable', filename='sc_format_ex_ma.pdf')
+
+
+    #scatter_report(dbm, sn, 'OpMa', 'ExPr', xlabel='Machine Readable', ylabel='Existence', filename='sc_format_ex_ma.pdf')
+    #scatter_report(dbm, sn, 'ExCo', 'CoCE', xlabel='Existence', ylabel='Conformance', filename='sc_email_ex_co.pdf')
+    #scatter_report(dbm, sn, 'ExCo', 'CoCU', xlabel='Existence', ylabel='Conformance', filename='sc_url_ex_co.pdf')
 
     #snapshots = xrange(1543, 1533, -1)
     #portals = [p for p in Portal.iter(dbm.getPortals())]

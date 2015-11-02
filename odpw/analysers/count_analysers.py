@@ -9,6 +9,7 @@ import urlnorm
 from odpw.utils.dataset_converter import DCAT, FOAF, VCARD, DCT
 import structlog
 from odpw.analysers import Analyser
+from odpw.utils.dcat_access import getDistributionLicenseTriples
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 from _collections import defaultdict
 log =structlog.get_logger()
@@ -358,11 +359,25 @@ class DCATLicenseCount(ElementCountAnalyser):
         self.license_mapping = LicensesOpennessMapping()
         
     def analyse_Dataset(self, dataset):
-        pass
-    
+        values = getDistributionLicenseTriples(dataset)
+        for id, label, url in values:
+            id, appr = self.license_mapping.map_license(label, id, url)
+            self.add(id)
+            break
+        return values
 
-    def getResult(self):
-        return self.getDist()
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.general_stats and 'licenses' in pmd.general_stats:
+            licenses = pmd.general_stats['licenses']
+            if isinstance(licenses, dict):
+                for f in licenses:
+                    self.add(f, licenses[f])
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.general_stats:
+            pmd.general_stats = {}
+        pmd.general_stats['licenses'] = self.getResult()
+
 
 class DCATOrganizationsCount(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):

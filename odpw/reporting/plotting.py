@@ -101,7 +101,9 @@ def histplotComp(data, labels, xlabel, ylabel, dir, filename, bins=None, colors=
             col = colors[i]
         bars = plt.bar( bins[:-1]+(width/2)+(width*i),hist.astype(np.float32)/hist.sum(), width = width, color=col, label=labels[d])
     plt.ylim([0,m+0.05])
-    plt.legend(loc=legend)
+    plt.legend(loc=legend,
+               ncol=4,
+               fontsize=12)
 
     createDir(dir)
 
@@ -161,6 +163,10 @@ def scatterplotComb(data, labels, xlabel, ylabel, dir, filename, colors=None):
     plt.savefig(os.path.join(dir, filename), bbox_inches="tight")
 
 def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, filename, colors=None):
+    fontsize = 20
+    fontsize_small = 12
+    labelsize = 20
+    legendsize = 14
 
     # You typically want your plot to be ~1.33x wider than tall.
     # Common sizes: (10, 7.5) and (12, 9)
@@ -184,7 +190,7 @@ def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, 
     ax1.get_xaxis().tick_bottom()
     ax1.get_yaxis().tick_left()
     ax1.set_xticklabels([])
-    plt.yticks(fontsize=10)
+    plt.yticks(fontsize=fontsize_small)
 
 
     width = 1 * (bins[1] - bins[0])/(len(data)+1)
@@ -211,7 +217,7 @@ def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, 
     ax4.get_xaxis().tick_bottom()
     ax4.get_yaxis().tick_left()
     ax4.set_yticklabels([])
-    plt.xticks(fontsize=10)
+    plt.xticks(fontsize=fontsize_small)
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -246,12 +252,14 @@ def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, 
     ax.set_xlim([-0.05, 1.05])
     ax.set_ylim([-0.05, 1.05])
 
-    plt.yticks(fontsize=10)
-    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=fontsize)
+    plt.xticks(fontsize=fontsize)
+
+    ax.grid(True)
 
     #Labels
-    plt.xlabel(xlabel, fontsize=16)
-    plt.ylabel(ylabel, fontsize=16)
+    plt.xlabel(xlabel, fontsize=labelsize)
+    plt.ylabel(ylabel, fontsize=labelsize)
 
 
     for i, d in enumerate(data):
@@ -271,7 +279,7 @@ def scatterplotHistplotComb(data, hist_data, bins, labels, xlabel, ylabel, dir, 
     ax2.legend(scatterpoints=1,
                loc='upper right',
                #ncol=4,
-               fontsize=12)
+               fontsize=legendsize)
     for sc_plt in dummy_plots:
         sc_plt.set_visible(False)
 
