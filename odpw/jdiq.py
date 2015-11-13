@@ -2,17 +2,19 @@ from collections import OrderedDict
 import numpy as np
 from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
-from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount, DCATLicenseCount
+from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount, DCATLicenseCount, ResourceCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, MultiHistogramAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
 from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, FormatOpennessDCATAnalyser, \
     FormatMachineReadableDCATAnalyser
 from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
+from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset, Portal
 from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter, MultiScatterHistReporter
-from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report
+from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report, LicenseCountReporter, \
+    ElementCountReporter
 
 __author__ = 'sebastian'
 
@@ -50,7 +52,8 @@ def general_stats(dbm, sn):
 
     # 1. STATS
     ds_count = pmd_analyser.add(DatasetCount())
-    #format_count = pmd_analyser.add(DCATFormatCount())
+    format_count = pmd_analyser.add(DCATFormatCount(total_count=False))
+    licenses_count = pmd_analyser.add(DCATLicenseCount(total_count=False))
     #tags_count = pmd_analyser.add(DCATTagsCount())
 
     # 2. Portal size distribution
@@ -63,14 +66,16 @@ def general_stats(dbm, sn):
 
     ################# RESULTS ###########################
     print 'ds_count', ds_count.getResult()
-    #print 'file formats', len(format_count.getResult())
+    print 'file formats', len(format_count.getResult())
+    print 'licenses', len(licenses_count.getResult())
     #print 'tags', len(tags_count.getResult())
 
     # top k reporter
-    #format_rep = FormatCountReporter(format_count, topK=10)
+    format_rep = FormatCountReporter(format_count, topK=800)
+    license_rep = LicenseCountReporter(licenses_count, topK=100)
     #tags_rep = TagReporter(tags_count, ds_count, topK=10)
-    #csv_re = Report([format_rep, tags_rep])
-    #csv_re.csvreport('tmp')
+    csv_re = Report([format_rep, license_rep])
+    csv_re.csvreport('tmp')
 
     print 'ds_histogram', ds_histogram.getResult()
 
@@ -260,6 +265,24 @@ def scatter_report(dbm, sn, xMetric, yMetric, xlabel="Existence", ylabel="Confor
     re = Report([scatter])
     re.plotreport('tmp')
 
+def retr_report(dbm, sn):
+    pmd_analyser = AnalyserSet()
+    # retrievability
+#    ds_count = pmd_analyser.add(DatasetCount())
+    res_count = pmd_analyser.add(ResourceCount())
+    retr_distr = pmd_analyser.add(DatasetStatusCode())
+#    res_retr_distr = pmd_analyser.add(ResourceStatusCode())
+
+    pmds = dbm.getPortalMetaDatas(snapshot=sn)
+    pmd_iter = PortalMetaData.iter(pmds)
+    process_all(pmd_analyser, pmd_iter)
+
+    print 'total res', res_count.getResult()
+
+    retr_rep = ElementCountReporter(retr_distr, columns=['Retrievable', 'Count'])
+    re = Report([retr_rep])
+
+    return re
 
 def calculate_license_count(dbm, sn):
     portals = [p for p in Portal.iter(dbm.getPortals())]
@@ -286,13 +309,18 @@ def calculate_license_count(dbm, sn):
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1542
-    calculate_license_count(dbm, sn)
+
     #general_stats(dbm, sn)
+    #re = retr_report(dbm, sn)
+    #re.csvreport('tmp')
+
     #metrics = ['ExAc', 'ExDi', 'ExCo']
     #exists_report(dbm, sn, ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
     #exists_report(dbm, sn, ['ExAc', 'ExDi', 'ExCo', 'ExRi'])
+    #conform_report(dbm, sn, ['CoAc', 'CoCE', 'CoCU'])
+    conform_report(dbm, sn, ['CoDa', 'CoLi', 'CoFo'])
     #open_report(dbm, sn, ['OpFo', 'OpMa', 'OpLi'])
-    #scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
+    scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
 
     #scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='Existence', ylabel='Openness', filename='sc_format_ex_op.pdf')
     #scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='Existence', ylabel='Conformance', filename='sc_format_ex_co.pdf')

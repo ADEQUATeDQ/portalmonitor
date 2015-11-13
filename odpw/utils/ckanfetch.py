@@ -1,5 +1,5 @@
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
-    DCATOrganizationsCount, DCATTagsCount, DCATFormatCount
+    DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, ResourceCount
 from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.analysers.dbm_handlers import DatasetInserter,\
     DCATDistributionInserter, DatasetFetchUpdater
@@ -56,21 +56,12 @@ def fetching(obj, outfile):
         
         ae.add(MD5DatasetAnalyser())
         if Portal.software == 'CKAN':
-            ka= ae.add(CKANKeyAnalyser())
+            # TODO ka= ae.add(CKANKeyAnalyser())
             ae.add(CompletenessAnalyser())
             ae.add(ContactabilityAnalyser())
             ae.add(OpennessAnalyser())
-            ae.add(UsageAnalyser(ka))
+            # TODO ae.add(UsageAnalyser(ka))
             #ae.add(OPQuastAnalyser())
-            
-
-            processor = CKAN()
-        elif Portal.software == 'Socrata':
-            processor = Socrata()
-        elif Portal.software == 'OpenDataSoft':
-            processor = OpenDataSoft()
-        else:
-            raise NotImplementedError(Portal.software + ' is not implemented')
 
         try:
             iter = Dataset.iter(dbm.getDatasetsAsStream(portalID=Portal.id, snapshot=sn))
@@ -104,9 +95,9 @@ def fetching(obj, outfile):
         pprint.pprint(pmd.qa_stats)
         #Qu(core), Qu(res), Qu(extra), Qc(core), Qc(res), Qc(extra), Qo(F), Qo(L), Qa(url), Qa(email), Qr(ds), Qr(res)
         p=[pmd.portal_id,
-           str(pmd.qa_stats['Qu']['core']),
-           str(pmd.qa_stats['Qu']['res']),
-           str(pmd.qa_stats['Qu']['extra']),
+           -1, # TODO str(pmd.qa_stats['Qu']['core']),
+           -1, # TODO str(pmd.qa_stats['Qu']['res']),
+           -1, # TODO str(pmd.qa_stats['Qu']['extra']),
            
            str(pmd.qa_stats['Qc']['core']),
            str(pmd.qa_stats['Qc']['res']),
@@ -120,6 +111,9 @@ def fetching(obj, outfile):
            
            str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd']),
            str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
+
+           str(pmd.datasets),
+           str(pmd.resources),
            ]
         s=",".join(p)
         outfile.write(s+"\n")
@@ -208,7 +202,10 @@ def cli(args,dbm):
            'Qa(email)',
            
            'Qr(ds)',
-           'Qr(res)'
+           'Qr(res)',
+
+           'D',
+           'R'
            ]
         s=",".join(p)
         args.outfile.write(s+"\n")

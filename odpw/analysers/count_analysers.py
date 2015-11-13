@@ -329,6 +329,10 @@ class DCATDistributionCount(DistinctElementCount):
 
 
 class DCATFormatCount(ElementCountAnalyser):
+    def __init__(self, total_count=True):
+        super(DCATFormatCount, self).__init__()
+        self.total_count = total_count
+
     def analyse_Dataset(self, dataset):
         for dcat_el in getattr(dataset,'dcat',[]):
             if str(DCAT.Distribution) in dcat_el.get('@type',[]):
@@ -340,7 +344,10 @@ class DCATFormatCount(ElementCountAnalyser):
             formats = pmd.general_stats['formats']
             if isinstance(formats, dict):
                 for f in formats:
-                    self.add(f, formats[f])
+                    if self.total_count:
+                        self.add(f, formats[f])
+                    else:
+                        self.add(f)
 
     def analyse_CKANFormatCount(self, format_analyser):
         formats = format_analyser.getResult()
@@ -354,9 +361,10 @@ class DCATFormatCount(ElementCountAnalyser):
         pmd.general_stats['formats'] = self.getResult()
         
 class DCATLicenseCount(ElementCountAnalyser):
-    def __init__(self):
+    def __init__(self, total_count=True):
         super(DCATLicenseCount, self).__init__()
         self.license_mapping = LicensesOpennessMapping()
+        self.total_count = total_count
         
     def analyse_Dataset(self, dataset):
         values = getDistributionLicenseTriples(dataset)
@@ -371,7 +379,10 @@ class DCATLicenseCount(ElementCountAnalyser):
             licenses = pmd.general_stats['licenses']
             if isinstance(licenses, dict):
                 for f in licenses:
-                    self.add(f, licenses[f])
+                    if self.total_count:
+                        self.add(f, licenses[f])
+                    else:
+                        self.add(f)
 
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
