@@ -160,23 +160,23 @@ col = ['#7fc97f', '#fdc086', '#386cb0', '#beaed4', '#ffff99']
 #col = ['#a6611a','#dfc27d','#80cdc1','#018571']
 
 keys_labels = {
-        'ExAc': 'Access',
-        'ExDi': 'Discovery',
-        'ExCo': 'Contact',
-        'ExRi': 'Rights',
-        'ExPr': 'Preservation',
-        'ExDa': 'Date',
-        'ExTe': 'Temporal',
-        'ExSp': 'Spatial',
-        'CoAc': 'AccessURI',
-        'CoCE': 'ContactEmail',
-        'CoCU': 'ContactURI',
-        'CoDa': 'DateFormat',
-        'CoLi': 'License',
-        'CoFo': 'FileFormat',
-        'OpFo': 'OpenFormat',
-        'OpMa': 'MachineRead',
-        'OpLi': 'OpenLicense'
+        'ExAc': '\\textsf{Access}',
+        'ExDi': '\\textsf{Discovery}',
+        'ExCo': '\\textsf{Contact}',
+        'ExRi': '\\textsf{Rights}',
+        'ExPr': '\\textsf{Preservation}',
+        'ExDa': '\\textsf{Date}',
+        'ExTe': '\\textsf{Temporal}',
+        'ExSp': '\\textsf{Spatial}',
+        'CoAc': '\\textsf{AccessURI}',
+        'CoCE': '\\textsf{ContactEmail}',
+        'CoCU': '\\textsf{ContactURI}',
+        'CoDa': '\\textsf{DateFormat}',
+        'CoLi': '\\textsf{License}',
+        'CoFo': '\\textsf{FileFormat}',
+        'OpFo': '\\textsf{OpenFormat}',
+        'OpMa': '\\textsf{MachineRead}',
+        'OpLi': '\\textsf{OpenLicense}'
 }
 
 def getMetrics(dbm, sn, metrics, bins):
@@ -206,7 +206,7 @@ def exists_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(dbm, sn, metrics, bins)
 
-    xlabel = "Existence"
+    xlabel = "\\textsc{Existence}"
     ylabel = "Portals"
     filename = "exist.pdf"
 
@@ -221,7 +221,7 @@ def exists_report(dbm, sn, metrics):
 def conform_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(dbm, sn, metrics, bins)
-    xlabel = "Conformance"
+    xlabel = "\\textsc{Conformance}"
     ylabel = "Portals"
     filename = "conf.pdf"
 
@@ -235,7 +235,7 @@ def conform_report(dbm, sn, metrics):
 def open_report(dbm, sn, metrics):
     bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(dbm, sn, metrics, bins)
-    xlabel = "Open Data"
+    xlabel = "\\textsc{Open Data}"
     ylabel = "Portals"
     filename = "open.pdf"
 
@@ -318,19 +318,19 @@ if __name__ == '__main__':
     #exists_report(dbm, sn, ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
     #exists_report(dbm, sn, ['ExAc', 'ExDi', 'ExCo', 'ExRi'])
     #conform_report(dbm, sn, ['CoAc', 'CoCE', 'CoCU'])
-    conform_report(dbm, sn, ['CoDa', 'CoLi', 'CoFo'])
+    #conform_report(dbm, sn, ['CoDa', 'CoLi', 'CoFo'])
     #open_report(dbm, sn, ['OpFo', 'OpMa', 'OpLi'])
-    scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
+    #scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
 
-    #scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='Existence', ylabel='Openness', filename='sc_format_ex_op.pdf')
-    #scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='Existence', ylabel='Conformance', filename='sc_format_ex_co.pdf')
+    scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{OpenFormat}', filename='sc_format_ex_op.pdf')
+    scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{FileFormat}', filename='sc_format_ex_co.pdf')
     #scatter_report(dbm, sn, 'OpLi', 'CoLi', xlabel='Openness', ylabel='Conformance', filename='sc_license_co_op.pdf')
     #scatter_report(dbm, sn, 'ExPr', 'OpMa', xlabel='Existence', ylabel='Machine Readable', filename='sc_format_ex_ma.pdf')
 
 
-    #scatter_report(dbm, sn, 'OpMa', 'ExPr', xlabel='Machine Readable', ylabel='Existence', filename='sc_format_ex_ma.pdf')
-    #scatter_report(dbm, sn, 'ExCo', 'CoCE', xlabel='Existence', ylabel='Conformance', filename='sc_email_ex_co.pdf')
-    #scatter_report(dbm, sn, 'ExCo', 'CoCU', xlabel='Existence', ylabel='Conformance', filename='sc_url_ex_co.pdf')
+    scatter_report(dbm, sn, 'ExPr', 'OpMa', ylabel='\\textsf{MachineRead}', xlabel='\\textsf{Preservation}', filename='sc_format_ex_ma.pdf')
+    scatter_report(dbm, sn, 'ExCo', 'CoCE', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactEmail}', filename='sc_email_ex_co.pdf')
+    scatter_report(dbm, sn, 'ExCo', 'CoCU', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactURL}', filename='sc_url_ex_co.pdf')
 
     #snapshots = xrange(1543, 1533, -1)
     #portals = [p for p in Portal.iter(dbm.getPortals())]
