@@ -5,6 +5,12 @@ from odpw.analysers.dbm_handlers import DatasetInserter,\
     DCATDistributionInserter, DatasetFetchUpdater
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.datasetlife import DatasetLifeAnalyser
+
+from odpw.analysers.quality.new.existence_dcat import *
+from odpw.analysers.quality.new.conformance_dcat import *
+from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser,\
+    FormatOpennessDCATAnalyser, FormatMachineReadableDCATAnalyser
+from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
 __author__ = 'jumbrich'
 
 
@@ -90,10 +96,49 @@ def fetching(obj):
         ae.add(DCATFormatCount())
         ae.add(DCATResourceInDSAge())
         ae.add(DCATDatasetAge())
-        
         ae.add(DatasetInserter(dbm))
-        ae.add(DatasetLifeAnalyser(dbm))
+        #ae.add(DatasetLifeAnalyser(dbm))
         
+        ##################### EXISTS ######################################
+        # ACCESS
+        access = ae.add(AnyMetric([AccessUrlDCAT(), DownloadUrlDCAT()], id='ExAc'))
+        # DISCOVERY
+        discovery = ae.add(AverageMetric([DatasetTitleDCAT(), DatasetDescriptionDCAT(), DatasetKeywordsDCAT(), DistributionTitleDCAT(), DistributionDescriptionDCAT()], id='ExDi'))
+        # CONTACT
+        contact = ae.add(AnyMetric([DatasetContactDCAT(), DatasetPublisherDCAT()], id='ExCo'))
+        # LICENSE
+        rights = ae.add(ProvLicenseDCAT())
+        # PRESERVATION
+        preservation = ae.add(AverageMetric([DatasetAccrualPeriodicityDCAT(), DistributionFormatsDCAT(), DistributionMediaTypesDCAT(), DistributionByteSizeDCAT()], id='ExPr'))
+        # DATE
+        date = ae.add(AverageMetric([DatasetCreationDCAT(), DatasetModificationDCAT(), DistributionIssuedDCAT(), DistributionModifiedDCAT()], id='ExDa'))
+        # TEMPORAL
+        temporal = ae.add(DatasetTemporalDCAT())
+        # SPATIAL
+        spatial = ae.add(DatasetSpatialDCAT())
+    
+        ####################### CONFORMANCE ###########################
+        # ACCESS
+        accessUri = ae.add(AnyConformMetric([ConformAccessUrlDCAT(), ConformDownloadUrlDCAT()], id='CoAc'))
+        # CONTACT
+        contactEmail = ae.add(AnyConformMetric([EmailConformContactPoint(), EmailConformPublisher()], id='CoCE'))
+        contactUri = ae.add(AnyConformMetric([UrlConformContactPoint(), UrlConformPublisher()], id='CoCU'))
+    
+        # DATE
+        dateformat = ae.add(AverageConformMetric([DateConform(dcat_access.getCreationDate),
+                                                 DateConform(dcat_access.getModificationDate),
+                                                 DateConform(dcat_access.getDistributionCreationDates),
+                                                 DateConform(dcat_access.getDistributionModificationDates)], id='CoDa'))
+        # LICENSE
+        licenseConf = ae.add(LicenseConform())
+        # FORMAT
+        formatConf = ae.add(IANAFormatDCATAnalyser())
+    
+        ####################### OPENNESS ###########################
+        formatOpen = ae.add(FormatOpennessDCATAnalyser())
+        formatMachine = ae.add(FormatMachineReadableDCATAnalyser())
+        licenseOpen = ae.add(LicenseOpennessDCATAnalyser())
+
         try:
             iter = processor.generateFetchDatasetIter(Portal, sn)
             process_all( ae, iter)

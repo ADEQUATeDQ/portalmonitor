@@ -95,7 +95,7 @@ class FetchProcessReporter(Reporter,PlotReporter, TexTableReporter):
             os.makedirs(folder)
             
             
-        fig=plt.figure(figsize=(14, 12)) 
+        fig=plt.figure(figsize=(10, 6)) 
         
         # These are the "Tableau 20" colors as RGB.    
         tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),    
@@ -145,7 +145,7 @@ class FetchProcessReporter(Reporter,PlotReporter, TexTableReporter):
         #ax.set_color_cycle(sns.color_palette("coolwarm_r",len(sn)))
         ax.set_xticklabels(['{:3.2f}%'.format(x*100) for x in ax.get_xticks()])
         plt.grid(True)
-        plt.legend(sn, loc='upper left')
+        plt.legend(sn, loc='upper left',prop={'size':16})
     
         labels = ax.get_yticks().tolist()
         #print labels
@@ -157,8 +157,11 @@ class FetchProcessReporter(Reporter,PlotReporter, TexTableReporter):
             i+=1
         ax.set_yticklabels(labels)
         #plt.show()
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+             ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(16)
         
-        plt.savefig(os.path.join(folder,"portal_fetch_process.pdf"))
+        plt.savefig(os.path.join(folder,"portal_fetch_process.pdf"),dpi = 300)
         
     def textablereport(self, folder):
         if not os.path.exists(folder):

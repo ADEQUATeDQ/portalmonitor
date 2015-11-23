@@ -15,6 +15,7 @@ OPEN_FORMATS = ['dvi', 'svg'] + ODM_formats.get_non_proprietary()
 MACHINE_FORMATS = ODM_formats.get_machine_readable()
 
 
+
 class ContainsFormatDCATAnalyser(Analyser):
 
     def __init__(self, contains_set):
@@ -89,16 +90,17 @@ class IANAFormatDCATAnalyser(Analyser):
         self.names = set()
         self.endings = set()
         self.mimetypes = set()
+        from pkg_resources import  resource_filename
         for p in ['application.csv', 'audio.csv', 'image.csv', 'message.csv', 'model.csv', 'multipart.csv', 'text.csv',
                   'video.csv']:
-            with open('../paper/iana/' + p) as f:
+            with open(resource_filename('odpw.resources.iana', p)) as f:
                 reader = csv.reader(f)
                 # skip header
                 reader.next()
                 for row in reader:
                     self.names.add(row[0].strip().lower())
                     self.mimetypes.add(row[1].strip().lower())
-        with open('../paper/iana/mimetypes.json') as f:
+        with open(resource_filename('odpw.resources.iana','mimetypes.json')) as f:
             mappings = json.load(f)
             for dict in mappings:
                 for k in dict:
