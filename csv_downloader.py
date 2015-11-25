@@ -103,7 +103,7 @@ def main(argv):
 #    except Exception as e:
 #        print 'error while writing json:'
 #        print e
-    with open(os.path.join(args.out, 'csv_urls_' + args.snapshot + '.pkl'), 'wb') as f:
+    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
 
 if __name__ == "__main__":
