@@ -68,8 +68,9 @@ def valid_filename(s):
 
 def extract_ckan_urls(urls, portal, snapshot, dbm, out, store_files):
     path = os.path.join(out, portal.id)
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if store_files:
+        if not os.path.exists(path):
+            os.makedirs(path)
 
     for dataset in Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot)):
         data = dataset.data
