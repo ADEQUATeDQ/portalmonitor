@@ -23,7 +23,7 @@ def name():
 
 def setupCLI(pa):
     pa.add_argument("-f","--file",  help='file containing csv urls', dest='file')
-    pa.add_argument("-d","--crawldate",  help='crawldate', dest='date')
+    pa.add_argument("-d","--crawldate",  help='next crawl date', dest='crawldate')
 
 def cli(args, dbm):
 
