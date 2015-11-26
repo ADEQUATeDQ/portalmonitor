@@ -28,7 +28,7 @@ def setupCLI(pa):
 def cli(args, dbm):
 
     experiment = 'csvengine'
-    nextCrawl = datetime(year=2015, month=11, day=25, hour=20)
+    nextCrawl = datetime(year=2015, month=11, day=26, hour=11)
     print 'Crawl time', nextCrawl
 
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
