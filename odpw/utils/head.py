@@ -94,8 +94,9 @@ class HeadProcess(Process):
         
     def run(self):
         self.dbm.engine.dispose()
-        resources=getResources(self.dbm, self.snapshot)
-        
+        with Timer(key="getFirstResourcesFromDB", verbose=True) as t:
+            resources=getResources(self.dbm, self.snapshot)
+
         checks=0
         while not self.exit.is_set() or len(resources) != 0:
 
@@ -108,8 +109,9 @@ class HeadProcess(Process):
             pool.close()
             
             pool.join()
-            
-            resources=getResources(self.dbm, self.snapshot)
+
+            with Timer(key="get10000ResourcesFromDB", verbose=True) as t:
+                resources=getResources(self.dbm, self.snapshot)
             checks+=1
             time.sleep(60)
             if checks % 15==0:
