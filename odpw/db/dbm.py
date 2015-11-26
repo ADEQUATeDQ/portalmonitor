@@ -894,7 +894,7 @@ class PostgressDBM(object):
 
         
     def updateResource(self, Resource):
-        with Timer(key="updateResource") as t:
+        with Timer(key="updateResource", verbose=True) as t:
             with self.engine.begin() as con:
                 origin=None
                 if Resource.origin:
