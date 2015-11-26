@@ -4,7 +4,8 @@ __author__ = 'jumbrich'
 
 import sys
 from odpw.db.models import Portal
-
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 from odpw.utils.util import ErrorHandler as eh, getSnapshot, progressIndicator
 from datetime import date, datetime, timedelta
 
@@ -31,10 +32,16 @@ def cli(args, dbm):
     print 'Crawl time', nextCrawl
 
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
+    val = URLValidator(verify_exists=False)
 
     with open(args.file) as f:
-        for url in f:
-            dm_dbm.upsert(url, experiment, nextCrawl, 0)
+        for u in f:
+            url = u.strip()
+            try:
+                val(url)
+                dm_dbm.upsert(url, experiment, nextCrawl, 0)
+            except ValidationError, e:
+                print e
 
     #psql --host datamonitor-data.ai.wu.ac.at -U datamonitor -W datamonitor
         #sn = getSnapshot(args)
