@@ -32,7 +32,7 @@ def cli(args, dbm):
         nextCrawl = datetime(year=2015, month=11, day=26, hour=12)
         print 'Crawl time', nextCrawl
     else:
-        nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%d %H:%M:%S')
+        nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
 
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
 
