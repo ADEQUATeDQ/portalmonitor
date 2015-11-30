@@ -95,7 +95,19 @@ def not_found(error=None):
 
     return resp
 
+@app.errorhandler(500)
+def internal_error(e, msg):
+    app.logger.error(e)
+    
+    message = {
+            'status': 500,
+            'exception': e.message(),
+            'request_url': request.url
+    }
+    resp = jsonify(message)
+    resp.status_code = 500
 
+    
 @app.before_request
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def before_request():
@@ -141,7 +153,7 @@ def portalList():
             
             return resp
         except Exception as e:
-            print e
+            internal_error(e,'')
 
 
 @app.route('/api/v1/portals/quality/<int:snapshot>', methods=['GET'])
@@ -222,10 +234,8 @@ def cli(args,dbm):
     
     app.config['db']=dbm
     
-    #loading current portal list
     
-    
-    
+    app.logger.info('Starting OPDW REST Service on http://localhost:{}/'.format(args.port))
     print('Starting OPDW REST Service on http://localhost:{}/'.format(args.port))
     app.run(debug=True, port = args.port)
     
