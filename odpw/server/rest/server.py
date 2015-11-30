@@ -124,16 +124,10 @@ def before_request():
 
 
 
-@app.route('/api', methods=['GET'])
-@cache.cached(timeout=300)  # cache this view for 5 minutes
-def index():
-    print app.config['db']
-    return "Hello, World!"
-
-
 @app.route('/api/v1/portals/list', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalList():
+    """list all portals in the system (JSON)"""
     dbm= app.config['db']
     with Timer(key='portal/list', verbose=True) as t:
         try:
@@ -158,6 +152,7 @@ def portalList():
 
 @app.route('/api/v1/portals/quality/<int:snapshot>', methods=['GET'])
 def quality(snapshot):
+    """(CSV) Get the quality metrics for all portals for a particular snapshot. Optional, use query flag since to consider only the portals which are in the system since the specified snapshot"""
     dbm= app.config['db']
     with Timer(key='portalsQuality('+str(snapshot)+')', verbose=True) as t:
         
