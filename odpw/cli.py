@@ -39,7 +39,11 @@ import odpw.utils.migrate as migratecli
 import odpw.utils.datset_life as datasetlifecli
 import odpw.utils.datset_life_stats as datasetlifestatscli
 import odpw.utils.quality as qualitycli
+<<<<<<< HEAD
 import odpw.server.rest.server as restcli
+=======
+import odpw.utils.url_extraction as urlscli
+>>>>>>> 46285a6e613fc806a78bb6224e5f29c0998ef058
 
 import odpw.utils.ckanfetch as ckanfetchcli
 submodules=[dbcli, initcli, fetchcli,  
@@ -50,7 +54,11 @@ submodules=[dbcli, initcli, fetchcli,
             datasetlifecli,datasetlifestatscli,
             qualitycli,
             ckanfetchcli,
+<<<<<<< HEAD
             restcli
+=======
+            urlscli
+>>>>>>> 46285a6e613fc806a78bb6224e5f29c0998ef058
             ]
 
 

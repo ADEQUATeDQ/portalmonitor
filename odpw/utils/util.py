@@ -679,7 +679,7 @@ def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None, 
     sys.stdout.flush()
 
 def head(url, redirects=0, props=None):
-    with Timer("headLookup") as t:
+    with Timer(key="headLookup", verbose=True) as t:
         if not props:
             props={}
             props['mime']=None
@@ -689,7 +689,7 @@ def head(url, redirects=0, props=None):
             props['header']=None
             props['exception']=None
         
-        headResp = requests.head(url=url,timeout=(10, 20.0), allow_redirects=True)#con, read -timeout
+        headResp = requests.head(url=url,timeout=(0.5, 1.0), allow_redirects=True)#con, read -timeout
         header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
         
         if 'content-type' in header_dict:
