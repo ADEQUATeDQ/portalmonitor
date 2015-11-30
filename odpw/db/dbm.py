@@ -112,7 +112,7 @@ class DMManager(object):
         return sel.execute()
     
 class PostgressDBM(object):
-    def __init__(self, db='portalwatch', host="localhost", port=5433, password=None, user='opwu'):
+    def __init__(self, db='portalwatch', host="localhost", port=5432, password=None, user='opwu'):
         
             #Define our connection string
             self.log = log.new()

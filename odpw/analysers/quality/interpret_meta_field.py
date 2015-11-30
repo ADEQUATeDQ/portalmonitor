@@ -16,8 +16,7 @@ ftp_url_regex = re.compile(ftp_url_pattern)
 relative_url_pattern = '\/?[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}'
 relative_url_regex = re.compile(relative_url_pattern)
 
-Type = Enum('empty', 'phone', 'email', 'http_url', 'https_url', 'ftp_url', 'relative_url', 'float', 'integer', 'date',
-            'yes_no', 'word', 'text', 'string', 'bool', 'unknown', 'list', 'dict')
+Type = Enum('empty', 'phone', 'email', 'http_url', 'https_url', 'ftp_url', 'relative_url', 'float', 'integer', 'date', 'yes_no', 'word', 'text', 'string', 'bool', 'unknown', 'list', 'dict')
 
 
 
