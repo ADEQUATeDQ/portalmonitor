@@ -138,9 +138,9 @@ def quality(snapshot):
         return resp
 
 def name():
-    return 'Dashboard'
+    return 'RestAPI'
 def help():
-    return "Start the dashboard"
+    return "Start the REST API"
 
 def setupCLI(pa):
     pa.add_argument('-p','--port',type=int, dest='port', default=2340)    
