@@ -364,6 +364,16 @@ class PostgressDBM(object):
             self.log.debug(query=s.compile(), params=s.compile().params)
                
             return s.execute()
+        
+    def getPortalIDs(self, snapshot=None):
+        with Timer(key="getPortalMetaDatas") as t:
+            s = select([self.pmd.c.portal_id])
+            if snapshot:
+                s=s.where(self.pmd.c.snapshot == snapshot)
+               
+            self.log.debug(query=s.compile(), params=s.compile().params)
+               
+            return s.execute()
 
     def getPortalMetaDatasBySoftware(self, software, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatasBySoftware") as t:

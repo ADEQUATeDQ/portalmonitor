@@ -4,7 +4,7 @@ __author__ = 'jumbrich'
 
 import sys
 from odpw.db.models import Portal
-import validators
+#import validators
 from odpw.utils.util import ErrorHandler as eh, getSnapshot, progressIndicator
 from datetime import date, datetime, timedelta
 
@@ -40,7 +40,7 @@ def cli(args, dbm):
         for u in f:
             url = u.strip()
             try:
-                validators.url(url)
+                #validators.url(url)
                 dm_dbm.upsert(url, experiment, nextCrawl, 0)
             except Exception, e:
                 print e
