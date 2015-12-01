@@ -4,6 +4,7 @@ __author__ = 'jumbrich'
 from sqlalchemy.engine.result import RowProxy
 
 import urlnorm
+import urllib
 import odpw.utils.util as util
 from odpw.utils.util import ErrorHandler as eh, getSnapshotfromTime,\
     getPreviousWeek, getNextWeek
@@ -311,6 +312,7 @@ class Resource(Model):
         props = {}
         try:
             url = urlnorm.norm(url.strip())
+            #url = urllib.quote(url_norm, safe="%/:=&?~#+!$,;'@()*[]")
             # props=util.head(url)
         except Exception as e:
             log.debug('Init Resource', exctype=type(e), excmsg=e.message, url=url, snapshot=snapshot, exc_info=True)

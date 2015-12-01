@@ -76,10 +76,10 @@ def accessDistribution(dataset, key ):
             for f in dcat_el.get(key,[]):
                 #print key,f
                 if '@value' in f:
-                    v = f['@value']
-                    value.append(v)
+                    v = f.get('@value','')
+                    value.append(v.strip())
                 elif '@id' in f:
-                    v = f['@id']
+                    v = f.get('@id','')
                     value.append(v.strip())
     return value
 

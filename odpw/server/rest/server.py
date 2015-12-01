@@ -8,6 +8,7 @@ from flask import Flask, render_template
 from flask import request
 from flask import Response
 from flask import jsonify
+from flask_swagger import swagger
 
 from odpw.db.dbm import PostgressDBM
 from odpw.utils.timer import Timer
@@ -16,6 +17,7 @@ from odpw.db.models import PortalMetaData
 import collections
 import pandas as pd
 from StringIO import StringIO
+import urllib
 ##### QA keys
 qakeys=[
         'ExAc',
@@ -42,7 +44,7 @@ from flask import after_this_request, request
 from cStringIO import StringIO as IO
 import gzip
 import functools 
-from flask.helpers import url_for, send_file
+from flask.helpers import url_for, send_file, send_from_directory
 
 
 
@@ -127,7 +129,32 @@ def before_request():
 @app.route('/api/v1/portals/list', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalList():
-    """list all portals in the system (JSON)"""
+    """
+        Get a list of all portals
+        ---
+        tags:
+          - portals
+        produces:
+          - application/json
+        responses:
+          200:
+            description: Returns a list of all portals in the system
+            schema:
+              id: portals
+              properties:
+                portals:
+                  type: array
+                  items:
+                    schema:
+                      id: SubItem
+                      properties:
+                        datasets:
+                          type: integer
+                          description: Number of datasets
+                        resources:
+                          type: integer
+                          description: Number of resources
+        """
     dbm= app.config['db']
     with Timer(key='portal/list', verbose=True) as t:
         try:
@@ -151,8 +178,43 @@ def portalList():
 
 
 @app.route('/api/v1/portals/quality/<int:snapshot>', methods=['GET'])
+@gzipped
 def quality(snapshot):
-    """(CSV) Get the quality metrics for all portals for a particular snapshot. Optional, use query flag since to consider only the portals which are in the system since the specified snapshot"""
+    """
+        Get a all portals quality information for a certain snapshot
+        ---
+        tags:
+          - portals
+        produces:
+          - text/csv
+        parameters:
+          - in: path
+            name: snapshot
+            type: integer
+            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
+            required: true
+          - in: query
+            name: since
+            type: integer
+        responses:
+          200:
+            description: Returns a list of basic information and quality metrics for all portals in the system
+            schema:
+              id: portals
+              properties:
+                portals:
+                  type: array
+                  items:
+                    schema:
+                      id: SubItem
+                      properties:
+                        datasets:
+                          type: integer
+                          description: Number of datasets
+                        resources:
+                          type: integer
+                          description: Number of resources
+        """
     dbm= app.config['db']
     with Timer(key='portalsQuality('+str(snapshot)+')', verbose=True) as t:
         
@@ -207,14 +269,25 @@ def quality(snapshot):
             
         #return resp
 
-@app.route('/api/v1/help', methods = ['GET'])
-def apihelp():
-    """Print available functions."""
-    func_list = {}
-    for rule in app.url_map.iter_rules():
-        if rule.endpoint != 'static':
-            func_list[rule.rule] = app.view_functions[rule.endpoint].__doc__
-    return jsonify(func_list)
+
+
+
+@app.route("/api/v1/help")
+def helpDoc():
+    return render_template("index.html")
+
+@app.route('/api/v1/lib/<path:path>')
+def send_js(path):
+    print 'here'
+    
+    
+
+@app.route("/api/v1/spec")
+def spec():
+    swag = swagger(app)
+    swag['info']['version'] = "1.0"
+    swag['info']['title'] = "ODPW API"
+    return jsonify(swag)
 
 
 def name():
