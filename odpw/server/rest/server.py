@@ -274,7 +274,7 @@ def quality(snapshot):
 
 @app.route("/api/v1/help")
 def helpDoc():
-    return render_template("index.html")
+    return render_template("index.html", host=request.host)
 
 @app.route('/api/v1/lib/<path:path>')
 def send_js(path):
