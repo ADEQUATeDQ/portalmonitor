@@ -19,54 +19,40 @@ log = get_logger()
 def help():
     return "Insert URIs into the datamonitor"
 def name():
-    return 'DM'
+    return 'DMInfo'
 
 def setupCLI(pa):
     pa.add_argument("-f","--file",  help='file containing csv urls', dest='file')
     pa.add_argument("-p","--pickle",  help='pickle file containing csv urls', dest='pickle')
-    pa.add_argument("-d","--crawldate",  help='next crawl date', dest='crawldate')
     pa.add_argument("-s","--size",  help='maximum size in KB if in header', dest='size', type=int, default=-1)
 
 def cli(args, dbm):
 
     experiment = 'csvengine'
-    if not args.crawldate:
-        #schedule two hours from now
-        today = datetime.now()
-        nextCrawl = today + timedelta(hours=2)
-        nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
-        nextCrawl= datetime(year=2015, month=11, day=26, hour=12)
-        print 'Crawl time', nextCrawl
-    else:
-        nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
-
+    
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
 
+    urls=None
     if args.file:
+        urls = {}
         with open(args.file) as f:
             for u in f:
                 url = u.strip()
                 try:
-                    #validators.url(url)
-                    dm_dbm.upsert(url, experiment, nextCrawl, 0)
+                    urls[url]={}
                 except Exception, e:
                     print e
     if args.pickle:
         import pickle
         with open( args.pickle, "rb" ) as p: 
             urls = pickle.load(p)
+
+    
+    for k,v in urls.iteritems():
+        
             
-            for k,v in urls.items():
-                
-                size = v.get('header',{}).get('size',-1)
-                
-                if  size<= args.size:
-                    try:
-                        #validators.url(url)
-                        print 'loading',k
-                        dm_dbm.upsert(k, experiment, nextCrawl, 0)
-                    except Exception, e:
-                        print e
+
+
     
 
     #psql --host datamonitor-data.ai.wu.ac.at -U datamonitor -W datamonitor

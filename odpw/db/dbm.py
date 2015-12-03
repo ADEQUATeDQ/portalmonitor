@@ -1,4 +1,5 @@
 from __future__ import generators
+from sqlalchemy.sql.sqltypes import INTEGER
 
 
 __author__ = 'jumbrich'
@@ -77,7 +78,29 @@ class DMManager(object):
                                  Column('nextcrawltime', TIMESTAMP),
                                  Column('frequency', BigInteger)
                                  )
-    
+        
+        self.crawllog = Table('crawllog',self.metadata,
+                                 Column('uri', String),
+                                 Column('experiment', String),
+                                 Column('status', INTEGER),
+                                 Column('timestamp', TIMESTAMP),
+                                 Column('crawltime', BigInteger),
+                                 Column('mime', String),
+                                 Column('size', BigInteger),
+                                 Column('referrer', String),
+                                 Column('header', String),
+                                 
+                                 Column('disklocation', String),
+                                 Column('digest', String),
+                                 Column('contentchanged', INTEGER),
+                                 Column('error', String),
+                                 Column('crawlstart', TIMESTAMP),
+                                 Column('domain', String),
+                                 
+                                 
+                                 )
+  
+  
     
     def upsert(self,uri, experiment, nextcrawltime, frequency):
         with Timer(key="upsert") as t:
@@ -110,6 +133,12 @@ class DMManager(object):
         
         sel = select([self.schedule.c.uri,self.schedule.c.experiment, self.schedule.c.frequency]).where(self.schedule.c.nextcrawltime < nextCrawltime)
         return sel.execute()
+    
+    def getLatestURLInfo(self, url):
+        latest= select([self.crawllog]).where(self.crawllog.c.uri == url).limit(1)
+        print latest
+        return latest.execute()
+        
     
 class PostgressDBM(object):
     def __init__(self, db='portalwatch', host="localhost", port=5432, password=None, user='opwu'):
