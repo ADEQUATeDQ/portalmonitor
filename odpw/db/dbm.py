@@ -135,8 +135,7 @@ class DMManager(object):
         return sel.execute()
     
     def getLatestURLInfo(self, url):
-        latest= select([self.crawllog]).where(self.crawllog.c.uri == url).limit(1)
-        print latest
+        latest= select([self.crawllog]).where(self.crawllog.c.uri == url).order_by(self.crawllog.c.crawltime).limit(1)
         return latest.execute()
         
     

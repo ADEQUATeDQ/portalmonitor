@@ -1,4 +1,5 @@
 from odpw.db.dbm import DMManager
+import os
 __author__ = 'jumbrich'
 
 
@@ -25,6 +26,7 @@ def setupCLI(pa):
     pa.add_argument("-f","--file",  help='file containing csv urls', dest='file')
     pa.add_argument("-p","--pickle",  help='pickle file containing csv urls', dest='pickle')
     pa.add_argument("-s","--size",  help='maximum size in KB if in header', dest='size', type=int, default=-1)
+    pa.add_argument('-o','--out',type=str, dest='out' , help="the out directory for the list of urls (and downloads)")
 
 def cli(args, dbm):
 
@@ -47,8 +49,25 @@ def cli(args, dbm):
         with open( args.pickle, "rb" ) as p: 
             urls = pickle.load(p)
 
-    
+    files={}
     for k,v in urls.iteritems():
+        print "checking", k
+        res = dm_dbm.getLatestURLInfo(k)
+        for r in res:
+            if '2015' in r['disklocation']:
+                v['file']=r['disklocation']
+                v['size']=r['size']
+                files[k]=v
+                
+    
+    with open(os.path.join(args.out, 'csv_urls_files.pkl'), 'wb') as f:
+        pickle.dump(files, f)
+        print 'Writing dict to ',f
+    
+            
+            
+        
+        
         
             
 
