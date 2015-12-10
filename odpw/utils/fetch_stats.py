@@ -111,7 +111,7 @@ def simulateFetching(dbm, job):
         
         ae = SAFEAnalyserSet()
         #ae.add(MD5DatasetAnalyser())
-        #ae.add(DatasetCount())
+        ae.add(DatasetCount())
         #ae.add(DatasetStatusCode())
         
         if Portal.software == 'CKAN':
