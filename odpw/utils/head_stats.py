@@ -1,5 +1,6 @@
 
 import time
+from odpw.analysers.quality.new.retrievability import ResRetrieveMetric
 import odpw.utils.util as util
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.resource_analysers import  ResourceSize
@@ -19,7 +20,7 @@ import structlog
 log =structlog.get_logger()
 
 
-def headStats(dbm, sn, portalID):
+def headStats(dbm, sn, portalID, re_metric=False):
     total=0
     print portalID,sn
     total= dbm.countResources(snapshot=sn, portalID=portalID)
@@ -38,6 +39,9 @@ def headStats(dbm, sn, portalID):
     rc= aset.add(ResourceCount(withDistinct=True))
     ruval= aset.add(ResourceURLValidator())
     ha= aset.add(HeadPeriod())
+
+    if re_metric:
+        aset.add(ResRetrieveMetric(rsc))
     
     process_all(aset, iter)
     
@@ -124,7 +128,7 @@ def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument('-u','--url',type=str, dest='url' , help="the API url")
-    
+    pa.add_argument('--rere', help="compute and store resource retrievability metric", action='store_true')
 
 def cli(args,dbm):
     sn = getSnapshot(args)
@@ -146,4 +150,4 @@ def cli(args,dbm):
             snapshots.add(sn)
         
         for sn in sorted(snapshots):
-            headStats(dbm,sn,pid)
+            headStats(dbm,sn,pid,args.rere)

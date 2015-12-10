@@ -62,6 +62,40 @@ class ResourceRetrievability(Retrievability):
 class DatasetRetrievability(Retrievability):
     def __init__(self, analyser):
         super(DatasetRetrievability,self).__init__(analyser, funct=None, range=[0,1])
-    
-    
-    
+
+
+# DCAT retrievability analyser, works with a status code distribution analylser
+class RetrieveMetric(Analyser):
+    def __init__(self, status_code_analyser):
+        self.a = status_code_analyser
+
+    def getResult(self):
+        dist = self.a.getResult()
+        # no values available
+        if len(dist) == 0 or (len(dist) == 1 and -1 in dist):
+            return None
+
+        two = 0.0
+        rest = 0.0
+        for x in dist:
+            if x != -1:
+                if 200 <= x < 300:
+                    two += dist[x]
+                rest += dist[x]
+        if rest == 0.0:
+            return None
+        return two/rest
+    def update_PortalMetaData(self, pmd):
+        if pmd.qa_stats:
+            pmd.qa_stats[self.name()] = self.getResult()
+
+
+class ResRetrieveMetric(RetrieveMetric):
+    def name(self):
+        return 'ReRe'
+
+
+class DSRetrieveMetric(RetrieveMetric):
+    def name(self):
+        return 'ReDa'
+

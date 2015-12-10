@@ -43,6 +43,7 @@ import odpw.server.rest.server as restcli
 
 import odpw.utils.url_extraction as urlscli
 import odpw.utils.datamonitoruris as dmuriscli
+import odpw.utils.accuracy as accuracycli
 
 import odpw.utils.ckanfetch as ckanfetchcli
 submodules=[dbcli, initcli, fetchcli,  
@@ -55,7 +56,8 @@ submodules=[dbcli, initcli, fetchcli,
             ckanfetchcli,
             restcli,
             urlscli,
-            dmuriscli
+            dmuriscli,
+            accuracycli
             ]
 
 

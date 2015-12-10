@@ -1,5 +1,6 @@
 
 import time
+from odpw.analysers.quality.analysers import dcat_analyser
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
@@ -107,47 +108,50 @@ def simulateFetching(dbm, job):
         if not pmd:
             pmd = PortalMetaData(portalID=Portal.id, snapshot=sn)
             dbm.insertPortalMetaData(pmd)
-         
         
         ae = SAFEAnalyserSet()
-        ae.add(MD5DatasetAnalyser())
-        ae.add(DatasetCount())
-        ae.add(DatasetStatusCode())
+        #ae.add(MD5DatasetAnalyser())
+        #ae.add(DatasetCount())
+        #ae.add(DatasetStatusCode())
         
         if Portal.software == 'CKAN':
-            ka= ae.add(CKANKeyAnalyser())
-            ae.add(CKANLicenseIDCount())
+            #ka= ae.add(CKANKeyAnalyser())
+            #ae.add(CKANLicenseIDCount())
             #ae.add(CKANResourceInDSAge())
             #ae.add(CKANDatasetAge())
             #ae.add(CKANFormatCount())
             #ae.add(CKANTagsCount())
-            ae.add(CKANLicenseCount())
+            #ae.add(CKANLicenseCount())
             #ae.add(CKANOrganizationsCount())
-            ae.add(CompletenessAnalyser())
-            ae.add(ContactabilityAnalyser())
-            ae.add(OpennessAnalyser())
-            ae.add(OPQuastAnalyser())
-            ae.add(UsageAnalyser(ka))
-            
+            #ae.add(CompletenessAnalyser())
+            #ae.add(ContactabilityAnalyser())
+            #ae.add(OpennessAnalyser())
+            #ae.add(OPQuastAnalyser())
+            #ae.add(UsageAnalyser(ka))
+            pass
         elif Portal.software == 'Socrata':
             pass
         elif Portal.software == 'OpenDataSoft':
             pass
-        
                 
         ae.add(DCATConverter(Portal))
         ae.add(DCATDistributionCount(withDistinct=True))
-        ae.add(DCATDistributionInserter(dbm))
-        
+        #ae.add(DCATDistributionInserter(dbm))
+
+        #ae.add(DatasetFetchUpdater(dbm))
+        #ae.add(DatasetLifeAnalyser(dbm))
+
         ae.add(DCATOrganizationsCount())
         ae.add(DCATTagsCount())
         ae.add(DCATFormatCount())
+        ae.add(DCATLicenseCount())
         ae.add(DCATResourceInDSAge())
         ae.add(DCATDatasetAge())
-    
-        ae.add(DatasetFetchUpdater(dbm))
-        ae.add(DatasetLifeAnalyser(dbm))
-        
+
+        # DCAT analyser
+        for a in dcat_analyser():
+            ae.add(a)
+
         total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
         
         steps=total/10
@@ -155,11 +159,9 @@ def simulateFetching(dbm, job):
             steps=1
         
         iter = Dataset.iter(dbm.getDatasets(portalID=Portal.id, snapshot=sn))
-        process_all(ae,progressIterator(iter, total, steps, label=Portal.id))
-        
+        process_all(ae, progressIterator(iter, total, steps, label=Portal.id))
+
         ae.update(pmd)
-        
-        
         dbm.updatePortalMetaData(pmd)
         
         log.info("DONE Simulated Fetch", pid=Portal.id, snapshot=sn)
