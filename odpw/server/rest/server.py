@@ -346,8 +346,10 @@ def quality(snapshot):
                 d=collections.OrderedDict()
                 d['portal_id']=pmd.portal_id
                 
+                
                 for k in qakeys:
-                    v = pmd.qa_stats.get(k,-1)
+                    
+                    v = pmd.qa_stats.get(k,-1) if pmd.qa_stats else None
                     if v is None:
                         v=-1
                     d['qa_'+k]=v
