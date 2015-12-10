@@ -122,6 +122,32 @@ def getDistributionMediaTypes(dataset):
 def getDistributionFormats(dataset):
     return accessDistribution(dataset, DCT['format'])
 
+def getDistributionFormatWithURL(dataset, url):
+    return accessDistributionWithURL(dataset, url, DCT['format'])
+
+def getDistributionMediaTypeWithURL(dataset, url):
+    return accessDistributionWithURL(dataset, url, DCAT.mediaType)
+
+def getDistributionSizeWithURL(dataset, url):
+    return accessDistributionWithURL(dataset, url, DCAT.byteSize)
+
+def accessDistributionWithURL(dataset, url, key):
+    key=str(key)
+    url_dict = {u'@id': url}
+    for dcat_el in getattr(dataset,'dcat',[]):
+        if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+            access = dcat_el.get(str(DCAT.accessURL), [])
+            download = dcat_el.get(str(DCAT.downloadURL), [])
+            if url_dict in access or url_dict in download:
+                for f in dcat_el.get(key, []):
+                    if '@value' in f:
+                        v = f.get('@value','')
+                        return v.strip()
+                    elif '@id' in f:
+                        v = f.get('@id','')
+                        return v.strip()
+    return None
+
 def accessById(dataset, id, key):
     key = str(key)
     for dcat_el in getattr(dataset, 'dcat', []):
