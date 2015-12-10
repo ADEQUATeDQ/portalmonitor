@@ -1,7 +1,7 @@
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.core import DCATConverter
-from odpw.analysers.quality.new.dcat_accuracy import AccuracyFormatDCATAnalyser
-from odpw.db.models import Portal, Dataset
+from odpw.analysers.quality.new.dcat_accuracy import AccuracyDCATAnalyser
+from odpw.db.models import Portal, Dataset, Resource
 from odpw.utils.util import getSnapshot, progressIterator
 
 import structlog
@@ -21,8 +21,12 @@ def setupCLI(pa):
 
 
 def accuracy_calc(dbm, sn, portal):
-    total = 0
     print portal.id, sn
+
+    # load all resources from db
+    resources = {r.url: r for r in Resource.iter(dbm.getResources(portalID=portal.id, snapshot=sn))}
+    print portal.id, 'resources loaded:', str(len(resources))
+
     total = dbm.countDatasets(snapshot=sn, portalID=portal.id)
 
     log.info("Computing accuracy metrics", sn=sn, count=total)
@@ -33,14 +37,13 @@ def accuracy_calc(dbm, sn, portal):
     iter = progressIterator(Dataset.iter(dbm.getDatasets(snapshot=sn, portalID=portal.id)), total, steps)
     aset = AnalyserSet()
     aset.add(DCATConverter(portal))
-    rsc = aset.add(AccuracyFormatDCATAnalyser(dbm, sn))
+    rsc = aset.add(AccuracyDCATAnalyser(resources))
 
     process_all(aset, iter)
 
-    # TODO uncomment
-    #pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
-    #aset.update(pmd)
-    #dbm.updatePortalMetaData(pmd)
+    pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portal.id)
+    aset.update(pmd)
+    dbm.updatePortalMetaData(pmd)
 
 
 
