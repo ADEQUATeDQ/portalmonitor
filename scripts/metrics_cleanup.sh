@@ -8,7 +8,8 @@ LOG=/home/opwu/ODPortalWatch_2/logs
 mkdir -p $LOG
 
 
-for ((sn=1547; sn>=1544; sn--)); do
+for ((sn=1547; sn>=1544; sn--)) 
+do
     echo $sn
     
     cmd="$SCRIPT  FetchSim -sn $sn -c $cores 1> $LOG/metrics_cleanup-$sn.out 2> $LOG/metrics_cleanup-$sn.err"

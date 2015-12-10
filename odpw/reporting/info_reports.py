@@ -10,10 +10,10 @@ from odpw.reporting.reporters import SoftWareDistReporter, ISO3DistReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
     CSVReporter, Reporter, DBReporter, DFtoListDict, addPercentageCol,\
-    TexTableReporter
+    TexTableReporter, LicenseCountReporter
 
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, PMDResourceStatsCount, DatasetCount
+    DCATFormatCount, PMDResourceStatsCount, DatasetCount, DCATLicenseCount
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
@@ -48,14 +48,12 @@ def systeminfoall(dbm):
 
 
 def portalinfo(dbm, sn, portal_id):
+    #get snapshots for this portal
     a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
     r=SnapshotsPerPortalReporter(a, portal_id)
-
         
     aset = AnalyserSet()
-    #lc=aset.add(CKANLicenseCount())# how many licenses
-    #lcc=aset.add(CKANLicenseConformance())
-
+    lc=aset.add(DCATLicenseCount())# how many licenses
     tc= aset.add(DCATTagsCount())   # how many tags
     oc= aset.add(DCATOrganizationsCount())# how many organisations
     fc= aset.add(DCATFormatCount())# how many formats
@@ -76,17 +74,17 @@ def portalinfo(dbm, sn, portal_id):
 
     rep = Report([r,
                     DatasetSumReporter(dsC),
-    ResourceCountReporter(resC),
-    ResourceSizeReporter(rsize),
-    #LicensesReporter(lc,lcc,topK=3),
-    TagReporter(tc,dc, distinct=True,topK=3),
-    OrganisationReporter(oc, distinct=True,topK=3),
-    FormatCountReporter(fc,  distinct=True,topK=3),
+                    ResourceCountReporter(resC),
+                    ResourceSizeReporter(rsize),
+                    LicenseCountReporter(lc,topK=3),
+                    TagReporter(tc,dc, distinct=True,topK=3),
+                    OrganisationReporter(oc, distinct=True,topK=3),
+                    FormatCountReporter(fc,  distinct=True,topK=3),
     
-    FetchTimePeriodReporter(fa),
-    HeadTimePeriodReporter(ha)
-    ]
-                 )
+                    FetchTimePeriodReporter(fa),
+                    HeadTimePeriodReporter(ha)
+                ]
+                )
     
     return rep
 
