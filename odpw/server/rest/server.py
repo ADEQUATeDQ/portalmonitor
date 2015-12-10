@@ -18,26 +18,7 @@ import collections
 import pandas as pd
 from StringIO import StringIO
 import urllib
-##### QA keys
-qakeys=[
-        'ExAc',
-        'ExCo',
-        'ExDa',
-        'ExDi',
-        'ExPr',
-        'ExRi',
-        'ExSp',
-        'ExTe',
-        'CoAc',
-        'CoCE',
-        'CoCU',
-        'CoDa',
-        'CoFo',
-        'CoLi',
-        'OpFo',
-        'OpLi',
-        'OpMa'
-        ]
+
 
 #GZIPPED RESPONSE
 from flask import after_this_request, request
@@ -45,6 +26,13 @@ from cStringIO import StringIO as IO
 import gzip
 import functools 
 from flask.helpers import url_for, send_file, send_from_directory
+from odpw.reporting.info_reports import portalinfo
+from odpw.analysers import process_all
+from odpw.analysers.core import DBAnalyser
+from odpw.reporting.quality_reports import portalquality
+from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
+
+
 
 
 
@@ -103,7 +91,7 @@ def internal_error(e, msg):
     
     message = {
             'status': 500,
-            'exception': e.message(),
+            'exception': e.message,
             'request_url': request.url
     }
     resp = jsonify(message)
@@ -124,7 +112,107 @@ def before_request():
     
     app.config['portals']= p
 
+@app.route('/api/v1/portal/<string:portal_id>/quality/<int:snapshot>', methods=['GET'])
+@cache.cached(timeout=300)  # cache this view for 5 minutes
+def portalQuality(portal_id, snapshot):
+    """
+        Get a list of all portals
+        ---
+        tags:
+          - portal
+        parameters:
+          - in: path
+            name: snapshot
+            type: integer
+            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
+            required: true
+          - in: path
+            name: portal_id
+            type: string
+            required: true
+        produces:
+          - application/json
+        responses:
+          200:
+            description: Returns a list of all portals in the system
+        """
+    dbm= app.config['db']
+    with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
+        try:
+            a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+            rep=SnapshotsPerPortalReporter(a, portal_id)
 
+            r = portalquality(dbm, snapshot, portal_id)
+            rep = Report([rep,r])
+            
+            
+            print rep.uireport()
+            results = {'portal':portal_id,'snapshot':snapshot, 'results': rep.uireport()}
+    
+             
+            pmd = dbm.getPortalMetaData(portalID=portal_id, snapshot=snapshot)
+            d=collections.OrderedDict()
+            d['portal_id']=pmd.portal_id
+            for k in qakeys:
+                
+                v = pmd.qa_stats.get(k,-1) if pmd.qa_stats else None
+                if v is None:
+                    v=-1
+                d['qa_'+k]=v
+                
+                #for k in ['snapshot', 'datasets', 'resources']:
+                #    d[k] = pmd.__dict__[k]
+                
+            results['quality']=d
+            
+            
+            print results
+            resp = jsonify(results)
+            resp.status_code = 200
+            
+            return resp
+        except Exception as e:
+            print e
+            internal_error(e,'')
+
+@app.route('/api/v1/portal/<string:portal_id>/info/<int:snapshot>', methods=['GET'])
+@cache.cached(timeout=300)  # cache this view for 5 minutes
+def portalInfo(portal_id, snapshot):
+    """
+        Get a list of all portals
+        ---
+        tags:
+          - portal
+        parameters:
+          - in: path
+            name: snapshot
+            type: integer
+            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
+            required: true
+          - in: path
+            name: portal_id
+            type: string
+            required: true
+        produces:
+          - application/json
+        responses:
+          200:
+            description: Returns a list of all portals in the system
+        """
+    dbm= app.config['db']
+    with Timer(key='portal/'+portal_id+'/info/'+str(snapshot), verbose=True) as t:
+        try:
+            r = portalinfo(dbm, snapshot, portal_id)
+        
+            results = {'portal':portal_id,'snapshot':snapshot, 'results': r.uireport()}
+        
+            print results
+            resp = jsonify(results)
+            resp.status_code = 200
+            
+            return resp
+        except Exception as e:
+            internal_error(e,'')
 
 @app.route('/api/v1/portals/list', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
@@ -176,6 +264,31 @@ def portalList():
         except Exception as e:
             internal_error(e,'')
 
+
+##### QA keys
+qakeys=[
+        'ExAc',
+        'ExCo',
+        'ExDa',
+        'ExDi',
+        'ExPr',
+        'ExRi',
+        'ExSp',
+        'ExTe',
+        'CoAc',
+        'CoCE',
+        'CoCU',
+        'CoDa',
+        'CoFo',
+        'CoLi',
+        'OpFo',
+        'OpLi',
+        'OpMa',
+        'ReDa',
+        'ReRe',
+        'AcFo',
+        'AcSi'
+        ]
 
 @app.route('/api/v1/portals/quality/<int:snapshot>', methods=['GET'])
 @gzipped

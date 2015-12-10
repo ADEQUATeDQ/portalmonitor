@@ -42,12 +42,11 @@ def headStats(dbm, sn, portalID):
     process_all(aset, iter)
     
     pmd = dbm.getPortalMetaData(snapshot=sn, portalID=portalID)
-    
     aset.update(pmd)
     
     #print pmd.res_stats
-    
     dbm.updatePortalMetaData(pmd)
+    
     
 
 #===============================================================================

@@ -223,7 +223,7 @@ class PortalHandler(BaseHandler):
     def inforendering(self, portalID, snapshot, portals):      
         with Timer(key="viewrendering", verbose=True) as t:
             r = portalinfo(self.db, snapshot, portalID)
-            self.render('portal_info.jinja', portal=True, data=r.uireport(), portalID=portalID, snapshot=snapshot,portals=portals)
+            self.render('portal_info.jinja', portal=True, data=r.uireport(), portalID=portalID, snapshot=snapshot, portals=portals)
     
     def evolutionrendering(self, portalID, snapshot, portals):      
         with Timer(key="evolutionrendering", verbose=True) as t:
