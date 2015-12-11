@@ -49,7 +49,7 @@ def accuracy_calc(dbm, sn, portal):
         dbm.updatePortalMetaData(pmd)
 
     except Exception as e:
-        ErrorHandler.handleError(log, "AccuracyCalculationException", portal=portal.id, snapshot=sn)
+        ErrorHandler.handleError(log, "AccuracyCalculationException", exception=e, portal=portal.id, snapshot=sn)
 
 
 def cli(args,dbm):
