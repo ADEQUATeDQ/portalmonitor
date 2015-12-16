@@ -365,11 +365,13 @@ class PostgressDBM(object):
             return None
         
         
-    def getPortalMetaDatasUntil(self, snapshot=None, portalID=None):
+    def getPortalMetaDatasUntil(self, snapshot=None, from_sn=None, portalID=None):
         with Timer(key="getPortalMetaDatas") as t:
             s = select([self.pmd])
             if snapshot:
                 s=s.where(self.pmd.c.snapshot <= snapshot)
+            if from_sn:
+                s=s.where(self.pmd.c.snapshot >= from_sn)
             if portalID:
                 s= s.where(self.pmd.c.portal_id == portalID)
                 

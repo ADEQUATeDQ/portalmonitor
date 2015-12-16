@@ -62,3 +62,33 @@ class SystemSoftwareEvolution(EvolutionCountAnalyser):
         
     def analyse_PortalMetaData(self, pmd):
         self.add(pmd.snapshot, self.portalSoftware[pmd.portal_id], 1)
+
+
+
+class DatasetDCATMetricsEvolution(EvolutionCountAnalyser):
+    def __init__(self, metrics):
+        super(DatasetDCATMetricsEvolution, self).__init__()
+        self.metrics = metrics
+
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.datasets:
+            self.add(pmd.snapshot, 'datasets', pmd.datasets)
+        if pmd.resources:
+            self.add(pmd.snapshot, 'resources', pmd.resources)
+        if pmd.qa_stats:
+            for m in self.metrics:
+                self.add(pmd.snapshot, m, pmd.qa_stats.get(m, 0))
+        else:
+            self.add(pmd.snapshot, 'no_qa_stats', 1)
+
+class PMDCountEvolution(EvolutionCountAnalyser):
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.datasets:
+            self.add(pmd.snapshot, 'datasets', pmd.datasets)
+        else:
+            self.add(pmd.snapshot,'no_datasets', 1)
+
+        if pmd.resources:
+            self.add(pmd.snapshot, 'resources', pmd.resources)
+        else:
+            self.add(pmd.snapshot,'no_resources', 1)

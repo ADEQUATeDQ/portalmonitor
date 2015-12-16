@@ -5,7 +5,10 @@ Created on Aug 14, 2015
 '''
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
-    ResourceAnalysedEvolution, SystemSoftwareEvolution, SystemEvolutionAnalyser
+    ResourceAnalysedEvolution, SystemSoftwareEvolution, SystemEvolutionAnalyser, DatasetDCATMetricsEvolution, \
+    PMDCountEvolution
+from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser
+from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Portal
 from odpw.reporting.reporters import Report, SystemEvolutionReport
 
@@ -35,7 +38,6 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
         return self.df
     
 class DatasetEvolutionReporter(EvolutionReporter):
-    pass
 
     def uireport(self):
         res=[]
@@ -51,8 +53,8 @@ class ResourceAnalyseReporter(EvolutionReporter):
     pass 
 class SystemSoftwareEvolutionReporter(EvolutionReporter):
     pass
-    
-    
+
+
 
 def portalevolution(dbm, sn, portal_id):
     
@@ -66,12 +68,31 @@ def portalevolution(dbm, sn, portal_id):
     
     rep = Report([
                     DatasetEvolutionReporter(de),
-                    ResourcesEvolutionReporter(re)
+                    DatasetEvolutionReporter(re)
                     
                 ])
    
     return rep
-    
+
+
+
+def dcat_evolution(dbm, from_sn, to_sn, portal_id, metrics):
+    aset = AnalyserSet()
+    ds = aset.add(PMDCountEvolution())
+    dcat = aset.add(DatasetDCATMetricsEvolution(metrics))
+
+    #re= aset.add(ResourceEvolution())
+
+    it = dbm.getPortalMetaDatasUntil(snapshot=to_sn, from_sn=from_sn, portalID=portal_id)
+    aset = process_all(aset, PortalMetaData.iter(it))
+
+    rep = Report([
+                    DatasetEvolutionReporter(dcat),
+                    #ResourcesEvolutionReporter(re)
+
+                ])
+    return rep
+
 def systemevolution(dbm):
     """
     
@@ -114,3 +135,83 @@ def systemevolution(dbm):
 #    
 #     return rep
 #===============================================================================
+
+
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
+import os
+import numpy
+
+def scalar_plot(curves, curve_labels, curve_colors, xlabels, dir, filename):
+    values = range(len(curves))
+
+    fig = plt.figure(figsize=(8, 4.5))
+    ax = fig.add_subplot(111)
+    #ax.set_ylim([0, 1])
+
+    jet = cm = plt.get_cmap('jet')
+    cNorm = colors.Normalize(vmin=0, vmax=values[-1])
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+
+    lines = []
+    i = 0
+    for c in curves:
+        lines.append(ax.plot(c, color=curve_colors[i], label=curve_labels[i]))
+        i += 1
+
+    # added this to get the legend to work
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, loc='lower right')
+    x = range(0, len(xlabels))
+    plt.xticks(x, xlabels, fontsize=10)
+
+    print "Saving figure to ", os.path.join(dir, filename)
+    plt.savefig(os.path.join(dir, filename), bbox_inches="tight")
+
+
+
+if __name__ == '__main__':
+    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
+    to_sn = 1550
+    from_sn = 1535
+    portal_id = 'data_hdx_rwlabs_org'
+    #metrics = ['CoLi', 'CoFo']
+
+    datasets= []
+    resources= []
+
+    ex = ['ExAc', 'ExDi', 'ExCo', 'ExRi', 'ExPr', 'ExDa', 'ExTe', 'ExSp']
+    co = ['CoAc', 'CoCE', 'CoCU', 'CoDa', 'CoLi', 'CoFo']
+    op = ['OpFo', 'OpMa', 'OpLi']
+    re = ['ReRe', 'ReDa']
+    metrics = ['AcFo', 'AcSi']
+
+
+    rep = dcat_evolution(dbm, from_sn=from_sn, to_sn=to_sn, portal_id=portal_id, metrics=metrics)
+    rep = rep.uireport()['datasetevolutionreporter']
+
+    val = {m: [] for m in metrics}
+    #coli = []
+    #cofo = []
+    xlabels = [str(x) for x in range(from_sn, to_sn)]
+
+    for sn in range(from_sn, to_sn):
+        for el in rep:
+            if el['snapshot'] == sn:
+                for k in metrics:
+                    if el['key'] == k:
+                        val[k].append(el['value'])
+                if el['key'] == 'datasets':
+                    datasets.append(el['value'])
+                #else:
+                #    datasets.append(-1)
+                if el['key'] == 'resources':
+                    resources.append(el['value'])
+                    #else:
+                    #    resources.append(-1)
+
+
+    scalar_plot(val.values(), metrics, "bgrcmykw", xlabels, '.', 'accuracy.pdf')
+    #scalar_plot([datasets], ['datasets'], ['blue'], xlabels, '.', 'datasets.pdf')
+    #scalar_plot([resources], ['resources'], ['blue'], xlabels, '.', 'resources.pdf')
