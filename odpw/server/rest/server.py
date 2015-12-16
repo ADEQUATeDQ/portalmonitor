@@ -116,7 +116,7 @@ def before_request():
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalQuality(portal_id, snapshot):
     """
-        Get a list of all portals
+        Get quality metrics for a portal and snapshot 
         ---
         tags:
           - portal
@@ -179,7 +179,7 @@ def portalQuality(portal_id, snapshot):
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalInfo(portal_id, snapshot):
     """
-        Get a list of all portals
+        Get basic information about a portal for a snapshot
         ---
         tags:
           - portal
