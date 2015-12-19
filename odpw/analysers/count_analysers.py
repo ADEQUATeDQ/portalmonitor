@@ -379,6 +379,7 @@ class DCATLicenseCount(ElementCountAnalyser):
             licenses = pmd.general_stats['licenses']
             if isinstance(licenses, dict):
                 for f in licenses:
+                    print f,licenses[f]
                     if self.total_count:
                         self.add(f, licenses[f])
                     else:

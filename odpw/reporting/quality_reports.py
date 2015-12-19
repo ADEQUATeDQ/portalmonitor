@@ -54,7 +54,6 @@ def portalquality(dbm, sn , portal_id):
     it = dbm.getPortalMetaDatas(snapshot=sn, portalID=portal_id)
     aset = process_all(aset, PortalMetaData.iter(it))
     
-    
     rep = Report([
                     DatasetStatusCodeReporter(dr),
                     ResourcesStatusCodeReporter(rr),

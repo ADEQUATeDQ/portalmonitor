@@ -36,6 +36,24 @@ class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
                 res.append(d) 
             self.df= pd.DataFrame(res)
         return self.df
+
+class NVD3EvolutionReporter(EvolutionReporter):
+
+    def __init__(self, analyser, key):
+        print analyser
+        super(NVD3EvolutionReporter, self).__init__(analyser)
+        self.key=key
+
+    def uireport(self):
+        print self.a.name()
+        res=[]
+        for sn, dkv in  self.a.getResult().items():
+            for k,v in dkv.items():
+                d={'snapshot':sn, 'value':v, 'key':k}
+                res.append(d)
+        return {self.key+'_evolv':res} 
+
+
     
 class DatasetEvolutionReporter(EvolutionReporter):
 
@@ -56,19 +74,38 @@ class SystemSoftwareEvolutionReporter(EvolutionReporter):
 
 
 
-def portalevolution(dbm, sn, portal_id):
+def portalevolution(dbm, sn, portal_id, metrics=None):
     
     aset = AnalyserSet()
     de=aset.add(DatasetEvolution())
     re= aset.add(ResourceEvolution())
     
+    ds = aset.add(PMDCountEvolution())
+    
+    ex = ['ExAc', 'ExDi', 'ExCo', 'ExRi', 'ExPr', 'ExDa', 'ExTe', 'ExSp']
+    co = ['CoAc', 'CoCE', 'CoCU', 'CoDa', 'CoLi', 'CoFo']
+    op = ['OpFo', 'OpMa', 'OpLi']
+    re = ['ReRe', 'ReDa']
+    ac = ['AcFo', 'AcSi']
+    
+    dcatEx = aset.add(DatasetDCATMetricsEvolution(ex))
+    dcatCo = aset.add(DatasetDCATMetricsEvolution(co))
+    dcatOp = aset.add(DatasetDCATMetricsEvolution(op))
+    dcatRe = aset.add(DatasetDCATMetricsEvolution(re))
+    dcatAc = aset.add(DatasetDCATMetricsEvolution(ac))
+
     
     it = dbm.getPortalMetaDatasUntil(snapshot=sn, portalID=portal_id)
     aset = process_all(aset, PortalMetaData.iter(it))
     
     rep = Report([
-                    DatasetEvolutionReporter(de),
-                    DatasetEvolutionReporter(re)
+                    NVD3EvolutionReporter(de,"ds"),
+                    NVD3EvolutionReporter(re,"res"),
+                    NVD3EvolutionReporter(dcatEx, 'ex'),
+                    NVD3EvolutionReporter(dcatCo, 'co'),
+                    NVD3EvolutionReporter(dcatOp, 'op'),
+                    NVD3EvolutionReporter(dcatRe, 're'),
+                    NVD3EvolutionReporter(dcatAc, 'ac'),
                     
                 ])
    

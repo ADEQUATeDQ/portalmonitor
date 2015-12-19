@@ -31,6 +31,7 @@ from odpw.analysers import process_all
 from odpw.analysers.core import DBAnalyser
 from odpw.reporting.quality_reports import portalquality
 from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
+import traceback
 
 
 
@@ -112,6 +113,39 @@ def before_request():
     
     app.config['portals']= p
 
+@app.route('/api/v1/portal/<string:portal_id>/evolv/<int:snapshot>', methods=['GET'])
+@cache.cached(timeout=300)  # cache this view for 5 minutes
+def portalEvolution(portal_id, snapshot):
+    """
+        Get evolution for a portal for various quality metrics until the defined snapshot 
+        ---
+        tags:
+          - portal
+        parameters:
+          - in: path
+            name: snapshot
+            type: integer
+            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
+            required: true
+          - in: path
+            name: portal_id
+            type: string
+            required: true
+        produces:
+          - application/json
+        responses:
+          200:
+            description: Returns a list of all portals in the system
+        """
+    dbm= app.config['db']
+    with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
+        try:
+            
+        except Exception as e:
+            print(traceback.format_exc())
+            internal_error(e,'')
+    
+
 @app.route('/api/v1/portal/<string:portal_id>/quality/<int:snapshot>', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalQuality(portal_id, snapshot):
@@ -139,13 +173,15 @@ def portalQuality(portal_id, snapshot):
     dbm= app.config['db']
     with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
         try:
-            a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+            a = process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
             rep=SnapshotsPerPortalReporter(a, portal_id)
 
-            r = portalquality(dbm, snapshot, portal_id)
-            rep = Report([rep,r])
+            #r = portalquality(dbm, snapshot, portal_id)
+            #rep = Report([rep,r])
+            rep = Report([rep])
             
             
+            print "ui"
             print rep.uireport()
             results = {'portal':portal_id,'snapshot':snapshot, 'results': rep.uireport()}
     
@@ -172,7 +208,8 @@ def portalQuality(portal_id, snapshot):
             
             return resp
         except Exception as e:
-            print e
+            
+            print(traceback.format_exc())
             internal_error(e,'')
 
 @app.route('/api/v1/portal/<string:portal_id>/info/<int:snapshot>', methods=['GET'])
@@ -212,6 +249,7 @@ def portalInfo(portal_id, snapshot):
             
             return resp
         except Exception as e:
+            print(traceback.format_exc())
             internal_error(e,'')
 
 @app.route('/api/v1/portals/list', methods=['GET'])

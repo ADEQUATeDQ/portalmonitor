@@ -76,7 +76,7 @@ def portalinfo(dbm, sn, portal_id):
                     DatasetSumReporter(dsC),
                     ResourceCountReporter(resC),
                     ResourceSizeReporter(rsize),
-                    LicenseCountReporter(lc,topK=3),
+                    LicenseCountReporter(lc,distinct=True,topK=3),
                     TagReporter(tc,dc, distinct=True,topK=3),
                     OrganisationReporter(oc, distinct=True,topK=3),
                     FormatCountReporter(fc,  distinct=True,topK=3),

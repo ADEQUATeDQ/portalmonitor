@@ -44,8 +44,8 @@ class ElementCountAnalyser(Analyser):
         else:
             self.add(element)
     
-    def add(self, value, count=1): 
-        self.dist[value]+=count
+    def add(self, value, count=1):
+        self.dist[value] += count
     
     def getDist(self):
         return dict(self.dist)

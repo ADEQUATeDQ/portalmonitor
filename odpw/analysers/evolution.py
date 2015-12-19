@@ -32,19 +32,29 @@ class EvolutionCountAnalyser(Analyser):
         return res
 
 class DatasetEvolution(EvolutionCountAnalyser):
+    def __init__(self):
+        super(DatasetEvolution, self).__init__()
+    
     def analyse_PortalMetaData(self, pmd):
-        if pmd.fetch_stats:
-            for i in DatasetLifeStatsAnalyser.keys:
-                self.add(pmd.snapshot, i, pmd.fetch_stats.get(i,0))
-        else:
-            self.add(pmd.snapshot,'no_stats', 1)
+        if pmd.datasets:
+            self.add(pmd.snapshot, 'datasets', pmd.datasets)
+        #if pmd.fetch_stats:
+        #    for i in DatasetLifeStatsAnalyser.keys:
+        #        self.add(pmd.snapshot, i, pmd.fetch_stats.get(i,0))
+        #else:
+        #    self.add(pmd.snapshot,'no_stats', 1)
         
         
         
     
 class ResourceEvolution(EvolutionCountAnalyser):
+    def __init__(self):
+        super(ResourceEvolution, self).__init__()
     def analyse_PortalMetaData(self, pmd):
-        self.add(pmd.snapshot, 'resources',pmd.resources)
+        if pmd.resources:
+            self.add(pmd.snapshot, 'resources', pmd.resources)
+        
+        #self.add(pmd.snapshot, 'resources',pmd.resources)
 
 class ResourceAnalysedEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):
@@ -71,10 +81,6 @@ class DatasetDCATMetricsEvolution(EvolutionCountAnalyser):
         self.metrics = metrics
 
     def analyse_PortalMetaData(self, pmd):
-        if pmd.datasets:
-            self.add(pmd.snapshot, 'datasets', pmd.datasets)
-        if pmd.resources:
-            self.add(pmd.snapshot, 'resources', pmd.resources)
         if pmd.qa_stats:
             for m in self.metrics:
                 self.add(pmd.snapshot, m, pmd.qa_stats.get(m, 0))
