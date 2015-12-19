@@ -46,8 +46,6 @@ class StatusCodeReporter(Reporter,UIReporter, CLIReporter, CSVReporter):
         df = self.getDataFrame()
         #total = df['count'].sum()
         
-        print 'df'
-        print df
         dfpref=df.groupby("pre",as_index=False)
         dfpref= dfpref.aggregate(np.sum)
         

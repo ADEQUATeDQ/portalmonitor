@@ -32,6 +32,7 @@ from odpw.analysers.core import DBAnalyser
 from odpw.reporting.quality_reports import portalquality
 from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
 import traceback
+from odpw.reporting.evolution_reports import portalEvolution_report
 
 
 
@@ -140,7 +141,16 @@ def portalEvolution(portal_id, snapshot):
     dbm= app.config['db']
     with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
         try:
-            resp = jsonify({'results':'under implmenentation'})
+            a = process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+            rep=SnapshotsPerPortalReporter(a, portal_id)
+
+            r = portalEvolution_report(dbm, snapshot, portal_id)
+            #rep = Report([rep,r])
+            rep = Report([rep,r])
+
+
+            results = {'portal':portal_id,'snapshot':snapshot, 'results': rep.uireport()}
+            resp = jsonify(results)
             resp.status_code = 200
             
             return resp

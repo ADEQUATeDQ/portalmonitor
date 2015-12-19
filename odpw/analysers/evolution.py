@@ -21,6 +21,8 @@ class EvolutionCountAnalyser(Analyser):
         
     def add(self, snapshot, key, value):
         sndict = self._evolv.get(snapshot, defaultdict(int))
+        if value is None:
+            value=-1
         sndict[key]+=value
         self._evolv[snapshot]=sndict
         self.keys.add(key)
@@ -79,9 +81,16 @@ class DatasetDCATMetricsEvolution(EvolutionCountAnalyser):
     def __init__(self, metrics):
         super(DatasetDCATMetricsEvolution, self).__init__()
         self.metrics = metrics
+    
+    def name(self):
+        return 'DatasetDCATMetricsEvolution'+('_'.join(self.metrics))
+        
 
     def analyse_PortalMetaData(self, pmd):
         if pmd.qa_stats:
+            print self.metrics
+            #if 'OpFo' in self.metrics:
+            print pmd.qa_stats    
             for m in self.metrics:
                 self.add(pmd.snapshot, m, pmd.qa_stats.get(m, 0))
         else:

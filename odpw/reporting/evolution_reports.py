@@ -45,12 +45,15 @@ class NVD3EvolutionReporter(EvolutionReporter):
         self.key=key
 
     def uireport(self):
-        print self.a.name()
-        res=[]
+        
+        res={}
         for sn, dkv in  self.a.getResult().items():
             for k,v in dkv.items():
-                d={'snapshot':sn, 'value':v, 'key':k}
-                res.append(d)
+                if k not in res:
+                    res[k]=[]
+                d={'snapshot':sn, 'value':v}
+                res[k].append(d)    
+                
         return {self.key+'_evolv':res} 
 
 
@@ -74,11 +77,11 @@ class SystemSoftwareEvolutionReporter(EvolutionReporter):
 
 
 
-def portalevolution(dbm, sn, portal_id, metrics=None):
+def portalEvolution_report(dbm, sn, portal_id, metrics=None):
     
     aset = AnalyserSet()
     de=aset.add(DatasetEvolution())
-    re= aset.add(ResourceEvolution())
+    rese= aset.add(ResourceEvolution())
     
     ds = aset.add(PMDCountEvolution())
     
@@ -100,7 +103,7 @@ def portalevolution(dbm, sn, portal_id, metrics=None):
     
     rep = Report([
                     NVD3EvolutionReporter(de,"ds"),
-                    NVD3EvolutionReporter(re,"res"),
+                    NVD3EvolutionReporter(rese,"res"),
                     NVD3EvolutionReporter(dcatEx, 'ex'),
                     NVD3EvolutionReporter(dcatCo, 'co'),
                     NVD3EvolutionReporter(dcatOp, 'op'),
