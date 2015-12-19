@@ -140,7 +140,10 @@ def portalEvolution(portal_id, snapshot):
     dbm= app.config['db']
     with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
         try:
+            resp = jsonify({'results':'under implmenentation'})
+            resp.status_code = 200
             
+            return resp
         except Exception as e:
             print(traceback.format_exc())
             internal_error(e,'')
