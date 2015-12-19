@@ -5,7 +5,7 @@ __author__ = 'jumbrich'
 import os
 from odpw.reporting.activity_reports import systemactivity
 from odpw.reporting.info_reports import systeminfoall, portalinfo
-from odpw.reporting.evolution_reports import systemevolution, portalevolution
+from odpw.reporting.evolution_reports import systemevolution, portalEvolution_report
 
 from odpw.utils.util import getSnapshot
 
