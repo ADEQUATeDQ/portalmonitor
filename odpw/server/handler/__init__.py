@@ -31,7 +31,7 @@ from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount
 from odpw.analysers.core import DCATConverter
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.activity_reports import systemactivity
-from odpw.reporting.evolution_reports import portalevolution, systemevolution
+from odpw.reporting.evolution_reports import portalEvolution_report, systemevolution
 from odpw.reporting.info_reports import portalinfo, SystemPortalInfoReporter,\
     systeminfoall
 from odpw.reporting.quality_reports import portalquality, portalsquality
