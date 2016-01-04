@@ -8,7 +8,7 @@ LOG=/home/opwu/ODPortalWatch_2/logs
 mkdir -p $LOG
 
 
-for ((sn=1553; sn>=1553; sn--))
+for ((sn=1553; sn>=1534; sn--))
 do
     echo $sn
 
