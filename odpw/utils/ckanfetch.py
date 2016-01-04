@@ -74,6 +74,8 @@ def fetching(obj, outfile):
             pmd.fetchTimeout(exc.timeout)
 
         ae.update(pmd)
+        # store to DB
+        dbm.updatePortalMetaData(pmd)
         
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
@@ -91,6 +93,8 @@ def fetching(obj, outfile):
         
         rdq.update_PortalMetaData(pmd)
         rrq.update_PortalMetaData(pmd)
+        # store to DB
+        dbm.updatePortalMetaData(pmd)
         
         
         #import pprint
