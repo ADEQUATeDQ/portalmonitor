@@ -15,6 +15,8 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
         self.l_mapping = LicensesOpennessMapping()
         super(LicenseOpennessDCATAnalyser, self).__init__()
         self.quality = None
+        self.count = 0
+        self.total = 0
 
     def analyse_Dataset(self, dataset):
         values = getDistributionLicenseTriples(dataset)
@@ -26,8 +28,9 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
 
     def done(self):
         dist = self.getDist()
-        exist = dist['approved'] if 'approved' in dist else 0
-        self.quality = float(exist)/sum(dist.values()) if sum(dist.values()) > 0 else 0
+        self.count = dist['approved'] if 'approved' in dist else 0
+        self.total = sum(dist.values())
+        self.quality = float(self.count)/self.total if self.total > 0 else 0
 
     def getResult(self):
         return self.quality
@@ -36,3 +39,4 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[LicenseOpennessDCATAnalyser.id] = self.quality
+        pmd.qa_stats[LicenseOpennessDCATAnalyser.id+'_hist'] = {1: self.count, 0: self.total - self.count}

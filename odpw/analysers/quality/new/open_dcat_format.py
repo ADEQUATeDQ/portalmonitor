@@ -3,6 +3,7 @@ Created on Aug 18, 2015
 
 @author: jumbrich
 '''
+from collections import Counter
 import csv
 import json
 from odpw.analysers import Analyser
@@ -63,6 +64,8 @@ class FormatOpennessDCATAnalyser(ContainsFormatDCATAnalyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[FormatOpennessDCATAnalyser.id] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats[FormatOpennessDCATAnalyser.id+'_hist'] = dict(cnt)
 
 class FormatMachineReadableDCATAnalyser(ContainsFormatDCATAnalyser):
     id = 'OpMa'
@@ -77,6 +80,8 @@ class FormatMachineReadableDCATAnalyser(ContainsFormatDCATAnalyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[FormatMachineReadableDCATAnalyser.id] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats[FormatMachineReadableDCATAnalyser.id+'_hist'] = dict(cnt)
 
 
 class IANAFormatDCATAnalyser(Analyser):
@@ -143,8 +148,9 @@ class IANAFormatDCATAnalyser(Analyser):
     def done(self):
         self.quality = sum(self.values)/self.total if self.total > 0 else 0
 
-
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[IANAFormatDCATAnalyser.id] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats[IANAFormatDCATAnalyser.id+'_hist'] = dict(cnt)

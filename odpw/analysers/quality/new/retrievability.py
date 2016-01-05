@@ -68,6 +68,8 @@ class DatasetRetrievability(Retrievability):
 class RetrieveMetric(Analyser):
     def __init__(self, status_code_analyser):
         self.a = status_code_analyser
+        self.total = 0
+        self.count = 0
 
     def getResult(self):
         dist = self.a.getResult()
@@ -84,10 +86,14 @@ class RetrieveMetric(Analyser):
                 rest += dist[x]
         if rest == 0.0:
             return None
+        self.total = rest
+        self.count = two
         return two/rest
+
     def update_PortalMetaData(self, pmd):
         if pmd.qa_stats:
             pmd.qa_stats[self.name()] = self.getResult()
+            pmd.qa_stats[self.name() + '_hist'] = {1: self.count, 0: self.total - self.count}
 
 
 class ResRetrieveMetric(RetrieveMetric):

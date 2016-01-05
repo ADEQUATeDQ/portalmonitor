@@ -7,10 +7,8 @@ Created on Aug 18, 2015
 Existence of crucial meta data information
 '''
 from odpw.analysers import Analyser
-from odpw.utils.dataset_converter import DCT, DCAT
 
-import datetime
-from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
+from collections import Counter
 from odpw.utils import dcat_access
 ## Provenance 
 
@@ -126,6 +124,8 @@ class DatasetTemporalDCAT(TemporalDCAT):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats['ExTe'] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats['ExTe_hist'] = dict(cnt)
 ##### 
 #BASIC SPATIAL
 #####  
@@ -137,6 +137,8 @@ class DatasetSpatialDCAT(SpatialDCAT):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats['ExSp'] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats['ExSp_hist'] = dict(cnt)
 ##### 
 #BASIC LOCAL
 #####    
@@ -170,6 +172,8 @@ class ProvLicenseDCAT(RightDCAT):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats['ExRi'] = self.quality
+        cnt = Counter(self.values)
+        pmd.qa_stats['ExRi_hist'] = dict(cnt)
 
 
 class AccessUrlDCAT(AccessDCAT):
@@ -257,6 +261,7 @@ class AnyMetric(Analyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[self.id] = self.getValue()
+        pmd.qa_stats[self.id + '_hist'] = {1: self.count, 0: self.total - self.count}
 
 class AverageMetric(Analyser):
     def __init__(self, analyser, id):
@@ -292,3 +297,5 @@ class AverageMetric(Analyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[self.id] = self.getValue()
+        cnt = Counter(self.values)
+        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
