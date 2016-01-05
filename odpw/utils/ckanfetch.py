@@ -255,6 +255,8 @@ def cli(args,dbm):
                     time.sleep(10)
                 elapsed = (time.time() - start)
                 util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
+
+        remain_start = time.time()
         while len(processes)>0:
             p_done += checkProcesses(processes, pidFile)
             checks+=1
@@ -264,7 +266,14 @@ def cli(args,dbm):
 
             elapsed = (time.time() - start)
             util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
-        
-        
+
+            # kill remaining processes after 2 hours
+            if (time.time() - remain_start) > (60 * 60 * 2):
+                for portalID in processes.keys():
+                    (pid, process, start,apiurl) = processes[portalID]
+                    log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start.isoformat(), exitcode=process.exitcode)
+                    process.terminate()
+                return
+
     except Exception as e:
-        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True) 
+        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True)
