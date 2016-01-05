@@ -164,8 +164,15 @@ def portalQuality(portal_id, snapshot):
                 #    d[k] = pmd.__dict__[k]
                 
             results['quality']=d
-            
-            
+
+            # quality historgrams
+            hists = collections.OrderedDict()
+            for k in qakeys:
+                v = pmd.qa_stats.get(k + '_hist', None) if pmd.qa_stats else None
+                if v:
+                    hists['qa_'+k] = v
+            results['quality_counts'] = hists
+
             print results
             resp = jsonify(results)
             resp.status_code = 200
