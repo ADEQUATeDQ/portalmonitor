@@ -405,7 +405,7 @@ class PostgressDBM(object):
                
             return s.execute()
 
-    def getPortalMetaDatasBySoftware(self, software, snapshot=None, portalID=None):
+    def getPortalMetaDatasBySoftware(self, software=None, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatasBySoftware") as t:
 
             j = join(self.pmd, self.portals, self.pmd.c.portal_id == self.portals.c.id)

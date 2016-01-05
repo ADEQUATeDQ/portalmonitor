@@ -31,8 +31,6 @@ from odpw.analysers import process_all
 from odpw.analysers.core import DBAnalyser
 from odpw.reporting.quality_reports import portalquality
 from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
-import traceback
-from odpw.reporting.evolution_reports import portalEvolution_report
 
 
 
@@ -114,51 +112,6 @@ def before_request():
     
     app.config['portals']= p
 
-@app.route('/api/v1/portal/<string:portal_id>/evolv/<int:snapshot>', methods=['GET'])
-@cache.cached(timeout=300)  # cache this view for 5 minutes
-def portalEvolution(portal_id, snapshot):
-    """
-        Get evolution for a portal for various quality metrics until the defined snapshot 
-        ---
-        tags:
-          - portal
-        parameters:
-          - in: path
-            name: snapshot
-            type: integer
-            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
-            required: true
-          - in: path
-            name: portal_id
-            type: string
-            required: true
-        produces:
-          - application/json
-        responses:
-          200:
-            description: Returns a list of all portals in the system
-        """
-    dbm= app.config['db']
-    with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
-        try:
-            a = process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
-            rep=SnapshotsPerPortalReporter(a, portal_id)
-
-            r = portalEvolution_report(dbm, snapshot, portal_id)
-            #rep = Report([rep,r])
-            rep = Report([rep,r])
-
-
-            results = {'portal':portal_id,'snapshot':snapshot, 'results': rep.uireport()}
-            resp = jsonify(results)
-            resp.status_code = 200
-            
-            return resp
-        except Exception as e:
-            print(traceback.format_exc())
-            internal_error(e,'')
-    
-
 @app.route('/api/v1/portal/<string:portal_id>/quality/<int:snapshot>', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalQuality(portal_id, snapshot):
@@ -186,15 +139,13 @@ def portalQuality(portal_id, snapshot):
     dbm= app.config['db']
     with Timer(key='portal/'+portal_id+'/quality/'+str(snapshot), verbose=True) as t:
         try:
-            a = process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+            a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
             rep=SnapshotsPerPortalReporter(a, portal_id)
 
-            #r = portalquality(dbm, snapshot, portal_id)
-            #rep = Report([rep,r])
-            rep = Report([rep])
+            r = portalquality(dbm, snapshot, portal_id)
+            rep = Report([rep,r])
             
             
-            print "ui"
             print rep.uireport()
             results = {'portal':portal_id,'snapshot':snapshot, 'results': rep.uireport()}
     
@@ -221,8 +172,7 @@ def portalQuality(portal_id, snapshot):
             
             return resp
         except Exception as e:
-            
-            print(traceback.format_exc())
+            print e
             internal_error(e,'')
 
 @app.route('/api/v1/portal/<string:portal_id>/info/<int:snapshot>', methods=['GET'])
@@ -262,7 +212,6 @@ def portalInfo(portal_id, snapshot):
             
             return resp
         except Exception as e:
-            print(traceback.format_exc())
             internal_error(e,'')
 
 @app.route('/api/v1/portals/list', methods=['GET'])
@@ -436,6 +385,125 @@ def quality(snapshot):
         #return resp
 
 
+@app.route('/api/v1/portals/ckanquality/<int:snapshot>', methods=['GET'])
+@gzipped
+def ckanquality(snapshot):
+    """
+        Get a all CKAN portals quality metrics for a certain snapshot
+        ---
+        tags:
+          - portals
+        produces:
+          - text/csv
+        parameters:
+          - in: path
+            name: snapshot
+            type: integer
+            description: Snapshot as integer (YYWW, e.g. 1542 -> year 2015 week 42)
+            required: true
+          - in: query
+            name: since
+            type: integer
+        responses:
+          200:
+            description: Returns a list of basic information and CKAN specific quality metrics for all CKAN portals in the system
+            schema:
+              id: portals
+              properties:
+                portals:
+                  type: array
+                  items:
+                    schema:
+                      id: SubItem
+                      properties:
+                        datasets:
+                          type: integer
+                          description: Number of datasets
+                        resources:
+                          type: integer
+                          description: Number of resources
+        """
+    dbm= app.config['db']
+    with Timer(key='CkanPortalsQuality('+str(snapshot)+')', verbose=True) as t:
+
+        filterSnapshot = request.args.get('since')
+        filterIDs=set([])
+
+        if filterSnapshot:
+            for p in dbm.getPortalIDs(snapshot=filterSnapshot):
+                filterIDs.add(p[0])
+
+        p=app.config['portals']
+        data={}
+        cols=[]
+        for pmd in PortalMetaData.iter(dbm.getPortalMetaDatasBySoftware(snapshot=snapshot, software='CKAN')):
+            if len(filterIDs)==0 or pmd.portal_id in filterIDs:
+                d=collections.OrderedDict()
+                d['portal_id']=pmd.portal_id
+
+                # get all ckan metrics
+                ms = ['Qu', 'Qc']
+                for m in ms:
+                    cu = pmd.qa_stats.get(m, None) if pmd.qa_stats else None
+                    for k in ['core', 'extra', 'res']:
+                        if cu and k in cu:
+                            d[m+'_'+k] = cu[k]
+                        else:
+                            d[m+'_'+k] = -1
+
+                # openness
+                qo = pmd.qa_stats.get('Qo', None) if pmd.qa_stats else None
+                qo_mapping = {'format': 'f', 'license': 'l'}
+                for k in qo_mapping:
+                    if qo and k in qo:
+                        v = qo[k]
+                    else:
+                        v = -1
+                    d['Qo_'+qo_mapping[k]] = v
+
+                # contactability
+                qa = pmd.qa_stats.get('Qa', None) if pmd.qa_stats else None
+                for k in ['url', 'email']:
+                    if qa and k in qa:
+                        v = qa[k]['total']
+                    else:
+                        v = -1
+                    d['Qa_'+k] = v
+
+                # qr_ds, qr_res
+                try:
+                    qr_ds = pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd']
+                except:
+                    qr_ds = -1
+                d['Qr_ds'] = qr_ds
+
+                try:
+                    qr_res = pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']
+                except:
+                    qr_res = -1
+                d['Qr_res'] = qr_res
+
+                d.update(p[pmd.portal_id])
+                for k in ['snapshot', 'datasets', 'resources']:
+                    d[k] = pmd.__dict__[k]
+
+                cols=d.keys()
+                data[pmd.portal_id]=(d)
+
+        od = collections.OrderedDict(sorted(data.items()))
+        pa = pd.DataFrame(od.values(), columns=cols)
+
+        #for csv
+        fname='ckan_quality_'+str(snapshot)
+        if filterSnapshot:
+            fname +='_since_'+str(filterSnapshot)
+
+        buffer = StringIO()
+        pa.to_csv(buffer,encoding='utf-8',index=False)
+        buffer.seek(0)
+        return send_file(buffer,
+                         attachment_filename=fname+".csv",
+                         mimetype='text/csv')
 
 
 @app.route("/api/v1/help")
