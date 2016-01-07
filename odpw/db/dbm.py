@@ -381,9 +381,25 @@ class PostgressDBM(object):
             
             return s.execute()
         
-    def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None):
+    def getPortalMetaDatasSelect(self, snapshot=None, portalID=None, portals=None, selectVars=None):
         with Timer(key="getPortalMetaDatas") as t:
             s = select([self.pmd])
+            if snapshot:
+                s=s.where(self.pmd.c.snapshot == snapshot)
+            if portalID:
+                s= s.where(self.pmd.c.portal_id == portalID)
+            if portals:
+                s= s.where(self.pmd.c.portal_id.in_(portals))
+                
+            self.log.debug(query=s.compile(), params=s.compile().params)
+               
+            return s.execute()
+    def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None, selectVars=None):
+        with Timer(key="getPortalMetaDatas") as t:
+            if select:
+                s = select(selectVars)
+            else:
+                s = select([self.pmd])
             if snapshot:
                 s=s.where(self.pmd.c.snapshot == snapshot)
             if portalID:
@@ -405,7 +421,7 @@ class PostgressDBM(object):
                
             return s.execute()
 
-    def getPortalMetaDatasBySoftware(self, software, snapshot=None, portalID=None):
+    def getPortalMetaDatasBySoftware(self, software=None, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatasBySoftware") as t:
 
             j = join(self.pmd, self.portals, self.pmd.c.portal_id == self.portals.c.id)
@@ -1131,6 +1147,16 @@ class PostgressDBM(object):
         #select snapshot, software, count(portal_id), sum(datasets), sum(resources), sum( (pmd.fetch_stats->>'accessed')::int), sum( (pmd.fetch_stats->>'added_accessed')::int), sum( (pmd.fetch_stats->>'added_mis_av')::int),  sum( (pmd.fetch_stats->>'mis_av')::int),  sum( (pmd.fetch_stats->>'dead')::int) from pmd inner join portals on pmd.portal_id = portals.id group by snapshot, software order by snapshot
 
 #select mime, count(*), sum(size) from resources where snapshot=1537 and (origin->>'data_gv_at') is not null group by mime order by sum(size) desc
+    
+    
+    @classmethod
+    def dictiter(cls, iterable):
+        for i in iterable:
+            r = dict(i)
+            yield r
+        return
+    
+    
     
 def name():
     return 'DB'

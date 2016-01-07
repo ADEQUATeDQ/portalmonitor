@@ -1,3 +1,4 @@
+from collections import Counter
 from odpw.analysers import Analyser
 from odpw.analysers.core import DistinctElementCount
 from odpw.utils import dcat_access, licenses_mapping
@@ -41,6 +42,7 @@ class AnyConformMetric(Analyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[self.id] = self.getValue()
+        pmd.qa_stats[self.id+'_hist'] = {1: self.count, 0: self.total - self.count}
 
 class AverageConformMetric(Analyser):
     def __init__(self, analyser, id):
@@ -82,6 +84,8 @@ class AverageConformMetric(Analyser):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats[self.id] = self.getValue()
+        cnt = Counter(self.values)
+        pmd.qa_stats[self.id+'_hist'] = dict(cnt)
 
 class ConformanceDCAT(DistinctElementCount):
 
@@ -170,3 +174,4 @@ class LicenseConform(DistinctElementCount):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
         pmd.qa_stats['CoLi'] = self.getValue()
+        pmd.qa_stats['CoLi_hist'] = {1: self.count, 0: self.total - self.count}

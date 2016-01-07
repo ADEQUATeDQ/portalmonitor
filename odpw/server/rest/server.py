@@ -7,27 +7,58 @@ Created on Nov 27, 2015
 from flask import Flask
 
 from odpw.db.dbm import PostgressDBM
-from odpw.server.rest.api_blueprint import api
+
+
 from flask.globals import request
 from flask.json import jsonify
 from flask_swagger import swagger
+
+from odpw.utils.timer import Timer
+from odpw.db.models import PortalMetaData
+
+import collections
+import pandas as pd
+from StringIO import StringIO
+import urllib
+
+
+#GZIPPED RESPONSE
+from flask import after_this_request, request
+from cStringIO import StringIO as IO
+import gzip
+import functools 
+from flask.helpers import url_for, send_file, send_from_directory
+from odpw.reporting.info_reports import portalinfo
+from odpw.analysers import process_all
+from odpw.analysers.core import DBAnalyser
+from odpw.reporting.quality_reports import portalquality
+from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
+from flask.templating import render_template
+
+
+
+
+from odpw.server.rest.api_blueprint import api
+
 
 app = Flask(__name__)
 from odpw.server.rest.cache import cache
 app = Flask(__name__)
 cache.init_app(app)
 
-#@app.errorhandler(500)
-def internal_error(e, msg):
-    app.logger.error(e)
+
+
+
+@app.route("/api/v1/help")
+def helpDoc():
+    return render_template("index.html", host=request.host)
+
+@app.route('/api/v1/lib/<path:path>')
+def send_js(path):
+    print 'here'
     
-    message = {
-            'status': 500,
-            'exception': e.message,
-            'request_url': request.url
-    }
-    resp = jsonify(message)
-    resp.status_code = 500
+    
+
 
 @app.route("/api/v1/spec")
 def spec():

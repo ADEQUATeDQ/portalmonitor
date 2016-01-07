@@ -11,6 +11,8 @@ from odpw.analysers.quality.analysers.openness import OpennessAnalyser
 from odpw.analysers.quality.analysers.opquast import OPQuastAnalyser
 from odpw.analysers.quality.new.retrievability import DatasetRetrievability,\
     ResourceRetrievability
+from odpw.utils.fetch import checkProcesses
+
 __author__ = 'jumbrich'
 
 
@@ -42,8 +44,8 @@ def fetching(obj, outfile):
     fullfetch=obj['fullfetch']
 
     dbm.engine.dispose()
-    log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
-    
+    log.info("START CKANMetrics", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
+
     try:
         ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
@@ -56,11 +58,11 @@ def fetching(obj, outfile):
         
         ae.add(MD5DatasetAnalyser())
         if Portal.software == 'CKAN':
-            # TODO ka= ae.add(CKANKeyAnalyser())
+            ka= ae.add(CKANKeyAnalyser())
             ae.add(CompletenessAnalyser())
             ae.add(ContactabilityAnalyser())
             ae.add(OpennessAnalyser())
-            # TODO ae.add(UsageAnalyser(ka))
+            ae.add(UsageAnalyser(ka))
             #ae.add(OPQuastAnalyser())
 
         try:
@@ -72,6 +74,8 @@ def fetching(obj, outfile):
             pmd.fetchTimeout(exc.timeout)
 
         ae.update(pmd)
+        # store to DB
+        dbm.updatePortalMetaData(pmd)
         
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
@@ -89,26 +93,28 @@ def fetching(obj, outfile):
         
         rdq.update_PortalMetaData(pmd)
         rrq.update_PortalMetaData(pmd)
+        # store to DB
+        dbm.updatePortalMetaData(pmd)
         
         
-        import pprint 
-        pprint.pprint(pmd.qa_stats)
+        #import pprint
+        #pprint.pprint(pmd.qa_stats)
         #Qu(core), Qu(res), Qu(extra), Qc(core), Qc(res), Qc(extra), Qo(F), Qo(L), Qa(url), Qa(email), Qr(ds), Qr(res)
         p=[pmd.portal_id,
            -1, # TODO str(pmd.qa_stats['Qu']['core']),
            -1, # TODO str(pmd.qa_stats['Qu']['res']),
            -1, # TODO str(pmd.qa_stats['Qu']['extra']),
-           
+
            str(pmd.qa_stats['Qc']['core']),
            str(pmd.qa_stats['Qc']['res']),
            str(pmd.qa_stats['Qc']['extra']),
-           
+
            str(pmd.qa_stats['Qo']['format']),
            str(pmd.qa_stats['Qo']['license']),
-           
+
            str(pmd.qa_stats['Qa']['url']['total']),
            str(pmd.qa_stats['Qa']['email']['total']),
-           
+
            str(pmd.qa_stats['DatasetRetrievability']['DatasetRetrievability']['avgP']['qrd']),
            str(pmd.qa_stats['ResourceRetrievability']['ResourceRetrievability']['avgP']['qrd']),
 
@@ -117,12 +123,12 @@ def fetching(obj, outfile):
            ]
         s=",".join(p)
         outfile.write(s+"\n")
-        
+
         
     except Exception as exc:
         eh.handleError(log, "UPDATE DB", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)
 
-    log.info("END Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch)
+    log.info("END CKANMetrics", pid=Portal.id, sn=sn, fullfetch=fullfetch)
   
 def name():
     return 'CKANFetch'
@@ -141,6 +147,7 @@ def setupCLI(pa):
     pa.add_argument("-i","--ignore",  help='Force to use current date as snapshot', dest='ignore', action='store_true')
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=1)
     pa.add_argument("-o","--csv", type=argparse.FileType('w'), dest="outfile")
+    pa.add_argument("--pidfile", type=argparse.FileType('w'), dest="pidfile")
 
 def cli(args,dbm):
 
@@ -189,18 +196,18 @@ def cli(args,dbm):
            'Qu(core)',
            'Qu(res)',
            'Qu(extra)',
-           
+
            'Qc(core)',
            'Qc(res)',
            'Qc(extra)',
-           
+
            'Qo(format)',
            'Qo(license)',
-           
-           
+
+
            'Qa(url)'
            'Qa(email)',
-           
+
            'Qr(ds)',
            'Qr(res)',
 
@@ -209,11 +216,64 @@ def cli(args,dbm):
            ]
         s=",".join(p)
         args.outfile.write(s+"\n")
-        
-        for job in jobs:
-            
-            fetching(job, args.outfile)
-        
-        
+
+        total=len(jobs)
+        c=0
+        start = time.time()
+        processes={}
+        checks=0
+        p_done=0
+        fetch_processors = args.processors
+
+        #for job in jobs:
+            #fetching(job, args.outfile)
+
+        with args.pidfile as pidFile:
+            pidFile.write("STATUS\t PID \t start \t p_id \t p_url\n")
+            pidFile.flush()
+
+            total=len(jobs)
+            c=0
+            start = time.time()
+            for job in jobs:
+                p = Process(target=fetching, args=(job, args.outfile))
+                p.start()
+                c+=1
+
+                p_start = datetime.now()
+                processes[job['portal'].id] = (p.pid, p, p_start, job['portal'].apiurl)
+
+                log.info("START", processID= p.pid, pid=job['portal'].id, apiurl=job['portal'].apiurl, start=p_start)
+                pidFile.write("START\t %s  \t %s \t %s (%s)\n"%(p.pid, p_start, job['portal'].id, job['portal'].apiurl))
+                pidFile.flush()
+
+                while len(processes) >= fetch_processors:
+                    p_done += checkProcesses(processes, pidFile)
+                    checks+=1
+                    if checks % 90==0:
+                        log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
+                    time.sleep(10)
+                elapsed = (time.time() - start)
+                util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
+
+        remain_start = time.time()
+        while len(processes)>0:
+            p_done += checkProcesses(processes, pidFile)
+            checks+=1
+            if checks % 90==0:
+                log.info("StatusCheck", checks=checks, runningProcsses=len(processes), done=(c-len(processes)), remaining=(total-c))
+            time.sleep(10)
+
+            elapsed = (time.time() - start)
+            util.progressIndicator(p_done, total, elapsed=elapsed,label='Portals')
+
+            # kill remaining processes after 2 hours
+            if (time.time() - remain_start) > (60 * 60 * 2):
+                for portalID in processes.keys():
+                    (pid, process, start,apiurl) = processes[portalID]
+                    log.info("ABORT", PID= process.pid, portalID=portalID, apiurl=apiurl, start=start.isoformat(), exitcode=process.exitcode)
+                    process.terminate()
+                return
+
     except Exception as e:
-        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True) 
+        eh.handleError(log, "ProcessingFetchException", exception=e, exc_info=True)
