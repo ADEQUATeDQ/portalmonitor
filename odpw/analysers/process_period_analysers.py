@@ -167,6 +167,13 @@ class FetchPeriod(PeriodAnalyser):
                 if f in pmd.fetch_stats:
                     self.add_time(dateutil.parser.parse(pmd.fetch_stats[f]))
     
+    
+    def analyse_dict(self, d):
+        if 'fetch_stats' in d:
+            for f in ['fetch_start', 'fetch_end']:
+                if f in d['fetch_stats']:
+                    self.add_time(dateutil.parser.parse(d['fetch_stats'][f]))
+        
 
 class HeadTimeSpanAnalyser(TimeSpanAnalyser):
     def analyse_PortalMetaData(self, pmd):

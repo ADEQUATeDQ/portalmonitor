@@ -14,33 +14,44 @@ from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter, FetchProcessReporter
 from odpw.utils.timer import Timer
 
-def systemactivity(dbm, sn):
-    print 'starting'
-    it =PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn))
+
+def systemfetchactivity(dbm, sn):
+    it =  dbm.dictiter(dbm.getPortalMetaDatas(snapshot=sn, selectVars=[dbm.pmd.c.portal_id,dbm.pmd.c.fetch_stats]))
     aset = AnalyserSet()
-    
     pmda=aset.add(PMDActivityAnalyser(sn))
-    
     fa= aset.add(FetchPeriod())
-    ha= aset.add(HeadPeriod())
-    #ftsa= aset.add(FetchTimeSpanAnalyser())
-    #fpa= aset.add(FetchProcessAnalyser())
-    #htsa= aset.add(HeadTimeSpanAnalyser())
+    
     aset = process_all(aset,it)
+    rep = Report([SystemActivityReporter(pmda,snapshot=sn, dbds=None, dbres= None, dbresproc=None),
+                  FetchTimePeriodReporter(fa)])
+    
+    return rep
     
     
     
-    print "processed"
-    print "count ds"
+def systemactivity(dbm, sn):
+    
+    with Timer(verbose=True, key="IterPMDs") as t:
+        it =PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn))
+        aset = AnalyserSet()
+        
+        pmda=aset.add(PMDActivityAnalyser(sn))
+        fa= aset.add(FetchPeriod())
+        ha= aset.add(HeadPeriod())
+        
+        #ftsa= aset.add(FetchTimeSpanAnalyser())
+        #fpa= aset.add(FetchProcessAnalyser())
+        #htsa= aset.add(HeadTimeSpanAnalyser())
+        aset = process_all(aset,it)
+    
     with Timer(verbose=True, key="CountDS") as t:
         totalDS = dbm.countDatasets(snapshot=sn)
-    print totalDS
     
-    print "count res total"
-    totalRes= dbm.countResourcesPerSnapshot(snapshot=sn)
-    print totalRes
+    with Timer(verbose=True, key="CountRes") as t:
+        totalRes= dbm.countResourcesPerSnapshot(snapshot=sn)
     
-    processedRes= dbm.countProcessedResourcesPerSnapshot(snapshot=sn)
+    with Timer(verbose=True, key="CountProcessedRes") as t:
+        processedRes= dbm.countProcessedResourcesPerSnapshot(snapshot=sn)
     
     return Report([SystemActivityReporter(pmda,snapshot=sn, dbds=totalDS, dbres= totalRes, dbresproc=processedRes),
                    FetchTimePeriodReporter(fa),

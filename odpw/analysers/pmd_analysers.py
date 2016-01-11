@@ -102,6 +102,66 @@ class PMDActivityAnalyser(Analyser):
         
         
         self.sum['fetch_'+stats['fetch']] += 1
+        self.sum['head_'+stats['head']] += 1  
+    
+    def analyse_dict(self, pmd):
+        stats={ 'pid':pmd['portal_id'],'fetch_error':'', 'fetch':'missing', 'head':'missing'}
+        tstats={}
+        
+        for k in self.stats_key:
+            tstats[k]=False
+        
+        if 'fetch_stats' in pmd:
+            tstats['fetch_done']=all(pmd['fetch_stats'].get(k) for k in PMDActivityAnalyser.times) and pmd['fetch_stats'].get('exception')==None
+            tstats['fetch_failed'] = all( pmd['fetch_stats'].get(k) for k in ['fetch_start', 'exception'])
+            for t in PMDActivityAnalyser.times:
+                if t in pmd['fetch_stats']:
+                    stats[t]= pmd['fetch_stats'][t]
+            
+            if tstats['fetch_failed']:
+                stats['fetch_error']= pmd['fetch_stats']['exception'].split(":")[0].replace("<class '","").replace("'>","").replace("<type '","")
+                
+            tstats['fetch_running'] = not tstats['fetch_done'] and not tstats['fetch_failed'] and  pmd['fetch_stats'].get('fetch_start',None) != None
+        else:
+            tstats['fetch_missing']=True
+        
+        if tstats['fetch_done']:
+            stats['fetch']="done"
+        if tstats['fetch_failed']:
+            stats['fetch']="failed"
+        if tstats['fetch_running']:
+            stats['fetch']="running"
+        if tstats['fetch_missing']:
+            stats['fetch']="missing"
+        
+        if 'res_stats' in pmd:
+            res_unique = pmd.res_stats.get('distinct',-1)
+            
+            resp = pmd.res_stats.get('respCodes',None)
+            tstats['head_started'] = sum(resp.values())>0 if resp else False
+            tstats['head_done'] =  sum(resp.values()) == res_unique if resp else False
+            if not tstats['head_done'] and resp:
+                print pmd.portal_id, sum(resp.values()) , res_unique
+            
+            if 'first_lookup' in pmd.res_stats:
+                stats['head_start']= pmd.res_stats['first_lookup']
+            if 'last_lookup' in pmd.res_stats:
+                stats['head_end']= pmd.res_stats['last_lookup']
+        else:
+            tstats['head_missing']=True
+
+        
+        if tstats.get('head_done',False):
+            stats['head']='done'
+        elif tstats.get('head_started',False):
+            stats['head']='running'
+        else: 
+            stats['head']='missing'
+                        
+        self.stats.append(stats)
+        
+        
+        self.sum['fetch_'+stats['fetch']] += 1
         self.sum['head_'+stats['head']] += 1    
         
     
