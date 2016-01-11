@@ -396,7 +396,7 @@ class PostgressDBM(object):
             return s.execute()
     def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None, selectVars=None):
         with Timer(key="getPortalMetaDatas") as t:
-            if select:
+            if selectVars:
                 s = select(selectVars)
             else:
                 s = select([self.pmd])
