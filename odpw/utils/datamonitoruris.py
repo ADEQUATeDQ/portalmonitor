@@ -26,6 +26,7 @@ def setupCLI(pa):
     pa.add_argument("-p","--pickle",  help='pickle file containing csv urls', dest='pickle')
     pa.add_argument("-d","--crawldate",  help='next crawl date', dest='crawldate')
     pa.add_argument("-s","--size",  help='maximum size in KB if in header', dest='size', type=int, default=-1)
+    pa.add_argument("-u","--update",  help='After how many seconds should the URL be crawled', dest='update', type=int, default=0)
 
 def cli(args, dbm):
 

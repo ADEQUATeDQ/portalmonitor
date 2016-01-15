@@ -28,7 +28,6 @@ class CSVFilter(object):
         for t in cls.filters:
             for f in formats:
                 if t in f.strip().lower():
-                    print t,f
                     return True
         return False
         
@@ -60,10 +59,9 @@ class DistributionExtractor(Analyser):
                     #try to normalise and validate url
                     url=self.getValue(dcat_el,DCAT.accessURL)
                     
-                    
                     url_norm = urlnorm.norm(url.strip())
                     url_clean = urllib.quote(url_norm, safe="%/:=&?~#+!$,;'@()*[]")
-                
+                    
                     info['format'] = self.getValue(dcat_el, DCT['format'])
                     info['mediatype']=self.getValue(dcat_el,DCAT.mediaType)
                     info['name'] = self.getValue(dcat_el,DCT.title)
@@ -86,14 +84,8 @@ class DistributionExtractor(Analyser):
                             
                             if header:
                                 self.urls[url_clean]['header']={'size':R.size,'mime':R.mime}
-                            
-                        
-                        
-                    
-                        
                 except Exception as e:
-                    print e
-
+                    print repr(e), e                    
       
     def getValue(self,dcat_el,key): 
         key=str(key) 
@@ -172,7 +164,7 @@ def extract_urls(urls, portal, snapshot, dbm, out, store_files, filter):
     ae = SAFEAnalyserSet()
     ae.add(DCATConverter(portal))
     
-    ae.add(DistributionExtractor(urls, dbm, snapshot, portal, path,filter))
+    ae.add(DistributionExtractor(urls, dbm, snapshot, portal, path, filter))
     
     iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
     process_all( ae, iter)
