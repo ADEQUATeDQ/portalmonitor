@@ -60,12 +60,14 @@ class DistributionExtractor(Analyser):
                     url=self.getValue(dcat_el,DCAT.accessURL)
                     print url
                     url_norm = urlnorm.norm(url.strip())
+                    print 'url_norm',url_norm
                     url_clean = urllib.quote(url_norm, safe="%/:=&?~#+!$,;'@()*[]")
+                    print 'url_clean',url_clean
                     
                     info['format'] = self.getValue(dcat_el, DCT['format'])
                     info['mediatype']=self.getValue(dcat_el,DCAT.mediaType)
                     info['name'] = self.getValue(dcat_el,DCT.title)
-                    f=[info['format'],info['mediatype']]
+                    f=[ info['format'], info['mediatype'] ]
                     
                 
                     if url_clean not in self.urls and len(url_clean) >0:
