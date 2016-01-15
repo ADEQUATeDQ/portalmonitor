@@ -58,7 +58,7 @@ class DistributionExtractor(Analyser):
                     info={}
                     #try to normalise and validate url
                     url=self.getValue(dcat_el,DCAT.accessURL)
-                    
+                    print url
                     url_norm = urlnorm.norm(url.strip())
                     url_clean = urllib.quote(url_norm, safe="%/:=&?~#+!$,;'@()*[]")
                     
