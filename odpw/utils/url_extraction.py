@@ -58,11 +58,11 @@ class DistributionExtractor(Analyser):
                     info={}
                     #try to normalise and validate url
                     url=self.getValue(dcat_el,DCAT.accessURL)
-                    print url
+                    #print url
                     url_norm = urlnorm.norm(url.strip())
-                    print 'url_norm',url_norm
+                    #print 'url_norm',url_norm
                     url_clean = urllib.quote(url_norm, safe="%/:=&?~#+!$,;'@()*[]")
-                    print 'url_clean',url_clean
+                    #print 'url_clean',url_clean
                     
                     info['format'] = self.getValue(dcat_el, DCT['format'])
                     info['mediatype']=self.getValue(dcat_el,DCAT.mediaType)
@@ -73,13 +73,14 @@ class DistributionExtractor(Analyser):
                     if url_clean not in self.urls and len(url_clean) >0:
                         
                         #parse URL as Resource for lookups
-                        tR =  Resource.newInstance(url=url, snapshot=self.snapshot)
-                        R = self.dbm.getResource(tR)
+                        tR =  Resource.newInstance( url=url, snapshot=self.snapshot)
+                        R = self.dbm.getResource(tR) 
+                        #print 'R',R
                         header=None
                         if R:
-                            header={'size':R.size,'mime':R.mime}
+                            header={ 'size':R.size, 'mime':R.mime}
                             f.append(R.mime)
-                        if DistributionExtractor.formats[self.filter].filter([info['format']]):
+                        if DistributionExtractor.formats[ self.filter ].filter([info['format']]):
                             self.urls[url_clean] = {'portals': {}}
                             if self.portal.id not in self.urls[url_clean]['portals']:
                                 self.urls[url_clean]['portals'][self.portal.id] = info
@@ -114,7 +115,7 @@ def setupCLI(pa):
     #pa.add_argument('-s','--software',choices=['CKAN', 'Socrata', 'OpenDataSoft'], dest='software')
     pa.add_argument('-o','--out',type=str, dest='out' , help="the out directory for the list of urls (and downloads)")
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
-    pa.add_argument('-f','--filter',type=str, dest='filter' , help="Filter by format (csv)")
+    pa.add_argument('-f','--filter',type=str, dest='filter' , help="Filter by format (csv)", default='csv')
     pa.add_argument('--store',  action='store_true', default=False, help="store the files in the out directory")
 
 def cli(args, dbm):
