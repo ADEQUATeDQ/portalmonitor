@@ -898,7 +898,7 @@
         "countryCode": "USA", 
         "software": "CKAN", 
         "url": "http://datos.codeandomexico.org/"
-    }, 
+    },
     "datos_gob_mx": {
         "api": "http://catalogo.datos.gob.mx/", 
         "countryCode": "MEX", 
@@ -1462,7 +1462,13 @@
         "countryCode": "GBR", 
         "software": "CKAN", 
         "url": "http://www.edinburghopendata.info/"
-    }, 
+    },
+    "www_europeandataportal_eu": {
+        "api": "http://www.europeandataportal.eu/data/api",
+        "countryCode": "",
+        "software": "CKAN",
+        "url": "http://www.europeandataportal.eu/"
+    },
     "www_hri_fi": {
         "api": "", 
         "countryCode": "FIN", 
