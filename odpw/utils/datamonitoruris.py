@@ -36,7 +36,7 @@ def cli(args, dbm):
         today = datetime.now()
         nextCrawl = today + timedelta(hours=2)
         nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
-        nextCrawl= datetime(year=2015, month=11, day=26, hour=12)
+        nextCrawl= datetime(year=2016, month=01, day=19, hour=20)
         print 'Crawl time', nextCrawl
     else:
         nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
@@ -49,7 +49,7 @@ def cli(args, dbm):
                 url = u.strip()
                 try:
                     #validators.url(url)
-                    dm_dbm.upsert(url, experiment, nextCrawl, 0)
+                    dm_dbm.upsert(url, experiment, nextCrawl, 10080)
                 except Exception, e:
                     print e
     if args.pickle:
@@ -58,14 +58,13 @@ def cli(args, dbm):
             urls = pickle.load(p)
             
             for k,v in urls.items():
-                
                 size = v.get('header',{}).get('size',-1)
                 
                 if  size<= args.size:
                     try:
                         #validators.url(url)
                         print 'loading',k
-                        dm_dbm.upsert(k, experiment, nextCrawl, 0)
+                        dm_dbm.upsert(k, experiment, nextCrawl, 10080)
                     except Exception, e:
                         print e
     
