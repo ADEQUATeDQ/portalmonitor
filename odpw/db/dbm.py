@@ -1,5 +1,6 @@
 from __future__ import generators
 from sqlalchemy.sql.sqltypes import INTEGER
+from odpw.utils.util import getNextWeek, getPreviousWeek
 
 
 __author__ = 'jumbrich'
@@ -50,6 +51,37 @@ def nested_json(o):
     else:
         return o
 
+from sqlalchemy import event
+from sqlalchemy import exc
+import os
+def add_engine_pidguard(engine):
+    """Add multiprocessing guards.
+
+    Forces a connection to be reconnected if it is detected
+    as having been shared to a sub-process.
+
+    """
+
+    @event.listens_for(engine, "connect")
+    def connect(dbapi_connection, connection_record):
+        connection_record.info['pid'] = os.getpid()
+
+    @event.listens_for(engine, "checkout")
+    def checkout(dbapi_connection, connection_record, connection_proxy):
+        pid = os.getpid()
+        if connection_record.info['pid'] != pid:
+            # substitute log.debug() or similar here as desired
+            warnings.warn(
+                "Parent process %(orig)s forked (%(newproc)s) with an open "
+                "database connection, "
+                "which is being discarded and recreated." %
+                {"newproc": pid, "orig": connection_record.info['pid']})
+            connection_record.connection = connection_proxy.connection = None
+            raise exc.DisconnectionError(
+                "Connection record belongs to pid %s, "
+                "attempting to check out in pid %s" %
+                (connection_record.info['pid'], pid)
+            )
 
 class DMManager(object):
     def __init__(self, db='datamonitor', host="137.208.51.23", port=5432, password=None, user='postgres'):
@@ -67,6 +99,7 @@ class DMManager(object):
         conn_string += "/"+db
             
         self.engine = create_engine(conn_string, pool_size=20)
+        add_engine_pidguard(self.engine)
         self.engine.connect()
             
         self.metadata = MetaData(bind=self.engine)
@@ -293,76 +326,80 @@ class PostgressDBM(object):
     
     def getUnprocessedPortals(self,snapshot=None):
         with Timer(key="getUnprocessedPortals") as t:
-            pmdid= select([self.pmd.c.portal_id]).where(and_(
+            with self.engine.begin() as con:
+                pmdid= select([self.pmd.c.portal_id]).where(and_(
                                                  self.pmd.c.snapshot==snapshot,
                                                  self.portals.c.id== self.pmd.c.portal_id
                                                  ))
-            s = select([self.portals]).where(~self.portals.c.id.in_(pmdid)).order_by(self.portals.c.datasets)
+                s = select([self.portals]).where(~self.portals.c.id.in_(pmdid)).order_by(self.portals.c.datasets)
             
-            self.log.debug(query=s.compile(), params=s.compile().params)    
+                self.log.debug(query=s.compile(), params=s.compile().params)    
             
-            return s.execute().fetchall()
+                return con.execute(s).fetchall()
                 
     def getPortal(self, url=None, portalID=None, apiurl=None):
         with Timer(key="getPortal") as t:
-            s = select([self.portals])
-        
-            if portalID:
-                s= s.where(self.portals.c.id == portalID)
-            if url:
-                s= s.where(self.portals.c.url == url)
-            if apiurl:
-                s= s.where(self.portals.c.apiurl == apiurl)
-        
-            self.log.debug(query=s.compile(), params=s.compile().params)    
+            with self.engine.begin() as con:
+                s = select([self.portals])
             
-            res = s.execute().fetchone()
-            if res:
-                return Portal.fromResult(dict(res))
-            return None
+                if portalID:
+                    s= s.where(self.portals.c.id == portalID)
+                if url:
+                    s= s.where(self.portals.c.url == url)
+                if apiurl:
+                    s= s.where(self.portals.c.apiurl == apiurl)
+            
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                res = con.execute(s).fetchone()
+                if res:
+                    return Portal.fromResult(dict(res))
+                return None
     
     def getPortals(self, software=None, iso3=None):
         with Timer(key="getPortals") as t:
-            
-            s = select([self.portals])
-            if software:
-                s=s.where(self.portals.c.software == software)
-            if iso3:
-                s=s.where(self.portals.c.iso3 == iso3)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            
-            return s.execute() 
+            with self.engine.begin() as con:
+                s = select([self.portals])
+                if software:
+                    s=s.where(self.portals.c.software == software)
+                if iso3:
+                    s=s.where(self.portals.c.iso3 == iso3)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                
+                return con.execute(s) 
         
     def getPortalsCount(self, software=None):
-        s = select([func.count(self.portals.c.id)])
-        if software:
-            s=s.where(self.portals.c.software == software)
+        with self.engine.begin() as con:
+            s = select([func.count(self.portals.c.id)])
+            if software:
+                s=s.where(self.portals.c.software == software)
             
-        self.log.debug(query=s.compile(), params=s.compile().params)
+                self.log.debug(query=s.compile(), params=s.compile().params)
             
-        return s.execute()
+                return con.execute(s)
 
     ####
     # Portal Meta Data
     ####
     def getPortalMetaData(self,portalID=None, snapshot=None):
         with Timer(key="getPortalMetaData") as t:
-            s = select([self.pmd])
-        
-            if portalID:
-                s= s.where(self.pmd.c.portal_id == portalID)
-            if snapshot:
-                s= s.where(self.pmd.c.snapshot == snapshot)
+            with self.engine.begin() as con:
+                s = select([self.pmd])
             
-            self.log.debug(query=s.compile(), params=s.compile().params)    
+                if portalID:
+                    s= s.where(self.pmd.c.portal_id == portalID)
+                if snapshot:
+                    s= s.where(self.pmd.c.snapshot == snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                res = con.execute(s).fetchone()
+                #self.conn.execute(s).fetchone()
             
-            res = s.execute().fetchone()
-            #self.conn.execute(s).fetchone()
-        
-            if res:
-                return PortalMetaData.fromResult(dict( res))
-            return None
+                if res:
+                    return PortalMetaData.fromResult(dict( res))
+                return None
         
         
     def getPortalMetaDatasUntil(self, snapshot=None, from_sn=None, portalID=None):
@@ -784,10 +821,11 @@ class PostgressDBM(object):
     ###
     def deleteResource(self,url, snapshot):
         with Timer(key="deleteResource") as t:
-            delete= self.resources.delete().where(and_(self.resources.c.snapshot==snapshot,
-                                                    self.resources.c.url == url))
-            self.log.debug(query=delete.compile(), params=delete.compile().params)
-            delete.execute()
+            with self.engine.begin() as con:
+                delete= self.resources.delete().where(and_(self.resources.c.snapshot==snapshot,
+                                                        self.resources.c.url == url))
+                self.log.debug(query=delete.compile(), params=delete.compile().params)
+                con.execute(delete)
             
     def insertResource(self, Resource):
         with Timer(key="insertResource") as t:
@@ -818,117 +856,123 @@ class PostgressDBM(object):
   
     def countProcessedResources(self, snapshot=None,portalID=None):
         with Timer(key="countProcessedResources") as t:
-            s = select([func.count(self.resources.c.url)],\
-                       and_(self.resources.c.snapshot==snapshot
-                            #,self.resources.c.status != -1
-                            )
-                       )
-            if portalID:
-                s= s.where(self.resources.c.origin[portalID]!=None)
-            
-            print s.compile(), s.compile().params    
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([func.count(self.resources.c.url)],\
+                           and_(self.resources.c.snapshot==snapshot
+                                #,self.resources.c.status != -1
+                                )
+                           )
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)
+                
+                print s.compile(), s.compile().params    
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
         #return  self.conn.execute(s)
     
     def countResources(self, snapshot=None, portalID=None, status =None):
         with Timer(key="countResources") as t:
-            s = select([func.count(self.resources.c.url)])
-            if snapshot:
-                s =s.where(self.resources.c.snapshot== snapshot)
-            if portalID:
-                s= s.where(self.resources.c.origin[portalID]!=None)
-            if status:
-                s= s.where(self.resources.c.status==status)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute().scalar()
+            with self.engine.begin() as con:
+                s = select([func.count(self.resources.c.url)])
+                if snapshot:
+                    s =s.where(self.resources.c.snapshot== snapshot)
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)
+                if status:
+                    s= s.where(self.resources.c.status==status)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s).scalar()
     def getResources(self, snapshot=None, portalID=None, status =None,limit=None,statuspre=None):
         with Timer(key="getResources") as t:
-            print "query"
-            s = select([self.resources])
-            if snapshot:
-                s =s.where(self.resources.c.snapshot== snapshot)
-            if portalID:
-                s= s.where(self.resources.c.origin[portalID]!=None)
-            if status:
-                s= s.where(self.resources.c.status==status)
-            elif statuspre:
-                sp=int(statuspre[0])
-                s= s.where(self.resources.c.status >= sp*100)
-                s= s.where(self.resources.c.status <= (sp+1)*100)
-            if limit:
-                s=s.limit(limit)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.resources])
+                if snapshot:
+                    s =s.where(self.resources.c.snapshot== snapshot)
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)
+                if status:
+                    s= s.where(self.resources.c.status==status)
+                elif statuspre:
+                    sp=int(statuspre[0])
+                    s= s.where(self.resources.c.status >= sp*100)
+                    s= s.where(self.resources.c.status <= (sp+1)*100)
+                if limit:
+                    s=s.limit(limit)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
 
 
     def getResourcesMimeSize(self, snapshot=None, portalID=None, status =None):
         with Timer(key="getResourcesMimeSize") as t:
-            s = select([self.resources.c.url, self.resources.c.mime, self.resources.c.size])
-            if snapshot:
-                s =s.where(self.resources.c.snapshot== snapshot)
-            if portalID:
-                s= s.where(self.resources.c.origin[portalID]!=None)
-            if status:
-                s= s.where(self.resources.c.status==status)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.resources.c.url, self.resources.c.mime, self.resources.c.size])
+                if snapshot:
+                    s =s.where(self.resources.c.snapshot== snapshot)
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)
+                if status:
+                    s= s.where(self.resources.c.status==status)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
         
     def getProcessedResources(self, snapshot=None, portalID=None):
         with Timer(key="getProcessedResources") as t:
-            s = select([self.resources])
-            if snapshot:
-                s =s.where(self.resources.c.snapshot== snapshot)
-            if portalID:
-                s= s.where(self.resources.c.origin[portalID]!=None)  
-                 
-            #s=s.where(self.resources.c.status !=-1)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.resources])
+                if snapshot:
+                    s =s.where(self.resources.c.snapshot== snapshot)
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)  
+                     
+                #s=s.where(self.resources.c.status !=-1)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
             #return self.conn.execute(s)
         
     def getResourceWithoutHeadCount(self,snapshot=None, status=-1):
         with Timer(key="getResourceWithoutHead") as t:
-            s=select([func.count(self.resources.c.url)]).\
-                where(self.resources.c.snapshot==snapshot).\
-                where(self.resources.c.status == status)
-            return s.execute().scalar()
+            with self.engine.begin() as con:
+                s=select([func.count(self.resources.c.url)]).\
+                    where(self.resources.c.snapshot==snapshot).\
+                    where(self.resources.c.status == status)
+                return con.execute(s).scalar()
                
     def getResourceWithoutHead(self, snapshot=None, status=-1, limit=None):
         with Timer(key="getResourceWithoutHead") as t:
-            s=select([self.resources]).\
-                where(self.resources.c.snapshot==snapshot)
+            with self.engine.begin() as con:
+                s=select([self.resources]).\
+                    where(self.resources.c.snapshot==snapshot)
+                    
+                if status is not None:
+                    s.where(self.resources.c.status == status)
                 
-            if status is not None:
-                s.where(self.resources.c.status == status)
-            
-            if limit:
-                s=s.limit(limit)
-            #if status:
-            #    s= s.where(self.resources.c.status == status)
-            #if not status:
-            #    s= s.where(self.resources.c.status == None)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            
-            return s.execute()
-            #return self.conn.execute(s)
+                if limit:
+                    s=s.limit(limit)
+                #if status:
+                #    s= s.where(self.resources.c.status == status)
+                #if not status:
+                #    s= s.where(self.resources.c.status == None)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                
+                return con.execute(s)
     
     def getResourceByURL(self, url, snapshot):
         with Timer(key="getResource") as t:
-            s = select([self.resources])
-        
-            s= s.where(self.resources.c.url == url)
-            s= s.where(self.resources.c.snapshot == snapshot)
+            with self.engine.begin() as con:
+                s = select([self.resources])
             
-            self.log.debug(query=s.compile(), params=s.compile().params)    
-            
-            
-            res = s.execute().fetchone()
-            #self.conn.execute(s).fetchone()
-            if res:
-                return Resource.fromResult( dict( res))
-            return None
+                s= s.where(self.resources.c.url == url)
+                s= s.where(self.resources.c.snapshot == snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                
+                res = con.execute(s).fetchone()
+                #self.conn.execute(s).fetchone()
+                if res:
+                    return Resource.fromResult( dict( res))
+                return None
 
     
     
@@ -936,19 +980,21 @@ class PostgressDBM(object):
             
     def getResource(self, Resource):
         with Timer(key="getResource") as t:
-            s = select([self.resources])
-        
-            s= s.where(self.resources.c.url == Resource.url)
-            s= s.where(self.resources.c.snapshot == Resource.snapshot)
             
-            self.log.debug(query=s.compile(), params=s.compile().params)    
+            with self.engine.begin() as con:
+                s = select([self.resources])
             
-            
-            res = s.execute().fetchone()
-            #self.conn.execute(s).fetchone()
-            if res:
-                return Resource.fromResult( dict( res))
-            return None
+                s= s.where(self.resources.c.url == Resource.url)
+                s= s.where(self.resources.c.snapshot == Resource.snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                
+                res = con.execute(s).fetchone()
+                #self.conn.execute(s).fetchone()
+                if res:
+                    return Resource.fromResult( dict( res))
+                return None
         
 
         
@@ -1115,9 +1161,9 @@ class PostgressDBM(object):
     def getDatasetsDiff(self,portalID=None, snapshot=None, computeAdds=True):
         if computeAdds:
             snapshotFrom=snapshot
-            snapshotTo=nextWeek(snapshot)
+            snapshotTo=getNextWeek(snapshot)
         else:
-            snapshotFrom=prevWeek(snapshot)
+            snapshotFrom=getPreviousWeek(snapshot)
             snapshotTo=snapshot
         
         ssub = select( [self.datasets.c.id] ).where(self.datasets.c.snapshot == snapshotTo)

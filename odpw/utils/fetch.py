@@ -38,6 +38,7 @@ def fetching(obj):
     fullfetch=obj['fullfetch']
 
     dbm.engine.dispose()
+    
     log.info("START Fetching", pid=Portal.id, sn=sn, fullfetch=fullfetch, software=Portal.software)
     
     try:
