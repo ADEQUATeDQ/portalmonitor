@@ -36,7 +36,7 @@ def cli(args, dbm):
         today = datetime.now()
         nextCrawl = today + timedelta(hours=2)
         nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
-        nextCrawl= datetime(year=2016, month=01, day=19, hour=20)
+        nextCrawl= datetime(year=2016, month=01, day=21, hour=16)
         print 'Crawl time', nextCrawl
     else:
         nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
