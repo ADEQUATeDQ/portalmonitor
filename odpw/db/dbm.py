@@ -260,9 +260,10 @@ class PostgressDBM(object):
         
     def getUniqueSnapshots(self):
          with Timer(key="getUniqueSnapshots") as t:
-             s = select([self.pmd.c.snapshot]).distinct()
+             with self.engine.begin() as con:
+                 s = select([self.pmd.c.snapshot]).distinct()
              
-             return s.execute()
+                 return con.execute(s)
         
     def getSnapshots(self, portalID=None,apiurl=None):
         with Timer(key="getSnapshots") as t:
@@ -281,18 +282,18 @@ class PostgressDBM(object):
      
     def getSnapshotsFromPMD(self, portalID=None):
         with Timer(key="getSnapshotsFromPMD") as t:
-            
-            s = select([self.pmd.c.portal_id , self.pmd.c.snapshot])
-            
-            if portalID:
-                s= s.where(self.pmd.c.portal_id==portalID)
-            #if apiurl:
-            #    s= s.where(self.pmd.c.apiurl==apiurl)
-            
-            s=s.distinct()
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.pmd.c.portal_id , self.pmd.c.snapshot])
+                
+                if portalID:
+                    s= s.where(self.pmd.c.portal_id==portalID)
+                #if apiurl:
+                #    s= s.where(self.pmd.c.apiurl==apiurl)
+                
+                s=s.distinct()
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
     ###
     # PORTALS
     ####         
@@ -312,17 +313,18 @@ class PostgressDBM(object):
     
     def updatePortal(self, Portal):
         with Timer(key="updatePortal") as t:
-            ins = self.portals.update().\
-                where(self.portals.c.id==Portal.id).\
-                values(
+            with self.engine.begin() as con:
+                ins = self.portals.update().\
+                    where(self.portals.c.id==Portal.id).\
+                    values(
                        url=Portal.url,
                        apiurl= Portal.apiurl,
                        software=Portal.software,
                        iso3=Portal.iso3
                        )
             
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            ins.execute()
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                con.execute(ins)
     
     def getUnprocessedPortals(self,snapshot=None):
         with Timer(key="getUnprocessedPortals") as t:
@@ -371,6 +373,7 @@ class PostgressDBM(object):
         
     def getPortalsCount(self, software=None):
         with self.engine.begin() as con:
+            
             s = select([func.count(self.portals.c.id)])
             if software:
                 s=s.where(self.portals.c.software == software)
@@ -404,107 +407,112 @@ class PostgressDBM(object):
         
     def getPortalMetaDatasUntil(self, snapshot=None, from_sn=None, portalID=None):
         with Timer(key="getPortalMetaDatas") as t:
-            s = select([self.pmd])
-            if snapshot:
-                s=s.where(self.pmd.c.snapshot <= snapshot)
-            if from_sn:
-                s=s.where(self.pmd.c.snapshot >= from_sn)
-            if portalID:
-                s= s.where(self.pmd.c.portal_id == portalID)
+            with self.engine.begin() as con:
+                s = select([self.pmd])
+                if snapshot:
+                    s=s.where(self.pmd.c.snapshot <= snapshot)
+                if from_sn:
+                    s=s.where(self.pmd.c.snapshot >= from_sn)
+                if portalID:
+                    s= s.where(self.pmd.c.portal_id == portalID)
+                    
+                self.log.debug(query=s.compile(), params=s.compile().params)
                 
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            
-            print s.compile()
-            
-            return s.execute()
+                
+                return con.execute(s)
         
     def getPortalMetaDatasSelect(self, snapshot=None, portalID=None, portals=None, selectVars=None):
         with Timer(key="getPortalMetaDatas") as t:
-            s = select([self.pmd])
-            if snapshot:
-                s=s.where(self.pmd.c.snapshot == snapshot)
-            if portalID:
-                s= s.where(self.pmd.c.portal_id == portalID)
-            if portals:
-                s= s.where(self.pmd.c.portal_id.in_(portals))
-                
-            self.log.debug(query=s.compile(), params=s.compile().params)
-               
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.pmd])
+                if snapshot:
+                    s=s.where(self.pmd.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.pmd.c.portal_id == portalID)
+                if portals:
+                    s= s.where(self.pmd.c.portal_id.in_(portals))
+                    
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                   
+                return con.execute(s)
+            
     def getPortalMetaDatas(self, snapshot=None, portalID=None, portals=None, selectVars=None):
         with Timer(key="getPortalMetaDatas") as t:
-            if selectVars:
-                s = select(selectVars)
-            else:
-                s = select([self.pmd])
-            if snapshot:
-                s=s.where(self.pmd.c.snapshot == snapshot)
-            if portalID:
-                s= s.where(self.pmd.c.portal_id == portalID)
-            if portals:
-                s= s.where(self.pmd.c.portal_id.in_(portals))
-                
-            self.log.debug(query=s.compile(), params=s.compile().params)
-               
-            return s.execute()
+            with self.engine.begin() as con:
+                if selectVars:
+                    s = select(selectVars)
+                else:
+                    s = select([self.pmd])
+                if snapshot:
+                    s=s.where(self.pmd.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.pmd.c.portal_id == portalID)
+                if portals:
+                    s= s.where(self.pmd.c.portal_id.in_(portals))
+                    
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                   
+                return con.execute(s)
         
     def getPortalIDs(self, snapshot=None):
         with Timer(key="getPortalMetaDatas") as t:
-            s = select([self.pmd.c.portal_id])
-            if snapshot:
-                s=s.where(self.pmd.c.snapshot == snapshot)
+            with self.engine.begin() as con:
+                s = select([self.pmd.c.portal_id])
+                if snapshot:
+                    s=s.where(self.pmd.c.snapshot == snapshot)
                
-            self.log.debug(query=s.compile(), params=s.compile().params)
+                    self.log.debug(query=s.compile(), params=s.compile().params)
                
-            return s.execute()
+                return con.execute(s)
 
     def getPortalMetaDatasBySoftware(self, software=None, snapshot=None, portalID=None):
         with Timer(key="getPortalMetaDatasBySoftware") as t:
-
-            j = join(self.pmd, self.portals, self.pmd.c.portal_id == self.portals.c.id)
-            s = select([self.pmd]).select_from(j)
-            s = s.where(self.portals.c.software == software)
-
-            if snapshot:
-                s = s.where(self.pmd.c.snapshot == snapshot)
-            if portalID:
-                s = s.where(self.pmd.c.portal_id == portalID)
-
-            self.log.debug(query=s.compile(), params=s.compile().params)
-
-            return s.execute().fetchall()
+            with self.engine.begin() as con:
+                j = join(self.pmd, self.portals, self.pmd.c.portal_id == self.portals.c.id)
+                s = select([self.pmd]).select_from(j)
+                s = s.where(self.portals.c.software == software)
+    
+                if snapshot:
+                    s = s.where(self.pmd.c.snapshot == snapshot)
+                if portalID:
+                    s = s.where(self.pmd.c.portal_id == portalID)
+    
+                self.log.debug(query=s.compile(), params=s.compile().params)
+    
+                return con.execute(s).fetchall()
 
     def insertPortalMetaData(self, PortalMetaData):
         with Timer(key="insertPortalMetaData") as t:
-            fetch_stats=None
-            if PortalMetaData.fetch_stats:
-                fetch_stats=PortalMetaData.fetch_stats
-                #json.dumps(nested_json(PortalMetaData.fetch_stats),default=date_handler)
-            general_stats=None
-            if PortalMetaData.general_stats:
-                general_stats=PortalMetaData.general_stats
-                #json.dumps(nested_json(PortalMetaData.general_stats),default=date_handler)
-            qa_stats=None
-            if PortalMetaData.qa_stats:
-                qa_stats=PortalMetaData.qa_stats
-                #json.dumps(nested_json(PortalMetaData.qa_stats),default=date_handler)
-            res_stats=None
-            if PortalMetaData.res_stats:
-                res_stats=PortalMetaData.res_stats
-                #json.dumps(nested_json(PortalMetaData.res_stats),default=date_handler)
-                
-            ins = self.pmd.insert().values(
-                                               snapshot=PortalMetaData.snapshot,
-                                               portal_id=PortalMetaData.portal_id,
-                                               fetch_stats=fetch_stats,
-                                               res_stats=res_stats,
-                                               qa_stats=qa_stats,
-                                               general_stats=general_stats,
-                                               resources=PortalMetaData.resources,
-                                               datasets=PortalMetaData.datasets
-                                               )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            ins.execute()
+            with self.engine.begin() as con:
+                fetch_stats=None
+                if PortalMetaData.fetch_stats:
+                    fetch_stats=PortalMetaData.fetch_stats
+                    #json.dumps(nested_json(PortalMetaData.fetch_stats),default=date_handler)
+                general_stats=None
+                if PortalMetaData.general_stats:
+                    general_stats=PortalMetaData.general_stats
+                    #json.dumps(nested_json(PortalMetaData.general_stats),default=date_handler)
+                qa_stats=None
+                if PortalMetaData.qa_stats:
+                    qa_stats=PortalMetaData.qa_stats
+                    #json.dumps(nested_json(PortalMetaData.qa_stats),default=date_handler)
+                res_stats=None
+                if PortalMetaData.res_stats:
+                    res_stats=PortalMetaData.res_stats
+                    #json.dumps(nested_json(PortalMetaData.res_stats),default=date_handler)
+                    
+                ins = self.pmd.insert().values(
+                                                   snapshot=PortalMetaData.snapshot,
+                                                   portal_id=PortalMetaData.portal_id,
+                                                   fetch_stats=fetch_stats,
+                                                   res_stats=res_stats,
+                                                   qa_stats=qa_stats,
+                                                   general_stats=general_stats,
+                                                   resources=PortalMetaData.resources,
+                                                   datasets=PortalMetaData.datasets
+                                                   )
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                con.execute(ins)
     
     def updatePortalMetaData(self, PortalMetaData):
         with Timer(key="updatePortalMetaData") as t:
@@ -611,15 +619,16 @@ class PostgressDBM(object):
             #assuming we have a change
             change=2
             
-            #TODO optimise query, get first the latest snapshot and check then for md5
-            s=select([self.datasets.c.md5]).where(
-                                                  and_(
-                                                       self.datasets.c.id==Dataset.id, 
-                                                       self.datasets.c.portal_id==Dataset.portal_id,
-                                                       self.datasets.c.snapshot != Dataset.snapshot)
-                                                   ).order_by(self.datasets.c.snapshot.desc()).limit(1)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            result=s.execute()
+            with self.engine.begin() as con:
+                #TODO optimise query, get first the latest snapshot and check then for md5
+                s=select([self.datasets.c.md5]).where(
+                                                      and_(
+                                                           self.datasets.c.id==Dataset.id, 
+                                                           self.datasets.c.portal_id==Dataset.portal_id,
+                                                           self.datasets.c.snapshot != Dataset.snapshot)
+                                                       ).order_by(self.datasets.c.snapshot.desc()).limit(1)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                result=con.execute(s)
             if result:
                 for res in result:
                     if Dataset.md5 == res['md5'] :
@@ -627,8 +636,8 @@ class PostgressDBM(object):
             else: 
                 change=1
             
-            
-            ins = self.datasets.insert().values(
+            with self.engine.begin() as con:
+                ins = self.datasets.insert().values(
                                                 id=Dataset.id, 
                                                 portal_id=Dataset.portal_id,
                                                 snapshot=Dataset.snapshot,
@@ -639,10 +648,10 @@ class PostgressDBM(object):
                                                 change=change,
                                                 software=Dataset.software
                                               )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
-            #self.conn.execute(ins)
-            ins.execute()
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                self.log.info("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
+                #self.conn.execute(ins)
+                con.execute(ins)
     
     def updateDatasetFetch(self, Dataset):
         with Timer(key="insertDatasetFetch") as t:
@@ -685,47 +694,49 @@ class PostgressDBM(object):
     
     def insertDataset(self, Dataset):
         with Timer(key="insertDataset") as t:
-            #assuming we have a change
-            change=2
-            
-            ins = self.datasets.insert().values(
-                                                id=Dataset.id, 
-                                                portal_id=Dataset.portal_id,
-                                                snapshot=Dataset.snapshot,
-                                                data=Dataset.data,
-                                                status=Dataset.status,
-                                                exception=Dataset.exception,
-                                                md5=Dataset.md5,
-                                                change=change,
-                                                software=Dataset.software
-                                              )
-            self.log.debug(query=ins.compile(), params=ins.compile().params)
-            self.log.debug("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
-            #self.conn.execute(ins)
-            ins.execute()
+            with self.engine.begin() as con:
+                #assuming we have a change
+                change=2
+                
+                ins = self.datasets.insert().values(
+                                                    id=Dataset.id, 
+                                                    portal_id=Dataset.portal_id,
+                                                    snapshot=Dataset.snapshot,
+                                                    data=Dataset.data,
+                                                    status=Dataset.status,
+                                                    exception=Dataset.exception,
+                                                    md5=Dataset.md5,
+                                                    change=change,
+                                                    software=Dataset.software
+                                                  )
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                self.log.debug("InsertDataset", pid=Dataset.portal_id, did=Dataset.id)
+                #self.conn.execute(ins)
+                con.execute(ins)
 
     def getDatasets(self,portalID=None, snapshot=None, software=None, status=None, limit=None,statuspre=None):
         with Timer(key="getDatasets") as t:
-            s = select([self.datasets])
-            
-            if snapshot:
-                s= s.where(self.datasets.c.snapshot == snapshot)
-            if portalID:
-                s= s.where(self.datasets.c.portal_id == portalID)
-            if software:
-                s= s.where(self.datasets.c.software == software)
-            if status:
-                s= s.where(self.datasets.c.status == status)
-            elif statuspre:
-                sp=int(statuspre[0])
-                s= s.where(self.datasets.c.status >= sp*100)
-                s= s.where(self.datasets.c.status <= (sp+1)*100)
-            if limit:
-                s=s.limit(limit)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)    
-            
-            return s.execute()
+            with self.engine.begin() as con:
+                s = select([self.datasets])
+                
+                if snapshot:
+                    s= s.where(self.datasets.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.datasets.c.portal_id == portalID)
+                if software:
+                    s= s.where(self.datasets.c.software == software)
+                if status:
+                    s= s.where(self.datasets.c.status == status)
+                elif statuspre:
+                    sp=int(statuspre[0])
+                    s= s.where(self.datasets.c.status >= sp*100)
+                    s= s.where(self.datasets.c.status <= (sp+1)*100)
+                if limit:
+                    s=s.limit(limit)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                return con.execute(s)
 
 
     def getDatasetsAsStream(self,portalID=None, snapshot=None, software=None, status=None, page=1000):
@@ -759,62 +770,64 @@ class PostgressDBM(object):
 
     def countDatasets(self, portalID=None, snapshot=None, software=None):
         with Timer(key="countDatasets") as t:
-            s = select([func.count(self.datasets.c.id)])
-            if snapshot:
-                s= s.where(self.datasets.c.snapshot == snapshot)
-            if portalID:
-                s= s.where(self.datasets.c.portal_id == portalID)
-            if software:
-                s= s.where(self.datasets.c.software == software)
+            with self.engine.begin() as con:
+                s = select([func.count(self.datasets.c.id)])
+                if snapshot:
+                    s= s.where(self.datasets.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.datasets.c.portal_id == portalID)
+                if software:
+                    s= s.where(self.datasets.c.software == software)
             
-        self.log.debug(query=s.compile(), params=s.compile().params)
-        return s.execute().scalar()
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s).scalar()
         #return  self.conn.execute(s)
             
     def getDataset(self, datasetID=None, snapshot=None, portalID=None):
         with Timer(key="getDataset") as t:
-            s = select([self.datasets])
+            with self.engine.begin() as con:
+                s = select([self.datasets])
+                
+                if datasetID:
+                    s= s.where(self.datasets.c.id == datasetID)
+                if snapshot:
+                    s= s.where(self.datasets.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.datasets.c.portal_id == portalID)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)    
+                
+                res = con.execute(s).fetchone()
+                #self.conn.execute(s).fetchone()
             
-            if datasetID:
-                s= s.where(self.datasets.c.id == datasetID)
-            if snapshot:
-                s= s.where(self.datasets.c.snapshot == snapshot)
-            if portalID:
-                s= s.where(self.datasets.c.portal_id == portalID)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)    
-            
-            res = s.execute().fetchone()
-            #self.conn.execute(s).fetchone()
-        
-            if res:
-                return Dataset.fromResult( dict( res))
-            return None
+                if res:
+                    return Dataset.fromResult( dict( res))
+                return None
 
     def updateDataset(self, Dataset):
         with Timer(key="updateDataset") as t:
-            
-            data=None
-            if Dataset.data:
-                data = Dataset.data
-            qa_stats=None
-            if Dataset.qa_stats:
-                qa_stats = Dataset.qa_stats
-            up = self.datasets.update().where(
-                                              and_(self.datasets.c.portal_id == Dataset.portal_id,
-                                                   self.datasets.c.snapshot == Dataset.snapshot,
-                                                   self.datasets.c.id == Dataset.id
-                                                   )).\
-                values(
-                       data=data,
-                       status=Dataset.status,
-                       exception=Dataset.exception,
-                       md5=Dataset.md5,
-                       change=Dataset.change,
-                       qa_stats=qa_stats,
-                       )
-            self.log.debug(query=up.compile(), params=up.compile().params)
-            up.execute()
+            with self.engine.begin() as con:
+                data=None
+                if Dataset.data:
+                    data = Dataset.data
+                qa_stats=None
+                if Dataset.qa_stats:
+                    qa_stats = Dataset.qa_stats
+                up = self.datasets.update().where(
+                                                  and_(self.datasets.c.portal_id == Dataset.portal_id,
+                                                       self.datasets.c.snapshot == Dataset.snapshot,
+                                                       self.datasets.c.id == Dataset.id
+                                                       )).\
+                    values(
+                           data=data,
+                           status=Dataset.status,
+                           exception=Dataset.exception,
+                           md5=Dataset.md5,
+                           change=Dataset.change,
+                           qa_stats=qa_stats,
+                           )
+                self.log.debug(query=up.compile(), params=up.compile().params)
+                con.execute(up)
   
     ###
     #Resources
@@ -1029,44 +1042,47 @@ class PostgressDBM(object):
     ##############
     def countDatasetsPerSnapshot(self, portalID=None, snapshot=None):
         with Timer(key="countDatasetsPerSnapshot") as t:
-            s=select( [func.count(self.datasets.c.id)]).\
-            where(self.datasets.c.portal_id==portalID)
-            if snapshot:
-                s=s.where(self.datasets.c.snapshot==snapshot)
-            else:
-                s=s.group_by(self.datasets.c.snapshot)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute().scalar()
+            with self.engine.begin() as con:
+                s=select( [func.count(self.datasets.c.id)]).\
+                where(self.datasets.c.portal_id==portalID)
+                if snapshot:
+                    s=s.where(self.datasets.c.snapshot==snapshot)
+                else:
+                    s=s.group_by(self.datasets.c.snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s).scalar()
             #return self.conn.execute(s)
     
     def countResourcesPerSnapshot(self,portalID=None, snapshot=None):
         with Timer(key="countResourcesPerSnapshot") as t:
-            s=select( [func.count(self.resources.c.url).label('resources')])
-            if portalID:
-                s=s.where(self.resources.c.origin[portalID]!=None)
-            if snapshot:
-                s=s.where(self.resources.c.snapshot==snapshot)
-            
-            #s=s.group_by(self.resources.c.snapshot)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute().scalar()
-    
+            with self.engine.begin() as con:
+                s=select( [func.count(self.resources.c.url).label('resources')])
+                if portalID:
+                    s=s.where(self.resources.c.origin[portalID]!=None)
+                if snapshot:
+                    s=s.where(self.resources.c.snapshot==snapshot)
+                
+                #s=s.group_by(self.resources.c.snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s).scalar()
+        
     def countProcessedResourcesPerSnapshot(self,portalID=None, snapshot=None):
         with Timer(key="countResourcesPerSnapshot") as t:
-            s=select( [func.count(self.resources.c.url).label('resources')])
-            
-            if portalID:
-                s=s.where(self.resources.c.origin[portalID]!=None)
-            if snapshot:
-                s=s.where(self.resources.c.snapshot==snapshot)
-            s=s.where(self.resources.c.status != -1)
-            
-            #s=s.group_by(self.resources.c.snapshot)
-            
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute().scalar()
+            with self.engine.begin() as con:
+                s=select( [func.count(self.resources.c.url).label('resources')])
+                
+                if portalID:
+                    s=s.where(self.resources.c.origin[portalID]!=None)
+                if snapshot:
+                    s=s.where(self.resources.c.snapshot==snapshot)
+                s=s.where(self.resources.c.status != -1)
+                
+                #s=s.group_by(self.resources.c.snapshot)
+                
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s).scalar()
              
              
              
@@ -1075,52 +1091,54 @@ class PostgressDBM(object):
     ########
     
     def getLatestPortalSnapshots(self):
-        latest= select([self.pmd.c.portal_id.label('portal_id'),self.pmd.c.datasets,self.pmd.c.resources,
+        with self.engine.begin() as con:
+            latest= select([self.pmd.c.portal_id.label('portal_id'),self.pmd.c.datasets,self.pmd.c.resources,
                         func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id)
-        print latest
-        return latest.execute()
+            return con.execute(latest)
     
     def getLatestPortalMetaDatas(self):
         with Timer(key="getLatestPortalMetaDatas") as t:
-            
-            latest= select([self.pmd.c.portal_id.label('portal_id'), func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id).alias()
-            t1=self.pmd.alias()
-            
-            s=  select([t1.c.portal_id,
-                        t1.c.snapshot,
-                        t1.c.resources,
-                        t1.c.datasets]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
-            
-            print s.compile()
-            return s.execute()
+            with self.engine.begin() as con:
+                latest= select([self.pmd.c.portal_id.label('portal_id'), func.max(self.pmd.c.snapshot).label('max')]).group_by(self.pmd.c.portal_id).alias()
+                t1=self.pmd.alias()
+                
+                s=  select([t1.c.portal_id,
+                            t1.c.snapshot,
+                            t1.c.resources,
+                            t1.c.datasets]).select_from(join(t1,latest,and_(latest.c.portal_id==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
+                
+                return con.execute(s)
     
     def getLatestPortalMetaData(self, portalID=None):
         with Timer(key="getLatestPortalMetaData") as t:
             
-            latest= select([func.max(self.pmd.c.snapshot).label('max')]).where(self.pmd.c.portal_id==portalID).alias()
+            with self.engine.begin() as con:
+                latest= select([func.max(self.pmd.c.snapshot).label('max')]).where(self.pmd.c.portal_id==portalID).alias()
+                
+                t1=self.pmd.alias()
+                
+                s=  select([t1]).select_from(join(t1,latest,and_(portalID==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
+                
+                res = con.execute(s).fetchone()
+                #self.conn.execute(s).fetchone()
             
-            t1=self.pmd.alias()
-            
-            s=  select([t1]).select_from(join(t1,latest,and_(portalID==t1.c.portal_id,latest.c.max==t1.c.snapshot)))
-            
-            res = s.execute().fetchone()
-            #self.conn.execute(s).fetchone()
-        
-            if res:
-                return PortalMetaData.fromResult(dict( res))
-            return None
+                if res:
+                    return PortalMetaData.fromResult(dict( res))
+                return None
             
     def getSystemPortalInfo(self):
         with Timer(key="getSoftwareDist") as t:
-            s=  select([self.portals.c.software, self.portals.c.iso3, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software,self.portals.c.iso3)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s=  select([self.portals.c.software, self.portals.c.iso3, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software,self.portals.c.iso3)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
     
     def getSoftwareDist(self):
         with Timer(key="getSoftwareDist") as t:
-            s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)
-            self.log.debug(query=s.compile(), params=s.compile().params)
-            return s.execute()
+            with self.engine.begin() as con:
+                s=  select([self.portals.c.software, func.count(self.portals.c.id).label('count')]).group_by(self.portals.c.software)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                return con.execute(s)
     
     #def getPortalStatusDist(self):
     #    with Timer(key="getPortalStatusDist") as t:
