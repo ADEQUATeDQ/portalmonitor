@@ -23,6 +23,7 @@ import urlnorm
 
 def head (dbm, sn, seen, resource):
     try:
+        dbm.engine.dispose()
         props={}
         props['mime']=None
         props['size']=None
@@ -144,7 +145,6 @@ def cli(args,dbm):
     resources= getResources(dbm, sn, status=args.status)
     
     while len(resources) >0:
-        
         pool = ThreadPool(processes=args.processors,) 
         mgr = multiprocessing.Manager()
         seen = mgr.dict()
