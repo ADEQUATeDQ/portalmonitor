@@ -1022,8 +1022,8 @@ class PostgressDBM(object):
                 if Resource.header:
                     header=Resource.header
                     #json.dumps(nested_json(Resource.header),default=date_handler)
-                print origin
-                print header
+                #print origin
+                #print header
                 ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
                                                    status=Resource.status,
                                                    origin=origin,
