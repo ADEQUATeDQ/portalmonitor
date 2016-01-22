@@ -5,9 +5,8 @@ Created on Jul 24, 2015
 '''
 import hashlib
 
-from odpw.analysers.core import ElementCountAnalyser, DistinctElementCount
-from odpw.analysers import Analyser
 import json
+from odpw.analysers import Analyser
 from odpw.db.models import Resource
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 from odpw.utils.timer import Timer

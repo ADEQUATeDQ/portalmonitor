@@ -92,7 +92,7 @@ class AnalyserSet(Analyser):
             self.analysers[analyser.name()] = analyser
         return analyser
 
-    def analyse(self, element, safe=None):
+    def analyse(self, element):
         for c in self.analysers.itervalues():
             c.analyse(element)
         
@@ -121,7 +121,7 @@ class AnalyserSet(Analyser):
         return res
 class SAFEAnalyserSet(AnalyserSet):
     
-    def analyse(self, element, safe=None):
+    def analyse(self, element):
         with Timer(key="analyse") as t:
             for c in self.analysers.itervalues():
                 try:
@@ -129,6 +129,7 @@ class SAFEAnalyserSet(AnalyserSet):
                         c.analyse(element)
                 except Exception as e:
                     ErrorHandler.handleError(log, "AnalyserException", analyser=str(c), exception=e, exc_info=True)
+
 
 class AnalyseEngine(Analyser):
     
@@ -188,5 +189,5 @@ def process_all( analyser, iterable):
 
     return analyser
     
-    
+
 

@@ -1,11 +1,10 @@
 from odpw.analysers.count_analysers import DatasetCount, DCATDistributionCount,\
     DCATOrganizationsCount, DCATTagsCount, DCATFormatCount, DCATLicenseCount
-from odpw.analysers.quality.analysers import dcat_analyser
+from odpw.analysers.quality.analysers import DCATDMD
 from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.analysers.dbm_handlers import DatasetInserter,\
-    DCATDistributionInserter, DatasetFetchUpdater
+    DCATDistributionInserter
 from odpw.analysers.core import DCATConverter
-from odpw.analysers.datasetlife import DatasetLifeAnalyser
 
 __author__ = 'jumbrich'
 
@@ -44,6 +43,7 @@ def fetching(obj):
     try:
         ## get the pmd for this job
         pmd = dbm.getPortalMetaData(portalID=Portal.id, snapshot=sn)
+
         pmd.fetchstart()
         dbm.updatePortalMetaData(pmd)
 
@@ -55,6 +55,7 @@ def fetching(obj):
         ae = SAFEAnalyserSet()
         
         ae.add(MD5DatasetAnalyser())
+
         ae.add(DatasetCount())
         ae.add(DatasetStatusCode())
 
@@ -94,13 +95,24 @@ def fetching(obj):
         ae.add(DCATLicenseCount())
         ae.add(DCATResourceInDSAge())
         ae.add(DCATDatasetAge())
-        ae.add(DatasetInserter(dbm))
+
         #ae.add(DatasetLifeAnalyser(dbm))
 
-        for a in dcat_analyser():
-            ae.add(a)
+        # dcat metrics
+        ae.add(DCATDMD())
 
+        # TODO ckan metrics
+        # ae.add(CKANDMD())
+
+        #TODO
+        #ae.add(OrganisationAggregator(dbm, Portal, sn))
+        # in Organ...Agg.done() -> write an dbminsert for each organisation
+
+
+        #make sure this analyser is last in the chain, since we now store ds and dmd
+        ae.add(DatasetInserter(dbm))
         try:
+            #webfetch iterator
             iter = processor.generateFetchDatasetIter(Portal, sn)
             process_all( ae, iter)
         except TimeoutError as exc:
@@ -110,6 +122,9 @@ def fetching(obj):
 
         pmd.fetchend()
         #processor.fetching(Portal, sn)
+
+        #omd = OMD(Portal)
+        #ae.update(omd)
 
         ae.update(pmd)
         ae.update(Portal)

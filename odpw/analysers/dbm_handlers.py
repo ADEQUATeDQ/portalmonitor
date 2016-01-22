@@ -4,7 +4,7 @@ Created on Aug 10, 2015
 @author: jumbrich
 '''
 from odpw.analysers import Analyser
-from odpw.db.models import Resource
+from odpw.db.models import Resource, DatasetMetaData
 from odpw.utils.dataset_converter import DCAT
 from odpw.analysers.core import DistinctElementCount
 
@@ -16,6 +16,11 @@ class DatasetInserter(Analyser):
         self.dbm = dbm
     
     def analyse_Dataset(self, dataset):
+        if hasattr(dataset, 'dmd'):
+            dmd = DatasetMetaData(dataset.id, dataset.portal_id, dataset.snapshot, dataset.dmd)
+            del dataset.dmd
+
+            self.dbm.insertDatasetMetaData(dmd)
         self.dbm.insertDataset(dataset)
 
 class DatasetFetchInserter(Analyser):

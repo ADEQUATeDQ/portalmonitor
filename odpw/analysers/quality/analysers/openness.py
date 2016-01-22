@@ -64,10 +64,11 @@ class OpennessAnalyser(Analyser):
         
         quality['total']=quality['total']/2
 
-        if not dataset.qa_stats:
-            dataset.qa_stats={}
-        dataset.qa_stats[OpennessAnalyser.id] = quality
-        
+        #if not dataset.qa_stats:
+        #    dataset.qa_stats={}
+        #dataset.qa_stats[OpennessAnalyser.id] = quality
+        return quality
+
 
     def getResult(self):
         return {OpennessAnalyser.id: self.quality}

@@ -149,7 +149,7 @@ def simulateFetching(dbm, job):
         ae.add(DCATDatasetAge())
 
         # DCAT analyser
-        for a in dcat_analyser():
+        for a in dcat_analyser().values():
             ae.add(a)
 
         total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)

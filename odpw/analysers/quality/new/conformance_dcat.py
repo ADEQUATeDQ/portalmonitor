@@ -27,7 +27,7 @@ class AnyConformMetric(Analyser):
             self.total += 1
         if any(conf_list):
             self.count += 1
-        return any(conf_list)
+        return int(any(conf_list))
 
     def getResult(self):
         return {'count': self.count, 'total': self.total}
@@ -145,6 +145,7 @@ class LicenseConform(DistinctElementCount):
         self.lm = licenses_mapping.LicensesOpennessMapping()
         self.id_based = id_based
         self.total = 0.0
+        self.id = 'CoLi'
 
     def analyse_Dataset(self, dataset):
         value = dcat_access.getDistributionLicenseTriples(dataset)
@@ -165,7 +166,8 @@ class LicenseConform(DistinctElementCount):
         e = True if len(eval) > 0 else False
         if e:
             self.analyse_generic(e)
-        return e, exist
+
+        return int(e)
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
@@ -173,5 +175,5 @@ class LicenseConform(DistinctElementCount):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats['CoLi'] = self.getValue()
-        pmd.qa_stats['CoLi_hist'] = {1: self.count, 0: self.total - self.count}
+        pmd.qa_stats[self.id] = self.getValue()
+        pmd.qa_stats[self.id + '_hist'] = {1: self.count, 0: self.total - self.count}
