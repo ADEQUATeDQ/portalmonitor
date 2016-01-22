@@ -31,13 +31,37 @@ def setupCLI(pa):
 def cli(args, dbm):
 
     experiment = 'csvengine'
+    
+    
+    update= args.update
     if not args.crawldate:
         #schedule two hours from now
         today = datetime.now()
+        
+        today = datetime.now()
+        start = today + timedelta(hours=1)
+        nextCrawl=start
+        #nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        #start = today + timedelta((6 - today.weekday()) % 7)
+        start = start.replace( minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=3)
+        
+        
+        '''
+        #nextCrawl= datetime(year=2016, month=01, day=21, hour=16)
+        
+        
+        today = datetime.now()
         nextCrawl = today + timedelta(hours=2)
         nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
-        nextCrawl= datetime(year=2016, month=01, day=21, hour=16)
-        print 'Crawl time', nextCrawl
+        
+        start = today + timedelta((6 - today.weekday()) % 7)
+        start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        end = start + timedelta(days=5)'''
+        
+        log.info("Scheduling URIs", start=start, end=end)        
     else:
         nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
 
@@ -48,8 +72,14 @@ def cli(args, dbm):
             for u in f:
                 url = u.strip()
                 try:
-                    #validators.url(url)
-                    dm_dbm.upsert(url, experiment, nextCrawl, 10080)
+                    
+                    
+                    if not args.crawldate:
+                        nextCrawl += timedelta(hours=1)
+                        if nextCrawl >= end:
+                            nextCrawl = start
+                    print nextCrawl,update,url
+                    dm_dbm.upsert(url, experiment, nextCrawl, update)
                 except Exception, e:
                     print e
     if args.pickle:
@@ -62,9 +92,13 @@ def cli(args, dbm):
                 
                 if  size<= args.size:
                     try:
-                        #validators.url(url)
-                        print 'loading',k
-                        dm_dbm.upsert(k, experiment, nextCrawl, 10080)
+                        
+                        if not args.crawldate:
+                            nextCrawl += timedelta(hours=1)
+                            if nextCrawl >= end:
+                                nextCrawl = start
+                        print nextCrawl,update,k
+                        dm_dbm.upsert(k, experiment, nextCrawl, update)
                     except Exception, e:
                         print e
     
