@@ -190,7 +190,7 @@ class PostgressDBM(object):
             conn_string += "/"+db
             
             
-            self.engine = create_engine(conn_string, pool_size=20)
+            self.engine = create_engine(conn_string, pool_size=20, client_encoding='utf8')
             add_engine_pidguard(self.engine)
             self.engine.connect()
             
