@@ -41,29 +41,30 @@ def head (dbm, sn, seen, resource):
             dbm.updateResource(resource)
             
             for pid in resource.origin:
-                d= seen[pid]
-                if d['processed']==0:
-                    ## get the pmd for this job
-                    pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
-                    if not pmd:
-                        pmd = PortalMetaData(portalID=pid, snapshot=sn)
-                        dbm.insertPortalMetaData(pmd)
-                    pmd.headstart()
-                    dbm.updatePortalMetaData(pmd)
-                    d['start'] = time.time()
-            
-                d['processed']+=1
-                if d['processed'] == d['resources']:
-                    d['end'] = time.time()
-                    pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
-                    if not pmd:
-                        print "AUTSCH, no pmd for ", pid
-                    pmd.headend()
-                    dbm.updatePortalMetaData(pmd)
-                elif d['processed'] >d['resources']:
-                    print ""   
-                    
-                seen[pid]=d 
+                if seen:
+                    d= seen[pid]
+                    if d['processed']==0:
+                        ## get the pmd for this job
+                        pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
+                        if not pmd:
+                            pmd = PortalMetaData(portalID=pid, snapshot=sn)
+                            dbm.insertPortalMetaData(pmd)
+                        pmd.headstart()
+                        dbm.updatePortalMetaData(pmd)
+                        d['start'] = time.time()
+                
+                    d['processed']+=1
+                    if d['processed'] == d['resources']:
+                        d['end'] = time.time()
+                        pmd = dbm.getPortalMetaData(portalID=pid, snapshot=sn)
+                        if not pmd:
+                            print "AUTSCH, no pmd for ", pid
+                        pmd.headend()
+                        dbm.updatePortalMetaData(pmd)
+                    elif d['processed'] >d['resources']:
+                        print ""   
+                        
+                    seen[pid]=d 
     except Exception as e:
         eh.handleError(log, "HeadFunctionException", exception=e, url=resource.url, snapshot=sn,exc_info=True)
 

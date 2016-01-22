@@ -98,8 +98,8 @@ class DMManager(object):
             conn_string += ":"+str(port)
         conn_string += "/"+db
             
-        self.engine = create_engine(conn_string, pool_size=20)
-        add_engine_pidguard(self.engine)
+        self.engine = create_engine(conn_string, pool_size=20, client_encoding='utf8')
+        #add_engine_pidguard(self.engine)
         self.engine.connect()
             
         self.metadata = MetaData(bind=self.engine)
@@ -1022,7 +1022,8 @@ class PostgressDBM(object):
                 if Resource.header:
                     header=Resource.header
                     #json.dumps(nested_json(Resource.header),default=date_handler)
-                
+                print origin
+                print header
                 ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
                                                    status=Resource.status,
                                                    origin=origin,
@@ -1032,6 +1033,8 @@ class PostgressDBM(object):
                                                    timestamp=Resource.timestamp,
                                                    exception=Resource.exception
                                                    )
+                
+                print ins.compile()
                 self.log.debug(query=ins.compile(), params=ins.compile().params)
                 con.execute(ins)
              
