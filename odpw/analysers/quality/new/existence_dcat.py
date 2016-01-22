@@ -119,26 +119,28 @@ class DistributionByteSizeDCAT(ExistenceDCAT):
 class DatasetTemporalDCAT(TemporalDCAT):
     def __init__(self):
         super(DatasetTemporalDCAT, self).__init__(dcat_access.getTemporal)
+        self.id = 'ExTe'
 
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats['ExTe'] = self.quality
+        pmd.qa_stats[self.id] = self.quality
         cnt = Counter(self.values)
-        pmd.qa_stats['ExTe_hist'] = dict(cnt)
+        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
 ##### 
 #BASIC SPATIAL
 #####  
 class DatasetSpatialDCAT(SpatialDCAT):
     def __init__(self):
-        super(DatasetSpatialDCAT, self).__init__(dcat_access.getSpatial)      
+        super(DatasetSpatialDCAT, self).__init__(dcat_access.getSpatial)
+        self.id = 'ExSp'
 
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats['ExSp'] = self.quality
+        pmd.qa_stats[self.id] = self.quality
         cnt = Counter(self.values)
-        pmd.qa_stats['ExSp_hist'] = dict(cnt)
+        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
 ##### 
 #BASIC LOCAL
 #####    
@@ -167,13 +169,14 @@ class PreservationTemporalDCAT(PreservationDCAT):
 class ProvLicenseDCAT(RightDCAT):
     def __init__(self):
         super(ProvLicenseDCAT, self).__init__(dcat_access.getDistributionLicenses)
+        self.id = 'ExRi'
 
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats['ExRi'] = self.quality
+        pmd.qa_stats[self.id] = self.quality
         cnt = Counter(self.values)
-        pmd.qa_stats['ExRi_hist'] = dict(cnt)
+        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
 
 
 class AccessUrlDCAT(AccessDCAT):
@@ -246,7 +249,8 @@ class AnyMetric(Analyser):
         self.total += 1
         if e:
             self.count += 1
-        return e
+
+        return int(e)
 
     def getResult(self):
         return {'count': self.count, 'total': self.total}

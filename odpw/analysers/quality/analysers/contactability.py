@@ -74,9 +74,10 @@ class ContactabilityAnalyser(Analyser):
             for key1, value1 in value.items():
                 self.stats[key][key1].append(quality[key][key1])
 
-        if not dataset.qa_stats:
-            dataset.qa_stats={}
-        dataset.qa_stats[ContactabilityAnalyser.id] = quality
+        #if not dataset.qa_stats:
+        #    dataset.qa_stats={}
+        #dataset.qa_stats[ContactabilityAnalyser.id] = quality
+        return quality
         
 
     

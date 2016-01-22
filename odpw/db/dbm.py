@@ -13,7 +13,7 @@ log =structlog.get_logger()
 import sys
 import datetime
 from odpw.utils.timer import Timer
-from odpw.db.models import Portal,PortalMetaData,Resource,Dataset, DatasetLife
+from odpw.db.models import Portal,PortalMetaData,Resource,Dataset, DatasetLife, DatasetMetaData
 
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, VARCHAR, Boolean, SmallInteger,TIMESTAMP,BigInteger
@@ -251,6 +251,15 @@ class PostgressDBM(object):
                              Column('size', BigInteger),
                              Column('origin', JSONB)
                              )
+
+            self.dmd = Table('dmd',self.metadata,
+                            Column('id', String,primary_key=True),
+                            Column('snapshot', SmallInteger,primary_key=True),
+                            Column('portal_id', String(70),primary_key=True),
+
+                            Column('dcat', JSONB),
+                            Column('ckan', JSONB)
+                            )
     def initTables(self):  
         self.metadata.drop_all(self.engine)
         self.metadata.create_all(self.engine)    
@@ -691,7 +700,25 @@ class PostgressDBM(object):
             
             self.log.debug(query=up.compile(), params=up.compile().params)
             #self.conn.execute(ins)
-            up.execute()        
+            up.execute()
+
+    def insertDatasetMetaData(self, datasetmetadata):
+        with Timer(key="insertDatasetMetaData") as t:
+            with self.engine.begin() as con:
+                #assuming we have a change
+                change=2
+
+                ins = self.dmd.insert().values(
+                                                    id=datasetmetadata.id,
+                                                    portal_id=datasetmetadata.portal_id,
+                                                    snapshot=datasetmetadata.snapshot,
+                                                    dcat=datasetmetadata.dcat,
+                                                    ckan=datasetmetadata.ckan
+                                                  )
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                self.log.debug("InsertDatasetMetaData", pid=datasetmetadata.portal_id, did=datasetmetadata.id)
+                #self.conn.execute(ins)
+                con.execute(ins)
     
     def insertDataset(self, Dataset):
         with Timer(key="insertDataset") as t:

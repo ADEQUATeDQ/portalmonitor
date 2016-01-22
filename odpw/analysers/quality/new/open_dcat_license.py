@@ -17,14 +17,17 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
         self.quality = None
         self.count = 0
         self.total = 0
+        self.id = LicenseOpennessDCATAnalyser.id
 
     def analyse_Dataset(self, dataset):
         values = getDistributionLicenseTriples(dataset)
+        appr = ''
         for id, label, url in values:
             id, appr = self.l_mapping.map_license(label, id, url)
             self.analyse_generic(appr)
             break
-        return values
+
+        return 1 if 'approved' in appr else 0
 
     def done(self):
         dist = self.getDist()
