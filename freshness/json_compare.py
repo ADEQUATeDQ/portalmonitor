@@ -6,25 +6,33 @@ __author__ = 'sebastian'
 from dictdiffer import diff, dot_lookup
 
 
-def exists(selector, json):
-    return _exists(copy(selector), json)
-def _exists(s, j):
+def exists(s, j):
     if len(s) == 0:
         return True
-    k = s.pop(0)
+    k = s[0]
+    s = s[1:]
     if k in j:
-        return _exists(s, j[k])
+        return exists(s, j[k])
+    if k == '*':
+        if isinstance(j, dict):
+            return any([exists(s, j[i]) for i in j])
+        if isinstance(j, list):
+            return any([exists(s, j[i]) for i in range(len(j))])
     if isinstance(j, list) and len(j) > k:
-        return _exists(s, j[k])
+        return exists(s, j[k])
     return False
 
-def select(selector, json):
-    return _select(copy(selector), json)
-def _select(s, j):
+def select(s, j):
     if len(s) == 0:
         return j
-    k = s.pop(0)
-    return _select(s, j[k])
+    k = s[0]
+    s = s[1:]
+    if k == '*':
+        if isinstance(j, dict):
+            return [select(s, j[i]) for i in j]
+        if isinstance(j, list):
+            return [select(s, j[i]) for i in range(len(j))]
+    return select(s, j[k])
 
 
 def jsondiff(j1, j2):
@@ -35,7 +43,7 @@ def jsondiff(j1, j2):
             v = select(selector, j1)
             print v
             query = '.'.join(unicode(s) for s in selector)
-            v = dot_lookup(j1, query)
+            v = dot_lookup(j1, selector)
             print v
         print
 
