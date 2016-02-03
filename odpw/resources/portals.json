@@ -1096,13 +1096,7 @@
         "countryCode": "GBR", 
         "software": "CKAN", 
         "url": "http://opendata.aberdeencity.gov.uk/"
-    }, 
-    "opendata_admin_ch": {
-        "api": "", 
-        "countryCode": "CHE", 
-        "software": "CKAN", 
-        "url": "http://opendata.admin.ch/"
-    }, 
+    },
     "opendata_aragon_es": {
         "api": "http://opendata.aragon.es/catalogo/", 
         "countryCode": "ESP", 
@@ -1210,7 +1204,13 @@
         "countryCode": "USA", 
         "software": "Socrata", 
         "url": "http://opendata.socrata.com"
-    }, 
+    },
+    "opendata_swiss": {
+        "api": "",
+        "countryCode": "CHE",
+        "software": "CKAN",
+        "url": "https://opendata.swiss/"
+    },
     "opendatacanarias_es": {
         "api": "http://opendatacanarias.es/datos/", 
         "countryCode": "ESP", 
