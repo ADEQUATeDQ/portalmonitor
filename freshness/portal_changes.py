@@ -43,7 +43,7 @@ def cli(args,dbm):
     p = dbm.getPortal( apiurl=args.url)
     ds_dict = change_history(p, sn, dbm)
 
-    with open('hdx_ds.json', 'w') as f:
+    with open('data_wu.json', 'w') as f:
         json.dump(ds_dict, f)
 
 
@@ -53,15 +53,14 @@ if __name__ == '__main__':
     total = 0
     count = 0
     for ds_id in data:
-        total += 1
         prev_content = None
-        for s in xrange(1603, 1606):
+        for s in [1603, 1605]:
             sn = str(s)
             if sn in data[ds_id]:
                 content = data[ds_id][sn]
 
                 if prev_content:
-                    diffs = json_compare.jsondiff(prev_content, content)
+                    diffs = json_compare.jsondiff(prev_content, content, withoutKey='tracking_summary')
                     if diffs:
                         count += 1
                         print ds_id, content.get('name', '')
@@ -72,3 +71,8 @@ if __name__ == '__main__':
                 prev_content = content
     print 'total', total
     print 'changes', count
+
+
+# check if resource is uploaded to CKAN
+#  json_compare.exists(['resources', '*', 'resource_type'], content) and \
+#   'file.upload' in json_compare.select(['resources', '*', 'resource_type'], content)
