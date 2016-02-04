@@ -8,6 +8,7 @@ import os
 from os.path import join
 from os import walk
 import json
+from freshness.estimators import IntuitiveFrequencyEstimator
 import json_compare
 from dateutil.parser import parse
 
@@ -88,12 +89,9 @@ if __name__ == '__main__':
 
             p = Page(join(dirpath,fname))
 
-            for t in p.iterExact():
-                print t
 
-            interval = datetime.timedelta(days=10)
-            for a, b in zip(p.iterAgeSampling(interval), p.iterContentSampling(interval)):
-                print a, b
-
+            interval = datetime.timedelta(days=1, hours=20)
+            e = IntuitiveFrequencyEstimator(p, interval)
+            print e.est
             break
             

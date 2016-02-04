@@ -48,19 +48,20 @@ def cli(args,dbm):
 
 
 if __name__ == '__main__':
-    with open('/home/sebastian/hdx_ds.json') as f:
+    with open('/home/sebastian/data_wu.json') as f:
         data = json.load(f)
     total = 0
     count = 0
     for ds_id in data:
+        total += 1
         prev_content = None
-        for s in [1603, 1605]:
+        for s in [1604, 1605]:
             sn = str(s)
             if sn in data[ds_id]:
                 content = data[ds_id][sn]
 
                 if prev_content:
-                    diffs = json_compare.jsondiff(prev_content, content, withoutKey='tracking_summary')
+                    diffs = json_compare.jsondiff(prev_content, content)
                     if diffs:
                         count += 1
                         print ds_id, content.get('name', '')

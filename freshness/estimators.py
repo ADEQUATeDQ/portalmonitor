@@ -1,5 +1,6 @@
-__author__ = 'sebastian'
+import datetime
 
+__author__ = 'sebastian'
 
 class IntuitiveFrequencyEstimator:
     """
@@ -27,12 +28,24 @@ class IntuitiveFrequencyEstimator:
     """
 
     def __init__(self, p, interval):
-        self.I = interval
-        self.f = 1/float(self.I)
-
-        revisions = p.iterContentSampling(self.I)
+        revisions = [r for r in p.iterContentSampling(interval)]
         self.n = len(revisions)
         self.X = revisions.count(1)
-        self.r = self.X/float(self.n)
+        self.I = interval.total_seconds()
 
-        print self.r
+        self.f = 1/float(self.I)
+        self.T = self.n * self.I
+
+        self.r = self.X/float(self.n)
+        self.est = datetime.timedelta(seconds=self.r * self.I)
+
+
+class ImprovedEstimator:
+    """
+    r = -log((X + 0.5)/(n + 0.5))
+    
+
+    Estimating frequency of change,
+    Cho, Junghoo
+    Garcia-Molina, Hector
+    """
