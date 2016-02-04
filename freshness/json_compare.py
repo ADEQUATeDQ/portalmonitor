@@ -35,18 +35,20 @@ def select(s, j):
     return select(s, j[k])
 
 
-def jsondiff(j1, j2):
+def jsondiff(j1, j2, filterMode=None, withoutKey=None, filterKey=None):
     diffs = diff(j1, j2)
+    tmp = []
     for mode, selector, changes in diffs:
-        print mode, selector, changes
-        if exists(selector, j1):
-            v = select(selector, j1)
-            print v
-            query = '.'.join(unicode(s) for s in selector)
-            v = dot_lookup(j1, selector)
-            print v
-        print
+        # parse selector to list
+        if isinstance(selector, basestring):
+            selector = selector.split('.')
 
+        # filter
+        if not filterMode or mode == filterMode:
+            if not withoutKey or withoutKey not in selector:
+                if not filterKey or filterKey in selector:
+                    tmp.append((mode, selector, changes))
+    return tmp
 
 if __name__ == '__main__':
     j1 = json.load(open('testcases/dataset.json'))
