@@ -77,6 +77,15 @@ class Page(object):
     def startTime(self):
         return self.rev_hist[0]
 
+    def getDeltas(self):
+        prev_r = None
+        deltas = []
+        for r in self.rev_hist:
+            if prev_r:
+                deltas.append((r - prev_r).total_seconds())
+            prev_r = r
+        return deltas
+
 
 def content_sampling(page, interval, estimators):
     for Xi in page.iterContentSampling(interval):
@@ -112,23 +121,26 @@ if __name__ == '__main__':
         for fname in filenames:
 
             p = Page(join(dirpath,fname))
-            interval = datetime.timedelta(days=10)
+            i = datetime.timedelta(days=10)
 
             c1 = IntuitiveFrequency()
             c2 = ImprovedFrequency()
-            content_sampling(p, interval, [c1, c2])
+            content_sampling(p, i, [c1, c2])
             e1 = c1.estimate()
             e2 = c2.estimate()
             print 'content based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
 
             a1 = NaiveLastModified()
             a2 = ImprovedLastModified()
-            age_sampling(p, interval, [a1, a2])
+            age_sampling(p, i, [a1, a2])
             e1 = a1.estimate()
             e2 = a2.estimate()
 
             print 'age based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
             print
 
-            break
-            
+            emp = EmpiricalDistribution(p.getDeltas())
+            emp.plotDistribution()
+
+            print
+

@@ -1,8 +1,35 @@
 import math
+from statsmodels.distributions.empirical_distribution import ECDF
+import matplotlib.pyplot as plt
+import datetime
 
 __author__ = 'sebastian'
 
-class ChoGarciaFrequencyEstimator:
+class Estimator:
+    def __init__(self):
+        self.N = 0.0 # total number of accesses
+        self.X = 0.0 # number of detected changes
+        self.T = 0.0 # sum of the times from changes
+
+    def estimate(self):
+        raise NotImplementedError()
+
+
+class ContentSampling(Estimator):
+    def setInterval(self, I):
+        self.I = I
+
+    def update(self, Xi):
+        raise NotImplementedError()
+
+
+class AgeSampling(Estimator):
+    def update(self, Ti, Ii):
+        raise NotImplementedError()
+
+
+
+class ChoGarciaFrequencyEstimator(ContentSampling):
     """
     X/T
     X: number of detected changes
@@ -16,18 +43,11 @@ class ChoGarciaFrequencyEstimator:
     Cho, Junghoo
     Garcia-Molina, Hector
     """
-    def __init__(self):
-        self.N = 0.0 # total number of accesses
-        self.X = 0.0 # number of detected changes
-        self.T = 0.0 # sum of the times from changes
-
     def update(self, Xi):
         self.N += 1
         # Has the element changed? (X is 0 or 1)
         self.X += Xi
 
-    def setInterval(self, I):
-        self.I = I
 
 class IntuitiveFrequency(ChoGarciaFrequencyEstimator):
     """
@@ -59,18 +79,12 @@ class ImprovedFrequency(ChoGarciaFrequencyEstimator):
         return self.r * self.f
 
 
-class ChoGarciaLastModifiedEstimator:
+class ChoGarciaLastModifiedEstimator(AgeSampling):
     """
     Estimating frequency of change,
     Cho, Junghoo
     Garcia-Molina, Hector
     """
-
-    def __init__(self):
-        self.N = 0.0 # total number of accesses
-        self.X = 0.0 # number of detected changes
-        self.T = 0.0 # sum of the times from changes
-
     def update(self, Ti, Ii):
         self.N += 1
         # Has the element changed?
@@ -91,3 +105,18 @@ class ImprovedLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
         x = (self.X - 1) - self.X/(self.N * math.log(1 - self.X/self.N))
         return x/self.T
+
+
+
+
+class EmpiricalDistribution:
+    def __init__(self, deltas):
+        self.deltas = deltas
+
+    def plotDistribution(self):
+        days = [t/86400 for t in self.deltas]
+        cdf = ECDF(days)
+        days.sort()
+        F = cdf(days)
+        plt.step(days, F)
+        plt.show()
