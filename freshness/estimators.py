@@ -1,51 +1,93 @@
-import datetime
+import math
 
 __author__ = 'sebastian'
 
-class IntuitiveFrequencyEstimator:
+class ChoGarciaFrequencyEstimator:
     """
     X/T
     X: number of detected changes
     T: monitoring period
-    n: number of accesses
+    N: number of accesses
     I: interval
     f: frequency = 1/I
     T = nI = n/f
 
-    Poisson process
+    Estimating frequency of change,
+    Cho, Junghoo
+    Garcia-Molina, Hector
+    """
+    def __init__(self):
+        self.N = 0.0 # total number of accesses
+        self.X = 0.0 # number of detected changes
+        self.T = 0.0 # sum of the times from changes
+
+    def update(self, Xi):
+        self.N += 1
+        # Has the element changed? (X is 0 or 1)
+        self.X += Xi
+
+    def setInterval(self, I):
+        self.I = I
+
+class IntuitiveFrequency(ChoGarciaFrequencyEstimator):
+    """
+    Poisson process:
     X(t): number of occurences of a change in the interval (0,t]
     lambda: average frequency that a change occurs
     goal: estimate lambda, given X and T
-    first estimate ratio r=lamda/f
+    estimate ratio r=lamda/f
 
     Estimator:
     r = X/n
     lambda = rf
-
-    Estimating frequency of change,
-    Cho, Junghoo
-    Garcia-Molina, Hector
     """
-
-    def __init__(self, p, interval):
-        revisions = [r for r in p.iterContentSampling(interval)]
-        self.n = len(revisions)
-        self.X = revisions.count(1)
-        self.I = interval.total_seconds()
-
+    def estimate(self):
         self.f = 1/float(self.I)
-        self.T = self.n * self.I
 
-        self.r = self.X/float(self.n)
-        self.est = datetime.timedelta(seconds=self.r * self.I)
+        self.r = self.X/float(self.N)
+        return self.r * self.f
 
 
-class ImprovedEstimator:
+class ImprovedFrequency(ChoGarciaFrequencyEstimator):
     """
-    r = -log((X + 0.5)/(n + 0.5))
-    
+    r = -log((n - X + 0.5)/(n + 0.5))
+    """
+    def estimate(self):
+        self.f = 1/float(self.I)
 
+        self.r = -math.log((self.N - self.X + 0.5)/(self.N + 0.5))
+        return self.r * self.f
+
+
+class ChoGarciaLastModifiedEstimator:
+    """
     Estimating frequency of change,
     Cho, Junghoo
     Garcia-Molina, Hector
     """
+
+    def __init__(self):
+        self.N = 0.0 # total number of accesses
+        self.X = 0.0 # number of detected changes
+        self.T = 0.0 # sum of the times from changes
+
+    def update(self, Ti, Ii):
+        self.N += 1
+        # Has the element changed?
+        if Ti < Ii:
+            self.X += 1
+            self.T += Ti
+        else:
+            # element has not changed
+            self.T += Ii
+
+
+class NaiveLastModified(ChoGarciaLastModifiedEstimator):
+    def estimate(self):
+        return self.X/self.T
+
+
+class ImprovedLastModified(ChoGarciaLastModifiedEstimator):
+    def estimate(self):
+        x = (self.X - 1) - self.X/(self.N * math.log(1 - self.X/self.N))
+        return x/self.T

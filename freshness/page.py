@@ -8,7 +8,7 @@ import os
 from os.path import join
 from os import walk
 import json
-from freshness.estimators import IntuitiveFrequencyEstimator
+from freshness.estimators import *
 import json_compare
 from dateutil.parser import parse
 
@@ -74,13 +74,37 @@ class Page(object):
                 yield 1
             prev_t = t
 
+    def startTime(self):
+        return self.rev_hist[0]
+
+
+def content_sampling(page, interval, estimators):
+    for Xi in page.iterContentSampling(interval):
+        for e in estimators:
+            e.update(Xi)
+
+    I = interval.total_seconds()
+    for e in estimators:
+        e.setInterval(I)
+
+
+def age_sampling(page, interval, estimators):
+    I = interval.total_seconds()
+    # the access time
+    ACC = page.startTime()
+    for t in page.iterAgeSampling(interval):
+        # Ti is the time to the previous change in the ith access
+        Ti = (ACC - t).total_seconds()
+        for e in estimators:
+            e.update(Ti, I)
+        # set access time to next interval
+        ACC += interval
+
 
 if __name__ == '__main__':
     # Deltas
     # Avg change time
-    # No Minors
 
-    
     revs='revs'
     for (dirpath, dirnames, filenames) in walk(revs):
         #for cat in dirnames:
@@ -88,10 +112,23 @@ if __name__ == '__main__':
         for fname in filenames:
 
             p = Page(join(dirpath,fname))
+            interval = datetime.timedelta(days=10)
 
+            c1 = IntuitiveFrequency()
+            c2 = ImprovedFrequency()
+            content_sampling(p, interval, [c1, c2])
+            e1 = c1.estimate()
+            e2 = c2.estimate()
+            print 'content based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
 
-            interval = datetime.timedelta(days=1, hours=20)
-            e = IntuitiveFrequencyEstimator(p, interval)
-            print e.est
+            a1 = NaiveLastModified()
+            a2 = ImprovedLastModified()
+            age_sampling(p, interval, [a1, a2])
+            e1 = a1.estimate()
+            e2 = a2.estimate()
+
+            print 'age based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
+            print
+
             break
             
