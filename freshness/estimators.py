@@ -1,11 +1,10 @@
 import math
 from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
-import datetime
 
 __author__ = 'sebastian'
 
-class Estimator:
+class Estimator(object):
     def __init__(self):
         self.N = 0.0 # total number of accesses
         self.X = 0.0 # number of detected changes
@@ -20,14 +19,6 @@ class ContentSampling(Estimator):
         self.I = I
 
     def update(self, Xi):
-        raise NotImplementedError()
-
-
-class AgeSampling(Estimator):
-    def setStart(self, S):
-        self.S = S
-
-    def update(self, Ti, Ii):
         raise NotImplementedError()
 
 
@@ -82,20 +73,38 @@ class ImprovedFrequency(ChoGarciaFrequencyEstimator):
         return self.r * self.f
 
 
+class AgeSampling(Estimator):
+    def __init__(self):
+        Estimator.__init__(self)
+        self.dates = set()
+
+    def update(self, Ti, Ii, timestamp):
+        self.dates.add(timestamp)
+
+    def computeIntervals(self):
+        deltas = []
+        prev = None
+        for d in sorted(self.dates):
+            if prev:
+                deltas.append((d - prev).total_seconds())
+            prev = d
+        return deltas
+
+
 class ChoGarciaLastModifiedEstimator(AgeSampling):
     """
     Estimating frequency of change,
     Cho, Junghoo
     Garcia-Molina, Hector
     """
-    def update(self, Ti, Ii):
-        t = (Ti - self.S).total_seconds()
+    def update(self, Ti, Ii, timestamp):
+        super(ChoGarciaLastModifiedEstimator, self).update(Ti, Ii, timestamp)
         # Ti is the time to the previous change in the ith access
         self.N += 1
         # Has the element changed?
-        if t < Ii:
+        if Ti < Ii:
             self.X += 1
-            self.T += t
+            self.T += Ti
         else:
             # element has not changed
             self.T += Ii
@@ -108,7 +117,7 @@ class NaiveLastModified(ChoGarciaLastModifiedEstimator):
 
 class ImprovedLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
-        if self.T > 0:
+        if self.X/self.N == 1:
             return -1
         x = (self.X - 1) - self.X/(self.N * math.log(1 - self.X/self.N))
         return x/self.T
@@ -129,24 +138,29 @@ class EmpiricalDistribution:
 
 
 class AgeSamplingEmpiricalDistribution(AgeSampling):
-    def __init__(self):
-        AgeSampling.__init__(self)
-        self.dates = set()
-
-    def update(self, Ti, Ii):
-        self.dates.add(Ti)
 
     def plotDistribution(self):
-        deltas = []
-        prev = None
-        for d in sorted(self.dates):
-            if prev:
-                deltas.append((d- prev).total_seconds())
-            prev = d
-
-        days = [t/86400 for t in deltas]
+        days = [t/86400 for t in self.computeIntervals()]
         cdf = ECDF(days)
         days.sort()
         F = cdf(days)
         plt.step(days, F)
         plt.show()
+
+
+class ExponentialSmoothing(AgeSampling):
+    def __init__(self, alpha):
+        AgeSampling.__init__(self)
+        self.alpha = alpha
+
+    def estimate(self):
+        deltas = self.computeIntervals()
+
+        y = None
+        for d in deltas:
+            if not y:
+                y = d
+            else:
+                y = self.alpha * y + (1 - self.alpha) * d
+
+        return y
