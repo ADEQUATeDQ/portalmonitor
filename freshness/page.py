@@ -99,11 +99,12 @@ def content_sampling(page, interval, estimators):
 
 def age_sampling(page, interval, estimators):
     I = interval.total_seconds()
+
+    for e in estimators:
+        e.setStart(page.startTime())
     # the access time
     ACC = page.startTime()
-    for t in page.iterAgeSampling(interval):
-        # Ti is the time to the previous change in the ith access
-        Ti = (ACC - t).total_seconds()
+    for Ti in page.iterAgeSampling(interval):
         for e in estimators:
             e.update(Ti, I)
         # set access time to next interval
@@ -132,14 +133,17 @@ if __name__ == '__main__':
 
             a1 = NaiveLastModified()
             a2 = ImprovedLastModified()
-            age_sampling(p, i, [a1, a2])
+            emp = AgeSamplingEmpiricalDistribution()
+            age_sampling(p, i, [a1, a2, emp])
             e1 = a1.estimate()
             e2 = a2.estimate()
+
+            #emp.plotDistribution()
 
             print 'age based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
             print
 
-            emp = EmpiricalDistribution(p.getDeltas())
+            #emp = EmpiricalDistribution(p.getDeltas())
             emp.plotDistribution()
 
             print

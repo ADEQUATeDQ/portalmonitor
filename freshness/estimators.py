@@ -24,6 +24,9 @@ class ContentSampling(Estimator):
 
 
 class AgeSampling(Estimator):
+    def setStart(self, S):
+        self.S = S
+
     def update(self, Ti, Ii):
         raise NotImplementedError()
 
@@ -86,11 +89,13 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
     Garcia-Molina, Hector
     """
     def update(self, Ti, Ii):
+        t = (Ti - self.S).total_seconds()
+        # Ti is the time to the previous change in the ith access
         self.N += 1
         # Has the element changed?
-        if Ti < Ii:
+        if t < Ii:
             self.X += 1
-            self.T += Ti
+            self.T += t
         else:
             # element has not changed
             self.T += Ii
@@ -98,14 +103,15 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
 
 class NaiveLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
-        return self.X/self.T
+        return self.X/self.T if self.T > 0 else -1
 
 
 class ImprovedLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
+        if self.T > 0:
+            return -1
         x = (self.X - 1) - self.X/(self.N * math.log(1 - self.X/self.N))
         return x/self.T
-
 
 
 
@@ -115,6 +121,30 @@ class EmpiricalDistribution:
 
     def plotDistribution(self):
         days = [t/86400 for t in self.deltas]
+        cdf = ECDF(days)
+        days.sort()
+        F = cdf(days)
+        plt.step(days, F)
+        plt.show()
+
+
+class AgeSamplingEmpiricalDistribution(AgeSampling):
+    def __init__(self):
+        AgeSampling.__init__(self)
+        self.dates = set()
+
+    def update(self, Ti, Ii):
+        self.dates.add(Ti)
+
+    def plotDistribution(self):
+        deltas = []
+        prev = None
+        for d in sorted(self.dates):
+            if prev:
+                deltas.append((d- prev).total_seconds())
+            prev = d
+
+        days = [t/86400 for t in deltas]
         cdf = ECDF(days)
         days.sort()
         F = cdf(days)
