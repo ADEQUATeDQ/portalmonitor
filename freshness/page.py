@@ -65,7 +65,7 @@ class Page(object):
             i += interval
         yield prev_t
 
-    def iterContentSampling(self, interval):
+    def iterComparisonSampling(self, interval):
         prev_t = -1
         for t in self.iterAgeSampling(interval):
             if prev_t == t:
@@ -87,8 +87,8 @@ class Page(object):
         return deltas
 
 
-def content_sampling(page, interval, estimators):
-    for Xi in page.iterContentSampling(interval):
+def comparison_sampling(page, interval, estimators):
+    for Xi in page.iterComparisonSampling(interval):
         for e in estimators:
             e.update(Xi)
 
@@ -111,8 +111,6 @@ def age_sampling(page, interval, estimators):
 
 
 if __name__ == '__main__':
-    # Deltas
-    # Avg change time
 
     revs='revs'
     for (dirpath, dirnames, filenames) in walk(revs):
@@ -125,10 +123,15 @@ if __name__ == '__main__':
 
             c1 = IntuitiveFrequency()
             c2 = ImprovedFrequency()
-            content_sampling(p, i, [c1, c2])
+            mar = MarkovChain(history=3)
+
+            comparison_sampling(p, i, [c1, c2, mar])
             e1 = c1.estimate()
             e2 = c2.estimate()
             print 'content based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
+
+            next, prob = mar.estimate()
+            print 'markov:', next, prob
 
             a1 = NaiveLastModified()
             a2 = ImprovedLastModified()

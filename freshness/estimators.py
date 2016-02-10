@@ -1,3 +1,4 @@
+from collections import defaultdict
 import math
 from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ class Estimator(object):
         raise NotImplementedError()
 
 
-class ContentSampling(Estimator):
+class ComparisonSampling(Estimator):
     def setInterval(self, I):
         self.I = I
 
@@ -23,7 +24,7 @@ class ContentSampling(Estimator):
 
 
 
-class ChoGarciaFrequencyEstimator(ContentSampling):
+class ChoGarciaFrequencyEstimator(ComparisonSampling):
     """
     X/T
     X: number of detected changes
@@ -164,3 +165,42 @@ class ExponentialSmoothing(AgeSampling):
                 y = self.alpha * y + (1 - self.alpha) * d
 
         return y
+
+
+class MarkovChain(ComparisonSampling):
+    def __init__(self, history=2):
+        ComparisonSampling.__init__(self)
+        self.history = history + 1
+        self.data = []
+        self.frequencies = defaultdict(int)
+
+    def update(self, Xi):
+        self.data.append(Xi)
+
+        if len(self.data) >= self.history:
+            key = ''.join(str(k) for k in self.data[-self.history:])
+            self.frequencies[key] += 1
+
+    def estimate(self):
+        prob = {}
+        bin_len = self.history - 1
+
+        # build probabilities
+        for i in range(int(math.pow(2, bin_len))):
+            k = bin(i).lstrip('0b').zfill(bin_len)
+            key_0 = k + '0'
+            key_1 = k + '1'
+
+            t = float(self.frequencies[key_0] + self.frequencies[key_1])
+
+            prob[key_0] = self.frequencies[key_0]/t if t > 0 else -1
+            prob[key_1] = self.frequencies[key_1]/t if t > 0 else -1
+
+        # calculate next step
+        if len(self.data) >= self.history:
+            key = ''.join(str(k) for k in self.data[-bin_len:])
+            key_0 = key + '0'
+            key_1 = key + '1'
+            return ('0', prob[key_0]) if prob[key_0] > prob[key_1] else ('1', prob[key_1])
+
+        return None, None
