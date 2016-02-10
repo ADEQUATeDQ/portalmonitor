@@ -1088,7 +1088,7 @@ class PostgressDBM(object):
     def getResourcesWithHeader(self):
         with Timer(key="countDatasetsPerSnapshot") as t:
             with self.engine.begin() as con:
-                s=select( [self.resources]).where(self.resources.c.header != 'null').limit(10)
+                s=select( [self.resources]).where(self.resources.c.header != 'null')
                 self.log.debug(query=s.compile(), params=s.compile().params)
                 return con.execute(s)
     
