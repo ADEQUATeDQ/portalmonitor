@@ -17,5 +17,9 @@ class DatasetChangeCountAnalyser(ElementCountAnalyser):
         if dataset.data and dataset.id in self.datasets:
             diffs = json_compare.jsondiff(self.datasets[dataset.id].data, dataset.data)
             for mode, selector, changes in diffs:
-                k= mode+'_'+"_".join([str(s) for s in selector])
-                self.add(k)
+                try:
+                    k= mode+'_'+"_".join([str(s) for s in selector])
+                    self.add(k)
+                except Exception as e:
+                    print dataset.id, dataset.portal_id, e
+            

@@ -60,7 +60,7 @@ def cli(args,dbm):
         steps=total/10
         if steps ==0:
             steps=1
-        
+         
         ae= AnalyserSet()
         cha= ae.add(DatasetChangeCountAnalyser(datasetsfrom))
         iter = Dataset.iter(dbm.getDatasets(portalID=p.id, snapshot=snto))
