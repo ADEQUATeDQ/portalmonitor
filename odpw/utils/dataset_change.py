@@ -73,8 +73,11 @@ def cli(args,dbm):
         print 'Pickling to',output_file
         pickle.dump( res, output_file )
         
-    print res
     
+    for k,v in res.items():
+        print k
+        for c,cnt in v.items():
+            print '  ',c,cnt
     
     
     
