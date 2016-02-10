@@ -154,7 +154,9 @@ def cli(args, dbm):
     with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
-    
+    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.json'), 'wb') as f:
+        json.dump(all_urls, f)
+        print 'Writing dict to ',f
 
 def extract_urls(urls, portal, snapshot, dbm, out, store_files, filter):
     log.info("Extracting urls from ", portals=portal.id)

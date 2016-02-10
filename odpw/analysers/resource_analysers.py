@@ -123,3 +123,59 @@ class ResourceOccurrenceCountAnalyser(ElementCountAnalyser):
         if self.portal_id:
             name += '_' + self.portal_id
         return name
+
+class ResourceHeaderETagCountAnalyser(ElementCountAnalyser):
+    def __init__(self):
+        super(ResourceHeaderETagCountAnalyser, self).__init__()
+        self.seen=set([])
+    def analyse_Resource(self, element):
+        if element.url not in self.seen:
+            if element.header:
+                if 'ETag' in element.header:
+                    self.add(1)
+                elif 'etag' in element.header:
+                    self.add(1)
+                else:
+                    self.add(0)
+            self.seen.add(element.url)
+            
+class ResourceHeaderLastModifiedCountAnalyser(ElementCountAnalyser):
+    def __init__(self):
+        super(ResourceHeaderLastModifiedCountAnalyser, self).__init__()
+        self.seen=set([])
+    def analyse_Resource(self, element):
+        if element.url not in self.seen:
+            if element.header:
+                if 'Last-Modified' in element.header:
+                    self.add(1)
+                elif 'last-modified' in element.header:
+                    self.add(1)
+                else:
+                    self.add(0)
+            self.seen.add(element.url)
+
+class ResourceHeaderExpiresCountAnalyser(ElementCountAnalyser):
+    def __init__(self):
+        super(ResourceHeaderExpiresCountAnalyser, self).__init__()
+        self.seen=set([])
+    def analyse_Resource(self, element):
+        if element.url not in self.seen:
+            if element.header:
+                if 'Expires' in element.header:
+                    self.add(1)
+                elif 'expires' in element.header:
+                    self.add(1)
+                else:
+                    self.add(0)
+            self.seen.add(element.url)
+            
+class ResourceHeaderFieldsCountAnalyser(ElementCountAnalyser):
+    def __init__(self):
+        super(ResourceHeaderFieldsCountAnalyser, self).__init__()
+        self.seen=set([])
+    def analyse_Resource(self, element):
+        if element.url not in self.seen:
+            if element.header:
+                for k in element.header:
+                    self.add(k.lower().strip())
+            self.seen.add(element.url)
