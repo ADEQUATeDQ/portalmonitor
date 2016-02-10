@@ -46,6 +46,7 @@ import odpw.utils.datamonitoruris as dmuriscli
 import odpw.utils.accuracy as accuracycli
 import freshness.portal_changes as changescli
 import odpw.utils.res_etag_lastmod as rescli
+import odpw.utils.dataset_change as dschangecli
 
 import odpw.utils.ckanfetch as ckanfetchcli
 submodules=[dbcli, initcli, fetchcli,  
@@ -61,7 +62,8 @@ submodules=[dbcli, initcli, fetchcli,
             dmuriscli,
             accuracycli,
             changescli,
-            rescli
+            rescli,
+            dschangecli
             ]
 
 
