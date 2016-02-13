@@ -2,6 +2,7 @@ from collections import defaultdict
 import math
 from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
+from scipy.stats import poisson
 
 __author__ = 'sebastian'
 
@@ -43,6 +44,12 @@ class ChoGarciaFrequencyEstimator(ComparisonSampling):
         # Has the element changed? (X is 0 or 1)
         self.X += Xi
 
+    def ppf_poisson(self, q):
+        # Percent point function (inverse of cdf)
+        l = self.estimate()
+        t = poisson.ppf(q, 1/l)
+        return t
+
 
 class IntuitiveFrequency(ChoGarciaFrequencyEstimator):
     """
@@ -61,6 +68,7 @@ class IntuitiveFrequency(ChoGarciaFrequencyEstimator):
 
         self.r = self.X/float(self.N)
         return self.r * self.f
+
 
 
 class ImprovedFrequency(ChoGarciaFrequencyEstimator):
@@ -204,3 +212,4 @@ class MarkovChain(ComparisonSampling):
             return ('0', prob[key_0]) if prob[key_0] > prob[key_1] else ('1', prob[key_1])
 
         return None, None
+
