@@ -8,7 +8,10 @@ from odpw.analysers.core import ElementCountAnalyser
 from odpw.analysers import Analyser
 from odpw.utils.dataset_converter import DCAT
 import tldextract
+from odpw.utils.util import ErrorHandler
 
+import structlog
+log =structlog.get_logger()
 
 class DatasetChangeCountAnalyser(ElementCountAnalyser):
     def __init__(self, datasets):
@@ -143,7 +146,10 @@ class ResourceChangeInfoAnalyser(Analyser):
                             str(meta_webstore_url),
                             str(meta_webstore_last_updated),
                             str(update_frequeny)]
-                    self.out.write(",".join(res)+"\n")
+                    try:
+                        self.out.write(",".join(res)+"\n")
+                    except Exception as e: 
+                        ErrorHandler.handleError(log, "Writting csv info", exception =e, url=url, pid=self.portal.id)
                     
         
     
