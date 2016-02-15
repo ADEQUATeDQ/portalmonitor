@@ -64,10 +64,10 @@ def cli(args,dbm):
     res={}
     
     resources={}
-    #iter=Resource.iter(dbm.getResourcesWithHeader())
-    #for R in iter:
-    #    if R.url not in resources:
-    #        resources[R.url]=R
+    iter=Resource.iter(dbm.getResourcesWithHeader())
+    for R in iter:
+        if R.url not in resources:
+            resources[R.url]=R
     
     for p in portals:
         total=dbm.countDatasets(portalID=p.id, snapshot=sn)
