@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import datetime
 import re
@@ -148,8 +149,11 @@ VALID_URL = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 def is_valid_url(references):
-    res = urlparse.urlparse(references)
-    return bool(res.scheme and res.netloc)
+    try:
+        res = urlparse.urlparse(references)
+        return bool(res.scheme and res.netloc)
+    except Exception as e:
+        return False
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):
