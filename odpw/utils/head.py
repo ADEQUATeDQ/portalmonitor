@@ -73,8 +73,9 @@ def getResources(dbm, snapshot, status=-1):
     resources =[]
     
     for res in dbm.getResourceWithoutHead(snapshot=snapshot, status=status, limit=10000):
+        url='NORMALIZATION NOT POSSIBLE'
         try:
-            
+
             url=urlnorm.norm(res['url'])
             R = Resource.fromResult(dict(res))
             resources.append(R)    
