@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 import odpw.utils.util as util
 from odpw.analysers import AnalyseEngine, process_all, SAFEAnalyserSet
