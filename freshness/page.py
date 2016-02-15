@@ -69,9 +69,9 @@ class Page(object):
         prev_t = -1
         for t in self.iterAgeSampling(interval):
             if prev_t == t:
-                yield 0
+                yield 0, t
             else:
-                yield 1
+                yield 1, t
             prev_t = t
 
     def startTime(self):
