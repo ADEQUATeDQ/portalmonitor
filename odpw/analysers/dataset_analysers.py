@@ -124,8 +124,12 @@ class ResourceChangeInfoAnalyser(Analyser):
                         
                     elif self.portal.software == 'Socrata':
                         local=True
+                        meta_last_modified= "same" if dataset.data['view']['publicationDate']== dataset.data['view']['rowsUpdatedAt'] else 'value'
                         pass   
-                    
+                        #rowsUpdatedAt
+                        #viewLastModified
+                    else:
+                        local=True
                     
                     ## http last-modified and etag
                     if url in self.resources:
