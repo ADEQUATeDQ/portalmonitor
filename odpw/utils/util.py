@@ -690,7 +690,7 @@ def head(url, redirects=0, props=None):
             props['exception']=None
             props['timestamp'] = datetime.now()
         
-        headResp = requests.head(url=url,timeout=(0.5, 1.0), allow_redirects=True)#con, read -timeout
+        headResp = requests.head(url=url,timeout=(3, 9), allow_redirects=True)#con, read -timeout
         header_dict = dict((k.lower(), v) for k, v in dict(headResp.headers).iteritems())
         
         if 'content-type' in header_dict:
