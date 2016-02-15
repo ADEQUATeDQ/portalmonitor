@@ -124,8 +124,8 @@ class ResourceChangeInfoAnalyser(Analyser):
                         
                     elif self.portal.software == 'Socrata':
                         local=True
-                        meta_last_modified= "same" if dataset.data['view']['publicationDate']== dataset.data['view']['rowsUpdatedAt'] else 'value'
-                        pass   
+                        if 'view' in dataset.data and 'publicationDate' in dataset.data['view'] and 'rowsUpdatedAt' in dataset.data['view']:
+                            meta_last_modified= "same" if dataset.data['view']['publicationDate']== dataset.data['view']['rowsUpdatedAt'] else 'value'
                         #rowsUpdatedAt
                         #viewLastModified
                     else:
