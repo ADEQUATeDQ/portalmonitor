@@ -20,7 +20,15 @@ class Page(object):
     def __init__(self, filename):
         self.filename = os.path.basename(filename)
         self.rev_hist = self.parse(filename)
-        
+        self.min = min(self.rev_hist)
+        self.max = max(self.rev_hist)
+        self.length = len(self.rev_hist)
+        self.delta = (self.max - self.min).total_seconds()
+        self.frequency = self.delta / self.length
+        deltas = self.getDeltas()
+        self.max_delta = max(deltas)
+        self.min_delta = min(deltas)
+
     def parse(self, filename):
         """
         :return: the revision history of the file (without minor changes)
