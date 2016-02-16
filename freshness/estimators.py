@@ -1,8 +1,10 @@
 from collections import defaultdict
 import math
+import scipy
 from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
+import numpy as np
 
 __author__ = 'sebastian'
 
@@ -23,6 +25,26 @@ class ComparisonSampling(Estimator):
     def update(self, Xi):
         raise NotImplementedError()
 
+
+
+class ComparisonSamplingEmpiricalDistribution(ComparisonSampling):
+    def __init__(self):
+        self.history = []
+
+    def update(self, Xi):
+        self.history.append(Xi)
+
+    def ppf(self, q):
+        intervals = []
+        i = 0
+        for x in self.history:
+            i += 1
+            if x:
+                intervals.append(i)
+                i = 0
+
+        perc = np.percentile(intervals, q=q*100)
+        return perc * self.I
 
 
 class ChoGarciaFrequencyEstimator(ComparisonSampling):
@@ -133,20 +155,11 @@ class ImprovedLastModified(ChoGarciaLastModifiedEstimator):
 
 
 
-class EmpiricalDistribution:
-    def __init__(self, deltas):
-        self.deltas = deltas
-
-    def plotDistribution(self):
-        days = [t/86400 for t in self.deltas]
-        cdf = ECDF(days)
-        days.sort()
-        F = cdf(days)
-        plt.step(days, F)
-        plt.show()
-
-
 class AgeSamplingEmpiricalDistribution(AgeSampling):
+
+    def ppf(self, q):
+        perc = np.percentile(self.computeIntervals(), q=q*100)
+        return perc
 
     def plotDistribution(self):
         days = [t/86400 for t in self.computeIntervals()]
@@ -189,7 +202,7 @@ class MarkovChain(ComparisonSampling):
             key = ''.join(str(k) for k in self.data[-self.history:])
             self.frequencies[key] += 1
 
-    def estimate(self):
+    def _estimate(self):
         prob = {}
         bin_len = self.history - 1
 
@@ -201,15 +214,36 @@ class MarkovChain(ComparisonSampling):
 
             t = float(self.frequencies[key_0] + self.frequencies[key_1])
 
-            prob[key_0] = self.frequencies[key_0]/t if t > 0 else -1
-            prob[key_1] = self.frequencies[key_1]/t if t > 0 else -1
+            prob[key_0] = self.frequencies[key_0]/t if t > 0 else 0
+            prob[key_1] = self.frequencies[key_1]/t if t > 0 else 0
 
+        return prob
+
+    def estimate(self):
+        prob = self._estimate()
+        bin_len = self.history - 1
         # calculate next step
         if len(self.data) >= self.history:
             key = ''.join(str(k) for k in self.data[-bin_len:])
             key_0 = key + '0'
             key_1 = key + '1'
             return ('0', prob[key_0]) if prob[key_0] > prob[key_1] else ('1', prob[key_1])
-
         return None, None
+
+    def estimated_next_change(self, percent):
+        prob = self._estimate()
+        # access key
+        key = ''.join(str(k) for k in self.data[-(self.history - 1):])
+        key_0 = key + '0'
+
+        current_perc = 0.0
+        zeros = 1.0
+        intervals = 0
+        while current_perc <= percent:
+            intervals += 1
+            zeros *= prob[key_0]
+            current_perc = 1.0 - zeros
+            key_0 = key_0[1:] + '0'
+
+        return intervals, current_perc
 
