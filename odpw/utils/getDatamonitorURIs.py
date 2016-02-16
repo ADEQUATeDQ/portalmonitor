@@ -61,8 +61,8 @@ def cli(args, dbm):
         print 'Writing dict to ',f
     with open(os.path.join(args.out, 'csv_urls_files.csv'), 'wb') as f:
         print 'Writing dict to ',f
-        for f,v in files.items():
-            f.write(",".join([f.encode("utf-8"),v['disklocation'].encode("utf-8")])+"\n")
+        for u,v in files.items():
+            f.write(",".join([u.encode("utf-8"),v['disklocation'].encode("utf-8")])+"\n")
         
     
             
