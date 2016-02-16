@@ -1024,13 +1024,14 @@ class PostgressDBM(object):
                 self.log.debug(query=s.compile(), params=s.compile().params)
                 return con.execute(s)
             
-    def getResourcesWithHeader(self):
+    def getResourcesWithHeader(self,portal_id=None):
         with Timer(key="countDatasetsPerSnapshot") as t:
             with self.engine.begin() as con:
                 s=select( [self.resources]).where(self.resources.c.header != 'null')
                 s=s.where(self.resources.c.status >= 200)
                 s=s.where(self.resources.c.status < 400)
-                
+                if portal_id:
+                    s= s.where(self.resources.c.origin[portal_id]!=None) 
                 self.log.debug(query=s.compile(), params=s.compile().params)
                 return con.execute(s)
     
