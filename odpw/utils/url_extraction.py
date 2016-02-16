@@ -148,9 +148,6 @@ def cli(args, dbm):
             print 'error in portal:', p.url
             print e
 
-    for k,v in all_urls.items():
-        print k,v
-
     fname='csv_urls_' + str(args.snapshot) + ("_"+portals[0].id) if len(portals)==1 else +'' 
     with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
