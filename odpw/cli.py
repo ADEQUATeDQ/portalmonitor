@@ -42,7 +42,9 @@ import odpw.utils.quality as qualitycli
 import odpw.server.rest.server as restcli
 
 import odpw.utils.url_extraction as urlscli
-import odpw.utils.getDatamonitorURIs as dmuriscli
+import odpw.utils.getDatamonitorURIs as dmgeturiscli
+import odpw.utils.insDatamonitorURIs as dminsuriscli
+
 import odpw.utils.accuracy as accuracycli
 import freshness.portal_changes as changescli
 import odpw.utils.res_etag_lastmod as rescli
@@ -63,7 +65,8 @@ submodules=[dbcli, initcli, fetchcli,
             ckanfetchcli,
             restcli,
             urlscli,
-            dmuriscli,
+            dmgeturiscli,
+            dminsuriscli,
             accuracycli,
             changescli,
             rescli,
