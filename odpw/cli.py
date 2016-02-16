@@ -26,7 +26,7 @@ import odpw.db.dbm as dbcli
 import odpw.init as initcli
 import odpw.utils.fetch as fetchcli
 #import odpw.utils.stats as statscli
-import odpw.utils.datamonitor as dmcli
+import odpw.utils.getDatamonitorURIs as dmcli
 #import odpw.utils.extractcsv as extractcli
 import odpw.utils.head as headcli
 #import odpw.analysers.quality.quality as qualitycli
@@ -42,7 +42,7 @@ import odpw.utils.quality as qualitycli
 import odpw.server.rest.server as restcli
 
 import odpw.utils.url_extraction as urlscli
-import odpw.utils.datamonitoruris as dmuriscli
+import odpw.utils.getDatamonitorURIs as dmuriscli
 import odpw.utils.accuracy as accuracycli
 import freshness.portal_changes as changescli
 import odpw.utils.res_etag_lastmod as rescli

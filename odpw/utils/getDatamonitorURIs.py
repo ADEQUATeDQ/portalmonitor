@@ -19,20 +19,17 @@ log = get_logger()
 
 
 def help():
-    return "Insert URIs into the datamonitor"
+    return "Get URIs from datamonitor"
 def name():
     return 'DMInfo'
 
 def setupCLI(pa):
     pa.add_argument("-f","--file",  help='file containing csv urls', dest='file')
     pa.add_argument("-p","--pickle",  help='pickle file containing csv urls', dest='pickle')
-    pa.add_argument("-s","--size",  help='maximum size in KB if in header', dest='size', type=int, default=-1)
     pa.add_argument('-o','--out',type=str, dest='out' , help="the out directory for the list of urls (and downloads)")
 
 def cli(args, dbm):
 
-    experiment = 'csvengine'
-    
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
 
     urls=None
@@ -55,15 +52,18 @@ def cli(args, dbm):
         print "checking", k
         res = dm_dbm.getLatestURLInfo(k)
         for r in res:
-            if '2015' in r['disklocation']:
-                v['file']=r['disklocation']
-                v['size']=r['size']
-                files[k]=v
+            v['file']=r['disklocation']
+            v['size']=r['size']
+            files[k]=v
                 
-    
     with open(os.path.join(args.out, 'csv_urls_files.pkl'), 'wb') as f:
         pickle.dump(files, f)
         print 'Writing dict to ',f
+    with open(os.path.join(args.out, 'csv_urls_files.csv'), 'wb') as f:
+        print 'Writing dict to ',f
+        for f,v in files.items():
+            f.write(",".join([f,v['disklocation']])+"\n")
+        
     
             
             

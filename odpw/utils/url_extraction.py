@@ -152,7 +152,7 @@ def cli(args, dbm):
     with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
-    with open(os.path.join(args.out, fname+'.json'), 'wb') as f:
+    with open(os.path.join(args.out, fname+'.json'), 'w') as f:
         json.dump(all_urls, f)
         print 'Writing dict to ',f
 
