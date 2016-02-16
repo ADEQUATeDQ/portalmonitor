@@ -151,10 +151,11 @@ def cli(args, dbm):
     for k,v in all_urls.items():
         print k,v
 
-    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.pkl'), 'wb') as f:
+    fname='csv_urls_' + str(args.snapshot) + ("_"+args.url) if args.url else +'' 
+    with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
-    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.json'), 'wb') as f:
+    with open(os.path.join(args.out, fname+'.json'), 'wb') as f:
         json.dump(all_urls, f)
         print 'Writing dict to ',f
 

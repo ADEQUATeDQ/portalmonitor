@@ -1,5 +1,6 @@
-from odpw.db.dbm import DMManager
+
 import os
+from odpw.db.dbm_datamonitor import DMManager
 __author__ = 'jumbrich'
 
 
