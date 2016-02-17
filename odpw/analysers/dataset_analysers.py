@@ -12,6 +12,7 @@ import tldextract
 from odpw.utils.util import ErrorHandler
 
 import structlog
+import urlnorm
 log =structlog.get_logger()
 
 class DatasetChangeCountAnalyser(ElementCountAnalyser):
@@ -91,6 +92,7 @@ class ResourceChangeInfoAnalyser(Analyser):
                     #    2a) url matches
                     #    2b) webstore
                     #    2b) url = upload
+                    
                     if self.portal.software == 'CKAN':
                         #CKAN case
                         #1) check url match
@@ -106,6 +108,7 @@ class ResourceChangeInfoAnalyser(Analyser):
                             for r in dataset.data['resources']:
                                 try:
                                     r_url = urlnorm.norm(r['url'].strip())
+                                    
                                     if url==r['url']:
                                         
                                         if not local and 'url_type' in r:
@@ -113,10 +116,9 @@ class ResourceChangeInfoAnalyser(Analyser):
                                         if 'last_modified' in r :
                                             meta_last_modified='empty' if r['last_modified'] is None or r['last_modified'] == "" else 'value'
                                         if 'webstore_url' in r :
-                                            meta_last_modified='empty' if r['webstore_url'] is None or r['webstore_url'] == "" else 'value'
-                                        if 'meta_webstore_last_updated' in r :
-                                            meta_last_modified='empty' if r['meta_webstore_last_updated'] is None or r['meta_webstore_last_updated'] == "" else 'value'
-                                        
+                                            meta_webstore_url='empty' if r['webstore_url'] is None or r['webstore_url'] == "" else 'value'
+                                        if 'webstore_last_updated' in r :
+                                            meta_webstore_last_updated='empty' if r['webstore_last_updated'] is None or r['webstore_last_updated'] == "" else 'value'
                                 except Exception as e:
                                     pass
                         if 'extras' in dataset.data and 'update_frequency' in dataset.data['extras']:
