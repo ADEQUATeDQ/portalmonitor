@@ -148,13 +148,11 @@ def cli(args, dbm):
             print 'error in portal:', p.url
             print e
 
-    for k,v in all_urls.items():
-        print k,v
-
-    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.pkl'), 'wb') as f:
+    fname='csv_urls_' + str(args.snapshot) + ("_"+portals[0].id) if len(portals)==1 else +'' 
+    with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
-    with open(os.path.join(args.out, 'csv_urls_' + str(args.snapshot) + '.json'), 'wb') as f:
+    with open(os.path.join(args.out, fname+'.json'), 'w') as f:
         json.dump(all_urls, f)
         print 'Writing dict to ',f
 

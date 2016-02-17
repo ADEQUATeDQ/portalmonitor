@@ -141,16 +141,16 @@ class ResourceChangeInfoAnalyser(Analyser):
                                 http_etag =True
                     
                     
-                    res=[   url,
-                            self.portal.software,
-                            self.portal.id,
-                            str(local),
-                            str(http_lm),
-                            str(http_etag),
-                            str(meta_last_modified),
-                            str(meta_webstore_url),
-                            str(meta_webstore_last_updated),
-                            str(update_frequeny)]
+                    res=[   url.encode('utf8'),
+                            self.portal.software.encode('utf8'),
+                            self.portal.id.encode('utf8'),
+                            str(local).encode('utf8'),
+                            str(http_lm).encode('utf8'),
+                            str(http_etag).encode('utf8'),
+                            str(meta_last_modified).encode('utf8'),
+                            str(meta_webstore_url).encode('utf8'),
+                            str(meta_webstore_last_updated).encode('utf8'),
+                            str(update_frequeny).encode('utf8')]
                     try:
                         self.out.write(",".join(res)+"\n")
                     except Exception as e: 

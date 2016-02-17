@@ -1,5 +1,5 @@
-from odpw.db.dbm import DMManager
-import os
+from odpw.db.dbm_datamonitor import DMManager
+
 __author__ = 'jumbrich'
 
 
@@ -20,58 +20,88 @@ log = get_logger()
 def help():
     return "Insert URIs into the datamonitor"
 def name():
-    return 'DMInfo'
+    return 'DM'
 
 def setupCLI(pa):
     pa.add_argument("-f","--file",  help='file containing csv urls', dest='file')
     pa.add_argument("-p","--pickle",  help='pickle file containing csv urls', dest='pickle')
+    pa.add_argument("-d","--crawldate",  help='next crawl date', dest='crawldate')
     pa.add_argument("-s","--size",  help='maximum size in KB if in header', dest='size', type=int, default=-1)
-    pa.add_argument('-o','--out',type=str, dest='out' , help="the out directory for the list of urls (and downloads)")
+    pa.add_argument("-u","--update",  help='After how many seconds should the URL be crawled', dest='update', type=int, default=0)
 
 def cli(args, dbm):
 
     experiment = 'csvengine'
     
+    
+    update= args.update
+    if not args.crawldate:
+        #schedule two hours from now
+        today = datetime.now()
+        
+        today = datetime.now()
+        start = today + timedelta(hours=1)
+        nextCrawl=start
+        #nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        #start = today + timedelta((6 - today.weekday()) % 7)
+        start = start.replace( minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=3)
+        
+        
+        '''
+        #nextCrawl= datetime(year=2016, month=01, day=21, hour=16)
+        
+        
+        today = datetime.now()
+        nextCrawl = today + timedelta(hours=2)
+        nextCrawl = nextCrawl.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        start = today + timedelta((6 - today.weekday()) % 7)
+        start = start.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        end = start + timedelta(days=5)'''
+        
+        log.info("Scheduling URIs", start=start, end=end)        
+    else:
+        nextCrawl = datetime.strptime(args.crawldate, '%Y-%m-%dT%H:%M:%S')
+
     dm_dbm = DMManager(db='datamonitor', host="datamonitor-data.ai.wu.ac.at", port=5432, password='d4tamonitor', user='datamonitor')
 
-    urls=None
     if args.file:
-        urls = {}
         with open(args.file) as f:
             for u in f:
                 url = u.strip()
                 try:
-                    urls[url]={}
+                    
+                    
+                    if not args.crawldate:
+                        nextCrawl += timedelta(hours=1)
+                        if nextCrawl >= end:
+                            nextCrawl = start
+                    print nextCrawl,update,url
+                    dm_dbm.upsert(url, experiment, nextCrawl, update)
                 except Exception, e:
                     print e
     if args.pickle:
         import pickle
         with open( args.pickle, "rb" ) as p: 
             urls = pickle.load(p)
-
-    files={}
-    for k,v in urls.iteritems():
-        print "checking", k
-        res = dm_dbm.getLatestURLInfo(k)
-        for r in res:
-            if '2015' in r['disklocation']:
-                v['file']=r['disklocation']
-                v['size']=r['size']
-                files[k]=v
+            
+            for k,v in urls.items():
+                size = v.get('header',{}).get('size',-1)
                 
-    
-    with open(os.path.join(args.out, 'csv_urls_files.pkl'), 'wb') as f:
-        pickle.dump(files, f)
-        print 'Writing dict to ',f
-    
-            
-            
-        
-        
-        
-            
-
-
+                if  size<= args.size:
+                    try:
+                        
+                        if not args.crawldate:
+                            nextCrawl += timedelta(hours=1)
+                            if nextCrawl >= end:
+                                nextCrawl = start
+                        print nextCrawl,update,k
+                        dm_dbm.upsert(k, experiment, nextCrawl, update)
+                    except Exception, e:
+                        print e
     
 
     #psql --host datamonitor-data.ai.wu.ac.at -U datamonitor -W datamonitor
