@@ -20,14 +20,15 @@ class Page(object):
     def __init__(self, filename):
         self.filename = os.path.basename(filename)
         self.rev_hist = self.parse(filename)
-        self.min = min(self.rev_hist)
-        self.max = max(self.rev_hist)
         self.length = len(self.rev_hist)
-        self.delta = (self.max - self.min).total_seconds()
-        self.frequency = self.delta / self.length
-        deltas = self.getDeltas()
-        self.max_delta = max(deltas)
-        self.min_delta = min(deltas)
+        if len(self.rev_hist) > 0:
+            self.min = min(self.rev_hist)
+            self.max = max(self.rev_hist)
+            self.delta = (self.max - self.min).total_seconds()
+            self.frequency = self.delta / self.length
+            deltas = self.getDeltas()
+            self.max_delta = max(deltas) if len(deltas) > 0 else -1
+            self.min_delta = min(deltas) if len(deltas) > 0 else -1
 
     def parse(self, filename):
         """
@@ -56,30 +57,35 @@ class Page(object):
         for t in self.rev_hist:
             yield t
 
-    def iterAgeSampling(self, interval):
-        i = self.rev_hist[0]
-        end = self.rev_hist[-1]
+    def iterAgeSampling(self, interval, start=None, end=None):
+        if start:
+            i = start
+        else:
+            i = self.rev_hist[0]
+
+        if not end:
+            end = self.rev_hist[-1]
 
         prev_t = i
         while i < end:
             for t in self.rev_hist:
                 if t > i:
                     # return last modification date in this interval
-                    yield prev_t
+                    yield prev_t, i
                     break
                 prev_t = t
 
             # go to next interval
             i += interval
-        yield prev_t
+        yield prev_t, i
 
-    def iterComparisonSampling(self, interval):
+    def iterComparisonSampling(self, interval, start=None, end=None):
         prev_t = -1
-        for t in self.iterAgeSampling(interval):
+        for t, i in self.iterAgeSampling(interval, start=start, end=end):
             if prev_t == t:
-                yield 0, t
+                yield 0, t, i
             else:
-                yield 1, t
+                yield 1, t, i
             prev_t = t
 
     def startTime(self):

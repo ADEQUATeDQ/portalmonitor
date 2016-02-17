@@ -72,6 +72,11 @@ class ChoGarciaFrequencyEstimator(ComparisonSampling):
         t = poisson.ppf(q, 1/l)
         return t
 
+    def cdf_poisson(self, t):
+        mu = 1/self.estimate()
+        p = poisson.cdf(t, mu)
+        return p
+
 
 class IntuitiveFrequency(ChoGarciaFrequencyEstimator):
     """
@@ -246,4 +251,17 @@ class MarkovChain(ComparisonSampling):
             key_0 = key_0[1:] + '0'
 
         return intervals, current_perc
+
+    def cumm_percent(self, delta):
+        prob = self._estimate()
+        # access key
+        key = ''.join(str(k) for k in self.data[-(self.history - 1):])
+        key_0 = key + '0'
+
+        zeros = 1.0
+        for i in range(int(delta)):
+            zeros *= prob[key_0]
+            key_0 = key_0[1:] + '0'
+
+        return 1.0 - zeros
 
