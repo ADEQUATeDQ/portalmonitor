@@ -4,32 +4,30 @@ Created on Jan 3, 2016
 @author: jumbrich
 '''
 
-from flask import Blueprint, render_template,current_app
-from odpw.server.rest.cache import cache
-from flask import jsonify
-from flask_swagger import swagger
-
-from odpw.utils.timer import Timer
-from odpw.db.models import PortalMetaData
-
 import collections
-import pandas as pd
+import functools
+import gzip
+import traceback
 from StringIO import StringIO
 from cStringIO import StringIO as IO
-import gzip
-import functools
+
+import pandas as pd
+from flask import Blueprint, render_template,current_app
+from flask import jsonify
 from flask.ctx import after_this_request
 from flask.globals import request
+from flask.helpers import send_file
+
 from odpw.analysers import process_all
 from odpw.analysers.core import DBAnalyser
-from odpw.reporting.reporters import SnapshotsPerPortalReporter, Report
+from odpw.db.models import PortalMetaData
+from odpw.reporting.activity_reports import systemfetchactivity
 from odpw.reporting.evolution_reports import portalEvolution_report
-import traceback
 from odpw.reporting.info_reports import portalinfo
-from flask.helpers import send_file
+from odpw.server.rest.cache import cache
 from  odpw.utils import util as  odpw_utils
-from odpw.reporting.activity_reports import systemactivity, systemfetchactivity
-
+from odpw.utils.timer import Timer
+from reporting.reporters.reporters import SnapshotsPerPortalReporter, Report
 
 api = Blueprint('api', __name__,
                     template_folder='templates',

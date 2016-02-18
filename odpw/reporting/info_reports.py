@@ -3,25 +3,21 @@ Created on Aug 14, 2015
 
 @author: jumbrich
 '''
+import numpy as np
+
 from odpw.analysers import process_all, AnalyserSet
 from odpw.analysers.core import DBAnalyser
-from odpw.reporting.reporters import SoftWareDistReporter, ISO3DistReporter,\
-    PortalListReporter, SnapshotsPerPortalReporter, DatasetSumReporter,\
-    ResourceCountReporter, ResourceSizeReporter, TagReporter,\
-    OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
-    CSVReporter, Reporter, DBReporter, DFtoListDict, addPercentageCol,\
-    TexTableReporter, LicenseCountReporter
-
 from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
     DCATFormatCount, PMDResourceStatsCount, DatasetCount, DCATLicenseCount
-from odpw.analysers.resource_analysers import ResourceSize
 from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod
+from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter
-
-
-import pandas as pd
-import numpy as np
+from reporting.reporters.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
+    ResourceCountReporter, ResourceSizeReporter, TagReporter,\
+    OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
+    CSVReporter, DBReporter, DFtoListDict, addPercentageCol,\
+    TexTableReporter, LicenseCountReporter
 
 
 def systeminfoall(dbm):
@@ -46,6 +42,10 @@ def systeminfoall(dbm):
     #              ])
     #===========================================================================
 
+
+def report_portalbasics(dbm, sn, portal_id):
+    a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+    r=SnapshotsPerPortalReporter(a, portal_id)
 
 def portalinfo(dbm, sn, portal_id):
     #get snapshots for this portal

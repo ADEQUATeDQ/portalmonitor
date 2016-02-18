@@ -1,32 +1,28 @@
-from collections import OrderedDict
-import pprint
 import operator
-import os
-import numpy as np
-import pandas as pd
 import pickle
+import pprint
+from _collections import defaultdict
+from collections import OrderedDict
+
+import numpy as np
+import os
+from matplotlib import pyplot as plt
+
 from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.compare_analyser import CKANKeyIntersectionAnalyser, OGDMetadatenAnalyser
-from odpw.analysers.core import ElementCountAnalyser, HistogramAnalyser, StatusCodeAnalyser
+from odpw.analysers.compare_analyser import OGDMetadatenAnalyser
 from odpw.analysers.count_analysers import DatasetCount, ResourceCount, CKANFormatCount, CKANTagsCount, CKANKeysCount, \
     CKANLicenseIDCount, DCATTagsCount, DCATFormatCount
 from odpw.analysers.evolution import DatasetEvolution
-from odpw.analysers.fetching import CKANKeyAnalyser, UsageAnalyser
+from odpw.analysers.fetching import CKANKeyAnalyser
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, PMDResourceCountAnalyser, CompletenessHistogram, \
     ContactabilityHistogram, OpennessHistogram, UsageHistogram, AccuracyHistogram, FormatHistogram, FormatDistribution
 from odpw.analysers.resource_analysers import ResourceOverlapAnalyser, ResourceOccurrenceCountAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData, Resource, Portal
-from odpw.reporting import plotting
-from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter
-from odpw.reporting.reporters import Report, Reporter, PlotReporter, FormatCountReporter, TagReporter, \
-    ElementCountReporter, CSVReporter, ResourceOverlapReporter
-
-from matplotlib.ticker import FuncFormatter
-from matplotlib import pyplot as plt
-from _collections import defaultdict
-
+from odpw.reporting.reporters import Report, FormatCountReporter, TagReporter, \
+    ElementCountReporter, ResourceOverlapReporter
+from reporting.reporters.plot_reporter import MultiHistogramReporter, MultiScatterReporter
 
 __author__ = 'sebastian'
 

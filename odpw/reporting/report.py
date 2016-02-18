@@ -4,15 +4,15 @@ Created on Jul 9, 2015
 @author: jumbrich
 '''
 import numpy as np
+
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.fetching import CKANTagsCount, CKANLicenseCount, CKANOrganizationsCount, CKANFormatCount
 from odpw.analysers.pmd_analysers import CompletenessHistogram, ContactabilityHistogram
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
-from odpw.analysers.socrata_analysers import SocrataTagsCount
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData
-from odpw.reporting.reporters import Report, dftopk, TagReporter, LicensesReporter
+from reporting.reporters.reporters import Report, dftopk, TagReporter, LicensesReporter
 
 if __name__ == '__main__':
     

@@ -3,12 +3,14 @@ Created on Aug 17, 2015
 
 @author: jumbrich
 '''
-from odpw.reporting.reporters import DBReporter, Report
-from pandas import merge
-import pandas as pd
-import numpy as np
 from _collections import defaultdict
-                
+
+import pandas as pd
+from pandas import merge
+
+from reporting.reporters.reporters import DBReporter, Report
+
+
 class SanityReport(Report):
     def getDataFrame(self):
         df = None

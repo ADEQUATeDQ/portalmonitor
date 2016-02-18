@@ -5,34 +5,12 @@ Created on Nov 27, 2015
 '''
 #!flask/bin/python
 from flask import Flask
-
-from odpw.db.dbm import PostgressDBM
-
-
-from flask.globals import request
 from flask.json import jsonify
 from flask_swagger import swagger
 
-from odpw.utils.timer import Timer
-from odpw.db.models import PortalMetaData
-
-import collections
-import pandas as pd
-from StringIO import StringIO
-import urllib
-
-
+from odpw.db.dbm import PostgressDBM
 #GZIPPED RESPONSE
-from flask import after_this_request, request
-from cStringIO import StringIO as IO
-import gzip
-import functools 
-from flask.helpers import url_for, send_file, send_from_directory
-from odpw.reporting.info_reports import portalinfo
-from odpw.analysers import process_all
-from odpw.analysers.core import DBAnalyser
-from odpw.reporting.quality_reports import portalquality
-from odpw.reporting.reporters import Report, SnapshotsPerPortalReporter
+from flask import request
 from flask.templating import render_template
 
 

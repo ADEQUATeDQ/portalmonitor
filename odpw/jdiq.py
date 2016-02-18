@@ -1,20 +1,22 @@
 from collections import OrderedDict
+
 import numpy as np
+
 from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
-from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATTagsCount, DCATLicenseCount, ResourceCount
+from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATLicenseCount, ResourceCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, MultiHistogramAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
 from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, FormatOpennessDCATAnalyser, \
     FormatMachineReadableDCATAnalyser
 from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
-from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
+from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData, Dataset, Portal
-from odpw.reporting.plot_reporter import MultiHistogramReporter, MultiScatterReporter, MultiScatterHistReporter
-from odpw.reporting.reporters import FormatCountReporter, TagReporter, Report, LicenseCountReporter, \
+from odpw.reporting.reporters import FormatCountReporter, Report, LicenseCountReporter, \
     ElementCountReporter
+from reporting.reporters.plot_reporter import MultiHistogramReporter, MultiScatterHistReporter
 
 __author__ = 'sebastian'
 

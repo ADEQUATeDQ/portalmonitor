@@ -3,9 +3,9 @@ Created on Aug 27, 2015
 
 @author: jumbrich
 '''
-from odpw.reporting.reporters import UIReporter, CLIReporter, Reporter
-
 import pandas as pd
+
+from reporting.reporters.reporters import UIReporter, CLIReporter, Reporter
 
 
 class RetrievabilityReporter(Reporter, UIReporter, CLIReporter):

@@ -3,16 +3,15 @@ Created on Aug 14, 2015
 
 @author: jumbrich
 '''
-from odpw.db.models import PortalMetaData
 from odpw.analysers import process_all, AnalyserSet
 from odpw.analysers.pmd_analysers import PMDActivityAnalyser
-
-from odpw.reporting.reporters import SystemActivityReporter, Report
-from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod,\
-    FetchTimeSpanAnalyser, HeadTimeSpanAnalyser, FetchProcessAnalyser
+from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod, \
+    FetchProcessAnalyser
+from odpw.db.models import PortalMetaData
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter, FetchProcessReporter
 from odpw.utils.timer import Timer
+from reporting.reporters.reporters import SystemActivityReporter, Report
 
 
 def systemfetchactivity(dbm, sn):

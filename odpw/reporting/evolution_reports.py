@@ -3,21 +3,18 @@ Created on Aug 14, 2015
 
 @author: jumbrich
 '''
-from odpw.analysers import AnalyserSet, process_all
-from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution,\
-    ResourceAnalysedEvolution, SystemSoftwareEvolution, SystemEvolutionAnalyser, DatasetDCATMetricsEvolution, \
-    PMDCountEvolution
-from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser
-from odpw.db.dbm import PostgressDBM
-from odpw.db.models import PortalMetaData, Portal
-from odpw.reporting.reporters import Report, SystemEvolutionReport
-
-from odpw.reporting.reporters import Reporter, UIReporter, CLIReporter,\
-    DFtoListDict, CSVReporter
 import pandas as pd
-from odpw.utils.timer import Timer
 from odpw.reporting.evolution_reporter import SystemEvolutionReporter
 
+from odpw.analysers import AnalyserSet, process_all
+from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution, \
+    SystemEvolutionAnalyser, DatasetDCATMetricsEvolution, \
+    PMDCountEvolution
+from odpw.db.dbm import PostgressDBM
+from odpw.db.models import PortalMetaData
+from reporting.reporters.reporters import Report, SystemEvolutionReport
+from reporting.reporters.reporters import Reporter, UIReporter, CLIReporter, \
+    CSVReporter
 
 
 class EvolutionReporter(Reporter, UIReporter, CLIReporter, CSVReporter):
@@ -181,7 +178,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 import os
-import numpy
+
 
 def scalar_plot(curves, curve_labels, curve_colors, xlabels, dir, filename):
     values = range(len(curves))

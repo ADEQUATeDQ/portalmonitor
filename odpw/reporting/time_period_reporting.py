@@ -3,13 +3,15 @@ Created on Aug 21, 2015
 
 @author: jumbrich
 '''
-from odpw.reporting.reporters import CSVReporter, UIReporter, CLIReporter,\
-    Reporter, PlotReporter, TexTableReporter
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core.numeric import arange
 import os
+import pandas as pd
+from numpy.core.numeric import arange
+
+from reporting.reporters.reporters import CSVReporter, UIReporter, CLIReporter,\
+    Reporter, PlotReporter, TexTableReporter
+
 
 class TimePeriodReporter(Reporter, CLIReporter, UIReporter, CSVReporter):
     

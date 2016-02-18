@@ -1,40 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tornado.web import RequestHandler, HTTPError, asynchronous
-from jinja2.exceptions import TemplateNotFound
-from tornado.escape import json_encode
-
-from odpw.db.models import Portal, PortalMetaData, Dataset, Resource
-from odpw.utils  import util
-from collections import defaultdict
-from urlparse import urlparse 
-import json
-from odpw.db.dbm import nested_json, date_handler
-from odpw.reporting.reporters import DBAnalyser, DFtoListDict, addPercentageCol,\
-    Report, ISO3DistReporter, SoftWareDistReporter,\
-    SystemActivityReporter, SnapshotsPerPortalReporter, LicensesReporter,\
-    TagReporter, OrganisationReporter, FormatCountReporter, DatasetSumReporter,\
-    ResourceSumReporter, ResourceSizeReporter, ResourceCountReporter, DBReporter
-from odpw.utils.timer import Timer
-from odpw.analysers import process_all, AnalyserSet
-
 import sys
 import traceback
-import os
-from odpw.analysers.pmd_analysers import PMDActivityAnalyser
-from odpw.analysers.fetching import  CKANLicenseConformance
-    
 
-from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount,\
-    DCATFormatCount, DatasetCount, ResourceCount, PMDResourceStatsCount
-from odpw.analysers.core import DCATConverter
-from odpw.analysers.resource_analysers import ResourceSize
+import os
+from jinja2.exceptions import TemplateNotFound
+from tornado.escape import json_encode
+from tornado.web import RequestHandler, HTTPError
+
+from odpw.analysers import process_all
+from odpw.db.models import Portal, Dataset, Resource
 from odpw.reporting.activity_reports import systemactivity
-from odpw.reporting.evolution_reports import portalEvolution_report, systemevolution
-from odpw.reporting.info_reports import portalinfo, SystemPortalInfoReporter,\
-    systeminfoall
+from odpw.reporting.evolution_reports import systemevolution
+from odpw.reporting.info_reports import portalinfo, systeminfoall
 from odpw.reporting.quality_reports import portalquality, portalsquality
+from odpw.utils  import util
+from odpw.utils.timer import Timer
+from reporting.reporters.reporters import DBAnalyser, Report, SnapshotsPerPortalReporter
 
 
 class CacheMixin(object):

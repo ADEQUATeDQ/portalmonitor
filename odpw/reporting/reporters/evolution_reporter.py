@@ -3,9 +3,8 @@ Created on Aug 12, 2015
 
 @author: jumbrich
 '''
-from odpw.reporting.reporters import UIReporter, CLIReporter, CSVReporter,\
-    Reporter, DBReporter
-from odpw.analysers.datasetlife import DatasetLifeStatsAnalyser
+from reporting.reporters.reporters import UIReporter, CLIReporter, CSVReporter, \
+    DBReporter
 
 
 class SystemEvolutionReporter(DBReporter, UIReporter, CLIReporter, CSVReporter):
