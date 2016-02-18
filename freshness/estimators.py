@@ -31,10 +31,7 @@ class ComparisonSamplingEmpiricalDistribution(ComparisonSampling):
     def __init__(self):
         self.history = []
 
-    def update(self, Xi):
-        self.history.append(Xi)
-
-    def ppf(self, q):
+    def _comupteIntervals(self):
         intervals = []
         i = 0
         for x in self.history:
@@ -42,9 +39,21 @@ class ComparisonSamplingEmpiricalDistribution(ComparisonSampling):
             if x:
                 intervals.append(i)
                 i = 0
+        return intervals
 
+
+    def update(self, Xi):
+        self.history.append(Xi)
+
+    def ppf(self, q):
+        intervals = self._comupteIntervals()
         perc = np.percentile(intervals, q=q*100)
         return perc * self.I
+
+    def cdf(self, real_interval):
+        intervals = self._comupteIntervals()
+        cdf = ECDF(intervals)
+        return cdf(real_interval)
 
 
 class ChoGarciaFrequencyEstimator(ComparisonSampling):
