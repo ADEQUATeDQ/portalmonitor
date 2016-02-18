@@ -65,6 +65,7 @@ def cli(args,dbm):
     
     resources={}
     iter=Resource.iter(dbm.getResourcesWithHeader())
+    print "loading Resources"
     for R in iter:
         if R.url not in resources:
             resources[R.url]=R
