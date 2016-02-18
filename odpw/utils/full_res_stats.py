@@ -64,7 +64,7 @@ def cli(args,dbm):
     res={}
     
     resources={}
-    iter=Resource.iter(dbm.getResourcesWithHeader(portal_id=p.id))
+    iter=Resource.iter(dbm.getResourcesWithHeader())
     print "loading Resources"
     for R in iter:
         if R.url not in resources:

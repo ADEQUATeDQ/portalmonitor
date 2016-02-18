@@ -35,7 +35,7 @@ class ResourceChangeInfoAnalyser(Analyser):
     
     def __init__(self, outfile, Portal, dbm, resources):
         super(ResourceChangeInfoAnalyser, self).__init__()
-        self.out=open(outfile, "wa")
+        self.out=open(outfile, "a")
         self.portal=Portal
         self.dbm=dbm
         self.resources=resources
