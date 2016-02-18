@@ -19,7 +19,8 @@ if __name__ == '__main__':
     sn=1550
     portalID='data_wu_ac_at'
 
-    report = report_portalbasics(dbm, sn, portalID)
+    #report = report_portalbasics(dbm, sn, portalID)
 
+    report = portalinfo(dbm,sn,portalID)
     print report.uireport()
 

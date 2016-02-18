@@ -13,7 +13,7 @@ from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter
-from reporting.reporters.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
+from odpw.reporting.reporters.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
     CSVReporter, DBReporter, DFtoListDict, addPercentageCol,\
@@ -44,8 +44,25 @@ def systeminfoall(dbm):
 
 
 def report_portalbasics(dbm, sn, portal_id):
-    a= process_all( DBAnalyser(), dbm.getSnapshots( portalID=portal_id,apiurl=None))
+    """
+    :param dbm:
+    :param sn:
+    :param portal_id:
+    :return: a PortalBasicReport containing
+        #snapshots
+        iso
+        system
+        id
+        url
+        apiurl
+    """
+    a = process_all( DBAnalyser(), dbm.getSnapshotsFromPMD( portalID=portal_id))
+
     r=SnapshotsPerPortalReporter(a, portal_id)
+
+    P = dbm.getPortal(portalID=portal_id)
+    return PortalBasicReport(r, P)
+
 
 def portalinfo(dbm, sn, portal_id):
     #get snapshots for this portal
@@ -76,10 +93,10 @@ def portalinfo(dbm, sn, portal_id):
                     DatasetSumReporter(dsC),
                     ResourceCountReporter(resC),
                     ResourceSizeReporter(rsize),
-                    LicenseCountReporter(lc,distinct=True,topK=3),
-                    TagReporter(tc,dc, distinct=True,topK=3),
-                    OrganisationReporter(oc, distinct=True,topK=3),
-                    FormatCountReporter(fc,  distinct=True,topK=3),
+                    LicenseCountReporter(lc,distinct=True),
+                    TagReporter(tc,dc, distinct=True),
+                    OrganisationReporter(oc, distinct=True),
+                    FormatCountReporter(fc,  distinct=True),
     
                     FetchTimePeriodReporter(fa),
                     HeadTimePeriodReporter(ha)

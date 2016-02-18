@@ -29,10 +29,11 @@ def setupCLI(pa):
     tasks.add_argument("-a",  help='generate the activity report', dest='activity', action='store_true')
     tasks.add_argument("-e",  help='generate the evolution report', dest='evolution', action='store_true')
     tasks.add_argument("-q",  help='generate the quality report', dest='quality', action='store_true')
-    
+    tasks.add_argument("-f", '--full',  help='generate the quality report', dest='full', action='store_true')
     
     focus = pa.add_argument_group("Views")
     focus.add_argument("-p",  help='Portal id ', dest='portal')
+    focus.add_argument("-u",'--url'  help='Portal apiurl ', dest='url')
     focus.add_argument("-s",  help='System', dest='system', action='store_true')
     focus.add_argument("--portals",  help='Specify a set of portals', dest='portals', nargs='+')
     focus.add_argument("--software",  help='Specify a set of portals', dest='software', nargs='+')
@@ -41,8 +42,8 @@ def setupCLI(pa):
     
     out = pa.add_argument_group("Output")
     out.add_argument("-o",  help='outputfolder to write the reports', dest='out')
-    out.add_argument("-c",  help='generate the system activity report', dest='csv', action='store_true')
-    out.add_argument("-u",  help='generate the system activity report', dest='ui', action='store_true')
+    out.add_argument("--json",  help='json output ', dest='csv', action='store_true')
+
     
 def cli(args,dbm):
     
@@ -205,10 +206,10 @@ def cli(args,dbm):
   #=============================================================================
 def output(rE, args,  snapshot=None):
     
-    rE.clireport()
+    #rE.clireport()
     import pprint
     if args.csv:
         outdir= os.path.join(args.out, snapshot ) if snapshot else args.out 
         print rE.csvreport(outdir )
-    if args.ui:
-        pprint.pprint( rE.uireport() )
+    if args.json:
+        pprint.pprint( rE.json() )

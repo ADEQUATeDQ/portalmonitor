@@ -9,7 +9,7 @@ import os
 import pandas as pd
 from numpy.core.numeric import arange
 
-from reporting.reporters.reporters import CSVReporter, UIReporter, CLIReporter,\
+from odpw.reporting.reporters.reporters import CSVReporter, UIReporter, CLIReporter,\
     Reporter, PlotReporter, TexTableReporter
 
 

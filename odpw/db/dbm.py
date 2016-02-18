@@ -186,7 +186,6 @@ class PostgressDBM(object):
          with Timer(key="getUniqueSnapshots") as t:
              with self.engine.begin() as con:
                  s = select([self.pmd.c.snapshot]).distinct()
-             
                  return con.execute(s)
         
     def getSnapshots(self, portalID=None,apiurl=None):
