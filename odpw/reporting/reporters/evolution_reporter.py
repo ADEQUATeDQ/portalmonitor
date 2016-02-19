@@ -3,7 +3,7 @@ Created on Aug 12, 2015
 
 @author: jumbrich
 '''
-from reporting.reporters.reporters import UIReporter, CLIReporter, CSVReporter, \
+from odpw.reporting.reporters.reporters import UIReporter, CLIReporter, CSVReporter, \
     DBReporter
 
 
