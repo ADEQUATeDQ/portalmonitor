@@ -8,7 +8,7 @@ from _collections import defaultdict
 import pandas as pd
 from pandas import merge
 
-from odpw.reporting import DBReporter, Report
+from odpw.reporting.reporters import DBReporter, Report
 
 
 class SanityReport(Report):
