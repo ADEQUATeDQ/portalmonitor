@@ -35,6 +35,21 @@ class DCATDMD(Analyser):
             except Exception as e:
                 ErrorHandler.handleError(log, "DcatAnalyserException", analyser=id, exception=e, exc_info=True)
 
+    def done(self):
+        for id in self.analysers:
+            try:
+                self.analysers[id].done()
+            except Exception as e:
+                ErrorHandler.handleError(log, "DcatAnalyserException", analyser=id, exception=e, exc_info=True)
+
+    def update_PortalMetaData(self, pmd):
+        if not pmd.qa_stats:
+            pmd.qa_stats = {}
+        for id in self.analysers:
+            try:
+                self.analysers[id].update(pmd)
+            except Exception as e:
+                ErrorHandler.handleError(log, "DcatAnalyserException", analyser=id, exception=e, exc_info=True)
 
 class CKANDMD(Analyser):
     def __init__(self):
