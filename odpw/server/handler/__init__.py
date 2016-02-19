@@ -9,7 +9,7 @@ from jinja2.exceptions import TemplateNotFound
 from tornado.escape import json_encode
 from tornado.web import RequestHandler, HTTPError
 
-from analysers.core import DBAnalyser
+from odpw.analysers.core import DBAnalyser
 from odpw.analysers import process_all
 from odpw.db.models import Portal, Dataset, Resource
 from odpw.reporting.activity_reports import systemactivity
