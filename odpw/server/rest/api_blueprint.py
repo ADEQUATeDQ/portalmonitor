@@ -27,7 +27,7 @@ from odpw.reporting.info_reports import portalinfo
 from odpw.server.rest.cache import cache
 from  odpw.utils import util as  odpw_utils
 from odpw.utils.timer import Timer
-from reporting.reporters.reporters import SnapshotsPerPortalReporter, Report
+from odpw.reporting.reporters import SnapshotsPerPortalReporter, Report
 
 api = Blueprint('api', __name__,
                     template_folder='templates',

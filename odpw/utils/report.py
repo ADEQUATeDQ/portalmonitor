@@ -33,7 +33,7 @@ def setupCLI(pa):
     
     focus = pa.add_argument_group("Views")
     focus.add_argument("-p",  help='Portal id ', dest='portal')
-    focus.add_argument("-u",'--url'  help='Portal apiurl ', dest='url')
+    focus.add_argument("-u",'--url', help='Portal apiurl ', dest='url')
     focus.add_argument("-s",  help='System', dest='system', action='store_true')
     focus.add_argument("--portals",  help='Specify a set of portals', dest='portals', nargs='+')
     focus.add_argument("--software",  help='Specify a set of portals', dest='software', nargs='+')

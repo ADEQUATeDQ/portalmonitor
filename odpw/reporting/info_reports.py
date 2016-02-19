@@ -13,7 +13,7 @@ from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod
 from odpw.analysers.resource_analysers import ResourceSize
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter
-from odpw.reporting.reporters.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
+from odpw.reporting.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
     CSVReporter, DBReporter, DFtoListDict, addPercentageCol,\
