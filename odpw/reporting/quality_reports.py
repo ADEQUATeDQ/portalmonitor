@@ -12,7 +12,7 @@ from odpw.analysers.quality.new.retrievability import ResourceRetrievability,\
 from odpw.analysers.statuscodes import DatasetStatusCode, ResourceStatusCode
 from odpw.db.models import PortalMetaData
 from odpw.reporting.reporters import Report
-from reporting.reporters.statuscode_reporter import DatasetStatusCodeReporter,\
+from odpw.reporting.reporters.statuscode_reporter import DatasetStatusCodeReporter,\
     ResourcesStatusCodeReporter
 
 

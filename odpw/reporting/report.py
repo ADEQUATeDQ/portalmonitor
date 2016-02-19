@@ -12,7 +12,7 @@ from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData
-from reporting.reporters.reporters import Report, dftopk, TagReporter, LicensesReporter
+from odpw.reporting.reporters.reporters import Report, dftopk, TagReporter, LicensesReporter
 
 if __name__ == '__main__':
     

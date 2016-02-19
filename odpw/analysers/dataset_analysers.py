@@ -38,8 +38,7 @@ class ResourceChangeInfoAnalyser(Analyser):
     def __init__(self, outfile, Portal, dbm, resources):
         super(ResourceChangeInfoAnalyser, self).__init__()
         self.out = csv.writer(open(outfile, "a"), delimiter=',',
-                lineterminator='\r\n',
-                quotechar = "'"
+                lineterminator='\r\n'
                 )
 
         self.portal=Portal

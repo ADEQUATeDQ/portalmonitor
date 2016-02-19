@@ -12,8 +12,8 @@ from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution, \
     PMDCountEvolution
 from odpw.db.dbm import PostgressDBM
 from odpw.db.models import PortalMetaData
-from reporting.reporters.reporters import Report, SystemEvolutionReport
-from reporting.reporters.reporters import Reporter, UIReporter, CLIReporter, \
+from odpw.reporting.reporters.reporters import Report, SystemEvolutionReport
+from odpw.reporting.reporters.reporters import Reporter, UIReporter, CLIReporter, \
     CSVReporter
 
 
