@@ -6,7 +6,7 @@ Created on Aug 27, 2015
 import numpy as np
 import pandas as pd
 
-from reporting.reporters.reporters import Reporter, UIReporter, CLIReporter,\
+from odpw.reporting.reporters.reporters import Reporter, UIReporter, CLIReporter,\
     CSVReporter, addPercentageCol, DFtoListDict
 
 class StatusCodeReporter(Reporter,UIReporter, CLIReporter, CSVReporter):

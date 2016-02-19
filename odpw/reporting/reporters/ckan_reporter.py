@@ -22,7 +22,7 @@ from odpw.db.dbm import PostgressDBM
 from odpw.db.models import Dataset, PortalMetaData, Resource, Portal
 from odpw.reporting.reporters import Report, FormatCountReporter, TagReporter, \
     ElementCountReporter, ResourceOverlapReporter
-from reporting.reporters.plot_reporter import MultiHistogramReporter, MultiScatterReporter
+from odpw.reporting.reporters.plot_reporter import MultiHistogramReporter, MultiScatterReporter
 
 __author__ = 'sebastian'
 

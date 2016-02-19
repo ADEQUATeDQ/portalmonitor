@@ -2,7 +2,7 @@ from odpw.reporting import plotting
 
 __author__ = 'sebastian'
 
-from reporting.reporters.reporters import Reporter, PlotReporter
+from odpw.reporting.reporters.reporters import Reporter, PlotReporter
 
 
 class MultiScatterHistReporter(Reporter, PlotReporter):
