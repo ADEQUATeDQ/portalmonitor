@@ -114,6 +114,9 @@ class CKAN(PortalProcessor):
             if p_steps == 0:
                 p_steps=1
             p_count=0
+            # TODO parameter:
+            NOT_SUPPORTED_PENALITY = 100
+            not_supported_count = 0
             for entity in package_list:
                 #WAIT between two consecutive GET requests
                 
@@ -130,7 +133,7 @@ class CKAN(PortalProcessor):
                                 'software':Portal.software
                                }
                         try:
-                            resp, status = util.getPackage( apiurl=Portal.apiurl, id=entity)
+                            resp, status = util.getPackage(apiurl=Portal.apiurl, id=entity)
                             props['status']=status
                             if resp:
                                 data = resp
@@ -141,6 +144,11 @@ class CKAN(PortalProcessor):
                                exc_info=True)
                             props['status']=util.getExceptionCode(e)
                             props['exception']=util.getExceptionString(e)
+
+                            # if we get too much exceptions we assume this is not supported
+                            not_supported_count += 1
+                            if not_supported_count > NOT_SUPPORTED_PENALITY:
+                                return
 
                         processed_names.add(entity)
                         #we always use the ckan-id for the dataset if possible

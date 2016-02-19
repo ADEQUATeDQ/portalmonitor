@@ -1,6 +1,6 @@
 
 import time
-from odpw.analysers.quality.analysers import dcat_analyser
+from odpw.analysers.quality.analysers import dcat_analyser, DCATDMD
 from odpw.analysers.quality.analysers.completeness import CompletenessAnalyser
 from odpw.analysers.quality.analysers.contactability import ContactabilityAnalyser
 from odpw.analysers.quality.analysers.openness import OpennessAnalyser
@@ -110,36 +110,15 @@ def simulateFetching(dbm, job):
             dbm.insertPortalMetaData(pmd)
         
         ae = SAFEAnalyserSet()
-        #ae.add(MD5DatasetAnalyser())
+
+        ae.add(MD5DatasetAnalyser())
+
         ae.add(DatasetCount())
-        #ae.add(DatasetStatusCode())
-        
-        if Portal.software == 'CKAN':
-            #ka= ae.add(CKANKeyAnalyser())
-            #ae.add(CKANLicenseIDCount())
-            #ae.add(CKANResourceInDSAge())
-            #ae.add(CKANDatasetAge())
-            #ae.add(CKANFormatCount())
-            #ae.add(CKANTagsCount())
-            #ae.add(CKANLicenseCount())
-            #ae.add(CKANOrganizationsCount())
-            #ae.add(CompletenessAnalyser())
-            #ae.add(ContactabilityAnalyser())
-            #ae.add(OpennessAnalyser())
-            #ae.add(OPQuastAnalyser())
-            #ae.add(UsageAnalyser(ka))
-            pass
-        elif Portal.software == 'Socrata':
-            pass
-        elif Portal.software == 'OpenDataSoft':
-            pass
-                
+        ae.add(DatasetStatusCode())
+
         ae.add(DCATConverter(Portal))
         ae.add(DCATDistributionCount(withDistinct=True))
-        #ae.add(DCATDistributionInserter(dbm))
-
-        #ae.add(DatasetFetchUpdater(dbm))
-        #ae.add(DatasetLifeAnalyser(dbm))
+        ae.add(DCATDistributionInserter(dbm))
 
         ae.add(DCATOrganizationsCount())
         ae.add(DCATTagsCount())
@@ -148,9 +127,15 @@ def simulateFetching(dbm, job):
         ae.add(DCATResourceInDSAge())
         ae.add(DCATDatasetAge())
 
-        # DCAT analyser
-        for a in dcat_analyser().values():
-            ae.add(a)
+        # dcat metrics
+        ae.add(DCATDMD())
+
+        # TODO ckan metrics
+        # ae.add(CKANDMD())
+
+        #TODO organisations
+        #ae.add(OrganisationAggregator(dbm, Portal, sn))
+        # in Organ...Agg.done() -> write an dbminsert for each organisation
 
         total=dbm.countDatasets(portalID=Portal.id, snapshot=sn)
         

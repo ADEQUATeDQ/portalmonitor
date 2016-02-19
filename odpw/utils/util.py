@@ -46,7 +46,7 @@ class ErrorHandler():
         
         if ErrorHandler.DEBUG:
             print(traceback.format_exc())
-        
+
         log.error(msg, exctype=type(exception), excmsg=exception.message,**kwargs)
     
     @classmethod
@@ -99,15 +99,15 @@ def getPreviousWeek(snapshot):
     return getSnapshotfromTime(d, timedelta(days=7), before=True)
 
 def getPackage(apiurl, id):
-    ex =None
-    package = None
+    #ex =None
+    #package = None
     #try:
     #    package = api.action.package_show(id=id)
     #    return package, 200
     #except Exception as e:
     #    ex = e
 
-    ex1=None
+    #ex1=None
     try:
         url = urlparse.urljoin(apiurl, "api/2/rest/dataset/" + id)
         resp = requests.get(url, verify=False)
@@ -116,9 +116,9 @@ def getPackage(apiurl, id):
             return package,resp.status_code
         else:
             return None, resp.status_code
-    except Exception as e:
-        ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
-        raise ex1
+    except Exception as ex:
+        ErrorHandler.handleError(log, "getPackageList", exception=ex, exc_info=True, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
+        raise ex
 
     #we have no package
     #if ex and ex1:
