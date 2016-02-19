@@ -11,7 +11,6 @@ from odpw.db.models import Dataset, Portal
 import odpw.utils.util as odpwutil
 
 def fetchDataset(Portal, did, dbm):
-    #
     props={
                            'status':-1,
                            'data':None,
@@ -31,9 +30,8 @@ def fetchDataset(Portal, did, dbm):
         props['status']=odpwutil.getExceptionCode(e)
         props['exception']=odpwutil.getExceptionString(e)
 
-    
     d = Dataset(snapshot=1533, portalID=P.id, did=did, **props)
-    
+
     dbm.updateDataset(d)
 
 
@@ -41,8 +39,6 @@ log =structlog.get_logger()
 if __name__ == '__main__':
     from odpw.db.dbm import PostgressDBM
     dbm = PostgressDBM(host='localhost', port=5432)
-    
-    
     portals ={}
     for P in Portal.iter(dbm.getPortals(software='CKAN')):
         portals[P.id]=P
@@ -68,7 +64,3 @@ if __name__ == '__main__':
         except Exception as e:
             ErrorHandler.handleError(log,'MissingExtra', exception=e, 
                                      exc_info=True)
-
-            
-            
-    

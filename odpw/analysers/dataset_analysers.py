@@ -4,13 +4,15 @@ Created on Feb 10, 2016
 
 @author: jumbrich
 '''
+from urllib import quote
+
 from freshness import json_compare
 from odpw.analysers.core import ElementCountAnalyser
 from odpw.analysers import Analyser
 from odpw.utils.dataset_converter import DCAT
 import tldextract
 from odpw.utils.util import ErrorHandler
-
+import csv
 import structlog
 import urlnorm
 log =structlog.get_logger()
@@ -35,7 +37,11 @@ class ResourceChangeInfoAnalyser(Analyser):
     
     def __init__(self, outfile, Portal, dbm, resources):
         super(ResourceChangeInfoAnalyser, self).__init__()
-        self.out=open(outfile, "a")
+        self.out = csv.writer(open(outfile, "a"), delimiter=',',
+                lineterminator='\r\n',
+                quotechar = "'"
+                )
+
         self.portal=Portal
         self.dbm=dbm
         self.resources=resources
@@ -143,7 +149,7 @@ class ResourceChangeInfoAnalyser(Analyser):
                                 http_etag =True
                     
                     
-                    res=[   url.encode('utf8'),
+                    res=[   quote(url, safe="%/:=&?~#+!$,;'@()*[]").encode('utf8'),
                             self.portal.software.encode('utf8'),
                             self.portal.id.encode('utf8'),
                             str(local).encode('utf8'),
@@ -154,7 +160,7 @@ class ResourceChangeInfoAnalyser(Analyser):
                             str(meta_webstore_last_updated).encode('utf8'),
                             str(update_frequeny).encode('utf8')]
                     try:
-                        self.out.write(",".join(res)+"\n")
+                        self.out.writerow(res)
                     except Exception as e: 
                         ErrorHandler.handleError(log, "Writting csv info", exception =e, url=url, pid=self.portal.id)
                     
