@@ -13,10 +13,6 @@ from odpw.analysers.fetching import CKANLicenseConformance
 from odpw.reporting import graph_plot
 import odpw.utils.util as util
 import os
-from odpw.analysers.core import DBAnalyser, HistogramAnalyser
-from odpw.analysers import AnalyseEngine
-from odpw.db.models import PortalMetaData
-from odpw.analysers.pmd_analysers import PMDActivityAnalyser
 
 import structlog
 from abc import abstractmethod
