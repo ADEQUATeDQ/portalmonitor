@@ -17,7 +17,7 @@ from odpw.reporting.info_reports import portalinfo, systeminfoall
 from odpw.reporting.quality_reports import portalquality, portalsquality
 from odpw.utils  import util
 from odpw.utils.timer import Timer
-from reporting.reporters.reporters import DBAnalyser, Report, SnapshotsPerPortalReporter
+from odpw.reporting.reporters import DBAnalyser, Report, SnapshotsPerPortalReporter
 
 
 class CacheMixin(object):

@@ -11,7 +11,7 @@ from odpw.db.models import PortalMetaData
 from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
     HeadTimePeriodReporter, FetchProcessReporter
 from odpw.utils.timer import Timer
-from odpw.reporting.reporters.reporters import SystemActivityReporter, Report
+from odpw.reporting.reporters import SystemActivityReporter, Report
 
 
 def systemfetchactivity(dbm, sn):
