@@ -471,13 +471,16 @@ def evolution_report(pmd):
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
     sn = 1533
-    #aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
+    aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
+    #datasets = Dataset.iter(dbm.getDatasets(portalID='data_gv_at'))
     #datasets = []
     #for id in aut_portals:
     #    datasets += [ds for ds in Dataset.iter(dbm.getDatasets(id, sn))]
 
+    rep = overlap_report(dbm, sn=1607, portals=aut_portals)
+    rep.plotreport('tmp/aut')
     #report = datasets_report(datasets)
     #report.plotreport('tmp/aut')
     #report.csvreport('tmp/aut')
 
-    socrata_report(dbm, sn)
+    #socrata_report(dbm, sn)

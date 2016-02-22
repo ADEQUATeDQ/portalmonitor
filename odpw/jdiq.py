@@ -4,7 +4,7 @@ import numpy as np
 
 from odpw.analysers import AnalyserSet, process_all, SAFEAnalyserSet
 from odpw.analysers.core import HistogramAnalyser, DCATConverter
-from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATLicenseCount, ResourceCount
+from odpw.analysers.count_analysers import DatasetCount, DCATFormatCount, DCATLicenseCount, ResourceCount, DCATTagsCount
 from odpw.analysers.pmd_analysers import PMDDatasetCountAnalyser, MultiHistogramAnalyser
 from odpw.analysers.quality.new.conformance_dcat import *
 from odpw.analysers.quality.new.existence_dcat import *
@@ -13,9 +13,9 @@ from odpw.analysers.quality.new.open_dcat_format import IANAFormatDCATAnalyser, 
 from odpw.analysers.quality.new.open_dcat_license import LicenseOpennessDCATAnalyser
 from odpw.analysers.statuscodes import DatasetStatusCode
 from odpw.db.dbm import PostgressDBM
-from odpw.db.models import PortalMetaData, Dataset, Portal
+from odpw.db.models import PortalMetaData, Dataset, Portal, DatasetMetaData
 from odpw.reporting.reporters import FormatCountReporter, Report, LicenseCountReporter, \
-    ElementCountReporter
+    ElementCountReporter, TagReporter
 from reporting.reporters.plot_reporter import MultiHistogramReporter, MultiScatterHistReporter
 
 __author__ = 'sebastian'
@@ -29,6 +29,10 @@ class PMDDCATMetricAnalyser(HistogramAnalyser):
     def analyse_PortalMetaData(self, pmd):
         if pmd.qa_stats and self.id in pmd.qa_stats:
             self.analyse_generic(pmd.qa_stats[self.id])
+
+    def analyse_DatasetMetaData(self, dmd):
+        if dmd.dcat and self.id in dmd.dcat:
+            self.analyse_generic(dmd.dcat[self.id])
 
     def name(self):
         return self.id
@@ -49,37 +53,36 @@ class PMDDCATSoftwareAnalyser(MultiHistogramAnalyser):
         return self.id
 
 
-def general_stats(dbm, sn):
+def general_stats(iter_set, p):
     pmd_analyser = AnalyserSet()
+    pmd_analyser.add(DCATConverter(p))
 
     # 1. STATS
     ds_count = pmd_analyser.add(DatasetCount())
-    format_count = pmd_analyser.add(DCATFormatCount(total_count=False))
-    licenses_count = pmd_analyser.add(DCATLicenseCount(total_count=False))
-    #tags_count = pmd_analyser.add(DCATTagsCount())
+    format_count = pmd_analyser.add(DCATFormatCount())
+    licenses_count = pmd_analyser.add(DCATLicenseCount())
+    tags_count = pmd_analyser.add(DCATTagsCount())
 
     # 2. Portal size distribution
-    bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
-    ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
+    #bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
+    #ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
 
-    pmds = dbm.getPortalMetaDatas(snapshot=sn)
-    pmd_iter = PortalMetaData.iter(pmds)
-    process_all(pmd_analyser, pmd_iter)
+    process_all(pmd_analyser, iter_set)
 
     ################# RESULTS ###########################
     print 'ds_count', ds_count.getResult()
     print 'file formats', len(format_count.getResult())
     print 'licenses', len(licenses_count.getResult())
-    #print 'tags', len(tags_count.getResult())
+    print 'tags', len(tags_count.getResult())
 
     # top k reporter
-    format_rep = FormatCountReporter(format_count, topK=800)
-    license_rep = LicenseCountReporter(licenses_count, topK=100)
-    #tags_rep = TagReporter(tags_count, ds_count, topK=10)
-    csv_re = Report([format_rep, license_rep])
+    format_rep = FormatCountReporter(format_count, topK=5)
+    license_rep = LicenseCountReporter(licenses_count, topK=5)
+    tags_rep = TagReporter(tags_count, ds_count, topK=10)
+    csv_re = Report([format_rep, license_rep, tags_rep])
     csv_re.csvreport('tmp')
 
-    print 'ds_histogram', ds_histogram.getResult()
+    #print 'ds_histogram', ds_histogram.getResult()
 
 def calculateMetrics(dbm, sn, p):
     analyser = SAFEAnalyserSet()
@@ -181,15 +184,13 @@ keys_labels = {
         'OpLi': '\\textsf{OpenLicense}'
 }
 
-def getMetrics(dbm, sn, metrics, bins):
+def getMetrics(iter_set, metrics, bins):
     aSet = AnalyserSet()
     analyser = {}
     for id in metrics:
         analyser[id] = aSet.add(PMDDCATMetricAnalyser(id, bins=bins))
 
-    pmds = dbm.getPortalMetaDatas(snapshot=sn)
-    pmd_iter = PortalMetaData.iter(pmds)
-    process_all(aSet, pmd_iter)
+    process_all(aSet, iter_set)
     return analyser
 
 
@@ -204,41 +205,39 @@ def getMetricsBySoftware(dbm, sn, metrics, bins):
     process_all(aSet, pmd_iter)
     return analyser
 
-def exists_report(dbm, sn, metrics):
-    bins = np.arange(0.0, 1.1, 0.1)
-    values = getMetrics(dbm, sn, metrics, bins)
+def exists_report(iter_set, metrics, ylabel="Portals"):
+    #bins = np.arange(0.0, 1.1, 0.1)
+    bins = np.arange(0.0, 1.1, 0.5)
+    values = getMetrics(iter_set, metrics, bins)
 
     xlabel = "\\textsc{Existence}"
-    ylabel = "Portals"
     filename = "exist.pdf"
 
     data = OrderedDict()
     for m in metrics:
         data[m] = values[m].getResult()
-    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
+    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col, bins=bins)
     re = Report([rep])
     re.plotreport('tmp')
 
 
-def conform_report(dbm, sn, metrics):
-    bins = np.arange(0.0, 1.1, 0.1)
-    values = getMetrics(dbm, sn, metrics, bins)
+def conform_report(iter_set, metrics, ylabel="Portals"):
+    bins = np.arange(0.0, 1.1, 0.5)
+    values = getMetrics(iter_set, metrics, bins)
     xlabel = "\\textsc{Conformance}"
-    ylabel = "Portals"
     filename = "conf.pdf"
 
     data = OrderedDict()
     for m in metrics:
         data[m] = values[m].getResult()
-    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col)
+    rep = MultiHistogramReporter(data, labels=keys_labels, xlabel=xlabel, ylabel=ylabel, filename=filename, colors=col, bins=bins)
     re = Report([rep])
     re.plotreport('tmp')
 
-def open_report(dbm, sn, metrics):
+def open_report(iter_set, metrics, ylabel="Portals"):
     bins = np.arange(0.0, 1.1, 0.1)
-    values = getMetrics(dbm, sn, metrics, bins)
+    values = getMetrics(iter_set, metrics, bins)
     xlabel = "\\textsc{Open Data}"
-    ylabel = "Portals"
     filename = "open.pdf"
 
     data = OrderedDict()
@@ -310,7 +309,6 @@ def calculate_license_count(dbm, sn):
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1542
 
     #general_stats(dbm, sn)
     #re = retr_report(dbm, sn)
@@ -324,15 +322,15 @@ if __name__ == '__main__':
     #open_report(dbm, sn, ['OpFo', 'OpMa', 'OpLi'])
     #scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
 
-    scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{OpenFormat}', filename='sc_format_ex_op.pdf')
-    scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{FileFormat}', filename='sc_format_ex_co.pdf')
+    #scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{OpenFormat}', filename='sc_format_ex_op.pdf')
+    #scatter_report(dbm, sn, 'ExPr', 'CoFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{FileFormat}', filename='sc_format_ex_co.pdf')
     #scatter_report(dbm, sn, 'OpLi', 'CoLi', xlabel='Openness', ylabel='Conformance', filename='sc_license_co_op.pdf')
     #scatter_report(dbm, sn, 'ExPr', 'OpMa', xlabel='Existence', ylabel='Machine Readable', filename='sc_format_ex_ma.pdf')
 
 
-    scatter_report(dbm, sn, 'ExPr', 'OpMa', ylabel='\\textsf{MachineRead}', xlabel='\\textsf{Preservation}', filename='sc_format_ex_ma.pdf')
-    scatter_report(dbm, sn, 'ExCo', 'CoCE', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactEmail}', filename='sc_email_ex_co.pdf')
-    scatter_report(dbm, sn, 'ExCo', 'CoCU', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactURL}', filename='sc_url_ex_co.pdf')
+    #scatter_report(dbm, sn, 'ExPr', 'OpMa', ylabel='\\textsf{MachineRead}', xlabel='\\textsf{Preservation}', filename='sc_format_ex_ma.pdf')
+    #scatter_report(dbm, sn, 'ExCo', 'CoCE', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactEmail}', filename='sc_email_ex_co.pdf')
+    #scatter_report(dbm, sn, 'ExCo', 'CoCU', xlabel='\\textsf{Contact}', ylabel='\\textsf{ContactURL}', filename='sc_url_ex_co.pdf')
 
     #snapshots = xrange(1543, 1533, -1)
     #portals = [p for p in Portal.iter(dbm.getPortals())]
@@ -340,3 +338,14 @@ if __name__ == '__main__':
     #    for p in portals:
     #        print 'SNAPSHOT:', sn, 'PORTAL:', p.id
     #        v = calculateMetrics(dbm, sn, p)
+
+    # dataset results
+    sn = 1607
+    p = dbm.getPortal(portalID='data_gv_at')
+    dmd = dbm.getDatasetMetaData(portalID='data_gv_at', snapshot=sn)
+    #exists_report(DatasetMetaData.iter(dmd), ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
+    #exists_report(DatasetMetaData.iter(dmd), ['ExSp', 'ExCo', 'ExRi'])
+    #open_report(DatasetMetaData.iter(dmd), ['OpFo', 'OpMa', 'OpLi'])
+
+    #general_stats(Dataset.iter(ds), p)
+    conform_report(DatasetMetaData.iter(dmd), ['CoDa', 'CoLi', 'CoCE'])
