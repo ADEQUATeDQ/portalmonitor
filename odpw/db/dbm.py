@@ -679,6 +679,19 @@ class PostgressDBM(object):
                 
                 return con.execute(s)
 
+    def getDatasetMetaData(self,portalID=None, snapshot=None):
+        with Timer(key="getDatasetMetaData") as t:
+            with self.engine.begin() as con:
+                s = select([self.dmd])
+
+                if snapshot:
+                    s= s.where(self.dmd.c.snapshot == snapshot)
+                if portalID:
+                    s= s.where(self.dmd.c.portal_id == portalID)
+
+                self.log.debug(query=s.compile(), params=s.compile().params)
+
+                return con.execute(s)
 
     def getDatasetsAsStream(self,portalID=None, snapshot=None, software=None, status=None, page=1000):
 

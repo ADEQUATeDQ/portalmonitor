@@ -91,26 +91,19 @@ class DatasetMetaData(Model):
         snapshot = result['snapshot']
         portal_id = result['portal_id']
         did = result['id']
+        dcat = result['dcat']
+        ckan = result['ckan']
 
-        del result['portal_id']
-        del result['id']
-        del result['snapshot']
+        return cls(snapshot=snapshot, portalID=portal_id, did=did, dcat=dcat, ckan=ckan)
 
-        for i in ['dcat', 'ckan']:
-            if isinstance(result[i], unicode):
-                result[i] = json.loads(result[i])
-
-        return cls(snapshot=snapshot, portalID=portal_id, did=did, **result)
-
-    def __init__(self, did, portalID, snapshot, dmd):
+    def __init__(self, did, portalID, snapshot, dcat, ckan):
         super(DatasetMetaData,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
 
         self.snapshot = snapshot
         self.portal_id = portalID
         self.id = did
-
-        self.dcat = dmd['dcat'] if 'dcat' in dmd else None
-        self.ckan = dmd['ckan'] if 'ckan' in dmd else None
+        self.dcat = dcat
+        self.ckan = ckan
 
 
 class Dataset(Model):
