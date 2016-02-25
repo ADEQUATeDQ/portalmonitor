@@ -53,4 +53,4 @@ def jsondiff(j1, j2, filterMode=None, withoutKey=None, filterKey=None):
 if __name__ == '__main__':
     j1 = json.load(open('testcases/dataset.json'))
     j2 = json.load(open('testcases/dataset_mod_2.json'))
-    jsondiff(j1, j2)
+    print jsondiff(j1, j2)

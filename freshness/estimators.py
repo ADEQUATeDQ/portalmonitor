@@ -154,6 +154,17 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
             # element has not changed
             self.T += Ii
 
+    def ppf_poisson(self, q):
+        # Percent point function (inverse of cdf)
+        l = self.estimate()
+        t = poisson.ppf(q, 1/l)
+        return t
+
+    def cdf_poisson(self, t):
+        mu = 1/self.estimate()
+        p = poisson.cdf(t, mu)
+        return p
+
 
 class NaiveLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
@@ -253,11 +264,15 @@ class MarkovChain(ComparisonSampling):
         current_perc = 0.0
         zeros = 1.0
         intervals = 0
+        i = 0
         while current_perc <= percent:
             intervals += 1
             zeros *= prob[key_0]
             current_perc = 1.0 - zeros
             key_0 = key_0[1:] + '0'
+            i += 1
+            if i > 10000:
+                raise Exception('no state change')
 
         return intervals, current_perc
 

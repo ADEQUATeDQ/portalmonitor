@@ -8,9 +8,7 @@ import hashlib
 import json
 import exceptions
 from odpw.analysers import Analyser
-from odpw.db.models import Resource
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
-from odpw.utils.timer import Timer
 import datetime
 import numpy as np
 from odpw.analysers.quality import interpret_meta_field
@@ -18,7 +16,9 @@ from odpw.utils.dataset_converter import DCAT, DCT
 import odpw.utils.util as odpwutil
 from _collections import defaultdict
 from pybloom import ScalableBloomFilter
-
+from odpw.utils.util import ErrorHandler as eh
+import structlog
+log =structlog.get_logger()
 
 
 class MD5DatasetAnalyser(Analyser):
@@ -137,6 +137,7 @@ class DCATDatasetAge(Analyser):
             }
         except exceptions.AttributeError as e:
             # error while calculating avg
+            eh.handleError(log, "DCATDatasetAge.done", exception=e, exc_info=True)
             self.age = {
                 'created': {
                     'old': dsc.min().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
