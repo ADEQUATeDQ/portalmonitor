@@ -96,14 +96,14 @@ class DatasetMetaData(Model):
 
         return cls(snapshot=snapshot, portalID=portal_id, did=did, dcat=dcat, ckan=ckan)
 
-    def __init__(self, did, portalID, snapshot, dcat, ckan):
+    def __init__(self, did, portalID, snapshot, dmd):
         super(DatasetMetaData,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
 
         self.snapshot = snapshot
         self.portal_id = portalID
         self.id = did
-        self.dcat = dcat
-        self.ckan = ckan
+        self.dcat = dmd['dcat'] if 'dcat' in dmd else None
+        self.ckan = dmd['ckan'] if 'ckan' in dmd else None
 
 
 class Dataset(Model):

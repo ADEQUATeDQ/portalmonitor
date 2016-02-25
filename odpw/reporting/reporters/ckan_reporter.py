@@ -477,7 +477,7 @@ if __name__ == '__main__':
     #for id in aut_portals:
     #    datasets += [ds for ds in Dataset.iter(dbm.getDatasets(id, sn))]
 
-    rep = overlap_report(dbm, sn=1607, portals=aut_portals)
+    rep = overlap_report(dbm, sn=1608, portals=aut_portals)
     rep.plotreport('tmp/aut')
     #report = datasets_report(datasets)
     #report.plotreport('tmp/aut')

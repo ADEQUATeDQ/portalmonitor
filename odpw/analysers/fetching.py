@@ -6,6 +6,7 @@ Created on Jul 24, 2015
 import hashlib
 
 import json
+import exceptions
 from odpw.analysers import Analyser
 from odpw.db.models import Resource
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
@@ -121,18 +122,31 @@ class DCATDatasetAge(Analyser):
             deltam = np.array(dsm - dsm.min())
 
         now = datetime.datetime.now().isoformat()
-        self.age={
-            'created': {
-                'old': dsc.min().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
-                'new': dsc.max().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
-                'avg': (dsc.min()+delta.mean()).astype(datetime.datetime).isoformat() if dsc.size !=0 else now
-            },
-            'modified': {
-                'old': dsm.min().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
-                'new': dsm.max().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
-                'avg': (dsm.min()+deltam.mean()).astype(datetime.datetime).isoformat() if dsm.size !=0 else now
+        try:
+            self.age={
+                'created': {
+                    'old': dsc.min().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
+                    'new': dsc.max().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
+                    'avg': (dsc.min()+delta.mean()).astype(datetime.datetime).isoformat() if dsc.size !=0 else now
+                },
+                'modified': {
+                    'old': dsm.min().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
+                    'new': dsm.max().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
+                    'avg': (dsm.min()+deltam.mean()).astype(datetime.datetime).isoformat() if dsm.size !=0 else now
+                }
             }
-        }
+        except exceptions.AttributeError as e:
+            # error while calculating avg
+            self.age = {
+                'created': {
+                    'old': dsc.min().astype(datetime.datetime).isoformat() if dsc.size !=0 else now,
+                    'new': dsc.max().astype(datetime.datetime).isoformat() if dsc.size !=0 else now
+                },
+                'modified': {
+                    'old': dsm.min().astype(datetime.datetime).isoformat() if dsm.size !=0 else now,
+                    'new': dsm.max().astype(datetime.datetime).isoformat() if dsm.size !=0 else now
+                }
+            }
     def getResult(self):
         return self.age
     

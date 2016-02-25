@@ -501,7 +501,7 @@ class ResourceOverlapReporter(Reporter, PlotReporter, CSVReporter):
         return self.df
 
     def plotreport(self, dir):
-        graph_plot.draw_graph(self.getDataFrame())
+        graph_plot.draw_graph(self.getDataFrame(), min_node_label=0, min_edge_label=2)
 
     def _csvreport(self, file):
         df = self.getDataFrame()

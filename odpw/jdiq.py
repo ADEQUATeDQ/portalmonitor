@@ -64,8 +64,8 @@ def general_stats(iter_set, p):
     tags_count = pmd_analyser.add(DCATTagsCount())
 
     # 2. Portal size distribution
-    #bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
-    #ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
+    bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
+    ds_histogram = pmd_analyser.add(PMDDatasetCountAnalyser(bins=bins))
 
     process_all(pmd_analyser, iter_set)
 
@@ -82,7 +82,7 @@ def general_stats(iter_set, p):
     csv_re = Report([format_rep, license_rep, tags_rep])
     csv_re.csvreport('tmp')
 
-    #print 'ds_histogram', ds_histogram.getResult()
+    print 'ds_histogram', ds_histogram.getResult()
 
 def calculateMetrics(dbm, sn, p):
     analyser = SAFEAnalyserSet()
@@ -310,7 +310,10 @@ def calculate_license_count(dbm, sn):
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
-    #general_stats(dbm, sn)
+    sn = 1601
+    pmds = PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn))
+
+    general_stats(pmds, sn)
     #re = retr_report(dbm, sn)
     #re.csvreport('tmp')
 
@@ -340,12 +343,9 @@ if __name__ == '__main__':
     #        v = calculateMetrics(dbm, sn, p)
 
     # dataset results
-    sn = 1607
-    p = dbm.getPortal(portalID='data_gv_at')
-    dmd = dbm.getDatasetMetaData(portalID='data_gv_at', snapshot=sn)
     #exists_report(DatasetMetaData.iter(dmd), ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
     #exists_report(DatasetMetaData.iter(dmd), ['ExSp', 'ExCo', 'ExRi'])
     #open_report(DatasetMetaData.iter(dmd), ['OpFo', 'OpMa', 'OpLi'])
 
     #general_stats(Dataset.iter(ds), p)
-    conform_report(DatasetMetaData.iter(dmd), ['CoDa', 'CoLi', 'CoCE'])
+    #conform_report(DatasetMetaData.iter(dmd), ['CoDa', 'CoLi', 'CoCE'])
