@@ -59,9 +59,9 @@ def general_stats(iter_set, p):
 
     # 1. STATS
     ds_count = pmd_analyser.add(DatasetCount())
-    format_count = pmd_analyser.add(DCATFormatCount())
-    licenses_count = pmd_analyser.add(DCATLicenseCount())
-    tags_count = pmd_analyser.add(DCATTagsCount())
+    format_count = pmd_analyser.add(DCATFormatCount(total_count=False))
+    licenses_count = pmd_analyser.add(DCATLicenseCount(total_count=False))
+    #tags_count = pmd_analyser.add(DCATTagsCount())
 
     # 2. Portal size distribution
     bins = [0,50,100,500,1000,5000,10000,50000,100000,10000000]
@@ -71,15 +71,15 @@ def general_stats(iter_set, p):
 
     ################# RESULTS ###########################
     print 'ds_count', ds_count.getResult()
-    print 'file formats', len(format_count.getResult())
-    print 'licenses', len(licenses_count.getResult())
-    print 'tags', len(tags_count.getResult())
+    #print 'file formats', len(format_count.getResult())
+    #print 'licenses', len(licenses_count.getResult())
+    #print 'tags', len(tags_count.getResult())
 
     # top k reporter
-    format_rep = FormatCountReporter(format_count, topK=5)
-    license_rep = LicenseCountReporter(licenses_count, topK=5)
-    tags_rep = TagReporter(tags_count, ds_count, topK=10)
-    csv_re = Report([format_rep, license_rep, tags_rep])
+    format_rep = FormatCountReporter(format_count, topK=550)
+    license_rep = LicenseCountReporter(licenses_count, topK=150)
+    #tags_rep = TagReporter(tags_count, ds_count, topK=10)
+    csv_re = Report([format_rep, license_rep])
     csv_re.csvreport('tmp')
 
     print 'ds_histogram', ds_histogram.getResult()
@@ -206,8 +206,7 @@ def getMetricsBySoftware(dbm, sn, metrics, bins):
     return analyser
 
 def exists_report(iter_set, metrics, ylabel="Portals"):
-    #bins = np.arange(0.0, 1.1, 0.1)
-    bins = np.arange(0.0, 1.1, 0.5)
+    bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(iter_set, metrics, bins)
 
     xlabel = "\\textsc{Existence}"
@@ -222,7 +221,7 @@ def exists_report(iter_set, metrics, ylabel="Portals"):
 
 
 def conform_report(iter_set, metrics, ylabel="Portals"):
-    bins = np.arange(0.0, 1.1, 0.5)
+    bins = np.arange(0.0, 1.1, 0.1)
     values = getMetrics(iter_set, metrics, bins)
     xlabel = "\\textsc{Conformance}"
     filename = "conf.pdf"
@@ -310,19 +309,19 @@ def calculate_license_count(dbm, sn):
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
-    sn = 1601
+    sn = 1608
     pmds = PortalMetaData.iter(dbm.getPortalMetaDatas(snapshot=sn))
 
     general_stats(pmds, sn)
-    #re = retr_report(dbm, sn)
-    #re.csvreport('tmp')
+    re = retr_report(dbm, sn)
+    re.csvreport('tmp')
 
     #metrics = ['ExAc', 'ExDi', 'ExCo']
-    #exists_report(dbm, sn, ['ExPr', 'ExDa', 'ExTe', 'ExSp'])
-    #exists_report(dbm, sn, ['ExAc', 'ExDi', 'ExCo', 'ExRi'])
-    #conform_report(dbm, sn, ['CoAc', 'CoCE', 'CoCU'])
-    #conform_report(dbm, sn, ['CoDa', 'CoLi', 'CoFo'])
-    #open_report(dbm, sn, ['OpFo', 'OpMa', 'OpLi'])
+    #exists_report(pmds, ['ExPr', 'ExDa', 'ExRi'])
+    #exists_report(pmds, ['ExAc', 'ExDi', 'ExCo'])
+    #conform_report(pmds, ['CoAc', 'CoCE', 'CoCU'])
+    #conform_report(pmds, ['CoDa', 'CoLi', 'CoFo'])
+    #open_report(pmds, ['OpFo', 'OpMa', 'OpLi'])
     #scatter_report(dbm, sn, 'CoLi', 'OpLi', xlabel='Conformance', ylabel='Openness', filename='license_conf_open_scatter.pdf')
 
     #scatter_report(dbm, sn, 'ExPr', 'OpFo', xlabel='\\textsf{Preservation}', ylabel='\\textsf{OpenFormat}', filename='sc_format_ex_op.pdf')
