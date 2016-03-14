@@ -64,10 +64,10 @@ def comparison_eval(page, interval, initial_skip, percent, markov_hist=1):
                 emp_res = prev_t + emp_next
 
                 # tf values
-                tf_values['c_emp_dist'].append(int(emp_res > exact_t))
-                tf_values['c_cho_naive'].append(int(res1 > exact_t))
-                tf_values['c_cho_impr'].append(int(res2 > exact_t))
-                tf_values['c_umb_markov'].append(int(mar_res > exact_t))
+                tf_values['c_emp_dist'].append(int(emp_res >= exact_t))
+                tf_values['c_cho_naive'].append(int(res1 >= exact_t))
+                tf_values['c_cho_impr'].append(int(res2 >= exact_t))
+                tf_values['c_umb_markov'].append(int(mar_res >= exact_t))
                 tf_samples.append(sampling_p)
 
                 tf_diff['c_emp_dist'].append(delta_to_days(emp_res - exact_t))
@@ -107,6 +107,7 @@ def age_eval(page, interval, initial_skip, percent):
 
     tf_samples = []
     tf_values = defaultdict(list)
+    tf_diff = defaultdict(list)
     initial_skip_counter = 0
 
     # the access time
@@ -137,10 +138,14 @@ def age_eval(page, interval, initial_skip, percent):
                 emp_res = prev_t + emp_next
 
                 # tf values
-                tf_values['a_emp_dist'].append(int(emp_res > exact_t))
-                tf_values['a_cho_naive'].append(int(res1 > exact_t))
-                tf_values['a_cho_impr'].append(int(res2 > exact_t))
+                tf_values['a_emp_dist'].append(int(emp_res >= exact_t))
+                tf_values['a_cho_naive'].append(int(res1 >= exact_t))
+                tf_values['a_cho_impr'].append(int(res2 >= exact_t))
                 tf_samples.append(sample_p)
+
+                tf_diff['a_emp_dist'].append(delta_to_days(emp_res - exact_t))
+                tf_diff['a_cho_naive'].append(delta_to_days(res1 - exact_t))
+                tf_diff['a_cho_impr'].append(delta_to_days(res2 - exact_t))
 
         # Ti is the time to the previous change in the ith access
         Ti = (ACC - exact_t).total_seconds()
@@ -151,7 +156,7 @@ def age_eval(page, interval, initial_skip, percent):
         prev_t = exact_t
         initial_skip_counter += 1
 
-    return {'tf': tf_values}
+    return {'tf': tf_values, 'tf_diff': tf_diff}
 
 
 def push_eval(page, initial_skip, percent):
@@ -161,6 +166,7 @@ def push_eval(page, initial_skip, percent):
     estimators = [a1, emp]
 
     tf_values = defaultdict(list)
+    tf_diff = defaultdict(list)
     initial_skip_counter = 0
 
     # the access time
@@ -182,9 +188,13 @@ def push_eval(page, initial_skip, percent):
                 emp_res = prev_t + emp_next
 
                 # tf values
-                tf_values['p_emp_dist'].append(int(emp_res > exact_t))
-                tf_values['p_cho_naive'].append(int(res1 > exact_t))
+                tf_values['p_emp_dist'].append(int(emp_res >= exact_t))
+                tf_values['p_cho_naive'].append(int(res1 >= exact_t))
                 #tf_values['a_cho_impr'].append(int(res2 > exact_t))
+
+                tf_diff['p_emp_dist'].append(delta_to_days(emp_res - exact_t))
+                tf_diff['p_cho_naive'].append(delta_to_days(res1 - exact_t))
+                #tf_diff['a_cho_impr'].append(delta_to_days(res2 - exact_t))
 
         if prev_t:
             # Ti is the time to the previous change in the ith access
@@ -193,10 +203,11 @@ def push_eval(page, initial_skip, percent):
                 # set interval to Ti+1 to indicate a change in every interval
                 e.update(Ti, Ti+1, exact_t)
             # set access time to next interval
-            initial_skip_counter += 1
+            if exact_t != prev_t:
+                initial_skip_counter += 1
         prev_t = exact_t
 
-    return {'tf': tf_values}
+    return {'tf': tf_values, 'tf_diff': tf_diff}
 
 
 def load_pages(dir):
@@ -260,6 +271,115 @@ def no_filter(pages):
 
 
 
+def push_table(pages, samples=20):
+    estimators = ['p_emp_dist', 'p_cho_naive']
+    res = [['p', 'documents'] + estimators + [e + '_delta' for e in estimators]]
+
+    for p in [0.7, 0.8, 0.9]:
+        tf_values = {}
+        print p
+        for page in pages:
+            try:
+                tmp = push_eval(page, 20, p)
+                if len(tmp['tf']['p_emp_dist']) >= samples:
+                    tf_values[page.name] = tmp
+            except Exception as e:
+                print e
+
+        if len(tf_values) <= 0:
+            res.append([str(p), '0'] + ['' for e in estimators] + ['' for e in estimators])
+            continue
+
+        avg_p = defaultdict(list)
+        avg_delta = defaultdict(list)
+        for x in range(samples):
+            for e in estimators:
+                avg_p[e].append(sum([tf_values[k]['tf'][e][x] for k in tf_values])/float(len(tf_values)))
+                avg_delta[e].append(sum([abs(tf_values[k]['tf_diff'][e][x]) for k in tf_values])/float(len(tf_values)))
+
+        line = [str(p), str(len(tf_values))]
+        for e in estimators:
+            line.append(str(sum(avg_p[e])/len(avg_p[e])))
+        for e in estimators:
+            line.append(str(sum(avg_delta[e])/len(avg_delta[e])))
+        res.append(line)
+    return res
+
+
+def age_table(pages, initial_skip, samples=20):
+    estimators = ['a_emp_dist', 'a_cho_naive', 'a_cho_impr']
+    res = [['p', 'i', 'documents'] + estimators + [e + '_delta' for e in estimators]]
+
+    for p in [0.7, 0.8, 0.9]:
+        for i in [10, 20, 50]:
+            interval = datetime.timedelta(days=int(i))
+            tf_values = {}
+            print p, i, int(initial_skip/i)
+            for page in pages:
+                try:
+                    tmp = age_eval(page, interval, int(initial_skip/i), p)
+                    if len(tmp['tf']['a_emp_dist']) >= samples:
+                        tf_values[page.name] = tmp
+                except Exception as e:
+                    print e
+
+            if len(tf_values) <= 0:
+                res.append([str(p), str(i), '0'] + ['' for e in estimators] + ['' for e in estimators])
+                continue
+
+            avg_p = defaultdict(list)
+            avg_delta = defaultdict(list)
+            for x in range(samples):
+                for e in estimators:
+                    avg_p[e].append(sum([tf_values[k]['tf'][e][x] for k in tf_values])/float(len(tf_values)))
+                    avg_delta[e].append(sum([abs(tf_values[k]['tf_diff'][e][x]) for k in tf_values])/float(len(tf_values)))
+
+            line = [str(p), str(i), str(len(tf_values))]
+            for e in estimators:
+                line.append(str(sum(avg_p[e])/len(avg_p[e])))
+            for e in estimators:
+                line.append(str(sum(avg_delta[e])/len(avg_delta[e])))
+            res.append(line)
+    return res
+
+
+
+def comp_table(pages, initial_skip, samples=20):
+    estimators = ['c_emp_dist', 'c_umb_markov', 'c_cho_naive', 'c_cho_impr']
+    res = [['p', 'i', 'documents'] + estimators + [e + '_delta' for e in estimators]]
+
+    for p in [0.7, 0.8, 0.9]:
+        for i in [10, 20, 50]:
+            interval = datetime.timedelta(days=int(i))
+            tf_values = {}
+            print p, i, int(initial_skip/i)
+            for page in pages:
+                try:
+                    tmp = comparison_eval(page, interval, int(initial_skip/i), p)
+                    if len(tmp['tf']['c_emp_dist']) >= samples:
+                        tf_values[page.name] = tmp
+                except Exception as e:
+                    print e
+
+            if len(tf_values) <= 0:
+                res.append([str(p), str(i), '0'] + ['' for e in estimators] + ['' for e in estimators])
+                continue
+
+            avg_p = defaultdict(list)
+            avg_delta = defaultdict(list)
+            for x in range(samples):
+                for e in estimators:
+                    avg_p[e].append(sum([tf_values[k]['tf'][e][x] for k in tf_values])/float(len(tf_values)))
+                    avg_delta[e].append(sum([abs(tf_values[k]['tf_diff'][e][x]) for k in tf_values])/float(len(tf_values)))
+
+            line = [str(p), str(i), str(len(tf_values))]
+            for e in estimators:
+                line.append(str(sum(avg_p[e])/len(avg_p[e])))
+            for e in estimators:
+                line.append(str(sum(avg_delta[e])/len(avg_delta[e])))
+            res.append(line)
+    return res
+
 
 def markov_table(pages, interval, initial_skip, samples=20):
     res = []
@@ -318,6 +438,7 @@ def create_files():
         json.dump(comp, f)
 
 
+
 def create_csv_markov_sets():
     pages = load_pages('revs')
     print 'total articles', len(pages)
@@ -346,8 +467,93 @@ def create_csv_markov_sets():
         csvw.writerows(res)
 
 
+def create_csv_comp():
+    pages = load_pages('revs')
+    print 'total articles', len(pages)
+
+    d = 20*20
+
+    import csv
+    pages = load_pages('revs')
+
+    fil = filter_regular(pages)
+    res = comp_table(fil, d)
+    with open('comp_table_reg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = filter_irregular(pages)
+    res = comp_table(fil, d)
+    with open('comp_table_irreg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = no_filter(pages)
+    res = comp_table(fil, d)
+    with open('comp_table_all.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+
+
+def create_csv_age():
+    pages = load_pages('revs')
+    print 'total articles', len(pages)
+
+    d = 20*20
+
+    import csv
+    pages = load_pages('revs')
+
+    fil = filter_regular(pages)
+    res = age_table(fil, d)
+    with open('age_table_reg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = filter_irregular(pages)
+    res = age_table(fil, d)
+    with open('age_table_irreg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = no_filter(pages)
+    res = age_table(fil, d)
+    with open('age_table_all.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+def create_csv_push():
+    pages = load_pages('revs')
+    print 'total articles', len(pages)
+
+    import csv
+    pages = load_pages('revs')
+
+    fil = filter_regular(pages)
+    res = push_table(fil)
+    with open('push_table_reg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = filter_irregular(pages)
+    res = push_table(fil)
+    with open('push_table_irreg.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+    fil = no_filter(pages)
+    res = push_table(fil)
+    with open('push_table_all.csv', 'w') as f:
+        csvw = csv.writer(f)
+        csvw.writerows(res)
+
+
 if __name__ == '__main__':
-    create_csv_markov_sets()
+    create_csv_comp()
+    create_csv_age()
+    create_csv_push()
+    #create_csv_markov_sets()
 
     #fname = 'revs/politicians/Luiz_In%C3%A1cio_Lula_da_Silva'
     #p = Page(fname)

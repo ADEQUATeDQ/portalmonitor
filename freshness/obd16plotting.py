@@ -33,6 +33,8 @@ def plot_tf_values(samples, values, labels, colors, estimators, filename, p_valu
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
 
+    plt.plot(samples, [p_value for _ in range(len(values[estimators[0]]))], 'grey')
+
     for m in estimators:
         plt.plot(samples, values[m], colors[m]+'o')
         plt.plot(samples, avg_vals[m], colors[m], label=labels[m])
@@ -54,7 +56,7 @@ def plot_p_values(samples, values):
     plt.show()
 
 
-def comparison(datafile, filename):
+def comparison(datafile, filename, p_value):
     with open(datafile) as f:
         res = json.load(f)
     print 'total articles', len(res)
@@ -84,10 +86,10 @@ def comparison(datafile, filename):
         for e in estimators:
             avg_p[e].append(sum(tf_values[k][e][i] for k in tf_values)/float(len(tf_values)))
 
-    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename)
+    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename, p_value=p_value)
 
 
-def age(datafile, filename):
+def age(datafile, filename, p_value):
     with open(datafile) as f:
         res = json.load(f)
     print 'total articles', len(res)
@@ -99,8 +101,8 @@ def age(datafile, filename):
             if len(res[k]['tf']['a_cho_naive']) >= samples:
                 tf_values[k] = res[k]['tf']
         else:
-            pass
-            #print res[k]
+            #pass
+            print res[k]
 
     #tf_values = {k: res[k]['tf'] for k in res if len(res[k]['tf']['c_emp_dist']) >= samples}
     print 'filtered tf values', len(tf_values)
@@ -115,10 +117,10 @@ def age(datafile, filename):
         for e in estimators:
             avg_p[e].append(sum(tf_values[k][e][i] for k in tf_values)/float(len(tf_values)))
 
-    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename)
+    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename, p_value=p_value)
 
 
-def push(datafile, filename):
+def push(datafile, filename, p_value):
     with open(datafile) as f:
         res = json.load(f)
     print 'total articles', len(res)
@@ -135,30 +137,30 @@ def push(datafile, filename):
     print 'filtered tf values', len(tf_values)
     avg_p = defaultdict(list)
     xlabels = []
-    ylabels = {'p_emp_dist': '$P_{EmpDist}$', 'p_cho_naive': '$P_{ChoNaive}$'}
-    estimators = ['p_emp_dist', 'p_cho_naive']
-    colors = {'p_emp_dist': 'r', 'p_cho_naive': 'b'}
+    ylabels = {'a_emp_dist': '$P_{EmpDist}$', 'a_cho_naive': '$P_{ChoNaive}$'}
+    estimators = ['a_emp_dist', 'a_cho_naive']
+    colors = {'a_emp_dist': 'r', 'a_cho_naive': 'b'}
 
     for i in range(samples):
         xlabels.append(i)
         for e in estimators:
             avg_p[e].append(sum(tf_values[k][e][i] for k in tf_values)/float(len(tf_values)))
 
-    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename)
+    plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename, p_value=p_value)
 
 
 
 
 if __name__ == '__main__':
-    #push('tmp/push_regular.json', 'tmp/push_regular.pdf')
-    #push('tmp/push_irregular.json', 'tmp/push_irregular.pdf')
-    #push('tmp/push_regular.json', 'tmp/push_regular.pdf')
+    push('tmp/push_all.json', 'tmp/push_all.pdf', 0.8)
+    push('tmp/push_irregular.json', 'tmp/push_irregular.pdf', 0.8)
+    push('tmp/push_regular.json', 'tmp/push_regular.pdf', 0.8)
 
-    #age('tmp/age_regular.json', 'tmp/age_regular.pdf')
-    #age('tmp/age_irregular.json', 'tmp/age_irregular.pdf')
-    age('tmp/age_regular.json', 'tmp/age_regular.pdf')
+    age('tmp/age_all.json', 'tmp/age_all.pdf', 0.8)
+    age('tmp/age_irregular.json', 'tmp/age_irregular.pdf', 0.8)
+    age('tmp/age_regular.json', 'tmp/age_regular.pdf', 0.8)
 
-    #comparison('tmp/age_regular.json', 'tmp/comparison_regular.pdf')
-    #comparison('tmp/comparison_irregular.json', 'tmp/comparison_irregular.pdf')
-    #comparison('tmp/comparison_regular.json', 'tmp/comparison_regular.pdf')
+    comparison('tmp/comparison_all.json', 'tmp/comparison_all.pdf', 0.8)
+    comparison('tmp/comparison_irregular.json', 'tmp/comparison_irregular.pdf', 0.8)
+    comparison('tmp/comparison_regular.json', 'tmp/comparison_regular.pdf', 0.8)
 

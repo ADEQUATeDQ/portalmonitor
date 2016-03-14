@@ -5,6 +5,7 @@ from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
 import numpy as np
+from freshness.obd16 import delta_to_days
 
 __author__ = 'sebastian'
 
@@ -131,7 +132,7 @@ class AgeSampling(Estimator):
         prev = None
         for d in sorted(self.dates):
             if prev:
-                deltas.append((d - prev).total_seconds())
+                deltas.append(delta_to_days(d - prev))
             prev = d
         return deltas
 
@@ -185,6 +186,11 @@ class AgeSamplingEmpiricalDistribution(AgeSampling):
     def ppf(self, q):
         perc = np.percentile(self.computeIntervals(), q=q*100)
         return perc
+
+    def cdf(self, t):
+        intervals = self.computeIntervals()
+        cdf = ECDF(intervals)
+        return cdf(t)
 
     def plotDistribution(self):
         days = [t/86400 for t in self.computeIntervals()]
