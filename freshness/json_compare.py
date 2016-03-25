@@ -51,6 +51,7 @@ def jsondiff(j1, j2, filterMode=None, withoutKey=None, filterKey=None):
     return tmp
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     j1 = json.load(open('/Users/jumbrich/Dev/odpw/stats/1551/data_wu_ac_at.json'))
     j2 = json.load(open('/Users/jumbrich/Dev/odpw/stats/1603/data_wu_ac_at.json'))
 
@@ -60,3 +61,8 @@ if __name__ == '__main__':
         if all([ k not in selector for k in ['DCATDatasetAge','DCATResourceInDSAge','fetch_process','DatasetChangeCountAnalyser']]):
             if 'total' != selector[-1]:
                 print mode, selector, changes
+=======
+    j1 = json.load(open('testcases/dataset.json'))
+    j2 = json.load(open('testcases/dataset_mod_2.json'))
+    print jsondiff(j1, j2)
+>>>>>>> d18579cce2b359f22b6bce56926093dbb93bd5e0

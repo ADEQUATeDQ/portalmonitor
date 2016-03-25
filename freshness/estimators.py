@@ -5,6 +5,7 @@ from statsmodels.distributions.empirical_distribution import ECDF
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
 import numpy as np
+from freshness.obd16 import delta_to_days
 
 __author__ = 'sebastian'
 
@@ -131,7 +132,7 @@ class AgeSampling(Estimator):
         prev = None
         for d in sorted(self.dates):
             if prev:
-                deltas.append((d - prev).total_seconds())
+                deltas.append(delta_to_days(d - prev))
             prev = d
         return deltas
 
@@ -154,6 +155,17 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
             # element has not changed
             self.T += Ii
 
+    def ppf_poisson(self, q):
+        # Percent point function (inverse of cdf)
+        l = self.estimate()
+        t = poisson.ppf(q, 1/l)
+        return t
+
+    def cdf_poisson(self, t):
+        mu = 1/self.estimate()
+        p = poisson.cdf(t, mu)
+        return p
+
 
 class NaiveLastModified(ChoGarciaLastModifiedEstimator):
     def estimate(self):
@@ -174,6 +186,11 @@ class AgeSamplingEmpiricalDistribution(AgeSampling):
     def ppf(self, q):
         perc = np.percentile(self.computeIntervals(), q=q*100)
         return perc
+
+    def cdf(self, t):
+        intervals = self.computeIntervals()
+        cdf = ECDF(intervals)
+        return cdf(t)
 
     def plotDistribution(self):
         days = [t/86400 for t in self.computeIntervals()]
@@ -253,11 +270,15 @@ class MarkovChain(ComparisonSampling):
         current_perc = 0.0
         zeros = 1.0
         intervals = 0
+        i = 0
         while current_perc <= percent:
             intervals += 1
             zeros *= prob[key_0]
             current_perc = 1.0 - zeros
             key_0 = key_0[1:] + '0'
+            i += 1
+            if i > 10000:
+                raise Exception('no state change')
 
         return intervals, current_perc
 
