@@ -29,20 +29,25 @@ class AnyConformMetric(Analyser):
             self.count += 1
         return int(any(conf_list))
 
+    def analyse_AnyConformMetric(self, analyser):
+        self.count+=analyser.count
+        self.total+=analyser.total
+
     def getResult(self):
-        return {'count': self.count, 'total': self.total}
+        return {'value': self.getValue(), 'total': self.total, 'hist':self.hist()}
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
 
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
-
+    def hist(self):
+        return {1: self.count, 0: self.total - self.count}
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.getValue()
-        pmd.qa_stats[self.id+'_hist'] = {1: self.count, 0: self.total - self.count}
+        pmd.qa_stats[self.id] = self.getResult()
+
 
 class AverageConformMetric(Analyser):
     def __init__(self, analyser, id):
@@ -71,11 +76,19 @@ class AverageConformMetric(Analyser):
 
         return v
 
-    def getResult(self):
-        return {'values': self.values, 'total': self.total}
+    def analyse_AverageConformMetric(self, analyser):
+        self.values=self.values+analyser.values
+        self.total+=analyser.total
 
     def getValue(self):
         return sum(self.values)/self.total if self.total > 0 else 0
+
+    def hist(self):
+        cnt = Counter(self.values)
+        return dict(cnt)
+
+    def getResult(self):
+        return {'value':self.getValue(), 'total':self.total, 'hist':self.hist()}
 
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
@@ -83,9 +96,8 @@ class AverageConformMetric(Analyser):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.getValue()
-        cnt = Counter(self.values)
-        pmd.qa_stats[self.id+'_hist'] = dict(cnt)
+        pmd.qa_stats[self.id] = self.getResult()
+
 
 class ConformanceDCAT(DistinctElementCount):
 
@@ -139,12 +151,13 @@ class DateConform(ConformanceDCAT):
         super(DateConform, self).__init__(access_function, is_date)
 
 
-class LicenseConform(DistinctElementCount):
+class LicenseConform(Analyser):
     def __init__(self, id_based=False):
         super(LicenseConform, self).__init__()
         self.lm = licenses_mapping.LicensesOpennessMapping()
         self.id_based = id_based
         self.total = 0.0
+        self.count=0
         self.id = 'CoLi'
 
     def analyse_Dataset(self, dataset):
@@ -165,9 +178,19 @@ class LicenseConform(DistinctElementCount):
 
         e = True if len(eval) > 0 else False
         if e:
-            self.analyse_generic(e)
+            self.count+=1
 
         return int(e)
+
+    def analyse_LicenseConform(self, analyser):
+        self.count+=analyser.count
+        self.total+=analyser.total
+
+    def getResult(self):
+        return {'value':self.getValue(), 'total':self.total,'hist':self.hist()}
+
+    def hist(self):
+        return  {1: self.count, 0: self.total - self.count}
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
@@ -175,5 +198,4 @@ class LicenseConform(DistinctElementCount):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.getValue()
-        pmd.qa_stats[self.id + '_hist'] = {1: self.count, 0: self.total - self.count}
+        pmd.qa_stats[self.id] = self.getResult()

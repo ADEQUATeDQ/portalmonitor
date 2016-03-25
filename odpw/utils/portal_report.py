@@ -16,16 +16,16 @@ Created on Feb 15, 2016
         Software
         in system since
 
-    per portal and organisation
-        general snapshot depdendent info
-            fetch.start - fetch.end
+    general snapshot depdendent info
+        fetch.start - fetch.end TODO
 
-            datastes,
-            distributions
-            licenses,
-            formats
-            organisations
-            keywords
+    per portal and organisation
+        datastes,
+        distributions
+        licenses,
+        formats
+        organisations
+        keywords
 
         details:
             dist of licenses
@@ -34,7 +34,7 @@ Created on Feb 15, 2016
             dist of keywords
 
         quality:
-
+            DONE
 
         activities
 

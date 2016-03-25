@@ -4,7 +4,7 @@ Created on Aug 14, 2015
 @author: jumbrich
 '''
 import pandas as pd
-from odpw.reporting.evolution_reporter import SystemEvolutionReporter
+from odpw.reporting.reporters.evolution_reporter import SystemEvolutionReporter
 
 from odpw.analysers import AnalyserSet, process_all
 from odpw.analysers.evolution import DatasetEvolution, ResourceEvolution, \

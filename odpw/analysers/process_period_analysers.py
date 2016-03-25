@@ -30,6 +30,9 @@ class PeriodAnalyser(Analyser):
         self.max=None
         
     def add_time(self, dt):
+        if dt is None:
+            return
+
         if not dt.tzinfo:
             dt=pytz.utc.localize(dt)
     
@@ -41,7 +44,7 @@ class PeriodAnalyser(Analyser):
     
     
     def getResult(self):
-        return {'min':self.min, 'max':self.max}
+        return {'start':self.min, 'end':self.max}
    
    
 class FetchProcessAnalyser(Analyser):
@@ -166,14 +169,26 @@ class FetchPeriod(PeriodAnalyser):
             for f in ['fetch_start', 'fetch_end']:
                 if f in pmd.fetch_stats:
                     self.add_time(dateutil.parser.parse(pmd.fetch_stats[f]))
-    
+
+    def analyse_FetchPeriod(self, analyser):
+        results= analyser.getResult()
+        print "here", results
+
+        for k, v in results['fetch_process'].items():
+            self.add_time(v)
+
+        print self.getResult()
+
+
     
     def analyse_dict(self, d):
         if 'fetch_stats' in d:
             for f in ['fetch_start', 'fetch_end']:
                 if f in d['fetch_stats']:
                     self.add_time(dateutil.parser.parse(d['fetch_stats'][f]))
-        
+
+    def getResult(self):
+        return {"fetch_process": super(FetchPeriod,self).getResult()}
 
 class HeadTimeSpanAnalyser(TimeSpanAnalyser):
     def analyse_PortalMetaData(self, pmd):

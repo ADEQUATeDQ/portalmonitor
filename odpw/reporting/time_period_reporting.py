@@ -20,9 +20,10 @@ class TimePeriodReporter(Reporter, CLIReporter, UIReporter, CSVReporter):
         
     
     def getDataFrame(self):
-        
-        mind=self.a.getResult()['min']
-        maxd=self.a.getResult()['max']
+
+
+        mind=self.a.getResult()[0]['start']
+        maxd=self.a.getResult()[0]['end']
         
         d={}
         if mind:
@@ -37,8 +38,13 @@ class TimePeriodReporter(Reporter, CLIReporter, UIReporter, CSVReporter):
         return self.df
     
     def uireport(self):
-        mind=self.a.getResult()['min']
-        maxd=self.a.getResult()['max']
+        print 'report:',self.a.getResult()
+        if 'fetch_process' in self.a.getResult():
+            mind=self.a.getResult()['fetch_process']['start']
+            maxd=self.a.getResult()['fetch_process']['end']
+        else:
+            mind=self.a.getResult()['start']
+            maxd=self.a.getResult()['end']
         
         d={'min':None, 'max':None,'delta_sec':None }
         if mind:

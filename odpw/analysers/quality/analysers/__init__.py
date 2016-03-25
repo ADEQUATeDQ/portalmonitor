@@ -35,6 +35,17 @@ class DCATDMD(Analyser):
             except Exception as e:
                 ErrorHandler.handleError(log, "DcatAnalyserException", analyser=id, exception=e, exc_info=True)
 
+    def analyse_DCATDMD(self, analyser):
+        for id in self.analysers:
+            self.analysers[id].analyse(analyser.analysers[id])
+
+    def getResult(self):
+        results={}
+        for id in self.analysers:
+            results[id]=self.analysers[id].getResult()
+
+        return results
+
     def done(self):
         for id in self.analysers:
             try:

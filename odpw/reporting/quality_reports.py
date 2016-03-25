@@ -3,7 +3,7 @@ Created on Aug 27, 2015
 
 @author: jumbrich
 '''
-from odpw.reporting.quality_reporters import DatasetRetrievabilityReporter,\
+from odpw.reporting.reporters.quality_reporters import DatasetRetrievabilityReporter,\
     ResourceRetrievabilityReporter
 
 from odpw.analysers import AnalyserSet, process_all

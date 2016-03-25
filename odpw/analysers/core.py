@@ -30,6 +30,25 @@ class HistogramAnalyser(Analyser):
         hist, bin_edges = np.histogram(np.array(self.list), **self.nphistparams)
         return {'hist':hist, 'bin_edges':bin_edges}
 
+class KeyValueCountAnalyser(Analyser):
+    """
+    Provides a count per distinct element
+    """
+    def __init__(self):
+        self.dist={}
+
+    def add(self, key, value, count=1):
+        d = self.dist.setdefault(key, defaultdict(int))
+        d[value] += count
+
+    def getDist(self):
+        res = {}
+        for k,v in self.dist.items():
+            res[k]=dict(v)
+
+    def getResult(self):
+        return self.getDist()
+
 class ElementCountAnalyser(Analyser):
     """
     Provides a count per distinct element
@@ -65,16 +84,7 @@ class DistinctElementCount(Analyser):
             self.distinct=0
             self.set=set([])
     
-    def analyse_generic(self, element):
-        self.count+=1
-        
-        #TODO prob datastrucutre for distinct
-        if self.bloom is not None and element not in self.bloom:
-            self.distinct+=1
-            self.bloom.add(element)
-            
-        #else:
-            #print "seen", element
+
             
     def getResult(self):
         res= {'count':self.count}

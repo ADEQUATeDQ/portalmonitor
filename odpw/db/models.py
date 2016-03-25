@@ -254,7 +254,7 @@ class PortalMetaData(Model):
 
 
         for i in ['res_stats', 'qa_stats', 'general_stats', 'fetch_stats']:
-            if isinstance(result[i], unicode):
+            if i in result and isinstance(result[i], unicode):
                 result[i] = json.loads(result[i])
 
         return cls(portalID=portal_id,

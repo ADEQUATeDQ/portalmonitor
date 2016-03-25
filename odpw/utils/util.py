@@ -1,6 +1,9 @@
 import time
 import json
 from ast import literal_eval
+
+import tornado
+
 from odpw.utils.timer import Timer
 import traceback
 
@@ -31,13 +34,13 @@ class TimeoutError(Exception):
 
         # Now for your custom code...
         self.timeout = timeout
-        print self.timeout
+
 
 class ErrorHandler():
 
     exceptions=defaultdict(long)
     
-    DEBUG=True
+    DEBUG=False
     
     @classmethod
     def handleError(cls, log, msg=None, exception=None, **kwargs):
@@ -47,7 +50,7 @@ class ErrorHandler():
         if ErrorHandler.DEBUG:
             print(traceback.format_exc())
 
-        log.error(msg, exctype=type(exception), excmsg=exception.message,**kwargs)
+        log.error(msg, exctype=type(exception), excmsg=exception.message, **kwargs)
     
     @classmethod
     def printStats(cls):
@@ -662,7 +665,7 @@ def progressIterator(iterable, total, steps, label=None):
             #Timer.printStats()
         yield element
 
-def progressIndicator(processed, total,bar_width=20,elapsed=None, interim=None, label=None):
+def progressIndicator(processed, total, bar_width=20,elapsed=None, interim=None, label=None):
     
     if total!=0:
         percent = float(processed) / total

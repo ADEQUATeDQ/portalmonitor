@@ -51,7 +51,7 @@ import odpw.utils.res_etag_lastmod as rescli
 import odpw.utils.dataset_change as dschangecli
 import odpw.utils.ckan_key_count as ckan_key_countcli
 import odpw.utils.full_res_stats as res_change_infocli
-
+import odpw.utils.getDCAT as dcat_convcli
 
 
 import odpw.utils.ckanfetch as ckanfetchcli
@@ -72,7 +72,8 @@ submodules=[dbcli, initcli, fetchcli,
             rescli,
             dschangecli,
             ckan_key_countcli,
-            res_change_infocli
+            res_change_infocli,
+            dcat_convcli
             ]
 
 

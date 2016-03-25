@@ -5,14 +5,17 @@ Created on Jan 3, 2016
 '''
 
 import collections
+import csv
 import functools
 import gzip
+import json
 import traceback
-from StringIO import StringIO
+import StringIO
 from cStringIO import StringIO as IO
 
+from datetime import datetime
 import pandas as pd
-from flask import Blueprint, render_template,current_app
+from flask import Blueprint, render_template,current_app, Response
 from flask import jsonify
 from flask.ctx import after_this_request
 from flask.globals import request
@@ -25,7 +28,7 @@ from odpw.reporting.activity_reports import systemfetchactivity
 from odpw.reporting.evolution_reports import portalEvolution_report
 from odpw.reporting.info_reports import portalinfo
 from odpw.server.rest.cache import cache
-from  odpw.utils import util as  odpw_utils
+from odpw.utils import util as  odpw_utils
 from odpw.utils.timer import Timer
 from odpw.reporting.reporters import SnapshotsPerPortalReporter, Report
 
@@ -33,6 +36,15 @@ api = Blueprint('api', __name__,
                     template_folder='templates',
                     static_folder='static',
                     )
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, datetime):
+        serial = obj.isoformat()
+        return serial
+    raise TypeError ("Type not serializable")
+
 
 def gzipped(f):
     @functools.wraps(f)
@@ -79,7 +91,6 @@ def not_found(error=None):
 
     return resp
 
-
 @api.route('/v1/system/activity/', methods=['GET'])
 #@cache.cached(timeout=300)  # cache this view for 5 minutes
 def system_activity_none():
@@ -122,7 +133,19 @@ def before_request():
                         }
     
     current_app.config['portals']= p
-    
+
+@api.route('/v1/portal/<string:portal_id>/<int:snapshot>', methods=['GET'])
+@cache.cached(timeout=300)  # cache this view for 5 minutes
+def portalall(portal_id, snapshot):
+    with Timer(key="json_load", verbose=True) as t:
+        j1 = json.load(open('/Users/jumbrich/Dev/odpw/stats/'+str(snapshot)+'/'+portal_id+'.json'))
+
+    with Timer(key="jsonify", verbose=True) as t:
+        resp = jsonify(j1)
+        resp.status_code = 200
+
+    return resp
+
 @api.route('/v1/portal/<string:portal_id>/evolv/<int:snapshot>', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalEvolution(portal_id, snapshot):
@@ -265,7 +288,7 @@ def portalInfo(portal_id, snapshot):
         
             results = {'portal':portal_id,'snapshot':snapshot, 'results': r.uireport()}
         
-            print results
+            print "our results:",results
             resp = jsonify(results)
             resp.status_code = 200
             
@@ -273,7 +296,62 @@ def portalInfo(portal_id, snapshot):
         except Exception as e:
             print(traceback.format_exc())
             internal_error(e,'')
+@api.route('/v1/portals/list.csv', methods=['GET'])
+  # cache this view for 5 minutes
+def portalListcsv():
+    """
+        Get a list of all portals
+        ---
+        tags:
+          - portals
+        produces:
+          - text/csv
+        responses:
+          200:
+            description: Returns a list of all portals in the system
+        """
+    def iter_csv(data):
+        line = StringIO.StringIO()
+        writer = csv.writer(line)
+        for csv_line in data:
+            writer.writerow(csv_line)
+            line.seek(0)
+            yield line.read()
+            line.truncate(0)
 
+
+    dbm= current_app.config['db']
+    with Timer(key='portal/list.csv', verbose=True) as t:
+        try:
+            data=[['url'
+                   ,'iso3'
+                   ,'software'
+                   ,'datasets'
+                   ,'distributions'
+                   ]]
+            p=current_app.config['portals']
+
+            for pRes in dbm.getPortalMetaDatas(snapshot=1607):
+                row=[]
+                rdict= dict(pRes)
+                if rdict['portal_id'] in p:
+                    rdict.update(p[rdict['portal_id']])
+                print rdict
+                row.append(rdict['url'])
+                row.append(rdict['iso3'])
+                row.append(rdict['software'])
+                row.append(rdict['datasets'])
+                row.append(rdict['resources'])
+
+                data.append(row)
+            #print "data"
+            #print data
+            response = Response(iter_csv(data), mimetype='text/csv')
+            response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+            return response
+
+        except Exception as e:
+            internal_error(e,'')
 @api.route('/v1/portals/list', methods=['GET'])
 @cache.cached(timeout=300)  # cache this view for 5 minutes
 def portalList():

@@ -11,10 +11,20 @@ class DatasetStatusCode(ElementCountAnalyser):
     def analyse_Dataset(self, dataset):
         self.add(dataset.status)
 
+    def analyse_generic(self, element):
+        pass
+
     def update_PortalMetaData(self, pmd):
         if not pmd.fetch_stats:
             pmd.fetch_stats = {}
         pmd.fetch_stats['respCodes'] = self.getResult()
+
+
+    def analyse_DatasetStatusCode(self, analyse):
+        formats = analyse.getResult()
+        if isinstance(formats, dict):
+            for f in formats:
+                self.add(f, formats[f])
 
     def analyse_PortalMetaData(self, pmd):
         if pmd.fetch_stats and 'respCodes' in pmd.fetch_stats:

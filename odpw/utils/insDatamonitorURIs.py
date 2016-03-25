@@ -98,7 +98,7 @@ def cli(args, dbm):
                             nextCrawl += timedelta(hours=1)
                             if nextCrawl >= end:
                                 nextCrawl = start
-                        print nextCrawl,update,k
+                        print nextCrawl ,update , k
                         dm_dbm.upsert(k, experiment, nextCrawl, update)
                     except Exception, e:
                         print e

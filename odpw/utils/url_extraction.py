@@ -148,7 +148,7 @@ def cli(args, dbm):
             print 'error in portal:', p.url
             print e
 
-    fname='csv_urls_' + str(args.snapshot) + ("_"+portals[0].id) if len(portals)==1 else +'' 
+    fname='csv_urls_' + str(args.snapshot) + ("_"+portals[0].id) if len(portals)==1 else ''
     with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
