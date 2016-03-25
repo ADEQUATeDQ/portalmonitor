@@ -37,39 +37,47 @@ def cli(args, dbm):
 
     if args.out is None:
         raise IOError("--out is not set")
-    if args.snapshot is None:
-        raise IOError("--snapshot not set")
 
     if not os.path.exists(args.out):
         os.makedirs(args.out)
         print "'writing to",args.out
 
+
     if args.url:
         p = dbm.getPortal(url=args.url)
         if not p:
             raise IOError(args.url + ' not found in DB')
-        portals = [p]
-    elif args.iso:
-        portals = [p for p in Portal.iter(dbm.getPortals(iso3=args.iso))]
+        portals = [p.id]
+
+    snapshots=[]
+    if args.snapshot:
+        snapshots.append(args.snapshot)
     else:
-        portals = [p for p in Portal.iter(dbm.getPortals())]
+        for sn in dbm.getSnapshotsFromPMD():#portalID='data_wu_ac_at'
+            snapshots.append(sn[1])
 
+    for sn in sorted(snapshots):
+        sn_portals=[]
+        for portalID in dbm.getPortalIDs(snapshot=sn):
+            sn_portals.append(portalID)
 
-    for p in portals:
-        try:
-            extract(p, dbm, args.snapshot, args.out)
-        except Exception as e:
-            print 'error in portal:', p.url
-            print e
+        for portalID in sn_portals:
+            pID = portalID[0]
+            p=dbm.getPortal(portalID=pID)
+            try:
+                extract(p, dbm, args.snapshot, args.out)
+            except Exception as e:
+                print 'error in portal:', p.url
+                print e
 
 
 def extract(portal, dbm, snapshot, out):
-    log.info("Extracting DCAT mappings from ", portals=portal.id)
+    log.info("Extracting DCAT mappings from ", portals=portal)
 
     ae = SAFEAnalyserSet()
     ae.add(DCATConverter(portal))
-    dcatlist=ae.add(DCATStore(portal))
-    metalist=ae.add(MetaStore(portal))
+    dcatlist=ae.add(DCATStore())
+    metalist=ae.add(MetaStore())
 
     iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
     process_all( ae, iter)
