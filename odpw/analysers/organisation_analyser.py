@@ -1,5 +1,5 @@
-from analysers.count_analysers import DatasetCount
-from analysers.dataset_analysers import DatasetChangeCountAnalyser
+from odpw.analysers.count_analysers import DatasetCount
+from odpw.analysers.dataset_analysers import DatasetChangeCountAnalyser
 from odpw.analysers import Analyser
 from odpw.utils.dataset_converter import DCAT, FOAF, VCARD, DCT
 

@@ -1,8 +1,6 @@
 import copy
 
-from analysers.dataset_analysers import DatasetChangeCountAnalyser
-from odpw.analysers.count_analysers import DCATLicenseCount, DCATTagsCount, DCATOrganizationsCount, DCATFormatCount, \
-    DCATDistributionCount, DatasetCount
+from odpw.analysers.dataset_analysers import DatasetChangeCountAnalyser
 from odpw.reporting.reporters import DBReporter,JSONReporter, Reporter, SnapshotReporter
 from odpw.utils import  util
 

@@ -26,7 +26,6 @@ def help():
 
 def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
-    #pa.add_argument('-s','--software',choices=['CKAN', 'Socrata', 'OpenDataSoft'], dest='software')
     pa.add_argument('-o','--out',type=str, dest='out' , help="the out directory for the list of urls (and downloads)")
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
     pa.add_argument('--iso',type=str, dest='iso' , help="isoCode")

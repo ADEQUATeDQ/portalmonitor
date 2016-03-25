@@ -6,7 +6,7 @@ Created on Dec 10, 2015
 # -*- coding: utf-8 -*-
 import errno
 
-from analysers.process_period_analysers import FetchPeriod, HeadPeriod
+from odpw.analysers.process_period_analysers import FetchPeriod, HeadPeriod
 from odpw.db.dbm import PostgressDBM
 from odpw.reporting.info_reports import portalinfo
 from odpw.reporting.portal_reports import report_portalbasics, report_portalAll, analyse_portalAll, aggregate_perSoftwareISO, \
