@@ -69,12 +69,12 @@ def mkdir_p(path):
 
 
 def storeJSON(fName, reporter):
-    with Timer(key="json.dump", verbose=True):
+    with Timer(key="json.dump"):
         with open(fName+'.json', 'w') as outfile:
             json.dump(reporter.jsonreport(), outfile, default=json_serial)
 
     log.info("Write to file", file=fName+'.json', size=sizeof_fmt(os.stat(fName+'.json').st_size))
-    with Timer(key="json.load", verbose=True):
+    with Timer(key="json.load"):
         json.load( open( fName+'.json', "r" ) )
 
 
@@ -82,7 +82,7 @@ def updateEvolution(fName, reporter):
     evolv={'snapshots':{}}
     fname = fName+'_evolution.json'
 
-    with Timer(key="evolution_json.load", verbose=True):
+    with Timer(key="evolution_json.load"):
         if os.path.isfile(fname):
             evolv = json.load( open( fname, "r" ) )
 
@@ -98,23 +98,36 @@ def updateEvolution(fName, reporter):
     evolv['first']={'sn':min_sn,'date':str(tofirstdayinisoweek(min_sn).date())}
     evolv['last']={'sn':max_sn,'date':str(tofirstdayinisoweek(max_sn).date())}
 
-    with Timer(key="evolution_json.dump", verbose=True):
+    with Timer(key="evolution_json.dump"):
         with open(fname, 'w') as outfile:
             json.dump(evolv, outfile, default=json_serial)
     log.info("Evolution to file", file=fname, size=sizeof_fmt(os.stat(fname).st_size))
 
-if __name__ == '__main__':
-    
-    
-    dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
 
 
-    portalIDs=['data_wu_ac_at','opendata_awt_be']#, 'www_opendataportal_at' ,'opendata_awt_be']
-    portalIDs=[]
 
-    base="/Users/jumbrich/Dev/odpw/stats"
 
+def name():
+    return 'FileStats'
+def help():
+    return "Generate various json reports"
+
+
+def setupCLI(pa):
+    pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
+    #pa.add_argument('-s','--software',choices=['CKAN', 'Socrata', 'OpenDataSoft'], dest='software')
+    pa.add_argument('-b','--base',type=str, dest='base' , help="base directory")
+    pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
+    pa.add_argument('-f','--filter',type=str, dest='filter' , help="Filter by format (csv)", default='csv')
+    pa.add_argument('--store',  action='store_true', default=False, help="store the files in the out directory")
+
+def cli(args, dbm):
+
+    if args.base is None:
+        raise IOError("--out is not set")
+    base=args.base
+    log.info("Preparing base", base=base)
     base_dirs={
         'portal':os.path.join(base,'portal'),
         'software':os.path.join(base,'software'),
@@ -125,13 +138,25 @@ if __name__ == '__main__':
         mkdir_p(d)
         mkdir_p(os.path.join(d, 'evol'))
 
+    if args.snapshot is None:
+        raise IOError("--snapshot not set")
+
+    portalIDs=[]
+    if args.url:
+        p = dbm.getPortal(url=args.url)
+        if not p:
+            raise IOError(args.url + ' not found in DB')
+        portals = [p.id]
+
     snapshots=[]
-    for sn in dbm.getSnapshotsFromPMD():#portalID='data_wu_ac_at'
-        snapshots.append(sn[1])
+    if args.snapshot:
+        snapshots.append(args.snapshot)
+    else:
+        for sn in dbm.getSnapshotsFromPMD():#portalID='data_wu_ac_at'
+            snapshots.append(sn[1])
 
+    log.info("Snapshots", snapshots=snapshots)
 
-    print snapshots
-    from pprint import pprint
     for sn in progressIterator(sorted(snapshots),len(snapshots), 1, label='PerSnapshot'):
         sn_dirs={ k:os.path.join(v,str(sn)) for k,v in base_dirs.items() }
         for d in sn_dirs: mkdir_p(d)
@@ -152,7 +177,7 @@ if __name__ == '__main__':
                 fp= FetchPeriod()
                 fp.analyse_PortalMetaData(pmd)
 
-                log.info("Analysing portal in snapshot", snapshot=sn, portal=pID)
+                log.info("Analysing organisations", snapshot=sn, portal=pID)
 
                 p_dir=os.path.join(sn_dirs['portal'], P.id)
                 p_dir_evol=os.path.join( *[base_dirs['portal'],'evol', P.id])
@@ -174,6 +199,7 @@ if __name__ == '__main__':
 
                     updateEvolution(o_file_evol, reporter)
 
+                log.info("Analysing portal", snapshot=sn, portal=pID)
                 portal_anaylser = analyse_organisations(P, sn, perOrga_analyser)
                 portal_anaylser.addAnalyser(fp)
 
@@ -188,6 +214,7 @@ if __name__ == '__main__':
                 ##Evaluation analysis
 
         #end for
+        log.info("Analysing software iso", snapshot=sn)
         result=aggregate_perSoftwareISO(portal_analysers)
 
 
@@ -214,6 +241,7 @@ if __name__ == '__main__':
 
             updateEvolution(o_file_evol, reporter)
 
+        log.info("Analysing iso", snapshot=sn)
         result=aggregate_perISO(portal_analysers)
         reporter= PerISOReporter( sn, result)
         for iso,  reporter in reporter.iso_reporters():
@@ -227,7 +255,7 @@ if __name__ == '__main__':
 
             updateEvolution(o_file_evol, reporter)
 
-
+        log.info("Analysing portals", snapshot=sn)
         result=aggregate_allportals(portal_analysers)
         reporter= AllPortalReporter( sn, result)
 
@@ -241,7 +269,7 @@ if __name__ == '__main__':
 
         updateEvolution(o_file_evol, reporter)
 
-
+        Timer.printStats()
 
     Timer.printStats()
     import sys

@@ -51,8 +51,9 @@ import odpw.utils.res_etag_lastmod as rescli
 import odpw.utils.dataset_change as dschangecli
 import odpw.utils.ckan_key_count as ckan_key_countcli
 import odpw.utils.full_res_stats as res_change_infocli
-import odpw.utils.getDCAT as dcat_convcli
+import odpw.utils.extract_dcat_metadata as dcat_convcli
 import freshness.dataset_freshness as freshnesscli
+import odpw.utils.single_portal_reports_test as filestatscli
 
 
 
@@ -76,7 +77,8 @@ submodules=[dbcli, initcli, fetchcli,
             ckan_key_countcli,
             res_change_infocli,
             dcat_convcli,
-            freshnesscli
+            freshnesscli,
+            filestatscli
             ]
 
 

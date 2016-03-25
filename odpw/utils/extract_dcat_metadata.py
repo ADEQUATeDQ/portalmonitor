@@ -19,10 +19,10 @@ import structlog
 log =structlog.get_logger()
 
 def name():
-    return 'DCAT'
+    return 'Meta'
 
 def help():
-    return "Extract DCAT files"
+    return "Extract metadata files"
 
 def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
@@ -34,6 +34,8 @@ def setupCLI(pa):
     pa.add_argument('--store',  action='store_true', default=False, help="store the files in the out directory")
 
 def cli(args, dbm):
+
+
     if args.out is None:
         raise IOError("--out is not set")
     if args.snapshot is None:
@@ -68,24 +70,54 @@ def extract(portal, dbm, snapshot, out):
     ae = SAFEAnalyserSet()
     ae.add(DCATConverter(portal))
     dcatlist=ae.add(DCATStore(portal))
+    metalist=ae.add(MetaStore(portal))
 
     iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
     process_all( ae, iter)
 
-    fname='dcat_' + str(snapshot) + "_"+portal.id
-    with open(os.path.join(out, fname+ '.pkl'), 'wb') as f:
+
+    sndir=os.path.join(out, snapshot)
+    if not os.path.exists(sndir):
+        os.makedirs(sndir)
+
+    pdir=os.path.join(sndir, portal.id)
+    if not os.path.exists(pdir):
+        os.makedirs(pdir)
+
+    fname='dcat'
+    with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
         pickle.dump(dcatlist.getResult(), f)
         print 'Writing dict to ',f
-    with open(os.path.join(out, fname+'.json'), 'w') as f:
+    with open(os.path.join(pdir, fname+'.json'), 'w') as f:
         json.dump(dcatlist.getResult(), f)
         print 'Writing dict to ',f
 
 
+    fname='metadata'
+    with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
+        pickle.dump(metalist.getResult(), f)
+        print 'Writing dict to ',f
+    with open(os.path.join(pdir, fname+'.json'), 'w') as f:
+        json.dump(metalist.getResult(), f)
+        print 'Writing dict to ',f
+
+
+class MetaStore(Analyser):
+    def __init__(self):
+        self.results=[]
+
+
+    def analyse_Dataset(self, dataset):
+        self.results.append(dataset.data)
+
+    def getResult(self):
+        return self.results
+
 class DCATStore(Analyser):
 
-    def __init__(self, portal):
+    def __init__(self):
         self.results=[]
-        self.portal=portal
+
 
     def analyse_Dataset(self, dataset):
 
