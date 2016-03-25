@@ -75,7 +75,7 @@ submodules=[dbcli, initcli, fetchcli,
             dschangecli,
             ckan_key_countcli,
             res_change_infocli,
-            dcat_convcli
+            dcat_convcli,
             freshnesscli
             ]
 
