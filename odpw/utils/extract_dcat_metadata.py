@@ -68,7 +68,7 @@ def cli(args, dbm):
             try:
                 extract(p, dbm, args.snapshot, args.out)
             except Exception as e:
-                ErrorHandler.handleError(log, "During extract", exception=e)
+                ErrorHandler.handleError(log, "During extract", exception=e,  exc_info=True)
                 print 'error in portal:', p.url
                 print e
 
