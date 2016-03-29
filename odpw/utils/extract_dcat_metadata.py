@@ -66,7 +66,7 @@ def cli(args, dbm):
             pID = portalID[0]
             p=dbm.getPortal(portalID=pID)
             try:
-                extract(p, dbm, sn, args.out)
+                extract(p, dbm, str(sn), args.out)
             except Exception as e:
                 ErrorHandler.handleError(log, "During extract", exception=e,  exc_info=True)
                 print 'error in portal:', p.url
