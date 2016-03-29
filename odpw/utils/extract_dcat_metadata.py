@@ -6,6 +6,7 @@ import rdflib
 
 from odpw.analysers.core import DCATConverter
 from odpw.utils.dataset_converter import graph_from_opendatasoft, fix_socrata_graph, CKANConverter
+from odpw.utils.util import ErrorHandler
 
 __author__ = 'jumbrich'
 
@@ -67,16 +68,13 @@ def cli(args, dbm):
             try:
                 extract(p, dbm, args.snapshot, args.out)
             except Exception as e:
+                ErrorHandler.handleError(log, "During extract", exception=e)
                 print 'error in portal:', p.url
                 print e
 
 
 def extract(portal, dbm, snapshot, out):
     log.info("Extracting DCAT mappings from ", portals=portal.id)
-
-    ae = SAFEAnalyserSet()
-    ae.add(DCATConverter(portal))
-
 
     sndir=os.path.join(out, snapshot)
     if not os.path.exists(sndir):
@@ -85,6 +83,12 @@ def extract(portal, dbm, snapshot, out):
     pdir=os.path.join(sndir, portal.id)
     if not os.path.exists(pdir):
         os.makedirs(pdir)
+
+    ae = SAFEAnalyserSet()
+    ae.add(DCATConverter(portal))
+
+
+
 
 
     dcat_file=os.path.join(pdir, 'dcat.json')
@@ -129,6 +133,7 @@ class MetaStore(Analyser):
     def done(self):
         self.f.write("]")
         self.f.close()
+        log.info("Done, closing", f=self.f)
 
 
     def write(self, obj):
