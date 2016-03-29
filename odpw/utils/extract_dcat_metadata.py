@@ -72,15 +72,10 @@ def cli(args, dbm):
 
 
 def extract(portal, dbm, snapshot, out):
-    log.info("Extracting DCAT mappings from ", portals=portal)
+    log.info("Extracting DCAT mappings from ", portals=portal.id)
 
     ae = SAFEAnalyserSet()
     ae.add(DCATConverter(portal))
-    dcatlist=ae.add(DCATStore())
-    metalist=ae.add(MetaStore())
-
-    iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
-    process_all( ae, iter)
 
 
     sndir=os.path.join(out, snapshot)
@@ -91,48 +86,81 @@ def extract(portal, dbm, snapshot, out):
     if not os.path.exists(pdir):
         os.makedirs(pdir)
 
-    fname='dcat'
-    with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
-        pickle.dump(dcatlist.getResult(), f)
-        print 'Writing dict to ',f
-    with open(os.path.join(pdir, fname+'.json'), 'w') as f:
-        json.dump(dcatlist.getResult(), f)
-        print 'Writing dict to ',f
+
+    dcat_file=os.path.join(pdir, 'dcat.json')
+    meta_file=os.path.join(pdir, 'meta.json')
+
+    ae.add(DCATStore(dcat_file))
+    ae.add(MetaStore(meta_file))
+
+    iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
+    process_all( ae, iter)
 
 
-    fname='metadata'
-    with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
-        pickle.dump(metalist.getResult(), f)
-        print 'Writing dict to ',f
-    with open(os.path.join(pdir, fname+'.json'), 'w') as f:
-        json.dump(metalist.getResult(), f)
-        print 'Writing dict to ',f
+
+    #fname='dcat'
+    #with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
+    #    pickle.dump(dcatlist.getResult(), f)
+    #    print 'Writing dict to ',f
+    #with open(os.path.join(pdir, fname+'.json'), 'w') as f:
+    #    json.dump(dcatlist.getResult(), f)
+    #    print 'Writing dict to ',f
+
+
+    #fname='metadata'
+    #with open(os.path.join(pdir, fname+ '.pkl'), 'wb') as f:
+    #    pickle.dump(metalist.getResult(), f)
+    #    print 'Writing dict to ',f
+    #with open(os.path.join(pdir, fname+'.json'), 'w') as f:
+    #    json.dump(metalist.getResult(), f)
+    #    print 'Writing dict to ',f
 
 
 class MetaStore(Analyser):
-    def __init__(self):
-        self.results=[]
+    def __init__(self, fname):
+        self.f= open(file, "w")
+        self.f.write("[")
 
 
     def analyse_Dataset(self, dataset):
-        self.results.append(dataset.data)
 
-    def getResult(self):
-        return self.results
+        self.write(dataset.data)
 
-class DCATStore(Analyser):
+    def done(self):
+        self.f.write("]")
+        self.f.close()
 
-    def __init__(self):
-        self.results=[]
+
+    def write(self, obj):
+        """
+        writes the first row, then overloads self with delimited_write
+        """
+        try:
+            self.f.write(json.dumps(obj))
+            setattr(self, "write", self.delimited_write)
+        except:
+            self.bad_obj(obj)
+
+    def delimited_write(self, obj):
+        """
+        prefix json object with a comma
+        """
+        try:
+            self.f.write("," + json.dumps(obj))
+        except:
+            log.info("BadObject", obj=obj)
+
+
+class DCATStore(MetaStore):
+
+    def __init__(self, fname):
+        super(self,DCATStore).__init__(fname)
 
 
     def analyse_Dataset(self, dataset):
 
         if hasattr(dataset,'dcat'):
-            self.results.append(dataset.dcat)
-
-    def getResult(self):
-        return self.results
+            self.write(dataset.dcat)
 
 
 
