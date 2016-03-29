@@ -122,7 +122,7 @@ def extract(portal, dbm, snapshot, out):
 
 class MetaStore(Analyser):
     def __init__(self, fname):
-        self.f= open(file, "w")
+        self.f= open(fname, "w")
         self.f.write("[")
 
 
