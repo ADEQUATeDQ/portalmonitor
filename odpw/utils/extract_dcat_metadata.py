@@ -159,7 +159,7 @@ class MetaStore(Analyser):
 class DCATStore(MetaStore):
 
     def __init__(self, fname):
-        super(self,DCATStore).__init__(fname)
+        super(DCATStore,self).__init__(fname)
 
 
     def analyse_Dataset(self, dataset):
