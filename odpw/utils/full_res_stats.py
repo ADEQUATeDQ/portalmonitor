@@ -64,18 +64,18 @@ def cli(args,dbm):
     res={}
     
     resources={}
-    iter=Resource.iter(dbm.getResourcesWithHeader())
-    print "loading Resources"
-    for R in iter:
-        if R.url not in resources:
-            resources[R.url]=R
-    
+
     for p in portals:
+        print "querying Resources"
+        iter=Resource.iter(dbm.getResourcesWithHeader(portal_id=p.id))
+        print "loading Resources"
+        for R in iter:
+            if R.url not in resources:
+                resources[R.url]=R
+        print 'found', len(resources),'with header'
         total=dbm.countDatasets(portalID=p.id, snapshot=sn)
         
-        
-        
-        
+
         steps=total/10
         if steps ==0:
             steps=1

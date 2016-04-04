@@ -11,13 +11,13 @@ from odpw.analysers.count_analysers import DCATTagsCount, DCATOrganizationsCount
     DCATFormatCount, PMDResourceStatsCount, DatasetCount, DCATLicenseCount
 from odpw.analysers.process_period_analysers import HeadPeriod, FetchPeriod
 from odpw.analysers.resource_analysers import ResourceSize
-from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
-    HeadTimePeriodReporter
 from odpw.reporting.reporters import SnapshotsPerPortalReporter, DatasetSumReporter,\
     ResourceCountReporter, ResourceSizeReporter, TagReporter,\
     OrganisationReporter, FormatCountReporter, Report, UIReporter, CLIReporter,\
     CSVReporter, DBReporter, DFtoListDict, addPercentageCol,\
     TexTableReporter, LicenseCountReporter
+from odpw.reporting.time_period_reporting import FetchTimePeriodReporter,\
+    HeadTimePeriodReporter
 
 
 def systeminfoall(dbm):
@@ -41,27 +41,6 @@ def systeminfoall(dbm):
     #                     PortalListReporter(pa)
     #              ])
     #===========================================================================
-
-
-def report_portalbasics(dbm, sn, portal_id):
-    """
-    :param dbm:
-    :param sn:
-    :param portal_id:
-    :return: a PortalBasicReport containing
-        #snapshots
-        iso
-        system
-        id
-        url
-        apiurl
-    """
-    a = process_all( DBAnalyser(), dbm.getSnapshotsFromPMD( portalID=portal_id))
-
-    r=SnapshotsPerPortalReporter(a, portal_id)
-
-    P = dbm.getPortal(portalID=portal_id)
-    return PortalBasicReport(r, P)
 
 
 def portalinfo(dbm, sn, portal_id):

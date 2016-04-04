@@ -7,6 +7,7 @@ from odpw.analysers import Analyser
 from _collections import defaultdict
 from odpw.analysers.datasetlife import DatasetLifeStatsAnalyser
 from odpw.analysers.core import DBAnalyser
+from odpw.utils.util import tofirstdayinisoweek
 
 
 class SystemEvolutionAnalyser(DBAnalyser):
@@ -33,30 +34,51 @@ class EvolutionCountAnalyser(Analyser):
             res[sn]= { k: ddict.get(k) for k in self.keys}
         return res
 
+class EvolutionAggregator(Analyser):
+
+    def __init__(self):
+        super(EvolutionAggregator, self).__init__()
+        self.results={}
+
+    def analyse_EvolutionCountAnalyser(self, a):
+        for sn,v in a.getResult().items():
+            fd=str(tofirstdayinisoweek(sn).date())
+            d= self.results.setdefault(fd,{})
+            d.setdefault('sn',sn)
+            de= d.setdefault('values',{})
+            de.update(v)
+
+    def getResult(self):
+        return {'evolution':self.results}
+
+
 class DatasetEvolution(EvolutionCountAnalyser):
     def __init__(self):
         super(DatasetEvolution, self).__init__()
     
     def analyse_PortalMetaData(self, pmd):
-        if pmd.datasets:
+        if pmd.datasets is not None:
             self.add(pmd.snapshot, 'datasets', pmd.datasets)
-        #if pmd.fetch_stats:
-        #    for i in DatasetLifeStatsAnalyser.keys:
-        #        self.add(pmd.snapshot, i, pmd.fetch_stats.get(i,0))
-        #else:
-        #    self.add(pmd.snapshot,'no_stats', 1)
-        
-        
-        
+
     
 class ResourceEvolution(EvolutionCountAnalyser):
     def __init__(self):
         super(ResourceEvolution, self).__init__()
     def analyse_PortalMetaData(self, pmd):
-        if pmd.resources:
+        if pmd.resources is not None:
             self.add(pmd.snapshot, 'resources', pmd.resources)
         
         #self.add(pmd.snapshot, 'resources',pmd.resources)
+
+class QualityEvolution(EvolutionCountAnalyser):
+    def __init__(self):
+        super(QualityEvolution, self).__init__()
+    def analyse_PortalMetaData(self, pmd):
+        if pmd.qa_stats:
+            for k,v in pmd.qa_stats.items():
+                if '_hist' not in k:
+                    self.add(pmd.snapshot, k, v['value'])
+
 
 class ResourceAnalysedEvolution(EvolutionCountAnalyser):
     def analyse_PortalMetaData(self, pmd):

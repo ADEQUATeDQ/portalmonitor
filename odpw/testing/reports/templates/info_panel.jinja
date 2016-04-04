@@ -1,0 +1,68 @@
+{% extends 'basic_elements.jinja' %}
+
+
+{% macro basics(data) -%}
+    {{ datasets(data) }}
+    {{ resources(data) }}
+    {{ headerSize(data) }}
+
+    {{ infoCard('Licenses',data.DCATLicenseCount| length , 'distinct') }}
+    {{ infoCard('Tags',data.DCATTagsCount| length , 'distinct') }}
+    {{ infoCard('Organisations',data.DCATOrganizationsCount| length , 'distinct') }}
+    {{ infoCard('Formats',data.DCATFormatCount| length , 'distinct') }}
+{%- endmacro %}
+
+{% macro datasets(data) -%}
+    {{ infoCard('Datasets',data.DatasetCount.count , 'total') }}
+{%- endmacro %}
+
+
+{% macro resources(data) -%}
+    <div class="mdl-card mdl-cell mdl-cell--6-col mdl-shadow--2dp">
+        <div class="mdl-card__title mdl-card--border">
+            <div class="mdl-card__title-text ">
+                <span>Distributions</span>
+            </div>
+        </div>
+        <div class="mdl-card__supporting-text ">
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--3-col">
+                {{ textfield( data.DCATDistributionCount.count, 'total') }}
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                {{ textfield( data.DCATDistributionCount.distinct, 'unique') }}
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                {{ textfield( data.DCATDistributionCount.urls, 'valid URLs') }}
+                </div>
+                <div class="mdl-cell mdl-cell--3-col">
+                {{ textfield( data.DCATDistributionCount.https_urls, 'HTTPS URLs') }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro headerSize(data) -%}
+    <div class="mdl-cell mdl-cell--3-col mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title mdl-card--border">
+            <div class="mdl-card__title-text ">
+               <span>Content Size</span>
+            </div>
+        </div>
+        <div class="mdl-card__supporting-text ">
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--12-col">
+                    {% if 'x' in data %}
+                        {% set value = data.resourcesizereporter.contentlength -%}
+                    {% else %}
+                        {% set value = 'NA' -%}
+                    {% endif %}
+                {{textfield( value, 'estimated size') }}
+                <label>based on {{data.DCATDistributionCount.urls}} HEAD lookups</label>
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}

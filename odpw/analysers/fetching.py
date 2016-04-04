@@ -109,7 +109,10 @@ class DCATDatasetAge(Analyser):
                         self.ages['modified'].append(created)
                     except Exception as e:
                         pass
-        
+    def analyse_DCATDatasetAge(self,analyse):
+        ages = analyse.ages
+        self.ages['created']=self.ages['created']+ages['created']
+        self.ages['modified']=self.ages['modified']+ages['modified']
         
 
     def done(self):
@@ -174,7 +177,12 @@ class DCATResourceInDSAge(DCATDatasetAge):
                         self.ages['modified'].append(created)
                     except Exception as e:
                         pass
-                    
+    def analyse_DCATResourceInDSAge(self, analyser):
+        ages = analyser.ages
+        self.ages['created']=self.ages['created']+ages['created']
+        self.ages['modified']=self.ages['modified']+ages['modified']
+
+
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
             pmd.general_stats = {}

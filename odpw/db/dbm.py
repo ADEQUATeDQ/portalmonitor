@@ -22,6 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from sqlalchemy.sql import select, text
 from sqlalchemy import and_, func
+from  sqlalchemy.sql.expression import func
 import math
 import json
 
@@ -383,9 +384,8 @@ class PostgressDBM(object):
                 s = select([self.pmd.c.portal_id])
                 if snapshot:
                     s=s.where(self.pmd.c.snapshot == snapshot)
-               
-                    self.log.debug(query=s.compile(), params=s.compile().params)
-               
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                print s.compile()
                 return con.execute(s)
 
     def getPortalMetaDatasBySoftware(self, software=None, snapshot=None, portalID=None):
@@ -912,7 +912,8 @@ class PostgressDBM(object):
                     
                 if status is not None:
                     s.where(self.resources.c.status == status)
-                
+
+                s=s.order_by(func.random())
                 if limit:
                     s=s.limit(limit)
                 #if status:
@@ -984,7 +985,7 @@ class PostgressDBM(object):
 
         
     def updateResource(self, Resource):
-        with Timer(key="updateResource", verbose=True) as t:
+        with Timer(key="updateResource") as t:
             with self.engine.begin() as con:
                 origin=None
                 if Resource.origin:
@@ -1006,9 +1007,51 @@ class PostgressDBM(object):
                                                    exception=Resource.exception
                                                    )
                 
-                print ins.compile()
                 self.log.debug(query=ins.compile(), params=ins.compile().params)
                 con.execute(ins)
+
+    def updateResources(self, ResourceList):
+        with Timer(key="updateResource") as t:
+            with self.engine.begin() as con:
+
+
+                origin=None
+                if Resource.origin:
+                    origin=Resource.origin
+                    #json.dumps(nested_json(Resource.origin),default=date_handler)
+                header=None
+                if Resource.header:
+                    header=Resource.header
+                    #json.dumps(nested_json(Resource.header),default=date_handler)
+                #print origin
+                #print header
+                ins = self.resources.update().where((self.resources.c.snapshot == Resource.snapshot) & (self.resources.c.url == Resource.url)).values(
+
+                    {
+                        'status': bindparam('status'),
+                        'origin': bindparam('origin'),
+                        'header': bindparam('header'),
+                        'mime': bindparam('mime'),
+                        'size': bindparam('size'),
+                        'timestamp': bindparam('timestamp'),
+                        'exception': bindparam('exception'),
+
+                    })
+
+                data=[]
+                for R in ResourceList:
+                    data.append({
+                        'status': Resource.status,
+                        'origin': Resource.origin,
+                        'header': Resource.header,
+                        'mime': Resource.mime,
+                        'size': Resource.size,
+                        'timestamp': Resource.timestamp,
+                        'exception': Resource.exception,
+                    })
+
+                self.log.debug(query=ins.compile(), params=ins.compile().params)
+                con.execute(ins, data)
              
           
           

@@ -8,8 +8,6 @@ from odpw.analysers import AnalyseEngine, QualityAnalyseEngine, Analyser
 import ckanapi
 import odpw.utils as util
 
-from odpw.fetch import generateFetchDatasetIter
-from odpw.util import getExceptionCode, getPackageList
 from odpw.db.models import PortalMetaData, Dataset, Portal
 
 from ckanapi.errors import CKANAPIError

@@ -15,31 +15,69 @@ from odpw.utils.util import ErrorHandler
 import csv
 import structlog
 import urlnorm
+
+from odpw.utils.dcat_access import getTitle
+
 log =structlog.get_logger()
 
 class DatasetChangeCountAnalyser(ElementCountAnalyser):
     def __init__(self, datasets):
         super(DatasetChangeCountAnalyser, self).__init__()
         self.datasets=datasets
-        
+        self.results={'new':{'count':0,'values':{}},
+                      'deleted':{'count':0,'values':{}},
+                      'changed':{'count':0,'values':{}}}
+
+
+    def analyse_DatasetChangeCountAnalyser(self, analyser):
+        res= analyser.getResult()
+        self.results['new']['values'].update(res['new']['values'])
+        self.results['deleted']['values'].update(res['deleted']['values'])
+        self.results['changed']['values'].update(res['changed']['values'])
+
+
     def analyse_Dataset(self, dataset):
+        title=getTitle(dataset)
+
         if dataset.data and dataset.id in self.datasets:
             diffs = json_compare.jsondiff(self.datasets[dataset.id].data, dataset.data)
+            s={'label':title, 'changes':{}}
             for mode, selector, changes in diffs:
                 try:
-                    k= mode+'_'+"_".join([str(s) for s in selector])
-                    self.add(k)
+                    v=s['changes'].setdefault(mode,{})
+                    v["_".join([str(sel) for sel in selector])]=changes
                 except Exception as e:
                     print dataset.id, dataset.portal_id, e
-            
+            if len(s['changes'])>0:
+                print dataset.snapshot, dataset.id
+                self.results['changed']['values'][dataset.id]=s
+
+            del self.datasets[dataset.id]
+        elif dataset.id not in  self.datasets:
+            self.results['new']['values'][dataset.id]=title
+
+    def getResult(self):
+        return self.results
+
+    def done(self):
+        if self.datasets is not None:
+            for id in self.datasets:
+                self.results['deleted']['values'][id]=getTitle(self.datasets[id])
+
+        for k,v in self.results.items():
+            v['count']=len(v['values'])
+
+
             
 class ResourceChangeInfoAnalyser(Analyser):
     
     def __init__(self, outfile, Portal, dbm, resources):
         super(ResourceChangeInfoAnalyser, self).__init__()
-        self.out = csv.writer(open(outfile, "a"), delimiter=',',
+        self.f = open(outfile, "a")
+        self.out = csv.writer(self.f, delimiter=',',
                 lineterminator='\r\n'
                 )
+
 
         self.portal=Portal
         self.dbm=dbm
@@ -82,7 +120,7 @@ class ResourceChangeInfoAnalyser(Analyser):
                         
                     """
                     local=False
-                    http_lm=False
+                    http_lm='na'
                     http_etag=False
                     
                     meta_webstore_url='mis'
@@ -136,18 +174,19 @@ class ResourceChangeInfoAnalyser(Analyser):
                         #rowsUpdatedAt
                         #viewLastModified
                     else:
+                        if 'metas' in dataset.data and 'modified' in dataset.data['metas']:
+                            meta_last_modified= "value" if dataset.data['metas']['modified'] else 'empty'
                         local=True
                     
                     ## http last-modified and etag
                     if url in self.resources:
                         header= self.resources[url].header
-                        for k in header: 
+                        for k in header:
                             if k.lower().strip() == 'last-modified':
-                                http_lm =True
+                                http_lm=True
                             if k.lower().strip() == 'etag':
-                                http_etag =True
-                    
-                    
+                                http_etag = True
+
                     res=[   quote(url, safe="%/:=&?~#+!$,;'@()*[]").encode('utf8'),
                             self.portal.software.encode('utf8'),
                             self.portal.id.encode('utf8'),
@@ -166,4 +205,4 @@ class ResourceChangeInfoAnalyser(Analyser):
         
     
     def done(self):
-        self.out.close()
+        self.f.close()

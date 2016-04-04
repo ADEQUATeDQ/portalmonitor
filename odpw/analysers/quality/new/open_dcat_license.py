@@ -29,6 +29,12 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
 
         return 1 if 'approved' in appr else 0
 
+    def analyse_LicenseOpennessDCATAnalyser(self, analyser):
+        formats = analyser.getDist()
+        if isinstance(formats, dict):
+            for f in formats:
+                self.add(f, formats[f])
+
     def done(self):
         dist = self.getDist()
         self.count = dist['approved'] if 'approved' in dist else 0
@@ -36,10 +42,11 @@ class LicenseOpennessDCATAnalyser(ElementCountAnalyser):
         self.quality = float(self.count)/self.total if self.total > 0 else 0
 
     def getResult(self):
-        return self.quality
+        return {'value':self.quality,'total':self.total, 'hist':self.hist()}
 
+    def hist(self):
+        return {1: self.count, 0: self.total - self.count}
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[LicenseOpennessDCATAnalyser.id] = self.quality
-        pmd.qa_stats[LicenseOpennessDCATAnalyser.id+'_hist'] = {1: self.count, 0: self.total - self.count}
+        pmd.qa_stats[LicenseOpennessDCATAnalyser.id] = self.getResult()

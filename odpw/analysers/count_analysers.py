@@ -12,6 +12,9 @@ from odpw.analysers import Analyser
 from odpw.utils.dcat_access import getDistributionLicenseTriples
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 from _collections import defaultdict
+
+from odpw.utils.util import tofirstdayinisoweek
+
 log =structlog.get_logger()
 
 
@@ -90,10 +93,43 @@ class ResourceCount(DistinctElementCount):
         
         return res
 
-class DatasetCount(DistinctElementCount):
+class DCATDatasetCount(DistinctElementCount):
     def __init__(self):
         super(DatasetCount, self).__init__()
-    
+
+class SnapshotCount(Analyser):
+    def __init__(self):
+        super(SnapshotCount, self).__init__()
+        self.snapshots=[]
+    def analyse_PortalMetaData(self, pmd):
+        self.snapshots.append(tofirstdayinisoweek(pmd.snapshot).date())
+
+    def getResult(self):
+        return {'snapshots':
+             {'first': min(self.snapshots)
+              ,'last': max(self.snapshots)
+              ,'count':len(self.snapshots)
+              ,'list':self.snapshots
+              }}
+
+class DatasetCount(DistinctElementCount):
+
+    def __init__(self):
+        super(DatasetCount, self).__init__()
+
+    def analyse_Dataset(self, element):
+        self.count+=1
+
+        #TODO prob datastrucutre for distinct
+        if self.bloom is not None and element not in self.bloom:
+            self.distinct+=1
+            self.bloom.add(element)
+
+    def analyse_DatasetCount(self, analyser):
+        res = analyser.getResult()
+        self.count+=res['count']
+
+
     def analyse_PortalMetaData(self, element):
         if element.datasets>=0:
             self.count+= element.datasets
@@ -236,6 +272,7 @@ class TagsCount(ElementCountAnalyser):
 
     def analyse_TagsCount(self, tag_analyser):
         tags = tag_analyser.getResult()
+
         if isinstance(tags, dict):
             for t in tags:
                 if self.total_count:
@@ -247,6 +284,8 @@ class TagsCount(ElementCountAnalyser):
         if not pmd.general_stats:
             pmd.general_stats = {}
         pmd.general_stats['tags'] = self.getResult()
+
+
 
 class CKANTagsCount(TagsCount):
     def analyse_Dataset(self, dataset):
@@ -262,12 +301,14 @@ class CKANTagsCount(TagsCount):
 
     def analyse_CKANTagsCount(self, tag_analyser):
         super(CKANTagsCount, self).analyse_TagsCount(tag_analyser)
-      
+
+
+
 class DCATDistributionCount(DistinctElementCount):
-    def __init__(self,withDistinct=None):
+    def __init__(self,withDistinct=True):
         super(DCATDistributionCount, self).__init__(withDistinct=withDistinct)
         self.empty=0
-    
+
     def analyse_Dataset(self, dataset):
         for dcat_el in getattr(dataset,'dcat',[]):
             if str(DCAT.Distribution) in dcat_el.get('@type',[]):
@@ -290,30 +331,40 @@ class DCATDistributionCount(DistinctElementCount):
                
                
                 if url:
-                    try:
-                        url = urlnorm.norm(url.strip())
-                        # props=util.head(url)
-                    except Exception as e:
-                        print e
-                        pass
-                    
-                    self.analyse_generic(url.strip())
-                    #print self.count, url
+                    self.count+=1
+
+                    #TODO prob datastrucutre for distinct
+                    if self.bloom is not None and url.strip() not in self.bloom:
+                        self.distinct+=1
+                        self.bloom.add(url.strip())
+                        self.set.add(url.strip())
+                        #print self.count, url
                 else:
                     self.empty+=1
-                    
-      
+
+    def analyse_DCATDistributionCount(self,analyser):
+        res = analyser.getResult()
+        self.empty+=res['empty']
+        self.count+=res['count']
+        if hasattr(analyser,'set'):
+            self.set.update(analyser.set)
+
     def getResult(self):
         res = super(DCATDistributionCount,self).getResult()
         res['empty']=self.empty
         if self.set is not None:
             res['urls']=0
+            res['https_urls']=0
             for r in self.set:
                 try:
                     url = urlnorm.norm(r.strip())
                     res['urls']+=1
+                    if url.startswith('https'):
+                        res['https_urls']+=1
                 except Exception as e:
                     pass
+            res['distinct']=len(self.set)
+
         return res
         
     def update_PortalMetaData(self, pmd):
@@ -326,8 +377,6 @@ class DCATDistributionCount(DistinctElementCount):
         pmd.resources = self.getResult()['count']
 
 
-
-
 class DCATFormatCount(ElementCountAnalyser):
     def __init__(self, total_count=True):
         super(DCATFormatCount, self).__init__()
@@ -338,7 +387,10 @@ class DCATFormatCount(ElementCountAnalyser):
             if str(DCAT.Distribution) in dcat_el.get('@type',[]):
                 for f in dcat_el.get('http://purl.org/dc/terms/format',[]):
                     self.add(f['@value'])
-    
+
+    def analyse_generic(self, element):
+        pass
+
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'formats' in pmd.general_stats:
             formats = pmd.general_stats['formats']
@@ -349,7 +401,7 @@ class DCATFormatCount(ElementCountAnalyser):
                     else:
                         self.add(f)
 
-    def analyse_CKANFormatCount(self, format_analyser):
+    def analyse_DCATFormatCount(self, format_analyser):
         formats = format_analyser.getResult()
         if isinstance(formats, dict):
             for f in formats:
@@ -374,12 +426,20 @@ class DCATLicenseCount(ElementCountAnalyser):
             break
         return values
 
+    def analyse_DCATLicenseCount(self, analyser):
+        orgs = analyser.getResult()
+        if isinstance(orgs, dict):
+            for o in orgs:
+                self.add(o, orgs[o])
+
+    def analyse_generic(self, element):
+        pass
+
     def analyse_PortalMetaData(self, pmd):
         if pmd.general_stats and 'licenses' in pmd.general_stats:
             licenses = pmd.general_stats['licenses']
             if isinstance(licenses, dict):
                 for f in licenses:
-                    print f,licenses[f]
                     if self.total_count:
                         self.add(f, licenses[f])
                     else:
@@ -399,6 +459,9 @@ class DCATOrganizationsCount(ElementCountAnalyser):
                 for tag in dcat_el.get(str(FOAF.name),[]):
                     self.add(tag['@value'])
 
+    def analyse_generic(self, element):
+        pass
+
     def update_PortalMetaData(self, pmd):
         if not pmd.general_stats:
             pmd.general_stats = {}
@@ -411,7 +474,7 @@ class DCATOrganizationsCount(ElementCountAnalyser):
                 for o in orgs:
                     self.add(o, orgs[o])
 
-    def analyse_CKANOrganizationsCount(self, org_analyser):
+    def analyse_DCATOrganizationsCount(self, org_analyser):
         orgs = org_analyser.getResult()
         if isinstance(orgs, dict):
             for o in orgs:
@@ -423,7 +486,17 @@ class DCATTagsCount(TagsCount):
             if str(DCAT.Dataset) in dcat_el.get('@type',[]):
                 for tag in dcat_el.get(str(DCAT.keyword),[]):
                     self.add(tag['@value'])
-                         
+
+    def analyse_generic(self, element):
+        pass
+
+    def analyse_DCATTagsCount(self, tag_analyser):
+        orgs = tag_analyser.getResult()
+        if isinstance(orgs, dict):
+            for o in orgs:
+                self.add(o, orgs[o])
+
+
     def analyse_DCATTagsCount(self, tag_analyser):
         super(DCATTagsCount, self).analyse_TagsCount(tag_analyser)
 

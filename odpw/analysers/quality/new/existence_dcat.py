@@ -34,11 +34,16 @@ class ExistenceDCAT(Analyser):
         self.values.append(res)
         return res
 
+    def analyse_ExistenceDCAT(self, analyser):
+        self.values=self.values+analyser.values
+        self.total+=analyser.total
+
     def done(self):
         self.quality = sum(self.values)/self.total if self.total > 0 else 0
 
     def getResult(self):
-        return self.quality
+        cnt = Counter(self.values)
+        return {'value':self.quality, 'total':self.total, 'hist':dict(cnt)}
    
 class DescriptionDCAT(ExistenceDCAT):  
      pass
@@ -124,9 +129,8 @@ class DatasetTemporalDCAT(TemporalDCAT):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
-        cnt = Counter(self.values)
-        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
+        pmd.qa_stats[self.id] = self.getResult()
+
 ##### 
 #BASIC SPATIAL
 #####  
@@ -138,7 +142,7 @@ class DatasetSpatialDCAT(SpatialDCAT):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
+        pmd.qa_stats[self.id] = self.getResult()
         cnt = Counter(self.values)
         pmd.qa_stats[self.id + '_hist'] = dict(cnt)
 ##### 
@@ -174,7 +178,7 @@ class ProvLicenseDCAT(RightDCAT):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
+        pmd.qa_stats[self.id] = self.getResult()
         cnt = Counter(self.values)
         pmd.qa_stats[self.id + '_hist'] = dict(cnt)
 
@@ -252,8 +256,12 @@ class AnyMetric(Analyser):
 
         return int(e)
 
+    def analyse_AnyMetric(self, analyser):
+        self.count+=analyser.count
+        self.total+=analyser.total
+
     def getResult(self):
-        return {'count': self.count, 'total': self.total}
+        return {'value': self.getValue(), 'total': self.total, 'hist':self.hist()}
 
     def getValue(self):
         return self.count/self.total if self.total > 0 else 0
@@ -261,11 +269,13 @@ class AnyMetric(Analyser):
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
 
+    def hist(self):
+        return {1: self.count, 0: self.total - self.count}
+
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.getValue()
-        pmd.qa_stats[self.id + '_hist'] = {1: self.count, 0: self.total - self.count}
+        pmd.qa_stats[self.id] = self.getResult()
 
 class AverageMetric(Analyser):
     def __init__(self, analyser, id):
@@ -288,18 +298,26 @@ class AverageMetric(Analyser):
         self.values.append(res)
         return res
 
-    def getResult(self):
-        return {'values': self.values, 'total': self.total}
+    def analyse_AverageMetric(self,analyser):
+        res = analyser.getValue()
+        self.values=self.values+res['values']
+        self.total+=res['total']
+
 
     def getValue(self):
-        return sum(self.values)/self.total if self.total > 0 else 0
+        return {'values': self.values, 'total': self.total}
+
+    def getResult(self):
+        return {'value': sum(self.values)/self.total if self.total > 0 else 0, 'total': self.total, 'hist':self.hist()}
 
     def name(self):
         return '_'.join([a.name() for a in self.analyser])
 
+    def hist(self):
+        cnt = Counter(self.values)
+        return dict(cnt)
+
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.getValue()
-        cnt = Counter(self.values)
-        pmd.qa_stats[self.id + '_hist'] = dict(cnt)
+        pmd.qa_stats[self.id] = self.getResult()

@@ -51,7 +51,12 @@ def cli(args,dbm):
     if not outdir and any([args.csv]):
         print "No output dir "
         return
-    
+
+
+
+
+
+
     reports=[]
     sn=None
     if args.info:

@@ -1,0 +1,24 @@
+
+{% macro textfield(value, label) -%}
+    <div class="" style="padding-bottom: 0px;">
+        <p class="mdl-typography--title	 mdl-color-text--black mdl-typography--text-center" type="text" id="{{label}}-{{value}}" >{{value}}</p>
+        <p class="mdl-color-text--primary mdl-typography--text-center">{{label}}</p>
+    </div>
+{%- endmacro %}
+
+{% macro infoCard(title, value, label) -%}
+    <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+        <div class="mdl-card__title mdl-card--border">
+            <div class="mdl-card__title-text ">
+                <span>{{title}}</span>
+            </div>
+        </div>
+        <div class="mdl-card__supporting-text ">
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--12-col">
+                {{ textfield( value, label ) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}

@@ -49,6 +49,17 @@ class ContainsFormatDCATAnalyser(Analyser):
         self.values.append(v)
         return v
 
+    def getResult(self):
+        return {'value': self.quality, 'total':self.total, 'hist':self.hist()}
+
+    def hist(self):
+        cnt = Counter(self.values)
+        return dict(cnt)
+
+    def analyse_ContainsFormatDCATAnalyser(self,analyser):
+        self.values=self.values+analyser.values
+        self.total+=analyser.total
+
     def done(self):
         self.quality = sum(self.values)/self.total if self.total > 0 else 0
 
@@ -59,30 +70,27 @@ class FormatOpennessDCATAnalyser(ContainsFormatDCATAnalyser):
         super(FormatOpennessDCATAnalyser, self).__init__(OPEN_FORMATS)
         self.id = 'OpFo'
 
-    def getResult(self):
-        return {self.id: self.quality}
+
 
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
+        pmd.qa_stats[self.id] = self.getResult()
         cnt = Counter(self.values)
-        pmd.qa_stats[self.id+'_hist'] = dict(cnt)
+
 
 class FormatMachineReadableDCATAnalyser(ContainsFormatDCATAnalyser):
     def __init__(self):
         super(FormatMachineReadableDCATAnalyser, self).__init__(MACHINE_FORMATS)
         self.id = 'OpMa'
 
-    def getResult(self):
-        return {self.id: self.quality}
+
 
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
-        cnt = Counter(self.values)
-        pmd.qa_stats[self.id+'_hist'] = dict(cnt)
+        pmd.qa_stats[self.id] = self.getResult()
+
 
 
 class IANAFormatDCATAnalyser(Analyser):
@@ -141,11 +149,20 @@ class IANAFormatDCATAnalyser(Analyser):
 
         return v
 
+    def analyse_IANAFormatDCATAnalyser(self, analyser):
+        self.values=self.values+analyser.values
+        self.total+=analyser.total
+
+
     def is_in_iana(self, v):
         return v in self.names or v in self.mimetypes or v in self.endings
 
     def getResult(self):
-        return {self.id: self.quality}
+        return {'value': self.quality, 'total':self.total, 'hist':self.hist()}
+
+    def hist(self):
+        cnt = Counter(self.values)
+        return dict(cnt)
 
     def done(self):
         self.quality = sum(self.values)/self.total if self.total > 0 else 0
@@ -153,6 +170,5 @@ class IANAFormatDCATAnalyser(Analyser):
     def update_PortalMetaData(self, pmd):
         if not pmd.qa_stats:
             pmd.qa_stats = {}
-        pmd.qa_stats[self.id] = self.quality
-        cnt = Counter(self.values)
-        pmd.qa_stats[self.id+'_hist'] = dict(cnt)
+        pmd.qa_stats[self.id] = self.getResult()
+

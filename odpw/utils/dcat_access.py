@@ -3,6 +3,7 @@ Created on Aug 26, 2015
 
 @author: jumbrich
 '''
+# -*- coding: utf-8 -*-
 from rdflib.namespace import RDFS
 from odpw.utils.dataset_converter import DCAT, DCT, VCARD, FOAF
 
@@ -98,13 +99,35 @@ def getDistributionModificationDates(dataset):
 def getDistributionLicenses(dataset):
     return accessDistribution(dataset, DCT.license)
 
+def safe_unicode1(value):
+    """ return the unicode representation of obj """
+    if value is None:
+        return None
+
+    if type(value) == str:
+        # Ignore errors even if the string is not proper UTF-8 or has
+        # broken marker bytes.
+        # Python built-in function unicode() can do this.
+        value = unicode(value, "utf-8", errors="ignore")
+    else:
+        # Assume the value object has proper __unicode__() method
+        value = unicode(value)
+    return value
+
 def getDistributionLicenseTriples(dataset):
     values = accessDistribution(dataset, DCT.license)
     triples = []
     for v in values:
         id = accessById(dataset, v, DCT.identifier)
         label = accessById(dataset, v, RDFS.label)
-        triples.append((id, label, str(v)))
+        try:
+            s_id=safe_unicode1(id)
+            s_label=safe_unicode1(label)
+            s_v=safe_unicode1(v)
+            triples.append((s_id, s_label, s_v ))
+        except Exception as e:
+            print id, label, v
+            raise e
     return triples
 
 def getDistributionRights(dataset):

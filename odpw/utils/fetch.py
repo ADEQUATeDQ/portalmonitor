@@ -131,7 +131,8 @@ def fetching(obj):
 
         pmd.fetch_stats['status'] = 200
         pmd.fetch_stats['exception'] = None
-        
+
+
 
     except Exception as exc:
         eh.handleError(log, "PortalFetch", exception=exc, pid=Portal.id, snapshot=sn, exc_info=True)

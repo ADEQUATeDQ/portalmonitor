@@ -8,8 +8,12 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 #import matplotlib.pyplot as plt
+from odpw.analysers.dataset_analysers import DatasetChangeCountAnalyser
+from odpw.analysers.quality.analysers import DCATDMD
 from odpw.analysers.count_analysers import CKANLicenseCount
 from odpw.analysers.fetching import CKANLicenseConformance
+from odpw.analysers.count_analysers import DCATLicenseCount, DCATTagsCount, DCATOrganizationsCount, DCATFormatCount, \
+    DCATDistributionCount, DatasetCount
 from odpw.reporting import graph_plot
 import odpw.utils.util as util
 import os
@@ -33,6 +37,7 @@ class Reporter(object):
     @abstractmethod
     def getDataFrame(self):
         pass
+
 
 
 def getTopK(self, df, k=10, column=None):
@@ -88,9 +93,6 @@ def DFtoListDict(df):
 
 
 class DBReporter(Reporter):
-
-
-
     def getDataFrame(self):
         if self.df is None:
             res = self.a.getResult()
@@ -104,6 +106,48 @@ class UIReporter(object):
         return {self.name():DFtoListDict(self.getDataFrame())}
 
 
+class JSONReporter(object):
+    def jsonreport(self):
+        pass
+
+classes={
+     DCATLicenseCount:'licenses'
+    ,DCATTagsCount:'tags'
+    ,DCATOrganizationsCount:'organisations'
+    ,DCATFormatCount:'formats'
+
+}
+class SnapshotReporter(object):
+
+    def snapshotreport(self):
+        result={'snapshot':self.sn, 'dschanges':{}, 'quality':{},'date':str(util.tofirstdayinisoweek(self.sn).date())}
+
+        if isinstance(self.a, list):
+            iter= self.a
+        elif isinstance(self.a.a, list):
+            iter= self.a.a
+
+        print iter
+        for an in iter:
+            if isinstance(an, DatasetChangeCountAnalyser):
+                for k in an.getResult():
+                    result['dschanges'][k]=len(an.getResult()[k])
+
+            if isinstance(an, DCATDMD):
+                for k, stats in an.getResult().items():
+                    result['quality'][k]={'total':stats['total'], 'value':stats['value']}
+            if isinstance(an, DatasetCount):
+                result['datasets']=an.getResult()['count']
+
+            if isinstance(an,DCATDistributionCount):
+                result['distributions'] = an.getResult()
+
+            for cls, label in classes.items():
+                if isinstance(an, cls):
+                    result[label ]=len(an.getResult())
+
+            #print an.name(), an.getResult()
+        return {str(self.sn): result}
 
 class CSVReporter(object):
     def csvreport(self, folder):
