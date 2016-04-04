@@ -1,4 +1,5 @@
 from collections import defaultdict
+import csv
 import json
 
 __author__ = 'sebastian'
@@ -149,9 +150,39 @@ def push(datafile, filename, p_value):
     plot_tf_values(samples=xlabels, values=avg_p, estimators=estimators, labels=ylabels, colors=colors, filename=filename, p_value=p_value)
 
 
+def p_vs_accr(data, y, labels, colors, filename='p_accr.pdf'):
+
+    plt.figure(figsize=(8, 5))
+    ax = plt.subplot(111)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    #ax.set_ylim([0.05, 0.95])
+    #ax.set_xlim([0.05, 0.95])
+
+    #Labels
+    plt.xlabel('p', fontsize=16)
+    plt.ylabel('Average Prediction Rate', fontsize=16)
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
+    plt.plot(y, y, 'grey')
+    for e in data:
+        x = data[e]
+        plt.plot(y, x, colors[e], label=labels[e])
+
+        plt.legend(scatterpoints=1,
+                   loc='lower right',
+                   ncol=1,
+                   fontsize=10)
+
+    print "Saving figure to ", filename
+    plt.savefig(filename, bbox_inches="tight")
 
 
-if __name__ == '__main__':
+def running_avg_plts():
     push('tmp/push_all.json', 'tmp/push_all.pdf', 0.8)
     push('tmp/push_irregular.json', 'tmp/push_irregular.pdf', 0.8)
     push('tmp/push_regular.json', 'tmp/push_regular.pdf', 0.8)
@@ -164,3 +195,21 @@ if __name__ == '__main__':
     comparison('tmp/comparison_irregular.json', 'tmp/comparison_irregular.pdf', 0.8)
     comparison('tmp/comparison_regular.json', 'tmp/comparison_regular.pdf', 0.8)
 
+
+if __name__ == '__main__':
+    labels = {'c_emp_dist': '$C_{EmpDist}$', 'c_umb_markov': '$C_{UmbMarkov}$', 'c_cho_impr': '$C_{ChoImpr}$', 'c_cho_naive': '$C_{ChoNaive}$'}
+    colors = {'c_umb_markov': 'b', 'c_emp_dist': 'r', 'c_cho_naive': 'y', 'c_cho_impr': 'g'}
+
+    with open('comp_table_reg.csv') as f:
+        csvr = csv.reader(f)
+        headers = csvr.next()
+        data = defaultdict(list)
+        y = []
+        for row in csvr:
+            y.append(float(row[0]))
+            data['c_emp_dist'].append(float(row[3]))
+            data['c_umb_markov'].append(float(row[4]))
+            data['c_cho_naive'].append(float(row[5]))
+            data['c_cho_impr'].append(float(row[6]))
+
+    p_vs_accr(data, y, labels=labels, colors=colors)

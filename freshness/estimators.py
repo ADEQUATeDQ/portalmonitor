@@ -76,7 +76,7 @@ class ChoGarciaFrequencyEstimator(ComparisonSampling):
         # Has the element changed? (X is 0 or 1)
         self.X += Xi
 
-    def ppf_poisson(self, q):
+    def ppf(self, q):
         # Percent point function (inverse of cdf)
         l = self.estimate()
         t = poisson.ppf(q, 1/l)
@@ -155,7 +155,7 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
             # element has not changed
             self.T += Ii
 
-    def ppf_poisson(self, q):
+    def ppf(self, q):
         # Percent point function (inverse of cdf)
         l = self.estimate()
         t = poisson.ppf(q, 1/l)
@@ -261,7 +261,7 @@ class MarkovChain(ComparisonSampling):
             return ('0', prob[key_0]) if prob[key_0] > prob[key_1] else ('1', prob[key_1])
         return None, None
 
-    def estimated_next_change(self, percent):
+    def ppf(self, percent):
         prob = self._estimate()
         # access key
         key = ''.join(str(k) for k in self.data[-(self.history - 1):])
@@ -280,7 +280,7 @@ class MarkovChain(ComparisonSampling):
             if i > 10000:
                 raise Exception('no state change')
 
-        return intervals, current_perc
+        return intervals
 
     def cumm_percent(self, delta):
         prob = self._estimate()

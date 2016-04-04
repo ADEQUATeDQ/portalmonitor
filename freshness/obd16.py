@@ -42,15 +42,15 @@ def comparison_eval(page, interval, initial_skip, percent, markov_hist=1):
 
             # comparison sampling
             mar_cdf = mar.cumm_percent(real_i)
-            mar_next, mar_p = mar.estimated_next_change(percent)
+            mar_next = mar.ppf(percent)
             emp_cdf = emp.cdf(real_i)
             c1_cdf = c1.cdf_poisson(real_delta)
             c2_cdf = c2.cdf_poisson(real_delta)
 
             if exact_t != prev_t:
                 # estiamtions
-                next1 = c1.ppf_poisson(percent)
-                next2 = c2.ppf_poisson(percent)
+                next1 = c1.ppf(percent)
+                next2 = c2.ppf(percent)
                 d1 = datetime.timedelta(days=next1)
                 d2 = datetime.timedelta(days=next2)
                 res1 = prev_t + d1
@@ -126,8 +126,8 @@ def age_eval(page, interval, initial_skip, percent):
 
             if exact_t != prev_t:
                 # estiamtions
-                next1 = a1.ppf_poisson(percent)
-                next2 = a2.ppf_poisson(percent)
+                next1 = a1.ppf(percent)
+                next2 = a2.ppf(percent)
                 d1 = datetime.timedelta(seconds=next1)
                 d2 = datetime.timedelta(seconds=next2)
                 res1 = prev_t + d1
@@ -176,7 +176,7 @@ def push_eval(page, initial_skip, percent):
         if initial_skip <= initial_skip_counter:
             if exact_t != prev_t:
                 # estiamtions
-                next1 = a1.ppf_poisson(percent)
+                next1 = a1.ppf(percent)
                 #next2 = a2.ppf_poisson(percent)
                 d1 = datetime.timedelta(seconds=next1)
                 #d2 = datetime.timedelta(seconds=next2)
@@ -271,11 +271,11 @@ def no_filter(pages):
 
 
 
-def push_table(pages, samples=20):
+def push_table(pages, samples, p_vals):
     estimators = ['p_emp_dist', 'p_cho_naive']
     res = [['p', 'documents'] + estimators + [e + '_delta' for e in estimators]]
 
-    for p in [0.7, 0.8, 0.9]:
+    for p in p_vals:
         tf_values = {}
         print p
         for page in pages:
@@ -306,12 +306,12 @@ def push_table(pages, samples=20):
     return res
 
 
-def age_table(pages, initial_skip, samples=20):
+def age_table(pages, initial_skip, samples, p_vals, i_vals):
     estimators = ['a_emp_dist', 'a_cho_naive', 'a_cho_impr']
     res = [['p', 'i', 'documents'] + estimators + [e + '_delta' for e in estimators]]
 
-    for p in [0.7, 0.8, 0.9]:
-        for i in [10, 20, 50]:
+    for p in p_vals:
+        for i in i_vals:
             interval = datetime.timedelta(days=int(i))
             tf_values = {}
             print p, i, int(initial_skip/i)
@@ -344,12 +344,13 @@ def age_table(pages, initial_skip, samples=20):
 
 
 
-def comp_table(pages, initial_skip, samples=20):
+def comp_table(pages, initial_skip, samples, p_vals, i_vals):
     estimators = ['c_emp_dist', 'c_umb_markov', 'c_cho_naive', 'c_cho_impr']
     res = [['p', 'i', 'documents'] + estimators + [e + '_delta' for e in estimators]]
+    errors = defaultdict(int)
 
-    for p in [0.7, 0.8, 0.9]:
-        for i in [10, 20, 50]:
+    for p in p_vals:
+        for i in i_vals:
             interval = datetime.timedelta(days=int(i))
             tf_values = {}
             print p, i, int(initial_skip/i)
@@ -359,7 +360,8 @@ def comp_table(pages, initial_skip, samples=20):
                     if len(tmp['tf']['c_emp_dist']) >= samples:
                         tf_values[page.name] = tmp
                 except Exception as e:
-                    print e
+                    errors[str(e)] += 1
+            print dict(errors)
 
             if len(tf_values) <= 0:
                 res.append([str(p), str(i), '0'] + ['' for e in estimators] + ['' for e in estimators])
@@ -445,7 +447,6 @@ def create_csv_markov_sets():
 
     i = datetime.timedelta(days=20)
     d = 10
-
     import csv
     pages = load_pages('revs')
     fil = filter_irregular(pages)
@@ -467,36 +468,35 @@ def create_csv_markov_sets():
         csvw.writerows(res)
 
 
-def create_csv_comp():
+def create_csv_comp(p_vals, i_vals):
     pages = load_pages('revs')
     print 'total articles', len(pages)
 
     d = 20*20
 
     import csv
-    pages = load_pages('revs')
 
-    fil = filter_regular(pages)
-    res = comp_table(fil, d)
-    with open('comp_table_reg.csv', 'w') as f:
-        csvw = csv.writer(f)
-        csvw.writerows(res)
+    #fil = filter_regular(pages)
+    #res = comp_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
+    #with open('comp_table_reg.csv', 'w') as f:
+    #    csvw = csv.writer(f)
+    #    csvw.writerows(res)
 
     fil = filter_irregular(pages)
-    res = comp_table(fil, d)
+    res = comp_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
     with open('comp_table_irreg.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
     fil = no_filter(pages)
-    res = comp_table(fil, d)
+    res = comp_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
     with open('comp_table_all.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
 
 
-def create_csv_age():
+def create_csv_age(p_vals, i_vals):
     pages = load_pages('revs')
     print 'total articles', len(pages)
 
@@ -506,24 +506,24 @@ def create_csv_age():
     pages = load_pages('revs')
 
     fil = filter_regular(pages)
-    res = age_table(fil, d)
+    res = age_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
     with open('age_table_reg.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
     fil = filter_irregular(pages)
-    res = age_table(fil, d)
+    res = age_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
     with open('age_table_irreg.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
     fil = no_filter(pages)
-    res = age_table(fil, d)
+    res = age_table(fil, d, samples=20, p_vals=p_vals, i_vals=i_vals)
     with open('age_table_all.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
-def create_csv_push():
+def create_csv_push(p_vals):
     pages = load_pages('revs')
     print 'total articles', len(pages)
 
@@ -531,28 +531,31 @@ def create_csv_push():
     pages = load_pages('revs')
 
     fil = filter_regular(pages)
-    res = push_table(fil)
+    res = push_table(fil, samples=20, p_vals=p_vals)
     with open('push_table_reg.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
     fil = filter_irregular(pages)
-    res = push_table(fil)
+    res = push_table(fil, samples=20, p_vals=p_vals)
     with open('push_table_irreg.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
     fil = no_filter(pages)
-    res = push_table(fil)
+    res = push_table(fil, samples=20, p_vals=p_vals)
     with open('push_table_all.csv', 'w') as f:
         csvw = csv.writer(f)
         csvw.writerows(res)
 
 
 if __name__ == '__main__':
-    create_csv_comp()
-    create_csv_age()
-    create_csv_push()
+    p_vals = list(np.arange(0.05,1,0.05))
+    i_vals = [10]
+
+    create_csv_comp(p_vals, i_vals)
+    #create_csv_age(p_vals, i_vals)
+    #create_csv_push(p_vals)
     #create_csv_markov_sets()
 
     #fname = 'revs/politicians/Luiz_In%C3%A1cio_Lula_da_Silva'

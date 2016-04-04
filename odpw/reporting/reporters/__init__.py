@@ -489,10 +489,11 @@ class SystemEvolutionReport(Report):
 
 
 class ResourceOverlapReporter(Reporter, PlotReporter, CSVReporter):
-    def __init__(self, analyser):
+    def __init__(self, analyser, filter_portals=None):
         super(ResourceOverlapReporter, self).__init__()
         self.analyser = analyser
         self.df = None
+        self.filter_portals = filter_portals
 
     def getDataFrame(self):
         if self.df is None:
@@ -501,7 +502,7 @@ class ResourceOverlapReporter(Reporter, PlotReporter, CSVReporter):
         return self.df
 
     def plotreport(self, dir):
-        graph_plot.draw_graph(self.getDataFrame())
+        graph_plot.draw_graph(self.getDataFrame(), filter_portals=self.filter_portals, min_node_label=0, min_edge_label=0, node_max_size=15000, node_min_size=5000)
 
     def _csvreport(self, file):
         df = self.getDataFrame()

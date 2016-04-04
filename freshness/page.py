@@ -143,7 +143,7 @@ if __name__ == '__main__':
             e1 = c1.estimate()
             e2 = c2.estimate()
             print 'content based:', datetime.timedelta(seconds=1/e1), datetime.timedelta(seconds=1/e2)
-            print '80%:', datetime.timedelta(seconds=c1.ppf_poisson(0.8)), datetime.timedelta(seconds=c2.ppf_poisson(0.8))
+            print '80%:', datetime.timedelta(seconds=c1.ppf(0.8)), datetime.timedelta(seconds=c2.ppf(0.8))
 
             next, prob = mar.estimate()
             print 'markov:', next, prob

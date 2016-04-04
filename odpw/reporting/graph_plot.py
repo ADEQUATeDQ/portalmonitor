@@ -65,7 +65,7 @@ def draw_graph(dataframe, filter_portals=None, min_node_label=5000, node_labels=
     node_sizes = normalized(nodes_res, node_min_size, node_max_size)
 
     # remove labels for small ones
-    node_labels = {n: node_labels[n] if num_of_resources[n] > min_node_label else '' for n in G.nodes()}
+    node_labels = {n: node_labels[n] + '\n' + str(num_of_resources[n]) if num_of_resources[n] > min_node_label else '' for n in G.nodes()}
 
     # these are different layouts for the network you may try
     # shell seems to work best

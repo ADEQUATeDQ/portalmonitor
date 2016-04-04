@@ -84,7 +84,7 @@ def overlap_report(dbm, sn, portals=None, portal_filter=None):
     print '3rd overlap portal:', sorted_overlap[2]
     print 'summed up:', sum(v[1] for v in sorted_overlap)
 
-    rep1 = ResourceOverlapReporter(overlap)
+    rep1 = ResourceOverlapReporter(overlap, filter_portals=portals)
     rep2 = ElementCountReporter(mult_occur, columns=['Occurrences', 'Count'])
 
     return Report([rep1, rep2])
@@ -470,14 +470,14 @@ def evolution_report(pmd):
 
 if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
-    sn = 1533
+    #aut_portals = [dbm.getPortal(portalID='data_gv_at').id]
     aut_portals = [p.id for p in Portal.iter(dbm.getPortals(iso3='AUT'))]
     #datasets = Dataset.iter(dbm.getDatasets(portalID='data_gv_at'))
     #datasets = []
     #for id in aut_portals:
     #    datasets += [ds for ds in Dataset.iter(dbm.getDatasets(id, sn))]
 
-    rep = overlap_report(dbm, sn=1608, portals=aut_portals)
+    rep = overlap_report(dbm, sn=1610, portals=aut_portals)
     rep.plotreport('tmp/aut')
     #report = datasets_report(datasets)
     #report.plotreport('tmp/aut')
