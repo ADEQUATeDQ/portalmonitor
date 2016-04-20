@@ -116,6 +116,7 @@ def help():
 
 def setupCLI(pa):
     pa.add_argument("-sn","--snapshot",  help='what snapshot is it', dest='snapshot')
+    pa.add_argument("-s",  help='what snapshot is it', dest='since')
     #pa.add_argument('-s','--software',choices=['CKAN', 'Socrata', 'OpenDataSoft'], dest='software')
     pa.add_argument('-b','--base',type=str, dest='base' , help="base directory")
     pa.add_argument('-u','--url',type=str, dest='url' , help="the CKAN API url")
@@ -157,7 +158,15 @@ def cli(args, dbm):
 
     log.info("Snapshots", snapshots=snapshots)
 
+    since=sorted(snapshots)[0]
+    if args.since:
+        since=args.since
+
     for sn in progressIterator(sorted(snapshots),len(snapshots), 1, label='PerSnapshot'):
+        if(int(sn)< int(since)):
+            print "Skipping",sn, since
+            continue
+
         sn_dirs={ k:os.path.join(v,str(sn)) for k,v in base_dirs.items() }
         for d in sn_dirs: mkdir_p(d)
 

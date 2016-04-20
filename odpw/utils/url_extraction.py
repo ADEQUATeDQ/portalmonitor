@@ -30,6 +30,20 @@ class CSVFilter(object):
                 if t in f.strip().lower():
                     return True
         return False
+
+
+class SemiStructFilter(object):
+    filters=set(['csv', 'csv', 'tsv', 'tsv','comma-separated-values','tab-separated-values','sv-semicolon delimited',
+                 'xls', 'xlsx', 'json', 'xml', 'rdf' ])
+
+    @classmethod
+    def filter(cls, formats):
+        for t in cls.filters:
+            for f in formats:
+                if t in f.strip().lower():
+                    return True
+        return False
+
         
 
 
@@ -143,7 +157,7 @@ def cli(args, dbm):
     for p in portals:
         try:
             
-            extract_urls(all_urls, p, args.snapshot, dbm, args.out, args.store,args.filter)
+            extract_urls(all_urls, p, args.snapshot, dbm, args.out, args.store, args.filter)
         except Exception as e:
             print 'error in portal:', p.url
             print e

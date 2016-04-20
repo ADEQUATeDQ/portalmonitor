@@ -32,6 +32,7 @@ def setupCLI(pa):
     pa.add_argument('--iso',type=str, dest='iso' , help="isoCode")
     pa.add_argument('-f','--filter',type=str, dest='filter' , help="Filter by format (csv)", default='csv')
     pa.add_argument('--store',  action='store_true', default=False, help="store the files in the out directory")
+    pa.add_argument('-s',  dest="since", help="Extract since")
 
 def cli(args, dbm):
 
@@ -57,7 +58,14 @@ def cli(args, dbm):
         for sn in dbm.getSnapshotsFromPMD():#portalID='data_wu_ac_at'
             snapshots.append(sn[1])
 
+    since=sorted(snapshots)[0]
+    if args.since:
+        since=args.since
+
     for sn in sorted(snapshots):
+        if(int(sn)< int(since)):
+            print "Skipping",sn, since
+            continue
         sn_portals=[]
         for portalID in dbm.getPortalIDs(snapshot=sn):
             sn_portals.append(portalID)
@@ -144,7 +152,7 @@ class MetaStore(Analyser):
             self.f.write(json.dumps(obj))
             setattr(self, "write", self.delimited_write)
         except:
-            self.bad_obj(obj)
+            pass
 
     def delimited_write(self, obj):
         """

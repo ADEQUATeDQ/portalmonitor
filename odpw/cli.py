@@ -55,6 +55,8 @@ import odpw.utils.extract_dcat_metadata as dcat_convcli
 import freshness.dataset_freshness as freshnesscli
 import odpw.utils.single_portal_reports_test as filestatscli
 
+import odpw.utils.estimate_size as sizecli
+
 
 
 import odpw.utils.ckanfetch as ckanfetchcli
@@ -78,7 +80,8 @@ submodules=[dbcli, initcli, fetchcli,
             res_change_infocli,
             dcat_convcli,
             freshnesscli,
-            filestatscli
+            filestatscli,
+            sizecli
             ]
 
 
@@ -119,12 +122,13 @@ def start ():
         '-d', '--debug',
         help="Print lots of debugging statements",
         action="store_const", dest="loglevel", const=logging.DEBUG,
-        default=logging.WARNING,
+        default=logging.WARNING
     )
     logg.add_argument(
         '-v', '--verbose',
         help="Be verbose",
         action="store_const", dest="loglevel", const=logging.INFO,
+        default=logging.WARNING
     )
     
     dbg=pa.add_argument_group("DB")

@@ -64,7 +64,7 @@ def timelimit(timeout):
             return c.result
         return internal2
     return internal
-
+from operator import itemgetter
 
 class DomainQueue(object):
 
@@ -83,14 +83,16 @@ class DomainQueue(object):
             elif self.size()==0 and not self.done:
                 log.info("Queue is empty but not done!!!")
 
-            d= OrderedDict(sorted(self.queue.iteritems(), key=lambda x: x[1]['last']))
-            for dd in d.items():
-                if len(dd[1]['urls'])!=0:
+            #d= sorted(self.queue.items(), key=itemgetter('last'))
+            #print d
+            #d= OrderedDict(d)
+            for d,v in self.queue.items():
+                if len(v['urls'])!=0:
                     now = datetime.datetime.now()
-                    if now - dd[1]['last'] > datetime.timedelta(seconds=self.waits[dd[0]]):
-                        dd[1]['last']=now
-                        if len(dd[1]['urls'])!=0:
-                            R= dd[1]['urls'].pop()
+                    if now - v['last'] > datetime.timedelta(seconds=self.waits[d]):
+                        v['last']=now
+                        if len(v['urls']) != 0:
+                            R= v['urls'].pop()
                             self.seen.add(R.url)
                             return R
             sleep(self.wait/2.0)
@@ -245,10 +247,12 @@ class QueueFiller(Thread):
             ," -------------------------","\n"
             ," Timing stats:","\n"
         ]
-        for m, st in Timer.getStats().items():
-            d=[    "  ["+m+'] -', str(st['avg']),'avg ms for',m,str(st['calls']),'calls)'
-                ,"\n       (min:",str(st['min']),"-",str(st['max'])," max)\n"]
+
+        for m,st in Timer.measures.items():
+            d=[    "  ["+m+'] -', str(st.mean),'avg ms for',m,str(st.n),'calls)'
+                   ,"\n       (min:",str(st.min),"-",str(st.max)," max, rep:",st.__repr__(),")\n"]
             s=s+d
+
 
 
         s.append(" -------------------------\n")
@@ -353,7 +357,7 @@ class Worker(Thread):
                         self.handle_request(url, None, e)
 
                 except Exception as e:
-                    eh.handleError(log, exception=e, msg="uncaught in doWork",exc_info=True, url=url.url,thread=current_thread())
+                    eh.handleError(log, exception=e, msg="uncaught in doWork",exc_info=True,thread=current_thread())
 
         log.info("Stopped", thread=current_thread())
 
@@ -434,7 +438,6 @@ class Worker(Thread):
                         log.info('Fetching', url=robots_url)
                         req = self.rsession.get(robots_url, timeout=10, allow_redirects=True, headers=headers)
 
-
                         # And now parse the thing and update
                         import reppy.parser
                         r=reppy.parser.Rules(robots_url, req.status_code, req.content, time.time() + ttl)
@@ -456,7 +459,7 @@ class Worker(Thread):
 
     @timelimit(30)
     def headlookup(self,ourl):
-        with closing(self.rsession.head(url=ourl, timeout=5, allow_redirects=True, headers=headers)) as r:
+        with closing(requests.head(url=ourl, timeout=5, allow_redirects=True, headers=headers)) as r:
             return r
 
     @timelimit(30)
@@ -507,8 +510,8 @@ def cli(args,dbm):
     if not sn:
         return
 
-    batch=10
-    concurrent = 30
+    batch=5
+    concurrent = 2
 
     rsession= requests.Session()
     robots=RobotsManager(rsession)
