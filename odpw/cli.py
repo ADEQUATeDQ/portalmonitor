@@ -42,6 +42,8 @@ import odpw.utils.quality as qualitycli
 import odpw.server.rest.server as restcli
 
 import odpw.utils.url_extraction as urlscli
+import odpw.utils.csv_extraction as csvscli
+
 import odpw.utils.getDatamonitorURIs as dmgeturiscli
 import odpw.utils.insDatamonitorURIs as dminsuriscli
 
@@ -70,6 +72,7 @@ submodules=[dbcli, initcli, fetchcli,
             ckanfetchcli,
             restcli,
             urlscli,
+            csvscli,
             dmgeturiscli,
             dminsuriscli,
             accuracycli,

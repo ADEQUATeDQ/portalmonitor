@@ -63,6 +63,8 @@ class DistributionExtractor(Analyser):
         self.dbm= dbm
         self.snapshot = snapshot
         self.filter = filter
+
+
         
     def analyse_Dataset(self, dataset):
         for dcat_el in getattr(dataset,'dcat',[]):
@@ -156,13 +158,15 @@ def cli(args, dbm):
     all_urls = {}
     for p in portals:
         try:
-            
             extract_urls(all_urls, p, args.snapshot, dbm, args.out, args.store, args.filter)
         except Exception as e:
             print 'error in portal:', p.url
             print e
 
-    fname='csv_urls_' + str(args.snapshot) + ("_"+portals[0].id) if len(portals)==1 else ''
+    fname='csv_urls_' + str(args.snapshot)
+    if len(portals)==1:
+        fname = fname+ ("_"+portals[0].id)
+
     with open(os.path.join(args.out, fname+ '.pkl'), 'wb') as f:
         pickle.dump(all_urls, f)
         print 'Writing dict to ',f
@@ -180,7 +184,6 @@ def extract_urls(urls, portal, snapshot, dbm, out, store_files, filter):
 
     ae = SAFEAnalyserSet()
     ae.add(DCATConverter(portal))
-    
     ae.add(DistributionExtractor(urls, dbm, snapshot, portal, path, filter))
     
     iter = Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot))
@@ -196,35 +199,3 @@ def store_file(url, filename):
 
 def valid_filename(s):
     return "".join(x for x in s if x.isalnum() or x == '.')
-
-
-#def extract_ckan_urls(urls, portal, snapshot, dbm, out, store_files):
-#    
-#
-#    for dataset in Dataset.iter(dbm.getDatasetsAsStream(portal.id, snapshot=snapshot)):
-#        data = dataset.data
-#        if data is not None and 'resources' in data:
- #           for res in data.get("resources"):
- #               format = res.get("format", '').strip().lower()
- #               if format in csv_related_formats:
- #                   url = None
- #                   try:
- #                       url = res.get("url").strip()
- #                       name = res.get('name', url)
- #                       # store metadata
- #                       if url not in urls:
- #                           urls[url] = {'portal': {}}
- #                       urls[url]['title'] = name
- #                       urls[url]['format'] = format
- #                       if portal.id not in urls[url]['portal']:
- #                           urls[url]['portal'][portal.id] = []
- #                       urls[url]['portal'][portal.id].append(data.get('name'))
-#
-#                        if store_files:
-#                            filename = os.path.join(path, valid_filename(url))
-#                            if url not in urls:
-#                                store_file(url, filename)
-#                                urls[url]['file'] = filename
-#                    except Exception as e:
-#                        print 'error loading url:', url
-#                        print e

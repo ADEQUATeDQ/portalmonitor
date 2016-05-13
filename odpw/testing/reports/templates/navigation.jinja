@@ -117,7 +117,7 @@
                 {% endfor %}
             </div>
 
-            <div class="mdl-cell mdl-cell--2-col current">
+            <div class="mdl-cell mdl-cell--3-col current">
                 <div class="" style="padding-bottom: 0px;">
                     <p class=" mdl-color-text--white" style="margin-bottom: 0px;">Selected</p>
                     <select id="cursn" class="select" style="width:90%">
@@ -151,8 +151,9 @@
 
 
 {% macro breadcrumbs(data, gennav) -%}
+    <div id="breadcrumb-info-frame" class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px;margin-bottom: -1px;">
     <div class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px;margin-bottom: -1px;">
-        <ul id="breadcrumb-info" >
+        <ul id="breadcrumb-info">
             <li >
                 <div style="width:100px;">
                     Software
@@ -200,7 +201,7 @@
         </ul>
 
     </div>
-
+</div>
 {%- endmacro %}
 
 
@@ -213,7 +214,7 @@
     <a href="{{urlI}}" class="mdl-cell mdl-cell--2-col">
         <div class="" style="padding-bottom: 0px;">
             <p class=" mdl-color-text--primary" style="margin-bottom: 0px;">{{label}}</p>
-            <span  class=" mdl-color-text--black" >{{value}}</span>
+            <span class="mdl-color-text--black">{{value}}</span>
         </div>
     </a>
 {%- endmacro %}

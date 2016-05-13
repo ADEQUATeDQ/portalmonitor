@@ -26,7 +26,7 @@ if __name__ == '__main__':
     dbm = PostgressDBM(host="portalwatch.ai.wu.ac.at", port=5432)
 
     #id='data_wu_ac_at'
-    snapshots=[1603, 1604, 1605, 1606, 1607, 1608, 1609,1610,1611,1612,1613]
+    snapshots=[ 1605, 1606, 1607, 1608, 1609,1610,1611,1612,1613,1614,1615]
     
     data={}
     for sn in snapshots:
