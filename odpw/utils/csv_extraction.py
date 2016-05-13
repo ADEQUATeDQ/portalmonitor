@@ -234,6 +234,11 @@ def cli(args, dbm):
     import pprint
     pprint.pprint(stats)
 
+    for k in stats:
+        del stats[k]['total']['bloom']
+        del stats[k]['distinct']['bloom']
+
+
     #pprint.pprint(all_urls)
 
     fname='csv_urls_' + str(args.snapshot)
@@ -245,5 +250,9 @@ def cli(args, dbm):
         print 'Writing dict to ',f
     with open(os.path.join(args.out, fname+'.json'), 'w') as f:
         json.dump(all_urls, f)
+        print 'Writing dict to ',f
+
+    with open(os.path.join(args.out, fname+'_stats.json'), 'w') as f:
+        json.dump(stats, f)
         print 'Writing dict to ',f
 
