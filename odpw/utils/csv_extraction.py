@@ -133,7 +133,7 @@ class DistributionExtractor(Analyser):
                         self.stats[k]['total']['csv']+=1
 
                     if self.stats[k]['total']['bloom'] is not None and url_norm not in self.stats[k]['total']['bloom']:
-                        self.stats[k]['total']['count']+=1
+                        self.stats[k]['distinct']['count']+=1
                         self.stats[k]['distinct']['distinct']+=1
                         self.stats[k]['total']['bloom'].add(url_norm)
 
