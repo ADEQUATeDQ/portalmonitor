@@ -68,16 +68,18 @@ class DistributionExtractor(Analyser):
 
             }
 
-        self.stats[portal.id]={
+        if portal.id not in self.stats:
+            self.stats[portal.id]={
                'total':copy.deepcopy(tmp)
              , 'distinct':copy.deepcopy(tmp)
 
-        }
-        self.stats[portal.software]={
+            }
+        if portal.software not in self.stats:
+            self.stats[portal.software]={
                'total':copy.deepcopy(tmp)
              , 'distinct':copy.deepcopy(tmp)
 
-        }
+            }
 
 
         
@@ -144,10 +146,6 @@ class DistributionExtractor(Analyser):
                             self.stats[k]['distinct']['csvinurl']+=1
                         if csv_format and csv_in_url:
                             self.stats[k]['distinct']['csv']+=1
-
-
-
-
 
 
                 if csv_format or csv_in_url:
