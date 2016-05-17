@@ -65,6 +65,7 @@ class DistributionExtractor(Analyser):
             self.stats['all']={
                'total':copy.deepcopy(tmp)
              , 'distinct':copy.deepcopy(tmp)
+                ,'datasets':0
 
             }
 
@@ -72,18 +73,23 @@ class DistributionExtractor(Analyser):
             self.stats[portal.id]={
                'total':copy.deepcopy(tmp)
              , 'distinct':copy.deepcopy(tmp)
+                ,'datasets':0
 
             }
         if portal.software not in self.stats:
             self.stats[portal.software]={
                'total':copy.deepcopy(tmp)
              , 'distinct':copy.deepcopy(tmp)
+                ,'datasets':0
 
             }
 
 
         
     def analyse_Dataset(self, dataset):
+        for k in ['all',self.portal.id,self.portal.software ]:
+            self.stats[k]['datasets']+=1
+
 
         for dcat_el in getattr(dataset,'dcat',[]):
             if str(DCAT.Distribution) in dcat_el.get('@type',[]):
