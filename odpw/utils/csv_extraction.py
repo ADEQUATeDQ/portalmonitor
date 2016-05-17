@@ -151,14 +151,16 @@ class DistributionExtractor(Analyser):
                 if csv_format or csv_in_url:
 
                     if url_clean in self.urls:
+
                         if self.portal.id in self.urls[url_clean]:
-                            self.urls[url_clean][self.portal.id][dataset.id]= info
+
+                            self.urls[url_clean][self.portal.id]['datasets'][dataset.id]= info
                         else:
-                            self.urls[url_clean][self.portal.id]={ dataset.id: info }
+                            self.urls[url_clean][self.portal.id]={ 'datasets':{dataset.id: info}, 'software':self.portal.software, 'iso3':self.portal.iso3 }
 
                     else:
                         self.urls[url_clean]={
-                            self.portal.id: { dataset.id: info, 'software':self.portal.software, 'iso3':self.portal.iso3 }
+                            self.portal.id: { 'datasets':{dataset.id: info}, 'software':self.portal.software, 'iso3':self.portal.iso3 }
                         }
 
       
