@@ -20,7 +20,7 @@ import structlog
 
 log =structlog.get_logger()
 
-db= DBClient(user='opwu', password='0pwu', host='datamonitor-data.wu.ac.at', port=5432, db='portalwatch')
+db= DBClient(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
 dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
 
 def migrate(P,snapshot):
