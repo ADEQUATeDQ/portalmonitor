@@ -1558,5 +1558,13 @@
         "countryCode": "CAN",
         "software": "CKAN",
         "url": "http://130.179.67.140/"
+    },
+    "daten_buergernetz_bz_it":{
+
+        "url":"http://daten.buergernetz.bz.it/de/",
+        "api":"http://daten.buergernetz.bz.it/de/api/3",
+        "countryCode": "ITA",
+        "software": "CKAN",
     }
+
 }

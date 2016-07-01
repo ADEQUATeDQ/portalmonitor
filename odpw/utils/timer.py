@@ -33,14 +33,18 @@ class Timer(object):
 
     @classmethod
     def printStats(cls):
-        print "\n -------------------------"
-        print "  Timing stats:"
-        pprint.pprint(cls.getStats())
-        print "\n -------------------------"
+        s=[" Timing stats:","\n"]
+        for m,st in Timer.measures.items():
+            d=["  ["+m+'] -', str(st.mean),'avg ms for',m,str(st.n),'calls)'
+                    ,"\n       (min:",str(st.min),"-",str(st.max)," max, rep:",st.__repr__(),")\n"]
+            s=s+d
+        s=s+['-'*50]
+        print " ".join(s)
 
 
     @classmethod
     def getStats(cls):
+
         stats={}
         for m in cls.measures:
             stats[m]={'avg':cls.measures[m].mean, 'calls':cls.measures[m].n, 'min':cls.measures[m].min, 'max':cls.measures[m].max}

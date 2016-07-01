@@ -80,9 +80,9 @@ cache={}
 
 
 def render(data, evolv, nav=None):
-    print data
+    print data.keys()
     print evolv
-    print nav
+    print 'nav',nav
 
     with Timer(key="dataDF", verbose=True) as t:
         d=[]
@@ -291,16 +291,25 @@ def index():
             func_list[rule.rule] = app.view_functions[rule.endpoint].__doc__
     return jsonify(func_list)
 
+@app.route("/list")
+def list():
+    """Print available functions."""
+
+    return jsonify(cache['genNav'])
+
+
 
 
 def main():
     app.logger.info('Starting OPDW Dashboard on http://localhost:{}/'.format(1111))
+    print 'Starting OPDW Dashboard on http://localhost:{}/'.format(1111)
     app.jinja_env.globals.update(slugify=slugify)
 
     app.config['base']=u'/Users/jumbrich/Data/portal_stats/'
 
     cache['genNav']=navigation_fromDisc(app.config['base'])
     app.run(debug=True, port = 1111)
+
 
 
 if __name__ == "__main__":

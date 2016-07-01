@@ -1,108 +1,117 @@
 
 {% macro software_select(data, gennav) -%}
-    <select id="soft" class="select" style="width:100%">
-        {% if 'software' in data %}
-            <option selected value="{{data.software}}">{{data.software}}</option>
-        {% else %}
-            <option  value=""></option>
-        {% endif %}
-        {% for soft,dv in gennav.iteritems() %}
-            {% if soft != data.software %}
-            <option value="{{soft}}">{{soft}} (since {{dv.since}})</option>
+    <label>
+        <span class=brlabel">Software</span>
+        <select id="soft" class="select" style="width:100%">
+            {% if 'software' in data %}
+                <option selected value="{{data.software}}">{{data.software}}</option>
+            {% else %}
+                <option  value=""></option>
             {% endif %}
-        {% endfor %}
+            {% for soft,dv in gennav.iteritems() %}
+                {% if soft != data.software %}
+                <option value="{{soft}}">{{soft}} (since {{dv.since}})</option>
+                {% endif %}
+            {% endfor %}
 
-    </select>
+        </select>
+    </label>
 {%- endmacro %}
 
 {% macro iso_select(data, gennav) -%}
-    <select id="iso3" class="select" style="width:100%">
-        {% if 'iso3' in data %}
-            <option selected value="{{data.iso3}}">{{data.iso3}}</option>
-        {% else %}
-            <option  value=""></option>
-        {% endif %}
-
-        {% for soft, dv in gennav.iteritems() %}
-            {% if 'software' not in data or soft == data.software %}
-
-                {% for iso3, dvv in dv.iso.iteritems() %}
-                    {% if iso3 != data.iso3 %}
-                        <option value="{{iso3}}">
-
-                            {% if dvv.since|string != data.snapshot|string %}
-                                {{dvv.since_date}}
-
-                            {% endif %}
-                        </option>
-                    {% endif %}
-                {% endfor %}
+    <label> ISO3
+        <select id="iso3" class="select" style="width:100%">
+            {% if 'iso3' in data %}
+                <option selected value="{{data.iso3}}">{{data.iso3}}</option>
+            {% else %}
+                <option  value=""></option>
             {% endif %}
-        {% endfor %}
-    </select>
-{%- endmacro %}
 
-{% macro portal_select(data, gennav) -%}
-    <select id="portal" class="select" style="width:100%">
-        {% if 'portalID' in data %}
-            <option value="{{url_for('portal',portal_id=data.portalID, snapshot=data.snapshot) }}">{{data.portalID}}</option>
-        {% else %}
-            <option  value=""></option>
-        {% endif %}
-        {% for soft, dv in gennav.iteritems() %}
-            {% if 'software' not in data or soft == data.software %}
-                {% for iso3, dvv in dv.iso.iteritems() %}
-                    {% if 'iso3' not in data or iso3 == data.iso3 %}
-                        {% for p, dvvv in dvv.portals.iteritems() %}
-                            {% if p!=data.portalID %}
-                                <option value="{{p}}">{{p}} (since {{dvvv.date}})</option>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
+            {% for soft, dv in gennav.iteritems() %}
+                {% if 'software' not in data or soft == data.software %}
 
-    </select>
-{%- endmacro %}
+                    {% for iso3, dvv in dv.iso.iteritems() %}
+                        {% if iso3 != data.iso3 %}
+                            <option value="{{iso3}}">
 
-{% macro orga_select(data, gennav) -%}
-    <select id="org" class="select" style="width:100%">
-        <option value=""></option>
-        {% if 'organisation' in data %}
-            <option selected value="{{slugify(data.organisation)}}">{{data.organisation}}</option>
-        {% endif %}
-        {% if 'portalID' in data %}
-            {% if nav is not none %}
-                {% if 'organisations' in nav %}
-                    {% for k in nav.organisations %}
-                        {% if k != data.organisation %}
-                            <option value="{{url_for('orga',portal_id=data.portalID, orga=slugify(k), snapshot=data.snapshot) }}">{{k}}</option>
+                                {% if dvv.since|string != data.snapshot|string %}
+                                    {{dvv.since_date}}
+
+                                {% endif %}
+                            </option>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
-            {% elif 'DCATOrganizationsCount' in data %}
-                {% for k in data.DCATOrganizationsCount %}
-                    <option value="{{url_for('orga',portal_id=data.portalID, orga=slugify(k), snapshot=data.snapshot) }}">{{k}}</option>
-                {% endfor %}
+            {% endfor %}
+        </select>
+    </label>
+{%- endmacro %}
+
+{% macro portal_select(data, gennav) -%}
+    <label> Portal
+        <select id="portal" class="select" style="width:100%">
+            {% if 'portalID' in data %}
+                <option value="{{url_for('portal',portal_id=data.portalID, snapshot=data.snapshot) }}">{{data.portalID}}</option>
+            {% else %}
+                <option  value=""></option>
             {% endif %}
-        {% endif %}
-    </select>
+            {% for soft, dv in gennav.iteritems() %}
+                {% if 'software' not in data or soft == data.software %}
+                    {% for iso3, dvv in dv.iso.iteritems() %}
+                        {% if 'iso3' not in data or iso3 == data.iso3 %}
+                            {% for p, dvvv in dvv.portals.iteritems() %}
+                                {% if p!=data.portalID %}
+                                    <option value="{{p}}">{{p}} (since {{dvvv.date}})</option>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+
+        </select>
+    </label>
+{%- endmacro %}
+
+{% macro orga_select(data, gennav) -%}
+    <label>Organisation
+        <select id="org" class="select" style="width:100%">
+            <option value=""></option>
+            {% if 'organisation' in data %}
+                <option selected value="{{slugify(data.organisation)}}">{{data.organisation}}</option>
+            {% endif %}
+            {% if 'portalID' in data %}
+                {% if nav is not none %}
+                    {% if 'organisations' in nav %}
+                        {% for k in nav.organisations %}
+                            {% if k != data.organisation %}
+                                <option value="{{url_for('orga',portal_id=data.portalID, orga=slugify(k), snapshot=data.snapshot) }}">{{k}}</option>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% elif 'DCATOrganizationsCount' in data %}
+                    {% for k in data.DCATOrganizationsCount %}
+                        <option value="{{url_for('orga',portal_id=data.portalID, orga=slugify(k), snapshot=data.snapshot) }}">{{k}}</option>
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
+        </select>
+    </label>
 {%- endmacro %}
 
 {% macro portal_header(data, evol, nav, gennav) -%}
+    <div id="header" class="mdl-grid mdl-grid--no-spacing">
 
+        {{ breadcrumbs(data, gennav) }}
 
-    {{breadcrumbs(data, gennav)}}
+        {{ snapshot_header(data, evol, nav, gennav) }}
 
-    <div class="mdl-cell mdl-cell--1-col mdl-grid" style="margin-top:-2px;">
-        <div class="mdl-cell mdl-cell--12-col">
-            <span class="">Snapshots:</span>
-        </div>
     </div>
-    <div class="mdl-cell mdl-cell--11-col mdl-grid snapshotinfo" style="margin-top:-2px;">
-        {% if evol %}
+{%- endmacro %}
 
+{% macro snapshot_header(data, evol, nav, gennav) -%}
+    <div class="mdl-cell mdl-cell--12-col mdl-grid snapshotinfo" style="margin-top:-2px;">
+        {% if evol %}
             <div class="mdl-cell mdl-cell--2-col">
                 {{snapshotField(evol.first.date , evol.first.sn, 'first snapshot',data)}}
             </div>
@@ -117,7 +126,7 @@
                 {% endfor %}
             </div>
 
-            <div class="mdl-cell mdl-cell--3-col current">
+            <div class="mdl-cell mdl-cell--4-col current">
                 <div class="" style="padding-bottom: 0px;">
                     <p class=" mdl-color-text--white" style="margin-bottom: 0px;">Selected</p>
                     <select id="cursn" class="select" style="width:90%">
@@ -149,52 +158,54 @@
     </div>
 {%- endmacro %}
 
-
 {% macro breadcrumbs(data, gennav) -%}
-    <div id="breadcrumb-info-frame" class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px;margin-bottom: -1px;">
-    <div class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px;margin-bottom: -1px;">
-        <ul id="breadcrumb-info">
-            <li >
-                <div style="width:100px;">
+    <div id="breadcrumb-info-frame" class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px; margin-bottom: -1px;">
+
+   {# <div class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 0px;margin-bottom: -1px;">
+        <ul id="breadcrumb-info" class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing">
+            <li class="mdl-cell mdl-cell--2-col">
+                <div>
                     Software
                 </div>
             </li>
-            <li>
-                <div  style="width:100px;">
+            <li class="mdl-cell mdl-cell--2-col">
+                <div>
                     Iso
                 </div>
             </li>
-            <li>
-                <div  style="width:200px;">
+            <li class="mdl-cell mdl-cell--4-col">
+                <div>
                     Portal
                 </div>
             </li>
-            <li>
-                <div  style="width:250px;">
+            <li class="mdl-cell mdl-cell--4-col">
+                <div>
                    Organisation
                 </div>
             </li>
         </ul>
     </div>
-    <div class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing" style="margin-top: 1px;">
-        <ul id="breadcrumb" >
-            <li >
-                <div style="width:100px;">
+    #}
+    <div  class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing">
+        <ul id="breadcrumb" class="mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing">
+            <li class="mdl-cell mdl-cell--2-col">
+
+                <div  >
                     {{ software_select(data, gennav)}}
                 </div>
             </li>
-            <li>
-                <div  style="width:100px;">
+            <li class="mdl-cell mdl-cell--2-col">
+                <div >
                     {{iso_select(data, gennav)}}
                 </div>
             </li>
-            <li>
-                <div  style="width:250px;">
+            <li class="mdl-cell mdl-cell--4-col">
+                <div >
                     {{portal_select(data, gennav)}}
                 </div>
             </li>
-            <li>
-                <div  style="width:300px;">
+            <li class="mdl-cell mdl-cell--4-col">
+                <div >
                     {{orga_select(data, gennav)}}
                 </div>
             </li>

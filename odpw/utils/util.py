@@ -666,7 +666,7 @@ def progressIterator(iterable, total, steps, label=None):
             #Timer.printStats()
         yield element
 
-def progressIndicator(processed, total, bar_width=20,elapsed=None, interim=None, label=None):
+def progressIndicator(processed, total, bar_width=20, elapsed=None, interim=None, label=None):
     
     if total!=0:
         percent = float(processed) / total

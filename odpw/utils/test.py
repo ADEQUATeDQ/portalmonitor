@@ -46,7 +46,7 @@ def dban(dbm):
         
 def dbscan(dbm):
     d = DBAnalyser(dbm.getSoftwareDist)
-    d.analyse()
+    d.profile()
     
     d.getDataFrame()
     

@@ -216,9 +216,6 @@ class PortalReporter(JSONReporter,SnapshotReporter):
 
         return result
 
-
-
-
 class PortalBasicReport(DBReporter, JSONReporter):
 
     def __init__(self, analyser, Portal):

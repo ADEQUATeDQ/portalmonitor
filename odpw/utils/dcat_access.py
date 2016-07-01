@@ -32,6 +32,24 @@ def getDescription(dataset):
 def getCreationDate(dataset):
     return accessDataset(dataset, DCT.issued)
 
+def getOrganization(dataset):
+
+    for dcat_el in getattr(dataset,'dcat',[]):
+        #TODO there is also a FOAF.Ogranisation
+        if str(FOAF.Organization) in dcat_el.get('@type',[]):
+            for tag in dcat_el.get(str(FOAF.name),[]):
+                orga=tag['@value']
+                if orga is not None and len(orga)>0:
+                    return orga
+    for dcat_el in getattr(dataset,'dcat',[]):
+        #TODO there is also a FOAF.Ogranisation
+        if str(VCARD.Organization) in dcat_el.get('@type',[]):
+            for tag in dcat_el.get(str(VCARD.fn),[]):
+                orga=tag['@value']
+                if orga is not None and len(orga)>0:
+                    return orga
+    return None
+
 def getModificationDate(dataset):
     return accessDataset(dataset, DCT.modified)
 
@@ -65,6 +83,8 @@ def getContactPoint(dataset):
 
 def getLandingPage(dataset):
     return accessDataset(dataset, DCAT.landingPage)
+
+
 
 
 #Distribution
@@ -153,6 +173,14 @@ def getDistributionMediaTypeWithURL(dataset, url):
 
 def getDistributionSizeWithURL(dataset, url):
     return accessDistributionWithURL(dataset, url, DCAT.byteSize)
+
+def getDistributionCreationDateWithURL(dataset, url):
+    return accessDistributionWithURL(dataset, url, DCT.issued)
+
+def getDistributionModificationDateWithURL(dataset, url):
+    return accessDistributionWithURL(dataset, url,DCT.modified)
+
+
 
 def accessDistributionWithURL(dataset, url, key):
     key=str(key)
