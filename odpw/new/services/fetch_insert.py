@@ -23,7 +23,7 @@ from odpw.utils.timer import Timer
 
 import structlog
 
-from utils.util import ErrorHandler, getExceptionCode, getExceptionString
+from odpw.utils.util import ErrorHandler, getExceptionCode, getExceptionString
 
 log =structlog.get_logger()
 
