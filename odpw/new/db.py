@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 
 import structlog
 
-from new.model import DatasetData, DatasetQuality, Dataset
+from odpw.new.model import DatasetData, DatasetQuality, Dataset
 
 log =structlog.get_logger()
 
