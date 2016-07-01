@@ -2,8 +2,8 @@ from urlparse import urlparse
 
 import pycountry
 
-from new.db import DBClient
-from new.model import Portal, Base
+from odpw.new.db import DBClient
+from odpw.new.model import Portal, Base
 from odpw.db.dbm import PostgressDBM
 
 
