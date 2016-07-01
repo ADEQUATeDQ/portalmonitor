@@ -108,8 +108,8 @@ def fetchMigrate(P,snapshot, db, dbm):
 
     if PMD.fetch_stats is not None and 'fetch_start' in PMD.fetch_stats:
 
-        start=datetime.datetime.strptime(PMD.fetch_stats['fetch_start'], "%Y-%m-%dT%H:%M:%S.%f")
-        end=datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if PMD.fetch_stats['fetch_end'] is not None else None
+        start= datetime.datetime.strptime(PMD.fetch_stats['fetch_start'], "%Y-%m-%dT%H:%M:%S.%f")
+        end= datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if 'fetch_end' in PMD.fetch_stats and PMD.fetch_stats['fetch_end'] is not None else None
         PS.start=start
         PS.end=end
         PS.exc=PMD.fetch_stats['exception']
