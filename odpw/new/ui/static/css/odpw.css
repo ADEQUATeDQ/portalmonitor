@@ -1,0 +1,11 @@
+header#header{
+    height:100px; 
+    margin-top:10px;
+}
+header#header img{
+    float: right;
+}
+
+nav#mainnav {
+    padding-left:50px;
+}

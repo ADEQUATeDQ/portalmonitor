@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, SmallInteger, TIMESTAMP, BigInteger, ForeignKeyConstraint, \
-    Boolean, func, select
+    Boolean, func, select, Float
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref, column_property, synonym
@@ -17,7 +17,9 @@ tmp='tmp'
 tab_portals   =   tmp+'portals'
 tab_portalevolution=tmp+'portalevolution'
 tab_portalsnapshot=tmp+'portalsnapshot'
+tab_portalsnapshotquality=tmp+'portalsnapshotquality'
 tab_portalsnapshotfetch=tmp+'portalsnapshotfetch'
+
 
 tab_datasets=tmp+'datasets'
 tab_datasetsquality=tmp+'datasetsquality'
@@ -40,6 +42,7 @@ class Portal(Base):
     active  = Column(Boolean, default=True,nullable=False)
 
     snapshots = relationship("PortalSnapshot", back_populates="portal")
+    snapshotsquality = relationship("PortalSnapshotQuality", back_populates="portal")
 
 
     def __repr__(self):
@@ -69,14 +72,49 @@ class PortalSnapshot(Base):
             self.portalid, self.snapshot, self.start, self.end, self.status)
 
 
+class PortalSnapshotQuality(Base):
+    __tablename__ = tab_portalsnapshotquality
+
+    portalid      = Column(String, ForeignKey(tab_portals+'.id'), primary_key=True, index=True,nullable=False)
+    snapshot= Column( SmallInteger, primary_key=True)
+    portal  = relationship("Portal", back_populates="snapshotsquality")
+
+    cocu = Column(Float)
+    coce = Column(Float)
+    coda = Column(Float)
+    cofo = Column(Float)
+    coli = Column(Float)
+    coac = Column(Float)
+
+    exda = Column(Float)
+    exri = Column(Float)
+    expr = Column(Float)
+    exac = Column(Float)
+    exdi = Column(Float)
+    exte = Column(Float)
+    exsp = Column(Float)
+    exco = Column(Float)
+
+    opfo = Column(Float)
+    opma = Column(Float)
+    opli = Column(Float)
+
+    datasets=Column(Integer)
+    resources=Column(Integer)
+
+    def __repr__(self):
+        return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s)>" % (
+            self.portalid, self.snapshot, self.start, self.end, self.status)
+
+
 class Dataset(Base):
     __tablename__ = tab_datasets
 
-    id      =   Column(String, primary_key=True)
-    snapshot=   Column( SmallInteger, primary_key=True)
-    portalid=   Column( String,     primary_key=True)
-    organisation = Column(String, index=True)
-    md5     =   Column(String, ForeignKey(tab_datasetsdata+'.md5'))
+    id          = Column( String, primary_key=True)
+    snapshot    = Column( SmallInteger, primary_key=True)
+    portalid    = Column( String, primary_key=True)
+    organisation= Column(String, index=True)
+    md5         = Column(String, ForeignKey(tab_datasetsdata+'.md5'))
 
 
     __table_args__ = (ForeignKeyConstraint([portalid, snapshot],
@@ -111,25 +149,25 @@ class DatasetQuality(Base):
     __tablename__ = tab_datasetsquality
 
     md5     = Column(String, ForeignKey(DatasetData.md5), primary_key=True)
-    cocu = Column(SmallInteger)
-    coce = Column(SmallInteger)
-    coda = Column(SmallInteger)
-    cofo = Column(SmallInteger)
-    coli = Column(SmallInteger)
-    coac = Column(SmallInteger)
+    cocu = Column(Float)
+    coce = Column(Float)
+    coda = Column(Float)
+    cofo = Column(Float)
+    coli = Column(Float)
+    coac = Column(Float)
 
-    exda = Column(SmallInteger)
-    exri = Column(SmallInteger)
-    expr = Column(SmallInteger)
-    exac = Column(SmallInteger)
-    exdi = Column(SmallInteger)
-    exte = Column(SmallInteger)
-    exsp = Column(SmallInteger)
-    exco = Column(SmallInteger)
+    exda = Column(Float)
+    exri = Column(Float)
+    expr = Column(Float)
+    exac = Column(Float)
+    exdi = Column(Float)
+    exte = Column(Float)
+    exsp = Column(Float)
+    exco = Column(Float)
 
-    opfo = Column(SmallInteger)
-    opma = Column(SmallInteger)
-    opli = Column(SmallInteger)
+    opfo = Column(Float)
+    opma = Column(Float)
+    opli = Column(Float)
 
     data = relationship("DatasetData", backref=backref("quality", uselist=False))
 

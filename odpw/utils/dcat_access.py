@@ -95,13 +95,18 @@ def accessDistribution(dataset, key ):
     for dcat_el in getattr(dataset,'dcat',[]):
         if str(DCAT.Distribution) in dcat_el.get('@type',[]):
             for f in dcat_el.get(key,[]):
-                #print key,f
                 if '@value' in f:
                     v = f.get('@value','')
-                    value.append(v.strip())
+                    uri=v.strip()
                 elif '@id' in f:
                     v = f.get('@id','')
-                    value.append(v.strip())
+                    uri=v.strip()
+                    #value.append(v.strip())
+                #fix some typical URL problems
+                uri=uri.replace("http:// \thttp:","http:")
+                uri=uri.replace("http:// http://","http://")
+
+                value.append(uri)
     return value
 
 def getDistributionTitles(dataset):
