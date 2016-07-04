@@ -208,6 +208,7 @@ def insertDatasets(P, db, iter, batch=1000):
 
     c=0
     for i, d in enumerate(iter):
+        c+=1
         with Timer(key='ProcessDataset'):
             #CREATE DATASET AND ADD
 
@@ -259,8 +260,6 @@ def insertDatasets(P, db, iter, batch=1000):
     bulkInsert(bulk_obj,db)
     for k in bulk_obj:
         bulk_obj[k]=[]
-    log.info("InsertedDatasets", parsed=i+1)
-
-
+    log.info("InsertedDatasets", parsed=c)
 
 
