@@ -75,7 +75,7 @@ def normaliseFormat(v):
 def toDatetime(value):
     if value:
         try:
-            return datetime.datetime.strptime(value.split(".")[0], "%Y-%m-%dT%H:%M:%S")
+            return datetime.datetime.strptime(value.split(".")[0][:19], "%Y-%m-%dT%H:%M:%S")
         except Exception as e:
             print e, e.message, value
     return None
