@@ -1,0 +1,78 @@
+{
+"swagger": "2.0",
+"info": {
+"title": "Datamonitor API",
+"description": "Memento-like API for datamonitor",
+"version": "1.0.0"
+},
+"host": "data.wu.ac.at",
+"schemes": [
+"http"
+],
+"basePath": "/datamonitorapi",
+"paths": {
+"/data/{date}/{url}": {
+"get": {
+"summary": "Get document version",
+"description": "Returns the closest version for the specified 'Date' for the 'url'\n",
+"parameters": [
+{
+"name": "date",
+"in": "path",
+"description": "Date as \"YYYY<MM|DD|HH|MM|SS>\"",
+"required": true,
+"type": "number",
+"format": "int32",
+"minLength": 4
+},
+{
+"name": "url",
+"in": "path",
+"description": "URL (HTTP URL)",
+"required": true,
+"type": "string",
+"format": "string"
+}
+],
+"tags": [
+"Data"
+],
+"responses": {
+"200": {
+"description": "The content of the URL for the given date"
+}
+}
+}
+},
+"/info/{date}/{url}": {
+"get": {
+"summary": "Info about document",
+"description": "Returns the header information\n",
+"parameters": [
+{
+"name": "date",
+"in": "path",
+"description": "Date as \"YYYY<MM|DD|HH|MM|SS>\"",
+"required": true,
+"type": "number",
+"format": "int32",
+"minLength": 4
+},
+{
+"name": "url",
+"in": "path",
+"description": "URL (HTTP URL)",
+"required": true,
+"type": "string",
+"format": "string"
+}
+],
+"responses": {
+"200": {
+"description": "The content of the URL for the given date"
+}
+}
+}
+}
+}
+}
