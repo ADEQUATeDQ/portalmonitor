@@ -10,8 +10,8 @@ import functools
 import gzip
 import json
 import traceback
-import StringIO
-from cStringIO import StringIO as IO
+
+from cStringIO import  StringIO
 
 from datetime import datetime
 import pandas as pd
@@ -62,7 +62,7 @@ def gzipped(f):
                 response.status_code >= 300 or
                 'Content-Encoding' in response.headers):
                 return response
-            gzip_buffer = IO()
+            gzip_buffer = StringIO()
             gzip_file = gzip.GzipFile(mode='wb', 
                                       fileobj=gzip_buffer)
             gzip_file.write(response.data)
