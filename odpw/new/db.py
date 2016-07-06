@@ -48,8 +48,7 @@ def add_engine_pidguard(engine):
                 (connection_record.info['pid'], pid)
             )
 
-class DBClient(object):
-
+class DBManager(object):
 
     def __init__(self, db='portalwatch', host="localhost", port=5432, password=None, user='opwu', debug=False):
 
@@ -75,12 +74,19 @@ class DBClient(object):
             #self.engine.connect()
 
             self.session_factory = sessionmaker(bind=self.engine)#, expire_on_commit=False
-            self.Session= scoped_session(self.session_factory)
+
             #self.session = self.Session()
 
+
+class DBClient(object):
+
+    def __init__(self, dbm):
+        self.dbm=dbm
+        self.Session = scoped_session(self.dbm.session_factory)
+
     def init(self, Base):
-        Base.metadata.drop_all(self.engine)
-        Base.metadata.create_all(self.engine)
+        Base.metadata.drop_all(self.dbm.engine)
+        Base.metadata.create_all(self.dbm.engine)
 
 
     from contextlib import contextmanager

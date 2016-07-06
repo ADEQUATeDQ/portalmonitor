@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 import structlog
 log =structlog.get_logger()
 
+
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
@@ -56,10 +57,12 @@ class PortalSnapshot(Base):
     snapshot= Column( SmallInteger, primary_key=True)
     portal  = relationship("Portal", back_populates="snapshots")
 
-    start   = Column(TIMESTAMP, server_default=func.now())
-    end     = Column(TIMESTAMP)
-    status  = Column(SmallInteger)
-    exc     = Column(String)
+    start       = Column(TIMESTAMP, server_default=func.now())
+    end         = Column(TIMESTAMP)
+    status      = Column(SmallInteger)
+    exc         = Column(String)
+    datasetCount    = Column(Integer)
+    resourceCount   = Column(Integer)
 
     @hybrid_property
     def fetchtime(self):
@@ -100,11 +103,10 @@ class PortalSnapshotQuality(Base):
     opli = Column(Float)
 
     datasets=Column(Integer)
-    resources=Column(Integer)
 
     def __repr__(self):
-        return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s)>" % (
-            self.portalid, self.snapshot, self.start, self.end, self.status)
+        return "<PortalSnapshotQuality(id=%s, snapshot=%s, agg=%s)>" % (
+            self.portalid, self.snapshot,  any([self.exda,self.coac,self.coce,self.cocu]))
 
 
 class Dataset(Base):

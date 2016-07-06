@@ -73,12 +73,18 @@ def normaliseFormat(v):
 
 
 def toDatetime(value):
+    date=None
     if value:
-        try:
-            return datetime.datetime.strptime(value.split(".")[0][:19], "%Y-%m-%dT%H:%M:%S")
-        except Exception as e:
-            print e, e.message, value
-    return None
+        for pattern in ["%Y-%m-%dT%H:%M:%S","%Y-%m-%d"]:
+            try:
+                date= datetime.datetime.strptime(value.split(".")[0][:19], pattern)
+                break
+            except Exception as e:
+                #print e, e.message, value
+                pass
+    if value is not None and date is None:
+        print "LOOK AT THIS DATE", value, date
+    return date
 
 
 def fetchHttp(P, snapshot, db):
@@ -126,6 +132,9 @@ def fetchMigrate(P,snapshot, db, dbm):
     from odpw.db.models import Dataset as DDataset
     iter=DDataset.iter(dbm.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
     insertDatasets(P,db, iter)
+    PS.datasetCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+    PS.resourceCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
+    db.commit()
 
 def createDatasetData(md5v,dataset):
     with Timer(key='createDatasetData'):
@@ -143,9 +152,6 @@ def createDatasetData(md5v,dataset):
         return DD
 
 def createDatasetQuality(P, md5v, dataset, ):
-    with Timer(key='dict_to_dcat'):
-        #analys quality
-        dataset.dcat=dict_to_dcat(dataset.data, P)
     with Timer(key='quality'):
         q= DCATDMD()
         q.analyse_Dataset(dataset)
@@ -220,14 +226,16 @@ def insertDatasets(P, db, iter, batch=1000):
                 md5v=None if d.data is None else md5(d.data)
 
             if md5v:
+                with Timer(key='dict_to_dcat'):
+                    #analys quality
+                    d.dcat=dict_to_dcat(d.data, P)
 
                 with Timer(key='db.datasetdataExists(md5v)'):
-                    process=not db.datasetdataExists(md5v)
+                    process = not db.datasetdataExists(md5v)
                 if process:
                     #DATATSET DATA
                     DD=createDatasetData(md5v,d)
                     db.add(DD) #primary key, needs to be inserted first
-
 
                     #DATATSET QUALTIY
                     DQ = createDatasetQuality(P, md5v, d)
@@ -243,7 +251,7 @@ def insertDatasets(P, db, iter, batch=1000):
                        snapshot=d.snapshot,
                        portalid=d.portal_id,
                        md5=md5v,
-                       organisation=DD.organisation)
+                       organisation=DD.organisation if DD else getOrganization(d))
                 bulk_obj['d'].append(D)
             else:
                 D= Dataset(id=d.id,

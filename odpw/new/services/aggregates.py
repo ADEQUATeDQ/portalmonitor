@@ -3,7 +3,7 @@
 from collections import defaultdict
 import numpy as np
 from sqlalchemy import inspect
-from new.model import Dataset, DatasetData, DatasetQuality
+from new.model import Dataset, DatasetData, DatasetQuality, MetaResource, PortalSnapshotQuality
 import pandas as pd
 from utils.timer import Timer
 
@@ -57,8 +57,12 @@ def aggregate(db, snapshot):
                 dfm=df.mean().round(decimals=2).copy()
 
                 data={k:float(str(v)) for k,v  in dict(dfm).items()}
-                data['datasets']=df.shape[0]
-                print portalid[0],data
+
+            data['datasets']=df.shape[0]
+            PSQ= PortalSnapshotQuality(portalid=portalid, snapshot=snapshot, **data)
+            db.add(PSQ)
+            print portalid[0],data
+
 
 
 

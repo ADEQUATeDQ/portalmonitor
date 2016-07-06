@@ -9,7 +9,7 @@ from odpw.new.services.fetch_insert import fetchMigrate
 from odpw.db.dbm import PostgressDBM
 from odpw.analysers.quality.analysers import DCATDMD
 
-from odpw.new.db import DBClient
+from odpw.new.db import DBClient,DBManager
 from odpw.new.model import Portal
 from odpw.new.portal_fetch_processors import CKAN
 
@@ -20,7 +20,9 @@ import structlog
 
 log =structlog.get_logger()
 
-db= DBClient(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
+dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+db= DBClient(dbm)
+
 dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
 
 def migrate(P,snapshot):
@@ -41,10 +43,10 @@ if __name__ == '__main__':
     Ps=[]
     tasks=[]
     for P in db.Session.query(Portal):
-        if P.id!='data_gv_at':
-            Ps.append(P)
-        if P.id!='data_gv_at':
-            tasks.append((P, snapshot))
+        #if P.id=='data_gv_at':
+        Ps.append(P)
+        #if P.id!='data_gv_at':
+        #    tasks.append((P, snapshot))
 
     #P = db.session.query(Portal).filter(Portal.id==P.id).first()
 

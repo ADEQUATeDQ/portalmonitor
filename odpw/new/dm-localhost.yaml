@@ -1,0 +1,7 @@
+db:
+    host: localhost
+    port: 1111
+    user: odpw
+    password: p0rt4lwatch
+    db: portalwatch
+
