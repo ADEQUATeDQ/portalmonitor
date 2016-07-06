@@ -1,7 +1,9 @@
+from sqlalchemy.orm import scoped_session, sessionmaker
 from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
 from tornado.wsgi import WSGIContainer
 
+from odpw.new.model import Base
 from odpw.new.web.ui.odpw_ui_blueprint import ui
 from odpw.new.db import DBManager
 
@@ -28,7 +30,14 @@ def create_app(dbm):
     app = Flask(__name__)
 
     #app.config.from_object(config_object)
+    app.engine = dbm.engine
     cache.init_app(app)
+
+    DbSession = scoped_session(sessionmaker(
+                                         bind=dbm.engine
+                                        ))
+    Base.query = DbSession.query_property()
+    app.config['dbsession']=DbSession
 
     @app.errorhandler(500)
     def internal_error(e):

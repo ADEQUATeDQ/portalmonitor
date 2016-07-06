@@ -82,8 +82,8 @@ def toDatetime(value):
             except Exception as e:
                 #print e, e.message, value
                 pass
-    if value is not None and date is None:
-        print "LOOK AT THIS DATE", value, date
+    #if value is not None and date is None:
+    #    print "LOOK AT THIS DATE", value, date
     return date
 
 

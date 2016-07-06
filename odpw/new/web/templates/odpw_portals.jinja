@@ -1,0 +1,63 @@
+{% extends "odpw_layout.jinja" %}
+
+
+{% macro basics(data) -%}
+
+<div class="ui card">
+  <div class="image">
+    <img src="/images/avatar2/large/kristy.png">
+  </div>
+  <div class="content">
+    <a class="header">Kristy</a>
+    <div class="meta">
+      <span class="date">Joined in 2013</span>
+    </div>
+    <div class="description">
+      Kristy is an art director living in New York.
+    </div>
+  </div>
+  <div class="extra content">
+    <a>
+      <i class="user icon"></i>
+      22 Friends
+    </a>
+  </div>
+</div>
+{%- endmacro %}
+
+
+
+{% block content %}
+    <div class="ui three column grid">
+  <div class="column">
+    <div class="ui fluid card">
+      <div class="image">
+        <img src="/images/avatar/large/daniel.jpg">
+      </div>
+      <div class="content">
+        <a class="header">Daniel Louise</a>
+      </div>
+    </div>
+  </div>
+  <div class="column">
+    <div class="ui fluid card">
+      <div class="image">
+        <img src="/images/avatar/large/helen.jpg">
+      </div>
+      <div class="content">
+        <a class="header">Helen Troy</a>
+      </div>
+    </div>
+  </div>
+  <div class="column">
+    <div class="ui fluid card">
+      <div class="image">
+        <img src="/images/avatar/large/elliot.jpg">
+      </div>
+      <div class="content">
+        <a class="header">Elliot Fu</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

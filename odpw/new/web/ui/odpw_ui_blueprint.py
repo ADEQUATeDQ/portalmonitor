@@ -23,7 +23,6 @@ ui = Blueprint('ui', __name__,
 def help():
     return render_template('index.jinja')
 
-
 @ui.route('/spec', methods=['GET'])
 def spec():
     return render_template('spec.json', host="localhost:5122/", basePath="api")
@@ -31,3 +30,14 @@ def spec():
 @ui.route('/api', methods=['GET'])
 def api():
     return render_template('apiui.jinja')
+
+
+@ui.route('/portals', methods=['GET'])
+def portals():
+
+
+    r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount)
+    for P in r:
+        print P
+    return render_template('odpw_portals.jinja')
+

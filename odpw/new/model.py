@@ -45,6 +45,43 @@ class Portal(Base):
     snapshots = relationship("PortalSnapshot", back_populates="portal")
     snapshotsquality = relationship("PortalSnapshotQuality", back_populates="portal")
 
+    @hybrid_property
+    def snapshot_count(self):
+        return self.snapshots.count()
+    @snapshot_count.expression
+    def snapshot_count(cls):
+        return select([func.count(PortalSnapshot.snapshot)])\
+            .where(PortalSnapshot.portalid == cls.id).label("snapshot_count")
+
+    @hybrid_property
+    def first_snapshot(self):
+        return min([s.snapshot for s in self.snapshots])
+
+    @first_snapshot.expression
+    def first_snapshot(cls):
+        return select([func.min(PortalSnapshot.snapshot)])\
+            .where(PortalSnapshot.portalid == cls.id).label("first_snapshot")
+
+    @hybrid_property
+    def last_snapshot(self):
+        return max([s.snapshot for s in self.snapshots])
+
+    @last_snapshot.expression
+    def last_snapshot(cls):
+        return select([func.min(PortalSnapshot.snapshot)])\
+            .where(PortalSnapshot.portalid == cls.id).label("last_snapshot")
+
+    @hybrid_property
+    def datasetCount(self):
+        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().datasetCount
+
+    @datasetCount.expression
+    def datasetCount(cls):
+        return select([PortalSnapshot.datasetCount])\
+            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).label("datasetCount")
+
+
+
 
     def __repr__(self):
         return "<Portal(id=%s, uri='%s', apiuri='%s', software='%s', iso=%s)>" % (
