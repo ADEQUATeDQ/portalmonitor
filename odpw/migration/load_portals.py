@@ -15,7 +15,7 @@ def _calc_id(url):
     return id.lower()
 
 if __name__ == '__main__':
-    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
     db.init(Base)
     dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')

@@ -20,7 +20,8 @@ import structlog
 
 log =structlog.get_logger()
 
-dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+#dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
 db= DBClient(dbm)
 
 dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
