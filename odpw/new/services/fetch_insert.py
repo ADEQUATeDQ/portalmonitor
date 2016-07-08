@@ -4,17 +4,15 @@ import json
 import rdflib
 import urlnorm
 
-from new.services.aggregates import aggregateByPortal3
-from odpw.db.dbm import PostgressDBM
 from odpw.analysers.quality.analysers import DCATDMD
 
-from odpw.new.db import DBClient
-from odpw.new.model import Portal, Dataset, DatasetData, Base, PortalSnapshot, MetaResource, \
-    DatasetQuality, PortalSnapshotQuality
-from odpw.new.portal_fetch_processors import CKAN
+from odpw.new.model import Dataset, DatasetData, PortalSnapshot, MetaResource, \
+    DatasetQuality
+
 from odpw.new.test_md5 import md5
 from odpw.utils.dataset_converter import CKANConverter, graph_from_opendatasoft, fix_socrata_graph
-from odpw.utils.dcat_access import getModificationDate, getCreationDate, getDistributionLicenseTriples, \
+from odpw.utils.dcat_access import \
+    getModificationDate, getCreationDate, getDistributionLicenseTriples, \
     getDistributionDownloadURLs, getDistributionAccessURLs, getDistributionFormatWithURL, \
     getDistributionMediaTypeWithURL, getDistributionSizeWithURL, getDistributionCreationDateWithURL, \
     getDistributionModificationDateWithURL, getOrganization
