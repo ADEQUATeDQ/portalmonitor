@@ -14,7 +14,7 @@ log =structlog.get_logger()
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
-tmp='tmp'
+tmp=''
 tab_portals   =   tmp+'portals'
 tab_portalevolution=tmp+'portalevolution'
 tab_portalsnapshot=tmp+'portalsnapshot'
@@ -77,11 +77,9 @@ class Portal(Base):
 
     @datasetCount.expression
     def datasetCount(cls):
-        return select([PortalSnapshot.datasetCount])\
-            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).label("datasetCount")
-
-
-
+        q=select([PortalSnapshot.datasetCount])\
+            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("datasetCount")
+        return q
 
     def __repr__(self):
         return "<Portal(id=%s, uri='%s', apiuri='%s', software='%s', iso=%s)>" % (
@@ -221,6 +219,7 @@ class MetaResource(Base):
 
     uri = Column(String, primary_key=True)
     md5 = Column(String,ForeignKey(DatasetData.md5), primary_key=True )
+    valid = Column(Boolean)
     format = Column(String)
     media = Column(String)
     size = Column(BigInteger)

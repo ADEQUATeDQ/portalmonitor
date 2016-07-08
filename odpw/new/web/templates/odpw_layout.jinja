@@ -19,6 +19,9 @@
         {% block headscripts %}  {% endblock %}
 
         <style>
+            .ui.card .meta {
+                font-size: 0.8em;
+            }
             {% block style %}
 
             {% endblock %}
@@ -47,6 +50,7 @@
         <nav id="mainnav" class="ui secondary pointing labeled icon menu" >
             <div class="header item">ODPW</div>
             <a class="active item">System</a>
+            <a class="item">Portals</a>
             <a class="item"><i class="icon line chart"></i>Dashboard</a>
             <a class="item"><i class="icon download"></i>Data</a>
             <a href="{{ url_for('ui.api')}}" class="item"><i class="icon code"></i>API</a>
@@ -57,7 +61,7 @@
 
 
     <!-- CONTENT -->
-        <section class="ui container text">
+        <section class="ui segement text">
             {% block content %}
             {% endblock %}
         </section>

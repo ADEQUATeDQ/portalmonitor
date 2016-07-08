@@ -4,13 +4,13 @@ import json
 import rdflib
 import urlnorm
 
-
+from new.services.aggregates import aggregateByPortal3
 from odpw.db.dbm import PostgressDBM
 from odpw.analysers.quality.analysers import DCATDMD
 
 from odpw.new.db import DBClient
 from odpw.new.model import Portal, Dataset, DatasetData, Base, PortalSnapshot, MetaResource, \
-    DatasetQuality
+    DatasetQuality, PortalSnapshotQuality
 from odpw.new.portal_fetch_processors import CKAN
 from odpw.new.test_md5 import md5
 from odpw.utils.dataset_converter import CKANConverter, graph_from_opendatasoft, fix_socrata_graph
@@ -111,7 +111,7 @@ def fetchMigrate(P,snapshot, db, dbm):
 
     PMD= dbm.getPortalMetaData(portalID=P.id, snapshot=snapshot)
     if PMD is None:
-        print "Skipping ",P.id, 'in', snapshot
+        log.info("Skipping ",portalid=P.id, snapshot=snapshot)
         return
     PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
 
@@ -131,10 +131,26 @@ def fetchMigrate(P,snapshot, db, dbm):
 
     from odpw.db.models import Dataset as DDataset
     iter=DDataset.iter(dbm.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
-    insertDatasets(P,db, iter)
-    PS.datasetCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
-    PS.resourceCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-    db.commit()
+    insertDatasets(P,db, iter,snapshot)
+    s=db.Session
+    PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
+    PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+    PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
+
+    print PS.datasetCount, PS.portalid, snapshot
+    s.commit()
+    s.remove()
+
+
+    #log.info("Aggregating results",portalid=P.id, snapshot=snapshot)
+    #df= aggregateByPortal3(db, P.id, snapshot)
+    #dfm=df.mean().round(decimals=2).copy()
+    #data={k:float(str(v)) for k,v  in dict(dfm).items()}
+    #data['datasets']=df.shape[0]
+    #PSQ= PortalSnapshotQuality(portalid=P.id, snapshot=snapshot, **data)
+    #db.add(PSQ)
+
+
 
 def createDatasetData(md5v,dataset):
     with Timer(key='createDatasetData'):
@@ -167,11 +183,13 @@ def createMetaResources(md5v,dataset):
         bulk_mr=[]
         uris=[]
         for uri in res:
+            valid=True
             try:
                 uri = urlnorm.norm(uri.strip())
             except Exception as e:
-                log.warn("URIFormat", uri=uri, md5=md5v, msg=e.message)
+                log.debug("URIFormat", uri=uri, md5=md5v, msg=e.message)
                 uri=uri
+                valid=False
 
             f=getDistributionFormatWithURL(dataset, uri)
             m=getDistributionMediaTypeWithURL(dataset, uri)
@@ -179,9 +197,8 @@ def createMetaResources(md5v,dataset):
             c=getDistributionCreationDateWithURL(dataset,uri)
             mod=getDistributionModificationDateWithURL(dataset,uri)
             if uri in uris:
-                log.warn("WARNING, duplicate URI", dataset=dataset.id, md5=md5v, uri=uri,format=f,media=m)
+                log.debug("WARNING, duplicate URI", dataset=dataset.id, md5=md5v, uri=uri,format=f,media=m)
                 continue
-
             try:
                 s=int(float(s)) if s is not None else None
             except Exception as e:
@@ -191,6 +208,7 @@ def createMetaResources(md5v,dataset):
                 uri = uri
                 ,md5 = md5v
                 ,media=m
+                ,valid=valid
                 ,format = normaliseFormat(f)
                 ,size = s
                 ,created = toDatetime(c)
@@ -207,9 +225,9 @@ def bulkInsert(bulk_obj, db ):
             bulk_obj[k]=[]
 
 
-def insertDatasets(P, db, iter, batch=1000):
+def insertDatasets(P, db, iter, snapshot, batch=100):
 
-    log.info("Inserting", portalid=P.id)
+    log.info("insertDatasets", portalid=P.id ,snapshot=snapshot)
 
     bulk_obj={ 'mr':[]
                ,'d':[]
@@ -229,23 +247,26 @@ def insertDatasets(P, db, iter, batch=1000):
                 with Timer(key='dict_to_dcat'):
                     #analys quality
                     d.dcat=dict_to_dcat(d.data, P)
-
+                DD=None
                 with Timer(key='db.datasetdataExists(md5v)'):
                     process = not db.datasetdataExists(md5v)
                 if process:
                     #DATATSET DATA
                     DD=createDatasetData(md5v,d)
-                    db.add(DD) #primary key, needs to be inserted first
+                    try:
+                        db.add(DD) #primary key, needs to be inserted first
+                        #DATATSET QUALTIY
+                        #print "adding",md5v
+                        DQ = createDatasetQuality(P, md5v, d)
+                        bulk_obj['dq'].append(DQ)
 
-                    #DATATSET QUALTIY
-                    DQ = createDatasetQuality(P, md5v, d)
-                    bulk_obj['dq'].append(DQ)
-
-                    #META RESOURCES
-                    MQs= createMetaResources(md5v,d)
-                    for MR in MQs:
-                        bulk_obj['mr'].append(MR)
-
+                        #META RESOURCES
+                        MQs= createMetaResources(md5v,d)
+                        for MR in MQs:
+                            bulk_obj['mr'].append(MR)
+                    except:
+                        pass
+                        #print "AND AGAIN",md5v, db.datasetdataExists(md5v)
                 #DATATSET
                 D= Dataset(id=d.id,
                        snapshot=d.snapshot,
@@ -271,6 +292,4 @@ def insertDatasets(P, db, iter, batch=1000):
     bulkInsert(bulk_obj,db)
     for k in bulk_obj:
         bulk_obj[k]=[]
-    log.info("InsertedDatasets", parsed=c)
-
-
+    log.info("InsertedDatasets", parsed=c,snapshot=snapshot)

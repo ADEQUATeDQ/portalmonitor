@@ -1,18 +1,29 @@
 from multiprocessing.util import register_after_fork
 
+import multiprocessing
 import os
 import sqlalchemy
 from sqlalchemy import Column, String, Integer, ForeignKey, SmallInteger, TIMESTAMP, BigInteger, ForeignKeyConstraint, \
     Boolean
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.engine import reflection
 from sqlalchemy.orm import relationship, Session, scoped_session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, relationship
-
+from sqlalchemy.schema import DDL
+from sqlalchemy.schema import (
+    MetaData,
+    Table,
+    DropTable,
+    ForeignKeyConstraint,
+    DropConstraint,
+    )
 
 import structlog
+from sqlalchemy.sql.ddl import DropConstraint
 
-from odpw.new.model import DatasetData, DatasetQuality, Dataset
+from odpw.new.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
+    tab_datasets, tab_resourcesinfo
 
 log =structlog.get_logger()
 
@@ -48,6 +59,7 @@ def add_engine_pidguard(engine):
                 (connection_record.info['pid'], pid)
             )
 
+
 class DBManager(object):
 
     def __init__(self, db='portalwatch', host="localhost", port=5432, password=None, user='opwu', debug=False):
@@ -69,7 +81,7 @@ class DBManager(object):
 
             self.engine = create_engine(conn_string, pool_size=20, client_encoding='utf8', echo=debug)
             add_engine_pidguard(self.engine)
-            register_after_fork(self.engine, self.engine.dispose)
+            #register_after_fork(self.engine, self.engine.dispose)
             log.info("Connected DB")
             #self.engine.connect()
 
@@ -78,15 +90,162 @@ class DBManager(object):
             #self.session = self.Session()
 
 
-class DBClient(object):
 
-    def __init__(self, dbm):
-        self.dbm=dbm
-        self.Session = scoped_session(self.dbm.session_factory)
+            self.dataset_insert_function = DDL(
+                """
+                CREATE OR REPLACE FUNCTION dataset_insert_trigger()
+                RETURNS TRIGGER AS $$
+
+                DECLARE
+                    _snapshot smallint;
+                    _table_name text;
+
+                BEGIN
+                    _snapshot := NEW.snapshot;
+                    _table_name := '"""+tab_datasets+"""_' || _snapshot;
+
+                    PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
+
+                      IF NOT FOUND THEN
+                        EXECUTE
+                          'CREATE TABLE '
+                          || quote_ident(_table_name)
+                          || ' (CHECK ("snapshot" = '
+                          || _snapshot::smallint
+                          || ')) INHERITS ("""+tab_datasets+""")';
+
+                        -- Indexes are defined per child, so we assign a default index that uses the partition columns
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_id') || ' ON '||quote_ident(_table_name) || ' (organisation)';
+                      END IF;
+
+                      EXECUTE
+                        'INSERT INTO '
+                        || quote_ident(_table_name)
+                        || ' VALUES ($1.*)'
+                      USING NEW;
+
+
+
+                      RETURN NULL;
+                END;
+
+                $$ LANGUAGE plpgsql;
+                """)
+            self.dataset_insert_trigger = DDL(
+                """
+                CREATE TRIGGER dataset_insert_trigger
+                BEFORE INSERT ON """+tab_datasets+"""
+                FOR EACH ROW EXECUTE PROCEDURE dataset_insert_trigger();
+                """
+            )
+            self.resourcesinfo_insert_function = DDL(
+                """
+                CREATE OR REPLACE FUNCTION resourcesinfo_insert_trigger()
+                RETURNS TRIGGER AS $$
+
+                DECLARE
+                    _snapshot smallint;
+                    _table_name text;
+
+                BEGIN
+                    _snapshot := NEW.snapshot;
+                    _table_name := '"""+tab_resourcesinfo+"""_' || _snapshot;
+
+                    PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
+
+                      IF NOT FOUND THEN
+                        EXECUTE
+                          'CREATE TABLE '
+                          || quote_ident(_table_name)
+                          || ' (CHECK ("snapshot" = '
+                          || _snapshot::smallint
+                          || ')) INHERITS ("""+tab_resourcesinfo+""")';
+
+                        -- Indexes are defined per child, so we assign a default index that uses the partition columns
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_id') || ' ON '||quote_ident(_table_name) || ' (status)';
+                      END IF;
+
+                      EXECUTE
+                        'INSERT INTO '
+                        || quote_ident(_table_name)
+                        || ' VALUES ($1.*)'
+                      USING NEW;
+
+
+
+                      RETURN NULL;
+                END;
+
+                $$ LANGUAGE plpgsql;
+                """)
+            self.resourcesinfo_insert_trigger = DDL(
+                """
+                CREATE TRIGGER resourcesinfo_insert_trigger
+                BEFORE INSERT ON """+tab_resourcesinfo+"""
+                FOR EACH ROW EXECUTE PROCEDURE resourcesinfo_insert_trigger();
+                """
+            )
+
+
+    def db_DropEverything(self):
+        print "Sroping everything"
+        conn = self.engine.connect()
+
+        # the transaction only applies if the DB supports
+        # transactional DDL, i.e. Postgresql, MS SQL Server
+        trans = conn.begin()
+
+        inspector = reflection.Inspector.from_engine(self.engine)
+
+        # gather all data first before dropping anything.
+        # some DBs lock after things have been dropped in
+        # a transaction.
+
+        metadata = MetaData()
+
+        tbs = []
+        all_fks = []
+
+        for table_name in inspector.get_table_names():
+            fks = []
+            for fk in inspector.get_foreign_keys(table_name):
+                if not fk['name']:
+                    continue
+                fks.append(
+                    ForeignKeyConstraint((),(),name=fk['name'])
+                    )
+            t = Table(table_name,metadata,*fks)
+            tbs.append(t)
+            all_fks.extend(fks)
+
+        for fkc in all_fks:
+            conn.execute(DropConstraint(fkc,cascade=True))
+
+        for table in tbs:
+            if table.name!=tab_datasets and table.name!=tab_resourcesinfo:
+                conn.execute(DropTable(table))
+
+        trans.commit()
 
     def init(self, Base):
-        Base.metadata.drop_all(self.dbm.engine)
-        Base.metadata.create_all(self.dbm.engine)
+
+        event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
+        event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
+        event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_function)
+        event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_trigger)
+        log.info("DROP ALL")
+        Base.metadata.drop_all(self.engine)
+        log.info("CREATE ALL")
+        Base.metadata.create_all(self.engine)
+
+
+
+class DBClient(object):
+
+
+    def __init__(self, dbm):
+        self.Session = scoped_session(dbm.session_factory)
+        Base.query = self.Session.query_property()
 
 
     from contextlib import contextmanager
@@ -97,6 +256,7 @@ class DBClient(object):
         #session = self.Session()
         try:
             yield self.Session
+            self.Session.flush()
             self.Session.commit()
         except:
             self.Session.rollback()
@@ -104,12 +264,16 @@ class DBClient(object):
         #finally:
         #   self.Session.remove()
 
-
+    def remove(self):
+        self.Session.remove()
 
     def add(self, obj):
         with self.session_scope() as session:
             session.add(obj)
-        #self.session.commit()
+
+    def merge(self, obj):
+        with self.session_scope() as session:
+            session.merge(obj)
 
     def bulkadd(self, obj):
         with self.session_scope() as session:
@@ -118,9 +282,28 @@ class DBClient(object):
     def commit(self):
         self.Session.commit
 
+    def portals(self):
+        return Portal.query.all()
+
+    def portalsSnapshots(self,snapshot):
+        return PortalSnapshot.query\
+            .filter(PortalSnapshot.snapshot==snapshot).all()
+
+    def portalsQuality(self,snapshot):
+        return PortalSnapshotQuality.query\
+            .filter(PortalSnapshotQuality.snapshot==snapshot).all()
+
+    def portalsAll(self,snapshot):
+        return PortalSnapshot.query\
+                .filter(PortalSnapshot.snapshot==snapshot)\
+                .outerjoin( PortalSnapshotQuality, PortalSnapshot.portalid==PortalSnapshotQuality.portalid )\
+                .join(Portal)\
+                .add_entity(PortalSnapshotQuality)\
+                .add_entity(Portal)\
+                .all()
+
     def datasetdataExists(self, md5):
-        with self.session_scope() as session:
-            return session.query(DatasetData).filter_by(md5=md5).first()
+        return DatasetData.query.filter_by(md5=md5).first()
 
     def datasetqualityExists(self, md5):
         with self.session_scope() as session:

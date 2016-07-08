@@ -28,36 +28,86 @@
 
 
 {% block content %}
-    <div class="ui three column grid">
-  <div class="column">
-    <div class="ui fluid card">
-      <div class="image">
-        <img src="/images/avatar/large/daniel.jpg">
-      </div>
-      <div class="content">
-        <a class="header">Daniel Louise</a>
-      </div>
-    </div>
-  </div>
-  <div class="column">
-    <div class="ui fluid card">
-      <div class="image">
-        <img src="/images/avatar/large/helen.jpg">
-      </div>
-      <div class="content">
-        <a class="header">Helen Troy</a>
-      </div>
-    </div>
-  </div>
-  <div class="column">
-    <div class="ui fluid card">
-      <div class="image">
-        <img src="/images/avatar/large/elliot.jpg">
-      </div>
-      <div class="content">
-        <a class="header">Elliot Fu</a>
-      </div>
+<div class="ui clearing segment">
+
+  <h2 class="ui left floated header">
+    {{data|length}} Portals
+  </h2>
+  <div class="ui left floated">
+    <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="circular search link icon"></i>
     </div>
   </div>
 </div>
+
+
+
+
+    <div class="ui four cards">
+
+        {% for p in data %}
+
+            <div class="ui flex raised card">
+                <div class="content">
+                    <div class="header">
+                    <a href="{{p.uri}}">{{p.uri|get_domain}}</a>
+                    <span class=" right floated ">
+                        <i class="{{p.iso| lower}} flag "></i>
+                        </span>
+                        </div>
+
+                    <div class="meta">
+                        <span class="right floated">{{p.software}}</span>
+                        <a href="{{p.apiuri}}">API</a>
+                        <a href="{{p.uri}}">Homepage</a>
+
+                    </div>
+                    <div class="description">
+
+                        <span class="date"><i class="calendar icon"></i>Snapshots {{p.snCount}}</span>
+                        <span class="right floated date"><i class="history icon"></i>Last <span class="ui label"> 1.6 - 8.6.16</span></span>
+                        <div class="ui mini statistics">
+                            <div class=" statistic">
+                            <div class="value">
+                              {{p.datasets}}
+                            </div>
+                            <div class="label">
+                              Datasets
+                            </div>
+                            </div>
+                            <div class="statistic">
+                            <div class="value">
+                              31,200
+                            </div>
+                            <div class="label">
+                              Licenses
+                            </div>
+                            </div>
+                            <div class="statistic">
+                            <div class="value">
+                              22
+                            </div>
+                            <div class="label">
+                              Resources
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui two bottom attached buttons">
+                    <div class="ui button">
+                        <i class="line chart icon"></i>
+                        Dashboard
+                    </div>
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+{% endblock %}
+
+{% block script %}
+
 {% endblock %}

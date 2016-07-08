@@ -37,8 +37,8 @@ def aggregateByPortal3(db, portalid, snapshot):
     with Timer(key="qualityDF3"):
         result = defaultdict(list)
         q=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).join(DatasetQuality, Dataset.md5==DatasetQuality.md5)
-        print str(q)
-        print '-'*50
+        #print str(q)
+        #print '-'*50
         for d in q:
             with Timer(key="inspect2"):
                 instance = inspect(d.data.quality)
@@ -55,7 +55,6 @@ def aggregate(db, snapshot):
                 df= aggregateByPortal3(db, portalid[0], snapshot)
             with Timer(key=portalid[0]+'-mean', verbose=True):
                 dfm=df.mean().round(decimals=2).copy()
-
                 data={k:float(str(v)) for k,v  in dict(dfm).items()}
 
             data['datasets']=df.shape[0]
