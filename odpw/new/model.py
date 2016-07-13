@@ -68,7 +68,7 @@ class Portal(Base):
 
     @last_snapshot.expression
     def last_snapshot(cls):
-        return select([func.min(PortalSnapshot.snapshot)])\
+        return select([func.max(PortalSnapshot.snapshot)])\
             .where(PortalSnapshot.portalid == cls.id).label("last_snapshot")
 
     @hybrid_property
@@ -79,6 +79,16 @@ class Portal(Base):
     def datasetCount(cls):
         q=select([PortalSnapshot.datasetCount])\
             .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("datasetCount")
+        return q
+
+    @hybrid_property
+    def resourceCount(self):
+        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().resourceCount
+
+    @resourceCount.expression
+    def resourceCount(cls):
+        q=select([PortalSnapshot.resourceCount])\
+            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("resourceCount")
         return q
 
     def __repr__(self):

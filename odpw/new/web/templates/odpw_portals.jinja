@@ -1,113 +1,154 @@
 {% extends "odpw_layout.jinja" %}
 
 
-{% macro basics(data) -%}
+{% macro portalCard(portal) -%}
+<div class="ui flex raised card" style="min-width: 350px;">
+    <div class="content">
+        <div class="header">
+            <span class="searchable">{{portal.uri|get_domain}}</span>
+            <span class=" right floated ">
+                <i class="{{portal.iso| lower}} flag "></i>
+                <span class="searchable" style="display:none"> {{portal.iso}}
 
-<div class="ui card">
-  <div class="image">
-    <img src="/images/avatar2/large/kristy.png">
-  </div>
-  <div class="content">
-    <a class="header">Kristy</a>
-    <div class="meta">
-      <span class="date">Joined in 2013</span>
+            </span>
+        </div>
+
+        <div class="meta">
+            <span class="right floated searchable">{{portal.software}}</span>
+            <a href="{{portal.apiuri}}">API</a>
+            <a href="{{portal.uri}}">Homepage</a>
+
+        </div>
+        <div class="description">
+
+            <span class="date"><i class="calendar icon"></i>{{portal.snCount}} Snapshots</span>
+            <span class="right floated date"><i class="history icon"></i>Last <span class=""> {{portal.snLast|getWeekString}}</span></span>
+            <div class="ui mini statistics">
+                <div class=" statistic">
+                    <div class="value">
+                      {{portal.datasets}}
+                    </div>
+                    <div class="label">
+                      Datasets
+                    </div>
+                </div>
+                <div class="statistic">
+                    <div class="value">
+                      --
+                    </div>
+                    <div class="label">
+                      Licenses
+                    </div>
+                </div>
+                <div class="statistic">
+                    <div class="value">
+                      {{ portal.resources }}
+                    </div>
+                    <div class="label">
+                      Resources
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="description">
-      Kristy is an art director living in New York.
+    <div class="ui two bottom attached buttons">
+        <div class="ui button">
+            <i class="line chart icon"></i>
+            Dashboard
+        </div>
     </div>
-  </div>
-  <div class="extra content">
-    <a>
-      <i class="user icon"></i>
-      22 Friends
-    </a>
-  </div>
 </div>
 {%- endmacro %}
 
 
 
 {% block content %}
-<div class="ui clearing segment">
+    <div class="ui grid">
+        <div class="three wide column" style="background: black;">
+              <div class="ui secondary sticky fixed vertical inverted fluid menu">
+                <a class="item active">
+                    Portals<i class="grid layout icon"></i>
 
-  <h2 class="ui left floated header">
-    {{data|length}} Portals
-  </h2>
-  <div class="ui left floated">
-    <div class="ui icon input">
-        <input type="text" placeholder="Search...">
-        <i class="circular search link icon"></i>
-    </div>
-  </div>
-</div>
+                </a>
+                <a class="item">
+                  Messages
+                </a>
+                <a class="item">
+                  Friends
+                </a>
+              </div>
+        </div>
+        <div class="thirteen wide column">
+            <br>
+            <div class="ui form">
+                <div class="fields">
 
 
-
-
-    <div class="ui four cards">
-
-        {% for p in data %}
-
-            <div class="ui flex raised card">
-                <div class="content">
-                    <div class="header">
-                    <a href="{{p.uri}}">{{p.uri|get_domain}}</a>
-                    <span class=" right floated ">
-                        <i class="{{p.iso| lower}} flag "></i>
-                        </span>
-                        </div>
-
-                    <div class="meta">
-                        <span class="right floated">{{p.software}}</span>
-                        <a href="{{p.apiuri}}">API</a>
-                        <a href="{{p.uri}}">Homepage</a>
-
-                    </div>
-                    <div class="description">
-
-                        <span class="date"><i class="calendar icon"></i>Snapshots {{p.snCount}}</span>
-                        <span class="right floated date"><i class="history icon"></i>Last <span class="ui label"> 1.6 - 8.6.16</span></span>
-                        <div class="ui mini statistics">
-                            <div class=" statistic">
-                            <div class="value">
-                              {{p.datasets}}
+                    <h2 class="field">
+                        <span id="pCount">{{data|length}}</span> Portals
+                    </h2>
+                    <div class="six wide field">
+                         <div class="ui icon input">
+                            <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
+                                <i class="search icon"></i>
                             </div>
-                            <div class="label">
-                              Datasets
-                            </div>
-                            </div>
-                            <div class="statistic">
-                            <div class="value">
-                              31,200
-                            </div>
-                            <div class="label">
-                              Licenses
-                            </div>
-                            </div>
-                            <div class="statistic">
-                            <div class="value">
-                              22
-                            </div>
-                            <div class="label">
-                              Resources
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ui two bottom attached buttons">
-                    <div class="ui button">
-                        <i class="line chart icon"></i>
-                        Dashboard
                     </div>
                 </div>
             </div>
+            <br>
 
-        {% endfor %}
 
-    </div>
+            <div class="ui doubling stackable grid cards" id="example1">
+
+                {% for p in data %}
+                    {{portalCard(p)}}
+
+
+                {% endfor %}
+
+            </div>
+        </div>
+   </div>
+
+
+
+
+
 {% endblock %}
 
 {% block script %}
+$('.ui.sticky')
+  .sticky({
+    context: '#example1'
+  });
+  $('#filter').change( function () {
+	    var filter = $(this).val().toLowerCase().trim();
+	    var filter_tags = filter.split(" ");
+	    var filter_tags_length = filter_tags.length;
+	    var pCount=0
+	    $('#example1>div.card').each(function () {
+	        matches = [];
+	        c = 0;
+	        $(this).find(".searchable").each(function () {
+	            var t = $(this);
+	            $.each(filter_tags, function (i, a_filter) {
+	                if ( t.text().toLowerCase().indexOf(a_filter) !== -1 ) {
+	                    matches.push(a_filter)
+	                }
+	            });
+	        });
+	        m = $.unique(matches)
+
+	        if( (m.length == filter_tags_length) || filter.length==0){
+	            $(this).show();
+	            pCount=pCount+1
+	        }else
+	            $(this).hide();
+	    });
+	    $("#pCount").text(pCount)
+	}).keyup( function () {
+	    // fire the above change event after every letter
+	    $(this).change();
+	});
 
 {% endblock %}

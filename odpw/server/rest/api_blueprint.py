@@ -490,6 +490,8 @@ def quality(snapshot):
                     v = pmd.qa_stats.get(k,-1) if pmd.qa_stats else None
                     if v is None:
                         v=-1
+                    if 'value' in v:
+                        v=v['value']
                     d['qa_'+k]=v
                 
                 

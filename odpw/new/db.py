@@ -23,7 +23,7 @@ import structlog
 from sqlalchemy.sql.ddl import DropConstraint
 
 from odpw.new.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
-    tab_datasets, tab_resourcesinfo
+    tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource
 
 log =structlog.get_logger()
 
@@ -304,6 +304,12 @@ class DBClient(object):
 
     def datasetdataExists(self, md5):
         return DatasetData.query.filter_by(md5=md5).first()
+
+    def resourceinfoExists(self, uri, snapshot):
+        return ResourceInfo.query.filter_by(uri=uri, snapshot=snapshot).first()
+
+    def metaresourceExists(self, uri):
+        return MetaResource.query.filter_by(uri=uri).first()
 
     def datasetqualityExists(self, md5):
         with self.session_scope() as session:

@@ -2,14 +2,13 @@ import datetime
 import json
 
 import rdflib
+import structlog
 import urlnorm
 
+from new.tests.test_md5 import md5
 from odpw.analysers.quality.analysers import DCATDMD
-
 from odpw.new.model import Dataset, DatasetData, PortalSnapshot, MetaResource, \
     DatasetQuality
-
-from odpw.new.test_md5 import md5
 from odpw.utils.dataset_converter import CKANConverter, graph_from_opendatasoft, fix_socrata_graph
 from odpw.utils.dcat_access import \
     getModificationDate, getCreationDate, getDistributionLicenseTriples, \
@@ -18,9 +17,6 @@ from odpw.utils.dcat_access import \
     getDistributionModificationDateWithURL, getOrganization
 from odpw.utils.licenses_mapping import LicensesOpennessMapping
 from odpw.utils.timer import Timer
-
-import structlog
-
 from odpw.utils.util import ErrorHandler, getExceptionCode, getExceptionString
 
 log =structlog.get_logger()

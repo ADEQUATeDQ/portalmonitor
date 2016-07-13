@@ -8,7 +8,7 @@ if __name__ == '__main__':
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
     #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
-    snapshot=1626
+    snapshot=1627
     portalid='opendata_hu'
 
     aggregate(db, snapshot)
