@@ -1,27 +1,15 @@
 from multiprocessing import Process, cpu_count, Manager
-from os import sys
 import time
-import logging
 from Queue import Empty
 
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import asc
 
-from new.model import ResourceInfo
-from utils.timer import Timer
-
-logger = logging.getLogger('chat_message_parser')
-logger.setLevel(logging.DEBUG)
-logging.basicConfig()
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-logger.addHandler(stream_handler)
+from odpw.new.model import ResourceInfo
+from odpw.utils.timer import Timer
 from odpw.db.dbm import PostgressDBM
 
 from odpw.new.db import DBClient,DBManager
+
 import structlog
-
-
 log =structlog.get_logger()
 
 
