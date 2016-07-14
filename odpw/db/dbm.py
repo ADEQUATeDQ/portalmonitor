@@ -868,6 +868,35 @@ class PostgressDBM(object):
                 self.log.debug(query=s.compile(), params=s.compile().params)
                 return con.execute(s)
 
+    def getResourcesAsStream(self,snapshot=None, portalID=None, status =None, statuspre=None, page=1000):
+
+        start=0
+        limit=page
+        while True:
+            with self.engine.begin() as con:
+                s = select([self.resources])
+                if snapshot:
+                    s =s.where(self.resources.c.snapshot== snapshot)
+                if portalID:
+                    s= s.where(self.resources.c.origin[portalID]!=None)
+                if status:
+                    s= s.where(self.resources.c.status==status)
+                elif statuspre:
+                    sp=int(statuspre[0])
+                    s= s.where(self.resources.c.status >= sp*100)
+                    s= s.where(self.resources.c.status <= (sp+1)*100)
+                s=s.limit(limit).offset(start)
+                self.log.debug(query=s.compile(), params=s.compile().params)
+                c =0
+                for res in con.execute(s):
+                    c+=1
+
+                    yield res
+                if c==0:
+                    break
+
+                start+=limit
+
 
     def getResourcesMimeSize(self, snapshot=None, portalID=None, status =None):
         with Timer(key="getResourcesMimeSize") as t:

@@ -25,37 +25,41 @@ import structlog
 log =structlog.get_logger()
 
 
-def producer_queue(queue, snapshot):
-    from odpw.db.models import Resource
-    dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
-    iter=Resource.iter(dbm.getResources(snapshot=snapshot))
+def producer_queue(queue, snapshots):
 
-    for R in iter:
-        uri=R.url
-        uri=uri.replace("http:// \thttp:","http:")
-        uri=uri.replace("http:// http://","http://")
+    for snapshot in snapshots:
+        log.info("Fetching HTTP INFO", snapshot=snapshot)
+        from odpw.db.models import Resource
+        dbm=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
+        iter=Resource.iter(dbm.getResourcesAsStream(snapshot=snapshot))
 
-        r={
-            'snapshot':R.snapshot
-            ,'uri':uri
-            ,'timestamp':R.timestamp
-            ,'status':R.status
-            ,'exc':R.exception
-            ,'header':R.header
-            ,'mime':R.mime
-            ,'size':R.size
-        }
-        RI=ResourceInfo(**r)
-        queue.put(RI)
+        for R in iter:
+            uri=R.url
+            uri=uri.replace("http:// \thttp:","http:")
+            uri=uri.replace("http:// http://","http://")
+
+            r={
+                'snapshot':R.snapshot
+                ,'uri':uri
+                ,'timestamp':R.timestamp
+                ,'status':R.status
+                ,'exc':R.exception
+                ,'header':R.header
+                ,'mime':R.mime
+                ,'size':R.size
+            }
+            RI=ResourceInfo(**r)
+            queue.put(RI)
+
 
     queue.put('STOP')
 
 
 def consumer_queue(proc_id, queue):
-    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
+    #dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
-
+    batchSize=100
     batch = []
     while True:
         try:
@@ -66,28 +70,30 @@ def consumer_queue(proc_id, queue):
                 # put stop back in queue for other consumers
                 queue.put('STOP')
                 break
-
-            if not db.resourceinfoExists(RI.uri, RI.snapshot):
-                if db.metaresourceExists(RI.uri):
-                    batch.append(RI)
-                else:
-                    log.warn("URI missing", uri=RI.uri)
+            with Timer(key="checkExistence"):
+                if not db.resourceinfoExists(RI.uri, RI.snapshot):
+                    if db.metaresourceExists(RI.uri):
+                        batch.append(RI)
+                    else:
+                        log.warn("URI missing", uri=RI.uri)
 
             batch.append(RI)
-            if queue.qsize() > 1000:
-                for i in xrange(50):
+            if queue.qsize() > (cpu_count()+1)*batchSize:
+                for i in xrange(batchSize):
                     RI = queue.get(proc_id, 1)
-                    if not db.resourceinfoExists(RI.uri,RI.snapshot):
-                        if db.metaresourceExists(RI.uri):
-                            batch.append(RI)
-                        else:
-                            log.warn("URI missing", uri=RI.uri)
+                    with Timer(key="checkExistence"):
+                        if not db.resourceinfoExists(RI.uri,RI.snapshot):
+                            if db.metaresourceExists(RI.uri):
+                                batch.append(RI)
+                            else:
+                                log.warn("URI missing", uri=RI.uri)
 
-            if len(batch)==100:
-                with Timer(key="Batch"+str(proc_id), verbose=True):
+            if len(batch)>=batchSize:
+                with Timer(key="Batch"+str(proc_id)):
                     db.bulkadd(batch)
                     batch=[]
                     print queue.qsize()
+                Timer.printStats()
         except Empty:
             pass
 
@@ -105,13 +111,11 @@ if __name__ == '__main__':
     snapshots=[1622]
     #snapshots=[1619]
     Ps=[]
-    tasks=[]
-    for sn in snapshots:
-        tasks.append(sn)
+
 
     producer = Process(
             target=producer_queue,
-            args=(queue, snapshots[0])
+            args=(queue, snapshots)
         )
     producer.start()
 
