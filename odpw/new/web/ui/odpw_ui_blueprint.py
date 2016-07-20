@@ -7,7 +7,7 @@ from bokeh.embed import components
 from bokeh.resources import INLINE
 from flask import Blueprint, current_app, render_template
 
-from new.utils.helper_functions import row2dict
+from odpw.new.utils.helper_functions import row2dict
 from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
 from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
 from odpw.new.web.ui.plots import fetchProcessChart, qualityChart, qa
