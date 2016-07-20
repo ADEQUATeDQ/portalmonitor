@@ -1,0 +1,79 @@
+{% extends "odpw_layout.jinja" %}
+{% set active_page = "dashboard" -%}
+
+
+{% block content %}
+    <div class="ui grid">
+        <div class="three wide column" style="background: black;">
+            <div class="ui secondary sticky fixed vertical inverted fluid labeled icon menu">
+
+                {% set navigation_bar = [
+                    ('ui.portal', 'info', 'Info'),
+                    ('ui.portalQuality', 'info', 'Quality'),
+                    ('ui.portalRes', 'grid layout', 'Resources')
+                    ]
+                -%}
+                {% set active_sub_page = active_sub_page|default('ui.portal') -%}
+                {% for href,  icon, caption in navigation_bar %}
+                    <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href, portalid=portalid, snapshot=snapshot)|e }}">
+                        <i class="{{ icon|e }} icon"></i>
+                        {{ caption|e }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="thirteen wide column ui grid" id="container">
+
+            <div class="sixteen wide column black">
+                <h3> Portal {{portalid}}</h3>
+            </div>
+            <div class="row">
+                <div class="right floated five wide column large">
+                    Week: {{snapshot|getWeekString}}
+
+                    {% if data.snapshots.prev %}
+                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                        <i class="icon angle left"></i>
+                        </a>
+                    {% else %}
+                        <i class="icon angle left"></i>
+                    {% endif %}
+
+                        <div class="ui upward dropdown item">
+                            <i class="calendar icon"></i>
+                            <div class="menu">
+                                {% for sn in data.snapshots.list %}
+                                    <div class="item" data-value="{{sn}}">{{snapshot|getWeekString}}</div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    {% if data.snapshots.next %}
+                       <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next)}}"> <i class="icon angle right"></i></a>
+                    {% else %}
+                        <i class="icon angle right"></i>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% block portalcontent %}
+            {% endblock %}
+        </div>
+   </div>
+{% endblock %}
+
+
+{% block script %}
+$('.dropdown')
+  .dropdown({
+    // you can use any ui transition
+    transition: 'drop'
+  })
+;
+$('.ui.sticky')
+  .sticky({
+    context: '#container'
+  });
+
+
+{% endblock %}

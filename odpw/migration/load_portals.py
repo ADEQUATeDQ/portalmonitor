@@ -1,9 +1,9 @@
 from urlparse import urlparse
 
 import pycountry
+from odpw.new.core.db import DBClient, DBManager
 
-from odpw.new.db import DBClient, DBManager
-from odpw.new.model import Portal, Base
+from new.core.model import Portal, Base
 from odpw.db.dbm import PostgressDBM
 
 
@@ -15,8 +15,8 @@ def _calc_id(url):
     return id.lower()
 
 if __name__ == '__main__':
-    #dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
+    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     dbm.db_DropEverything()
     dbm.init(Base)
     db= DBClient(dbm)

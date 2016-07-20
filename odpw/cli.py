@@ -107,7 +107,6 @@ def config_logging():
             structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(sort_keys=True)
             ],
-            context_class=dict,
             logger_factory=structlog.stdlib.LoggerFactory(),
             wrapper_class=structlog.stdlib.BoundLogger,
             cache_logger_on_first_use=True,

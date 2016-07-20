@@ -44,21 +44,19 @@ namespaces = {
 
 
 def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
-
-    # init a new graph
     if not graph:
         graph = rdflib.Graph()
 
     if portal.software == 'CKAN':
-        converter = CKANConverter(graph, portal.apiurl)
+        converter = CKANConverter(graph, portal.apiuri)
         converter.graph_from_ckan(dataset_dict)
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
             graph.parse(data=dataset_dict['dcat'], format='xml')
-            fix_socrata_graph(graph, dataset_dict, portal.apiurl)
+            fix_socrata_graph(graph, dataset_dict, portal.apiuri)
             # TODO redesign distribution, format, contact (publisher, organization)
     elif portal.software == 'OpenDataSoft':
-        graph_from_opendatasoft(graph, dataset_dict, portal.apiurl)
+        graph_from_opendatasoft(graph, dataset_dict, portal.apiuri)
         # TODO contact, publisher, organization
 
     return json.loads(graph.serialize(format=format))

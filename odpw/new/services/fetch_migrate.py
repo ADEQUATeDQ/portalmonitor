@@ -5,6 +5,7 @@ from multiprocessing import Pool
 import rdflib
 import structlog
 
+from db.dbm import PostgressDBM
 from odpw.new.quality import dcat_analyser
 from odpw.new.utils.utils_snapshot import getCurrentSnapshot
 
@@ -28,50 +29,52 @@ from odpw.new.core.parsing import toDatetime, normaliseFormat
 from odpw.new.core.portal_fetch_processors import getPortalProcessor
 from odpw.new.core.db import DBClient, DBManager
 
-def fetchHttp(obj):
+
+
+def fetchMigrate(obj):
+
     P, dbConf, snapshot = obj[0],obj[1],obj[2]
-    log.info("HTTPInsert", portalid=P.id, snapshot=snapshot)
 
     dbm = DBManager(**dbConf)
     db= DBClient(dbm)
 
-    with Timer(key='InsertPortal', verbose=True):
-        PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
 
-        db.add(PS)
-        try:
-            processor=getPortalProcessor(P)
+    dbm1=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
+    PMD= dbm.getPortalMetaData(portalID=P.id, snapshot=snapshot)
+    if PMD is None:
+        log.info("Skipping ",portalid=P.id, snapshot=snapshot)
+        return
+    PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
 
-            iter=processor.generateFetchDatasetIter(P, snapshot)
-            insertDatasets(P,db,iter,snapshot)
-            status=200
-            exc=None
-        except Exception as exc:
-            ErrorHandler.handleError(log, "PortalFetchException", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
-            status=getExceptionCode(exc)
-            exc=getExceptionString(exc)
+    if PMD.fetch_stats is not None and 'fetch_start' in PMD.fetch_stats:
 
+        start= datetime.datetime.strptime(PMD.fetch_stats['fetch_start'], "%Y-%m-%dT%H:%M:%S.%f")
+        end= datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if 'fetch_end' in PMD.fetch_stats and PMD.fetch_stats['fetch_end'] is not None else None
+        PS.start=start
+        PS.end=end
+        PS.exc=PMD.fetch_stats['exception']
+        PS.status=PMD.fetch_stats['status']
+    else:
+        PS.start=None
+        PS.end=None
+    db.add(PS)
 
-        #update the portalsnapshot object with dataset and resource count and end time
-        s = db.Session
-        PS = s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
-        PS.datasetCount = s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
-        PS.resourceCount =s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-        PS.end = datetime.datetime.now()
-        PS.exc=exc
-        PS.status=status
+    from odpw.db.models import Dataset as DDataset
+    iter=DDataset.iter(dbm.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
+    insertDatasets(P,db, iter,snapshot)
+    s=db.Session
+    PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
+    PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+    PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
 
-        s.commit()
-        s.remove()
+    s.commit()
+    s.remove()
 
-        try:
-            aggregatePortalQuality(db,P.id, snapshot)
-        except Exception as exc:
-            ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
+    try:
+        aggregatePortalQuality(db,P.id, snapshot)
+    except Exception as exc:
+        ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
 
-
-
-    return (P, snapshot)
 
 def createDatasetData(md5v,dataset):
     with Timer(key='createDatasetData'):
@@ -218,21 +221,22 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
 def help():
     return "perform head lookups"
 def name():
-    return 'Fetch'
+    return 'FetchM'
 
 def setupCLI(pa):
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=4)
     pa.add_argument('--pid', dest='portalid' , help="Specific portal id ")
+    pa.add_argument('--sn', dest='snapshot' , help="Snapshot")
 
 def cli(args,dbm):
-    sn = getCurrentSnapshot()
+    sn=args.snapshot
 
     dbConf= readDBConfFromFile(args.config)
     db= DBClient(dbm)
 
     tasks=[]
     if args.portalid:
-        P =db.Session.query(Portal).filter(Portal.id==args.portalid).one()
+        P = db.Session.query(Portal).filter(Portal.id==args.portalid).one()
         if P is None:
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
@@ -245,6 +249,6 @@ def cli(args,dbm):
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 
     pool = Pool(args.processors)
-    for x in pool.imap(fetchHttp,tasks):
+    for x in pool.imap(fetchMigrate,tasks):
         pid,sn =x[0].id, x[1]
         log.info("RECEIVED RESULT", portalid=pid, snapshot=sn)

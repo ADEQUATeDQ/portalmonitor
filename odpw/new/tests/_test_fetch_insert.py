@@ -1,14 +1,12 @@
 from multiprocessing import Pool
 
-from odpw.new.services.fetch_insert import fetchMigrate
-from odpw.db.dbm import PostgressDBM
-
-from odpw.new.db import DBClient,DBManager
-from odpw.new.model import Portal, PortalSnapshotQuality
-
-from odpw.utils.timer import Timer
-
 import structlog
+from odpw.new.core.db import DBClient,DBManager
+
+from odpw.new.core.model import Portal
+from odpw.db.dbm import PostgressDBM
+from odpw.new.services.fetch_insert import fetchMigrate
+from odpw.utils.timer import Timer
 
 
 log =structlog.get_logger()
@@ -16,8 +14,8 @@ import time
 #dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
 def migrate(obj):
 
-    #dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
+    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
     time.sleep(1)
     P= obj[0]
@@ -37,21 +35,19 @@ def migrate(obj):
     return (P, snapshot)
 
 if __name__ == '__main__':
-    #dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
+    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
 
     #snapshot=1625
-    snapshots=[1627,1626,1625,1624,1623,1622,1621,1622]
+    snapshots=[1628,1627]
     #snapshots=[1619]
     Ps=[]
     tasks=[]
     for P in db.Session.query(Portal):
-        #if P.id=='data_gv_at':
-            #Ps.append(P)
-            #if P.id!='data_gv_at':
-        for sn in snapshots:
-            tasks.append((P, sn))
+        if P.id=='data_wu_ac_at':
+            for sn in snapshots:
+                tasks.append((P, sn))
 
     pool = Pool(4)
     for x in pool.imap(migrate,tasks):

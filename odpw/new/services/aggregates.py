@@ -1,11 +1,11 @@
-
-
 from collections import defaultdict
-import numpy as np
-from sqlalchemy import inspect
-from new.model import Dataset, DatasetData, DatasetQuality, MetaResource, PortalSnapshotQuality
+
 import pandas as pd
-from utils.timer import Timer
+from sqlalchemy import inspect
+
+from odpw.new.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality
+from odpw.new.utils.timing import Timer
+
 
 def aggregateByPortal1(db, portalid, snapshot):
     with Timer(key="qualityDF1", verbose=True):
@@ -48,21 +48,35 @@ def aggregateByPortal3(db, portalid, snapshot):
 
 
 
+boolTypeCol=['cocu','coce','coli','coac','exac','exco','opli']
+
+def aggregatePortalQuality(db, portalid, snapshot):
+
+    with Timer(key=portalid+'-agg', verbose=True):
+        df= aggregateByPortal3(db, portalid, snapshot)
+    with Timer(key=portalid+'-mean', verbose=True):
+        for c in boolTypeCol:
+            df[c]=df[c].apply(bool)
+
+        data={ k:float(str(v[['mean']]['mean'].round(decimals=2))) for k,v  in dict(df.describe()).items()}
+        data.update({ k+'N':int(v[['count']]['count']) for k,v  in dict(df.describe()).items()})
+
+    data['datasets']=df.shape[0]
+    PSQ= PortalSnapshotQuality(portalid=portalid, snapshot=snapshot, **data)
+    db.add(PSQ)
+
+
+
+
 def aggregate(db, snapshot):
     for portalid in  db.Session.query(Dataset.portalid).distinct():
-        with Timer(key=portalid[0], verbose=True):
-            with Timer(key=portalid[0]+'-agg', verbose=True):
-                df= aggregateByPortal3(db, portalid[0], snapshot)
-            with Timer(key=portalid[0]+'-mean', verbose=True):
-                dfm=df.mean().round(decimals=2).copy()
-                data={k:float(str(v)) for k,v  in dict(dfm).items()}
-
-            data['datasets']=df.shape[0]
-            PSQ= PortalSnapshotQuality(portalid=portalid, snapshot=snapshot, **data)
-            db.add(PSQ)
-            print portalid[0],data
+        aggregatePortalQuality(db,portalid,snapshot)
 
 
 
 
 
+#opfo
+#opli
+#opma
+#cofo

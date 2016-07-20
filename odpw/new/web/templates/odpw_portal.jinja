@@ -1,0 +1,43 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% block portalcontent %}
+
+
+<div class="thirteen wide column ui padded divided grid">
+    <h2>General Portal Information</h2>
+    <div class="row">
+        <div class="ui statistics column">
+            <div class="statistic">
+                <div class="value">
+                    {{data.datasets}}
+                </div>
+                <div class="label">
+                    Datasets
+                </div>
+            </div>
+            <div class="statistic">
+                <div class="value">
+                    {{data.snapshots.list|length}}
+                </div>
+                <div class="label">
+                    Snapshots
+                </div>
+            </div>
+            <div class="statistic">
+                <div class="value">
+                    22
+                </div>
+                <div class="label">
+                    Members
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+{{data}}
+
+{% endblock %}

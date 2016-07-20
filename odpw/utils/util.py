@@ -593,13 +593,6 @@ def getExceptionString(e):
         return 601
 
 
-def getCurrentSnapshot():
-    now = datetime.now()
-    y=now.isocalendar()[0]
-    w=now.isocalendar()[1]
-    sn=str(y)[2:]+'{:02}'.format(w)
-        
-    return sn
 
 def getSnapshot(args):
     if hasattr(args, 'snapshotignore') and args.snapshotignore:

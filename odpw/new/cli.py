@@ -1,32 +1,43 @@
-import odpw
-from odpw.new.db import DBManager
-from odpw.utils.timer import Timer
+
 
 __author__ = 'jumbrich'
 
+import odpw
+
+import logging.config
 import structlog
 
 from sqlalchemy.exc import OperationalError
 import os
 import yaml
 import argparse
-import logging.config
 import time
 
 
+from odpw.new.core.db import DBManager
+from odpw.new.utils.error_handling import ErrorHandler
+from odpw.new.utils.helper_functions import readDBConfFromFile
+from odpw.new.utils.timing import Timer
 
-
+#SERVICES
+import odpw.new.web.rest.rest as restAPI
+import odpw.new.web.ui.server as ui
+import odpw.new.services.fetch_insert as fetch
+import odpw.new.services.fetch_migrate as fetchM
+import odpw.new.services.resource_head as head
 
 submodules=[
-            ]
+    restAPI,
+    ui,
+    fetch,fetchM,
+    head
+  ]
 
 
 
 
 def config_logging():
-    
-    
-    
+
     structlog.configure(
         processors=[
             structlog.stdlib.filter_by_level,
@@ -38,7 +49,6 @@ def config_logging():
             structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(sort_keys=True)
             ],
-            context_class=dict,
             logger_factory=structlog.stdlib.LoggerFactory(),
             wrapper_class=structlog.stdlib.BoundLogger,
             cache_logger_on_first_use=True,
@@ -77,16 +87,8 @@ def start ():
     args = pa.parse_args()
     
         
-    db={
-        'host':None,
-        'port':None,
-        'password':None,
-        'user':None,
-        'db':None
-        }
-    
+    db=readDBConfFromFile(args.config)
     if args.config:
-        print args.config
         try:
             with open(args.config) as f_conf:
                 config = yaml.load(f_conf)
@@ -98,11 +100,10 @@ def start ():
                     logconf = os.path.join(odpw.__path__[0], 'resources', 'logging.yaml')
                     with open(logconf) as f:
                         logging.config.dictConfig(yaml.load(f))
-    
-                if 'db' in config:
-                    for key in db:
-                        if key in config['db']:
-                            db[key]=config['db'][key]
+
+
+
+
         except Exception as e:
             print "Exception during config initialisation",e
             return
@@ -121,7 +122,7 @@ def start ():
         log.info("CMD ARGS", args=str(args))
     
         dbm = DBManager(**db)
-        args.func(args,dbm)
+        args.func(args , dbm)
     except OperationalError as e:
         log.fatal("DB Connection Exception: ", msg=e.message)
         
@@ -130,12 +131,10 @@ def start ():
     end = time.time()
     secs = end - start
     msecs = secs * 1000
-    
     log.info("END MAIN", time_elapsed=msecs)
-    
 
     Timer.printStats()
-    
+    ErrorHandler.printStats()
     
     
 

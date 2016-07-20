@@ -3,29 +3,22 @@ disable_existing_loggers: true
 # Configuring the default (root) logger is highly recommended
 root:
     level: INFO
-    handlers: [console]
+    handlers: [console,logfile]
 loggers:
-    # Logging from my application
-    # Controlling logging of 3rd party libs
-    sqlalchemy.engine:
-      level: !!python/name:logging.WARN
-      handlers: [logfile,console]
-      qualname: sqlalchemy.engine
-      propagate: false
-    sqlalchemy.pool:
-      level: !!python/name:logging.WARN
-      handlers: [logfile]
-      qualname: sqlalchemy.pool
-      propagate: false
-    requests.packages.urllib3.connectionpool:
-      level: !!python/name:logging.WARN
-      handlers: [console]
-      qualname: requests.packages.urllib3.connectionpool
+    tornado.access:
+      level: !!python/name:logging.INFO
+      handlers: [access]
+      qualname: tornado.access
       propagate: false
 handlers:
     logfile:
       class: logging.FileHandler
       filename: sample.log
+      formatter: simpleFormatter
+      level: !!python/name:logging.NOTSET
+    access:
+      class: logging.FileHandler
+      filename: access.log
       formatter: simpleFormatter
       level: !!python/name:logging.NOTSET
     console:

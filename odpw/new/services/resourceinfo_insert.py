@@ -1,9 +1,11 @@
 import structlog
 
-from new.model import ResourceInfo
+from new.core.model import ResourceInfo
 from utils.timer import Timer
 
 log =structlog.get_logger()
+
+
 
 
 def resourceMigrate(snapshot, db, dbm):

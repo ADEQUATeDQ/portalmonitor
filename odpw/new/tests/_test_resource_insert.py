@@ -1,15 +1,11 @@
 from multiprocessing import Pool
 
-from new.services.resourceinfo_insert import resourceMigrate
-from odpw.new.services.fetch_insert import fetchMigrate
-from odpw.db.dbm import PostgressDBM
-
-from odpw.new.db import DBClient,DBManager
-from odpw.new.model import Portal, PortalSnapshotQuality
-
-from odpw.utils.timer import Timer
-
 import structlog
+from odpw.new.db import DBClient,DBManager
+
+from new.services.resourceinfo_insert import resourceMigrate
+from odpw.db.dbm import PostgressDBM
+from odpw.utils.timer import Timer
 
 
 log =structlog.get_logger()

@@ -1,4 +1,4 @@
-from new.db import DBClient
+from new.core.db import DBClient
 from odpw.db.dbm import PostgressDBM
 
 if __name__ == '__main__':

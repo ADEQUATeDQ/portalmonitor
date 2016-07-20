@@ -1,15 +1,14 @@
-from multiprocessing import Process, cpu_count, Manager
 import time
 from Queue import Empty
-
-
-from odpw.new.model import ResourceInfo
-from odpw.utils.timer import Timer
-from odpw.db.dbm import PostgressDBM
-
-from odpw.new.db import DBClient,DBManager
+from multiprocessing import Process, cpu_count, Manager
 
 import structlog
+from odpw.new.db import DBClient,DBManager
+
+from new.core.model import ResourceInfo
+from odpw.db.dbm import PostgressDBM
+from odpw.utils.timer import Timer
+
 log =structlog.get_logger()
 
 

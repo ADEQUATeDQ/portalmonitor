@@ -1,8 +1,7 @@
+import datetime
 import unittest
 
-import datetime
-
-from odpw.new.utils_snapshot import tofirstdayinisoweek, getSnapshotfromTime
+from new.utils.utils_snapshot import tofirstdayinisoweek, getSnapshotfromTime
 
 
 class SnapshotMethods(unittest.TestCase):

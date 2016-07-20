@@ -1,0 +1,28 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% set active_sub_page = "ui.portalQuality" -%}
+
+
+{% block headcss %}
+    {{ css_resources }}
+{% endblock %}
+
+{% block headscripts %}
+    {{ js_resources }}
+{% endblock %}
+
+
+
+{% block portalcontent %}
+<div class="thirteen wide column ui padded divided grid">
+    <h2>Quality Assessment over the DCAT representation</h2>
+    <div class="ui row">
+        <div style="width:400px; height:400px">
+
+        {{ plot_div }}
+        {{ plot_script }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

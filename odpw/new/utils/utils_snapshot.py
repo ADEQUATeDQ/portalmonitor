@@ -1,6 +1,16 @@
 from datetime import timedelta, datetime, date
 
 
+
+def getCurrentSnapshot():
+    now = datetime.now()
+    y=now.isocalendar()[0]
+    w=now.isocalendar()[1]
+    sn=str(y)[2:]+'{:02}'.format(w)
+
+    return sn
+
+
 def getSnapshotfromTime(now, delta=None,before=False):
     """
     Returns the snapshot for a given time (+/- a delta)
@@ -74,6 +84,17 @@ def getWeekString(yearweek):
     first=tofirstdayinisoweek(yearweek)
     last=toLastdayinisoweek(yearweek)
     return "{} {} - {} {}, {}".format(first.strftime("%b"), first.day,last.strftime("%b"),last.day,last.year)
+
+
+def getLastNSnapshots(yearweek,n):
+    d=[]
+    sn=yearweek
+    while n>0:
+        sn=getPreviousWeek(sn)
+        d.append(sn)
+        n=n-1
+    return d
+
 
 if __name__ == '__main__':
     print getWeekString(1627)

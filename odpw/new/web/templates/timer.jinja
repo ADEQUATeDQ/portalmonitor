@@ -1,0 +1,85 @@
+{% extends "odpw_layout.jinja" %}
+
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="ui grid">
+        <h2>Performance stats</h2>
+
+        <table class="ui celled table" id="timingStats" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Function</th>
+                    <th>Calls</th>
+                    <th>min(ms)</th>
+                    <th>mean(ms)</th>
+                    <th>max(ms)</th>
+                    <th>25% (ms)</th>
+                    <th>50% (ms)</th>
+                    <th>75% (ms)</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <th>Function</th>
+                    <th>Calls</th>
+                    <th>min(ms)</th>
+                    <th>mean(ms)</th>
+                    <th>max(ms)</th>
+                    <th>25% (ms)</th>
+                    <th>50% (ms)</th>
+                    <th>75% (ms)</th>
+                </tr>
+            </tfoot>
+            <tbody>
+            {% for m,s in stats.iteritems() %}
+                <tr>
+                    <td>{{m}}</td>
+                    <td>{{s.calls}}</td>
+                    <td>{{s.min|round(2, 'floor')}}</td>
+                    <td>{{s.avg|round(2, 'floor')}}</td>
+                    <td>{{s.max|round(2, 'floor')}}</td>
+                    <td>{{s.q25}}</td>
+                    <td>{{s.q5}}</td>
+                    <td>{{s.q75}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+
+    $(document).ready(function() {
+
+        var table = $('#timingStats').DataTable(
+            {
+                dom: 'lfrBtip',
+                lengthChange: false
+            }
+        );
+        table.buttons().container()
+            .appendTo( $('#test', table.table().container()) );
+    })
+
+ {% endblock %}
+
+
+
+

@@ -1,34 +1,26 @@
-from multiprocessing.util import register_after_fork
-
-import multiprocessing
 import os
-import sqlalchemy
-from sqlalchemy import Column, String, Integer, ForeignKey, SmallInteger, TIMESTAMP, BigInteger, ForeignKeyConstraint, \
-    Boolean
-from sqlalchemy.dialects.postgresql import JSONB
+import structlog
+from sqlalchemy import create_engine, func
+from sqlalchemy import event
+from sqlalchemy import exc
+from sqlalchemy import exists
 from sqlalchemy.engine import reflection
-from sqlalchemy.orm import relationship, Session, scoped_session
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.schema import DDL
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import (
     MetaData,
     Table,
     DropTable,
     ForeignKeyConstraint,
-    DropConstraint,
+    DDL
     )
-
-import structlog
 from sqlalchemy.sql.ddl import DropConstraint
 
-from odpw.new.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
+from odpw.new.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
     tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource
 
 log =structlog.get_logger()
 
-from sqlalchemy import event
-from sqlalchemy import exc
 
 def add_engine_pidguard(engine):
     """Add multiprocessing guards.
@@ -115,7 +107,14 @@ class DBManager(object):
                           || ')) INHERITS ("""+tab_datasets+""")';
 
                         -- Indexes are defined per child, so we assign a default index that uses the partition columns
-                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_id') || ' ON '||quote_ident(_table_name) || ' (organisation)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_org') || ' ON '||quote_ident(_table_name) || ' (organisation)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_sn')  || ' ON '||quote_ident(_table_name) || ' (snapshot)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_pid') || ' ON '||quote_ident(_table_name) || ' (portalid)';
+                        EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_pkey') || ' PRIMARY KEY (id, snapshot, portalid)';
+                        EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_md5_fkey') || ' FOREIGN KEY (md5) REFERENCES datasetsdata (md5) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION';
+                        EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_portalid_fkey') || ' FOREIGN KEY (portalid, snapshot) REFERENCES portalsnapshot (portalid, snapshot) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION';
+
+
                       END IF;
 
                       EXECUTE
@@ -123,8 +122,6 @@ class DBManager(object):
                         || quote_ident(_table_name)
                         || ' VALUES ($1.*)'
                       USING NEW;
-
-
 
                       RETURN NULL;
                 END;
@@ -229,13 +226,13 @@ class DBManager(object):
 
     def init(self, Base):
 
+        log.info("DROP ALL")
+        Base.metadata.drop_all(self.engine)
+        log.info("CREATE ALL")
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
         event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_function)
         event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_trigger)
-        log.info("DROP ALL")
-        Base.metadata.drop_all(self.engine)
-        log.info("CREATE ALL")
         Base.metadata.create_all(self.engine)
 
 
@@ -271,7 +268,8 @@ class DBClient(object):
         with self.session_scope() as session:
             session.add(obj)
 
-    def merge(self, obj):
+    def merge(self
+              , obj):
         with self.session_scope() as session:
             session.merge(obj)
 
@@ -328,4 +326,75 @@ class DBClient(object):
     def getDatasetData(self,md5=None):
         with self.session_scope() as session:
             q= session.query(DatasetData).filter(DatasetData.md5==md5).first()
+            return q
+
+    def getUnfetchedResources(self,snapshot, portalid=None, batch=None):
+        with self.session_scope() as session:
+            q=session.query(MetaResource.uri)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(MetaResource.valid==True)\
+                .filter(
+                    ~exists().where(MetaResource.uri== ResourceInfo.uri))
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            if batch:
+                q=q.limit(batch)
+            return q
+
+
+    def getResourceInfos(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(ResourceInfo)\
+                .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+            return q
+
+
+    def statusCodeDist(self, snapshot,portalid=None):
+        with self.session_scope() as session:
+            q= session.query(ResourceInfo.status,func.count(ResourceInfo.status))\
+                .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+            q=q.group_by(ResourceInfo.status).all()
+
+            return q
+
+    def organisationDist(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(Dataset.organisation,func.count(Dataset.organisation))\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            q=q.group_by(Dataset.organisation).all()
+            return q
+
+    def licenseDist(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(DatasetData.license,func.count(DatasetData.license)).join(Dataset)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            q=q.group_by(DatasetData.license).all()
+            return q
+
+
+    def validURLDist(self, snapshot,portalid=None):
+        with self.session_scope() as session:
+            q= session.query(MetaResource.valid,func.count(MetaResource.valid))\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+            q=q.group_by(MetaResource.valid).all()
+
             return q

@@ -1,10 +1,7 @@
-from urlparse import urlparse
-
-import pycountry
 import time
 
 from new.db import DBClient
-from new.model import Portal
+
 from odpw.db.dbm import PostgressDBM
 
 

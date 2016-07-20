@@ -48,10 +48,20 @@
 
     <!-- MAIN NAVIGATION -->
         <nav id="mainnav" class="ui secondary pointing labeled icon menu" >
-            <div class="header item">ODPW</div>
-            <a class="active item">System</a>
-            <a class="item">Portals</a>
-            <a class="item"><i class="icon line chart"></i>Dashboard</a>
+            <div class="header item inverted">ODPW</div>
+
+            {% set navigation_bar = [
+                    ('ui.system','system', 'System'),
+                    ('ui.portals', 'portals', 'Portals'),
+                    ('ui.spec', 'api', 'API'),
+                ]
+            -%}
+            {% set active_page = active_page|default('index') -%}
+            {% for href, id, caption in navigation_bar %}
+                <a class="item {% if id == active_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                    {{ caption|e }}
+                </a>
+            {% endfor %}
             <a class="item"><i class="icon download"></i>Data</a>
             <a href="{{ url_for('ui.api')}}" class="item"><i class="icon code"></i>API</a>
             <div class="right menu">

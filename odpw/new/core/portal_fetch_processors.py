@@ -14,6 +14,19 @@ from odpw.utils.util import ErrorHandler as eh, progressIndicator, TimeoutError,
 import structlog
 log = structlog.get_logger()
 
+
+
+
+def getPortalProcessor(P):
+    if P.software == 'CKAN':
+        return CKAN()
+    elif P.software == 'Socrata':
+        return Socrata()
+    elif P.software == 'OpenDataSoft':
+        return OpenDataSoft()
+    else:
+        raise NotImplementedError(P.software + ' is not implemented')
+
 class PortalProcessor:
     def generateFetchDatasetIter(self, Portal, sn):
         raise NotImplementedError("Should have implemented this")
@@ -102,7 +115,6 @@ class CKAN(PortalProcessor):
             raise e
         except Exception as e:
             ErrorHandler.handleError(log,"CKANDSFetchBatchError", pid=Portal.id, exception=e, exc_info=True)
-
         try:
             package_list, status = util.getPackageList(Portal.apiuri)
             if total >0 and len(package_list) !=total:
@@ -132,7 +144,7 @@ class CKAN(PortalProcessor):
                                 'software':Portal.software
                                }
                         try:
-                            resp, status = util.getPackage(apiurl=Portal.apiurl, id=entity)
+                            resp, status = util.getPackage(apiurl=Portal.apiuri, id=entity)
                             props['status']=status
                             if resp:
                                 data = resp

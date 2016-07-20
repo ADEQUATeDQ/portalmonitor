@@ -1,5 +1,6 @@
 {% extends "odpw_layout.jinja" %}
 
+{% set active_page = "portals" -%}
 
 {% macro portalCard(portal) -%}
 <div class="ui flex raised card" style="min-width: 350px;">
@@ -52,10 +53,17 @@
         </div>
     </div>
     <div class="ui two bottom attached buttons">
-        <div class="ui button">
-            <i class="line chart icon"></i>
-            Dashboard
-        </div>
+        {% if portal.snLast %}
+            <a href="{{url_for("ui.portal", portalid=portal.id, snapshot=portal.snLast)}}" class="ui button">
+                <i class="line chart icon"></i>
+                Dashboard
+            </a>
+        {% else %}
+            <div class="ui disabled button">
+                <i class="line chart icon"></i>
+                Dashboard
+            </div>
+        {% endif %}
     </div>
 </div>
 {%- endmacro %}
@@ -65,9 +73,9 @@
 {% block content %}
     <div class="ui grid">
         <div class="three wide column" style="background: black;">
-              <div class="ui secondary sticky fixed vertical inverted fluid menu">
-                <a class="item active">
-                    Portals<i class="grid layout icon"></i>
+            <div class="ui secondary sticky fixed vertical inverted fluid menu" style="margin-left:15px;padding-right:15px;">
+                <a class="item active" >
+                    <i class="grid layout icon"></i>Portals
 
                 </a>
                 <a class="item">

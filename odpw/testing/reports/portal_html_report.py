@@ -301,14 +301,14 @@ def list():
 
 
 def main():
-    app.logger.info('Starting OPDW Dashboard on http://localhost:{}/'.format(1111))
-    print 'Starting OPDW Dashboard on http://localhost:{}/'.format(1111)
+    app.logger.info('Starting OPDW Dashboard on http://localhost:{}/'.format(1112))
+    print 'Starting OPDW Dashboard on http://localhost:{}/'.format(1112)
     app.jinja_env.globals.update(slugify=slugify)
 
     app.config['base']=u'/Users/jumbrich/Data/portal_stats/'
 
     cache['genNav']=navigation_fromDisc(app.config['base'])
-    app.run(debug=True, port = 1111)
+    app.run(debug=True, port = 1112)
 
 
 

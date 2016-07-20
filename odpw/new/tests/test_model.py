@@ -1,8 +1,8 @@
 import datetime
 
-from analysers.quality.analysers import dcat_analyser
 from new.db import DBClient
-from new.model import Portal, Dataset, DatasetData, Base, DatasetQuality, PortalSnapshot, MetaResource, ResourceInfo, \
+
+from new.core.model import Portal, Dataset, DatasetData, Base, DatasetQuality, PortalSnapshot, MetaResource, \
     PortalSnapshotFetch
 
 if __name__ == '__main__':

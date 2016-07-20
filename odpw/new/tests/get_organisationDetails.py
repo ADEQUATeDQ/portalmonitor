@@ -1,9 +1,7 @@
-
-from odpw.new.model import Portal
-from odpw.new.services.fetch_insert import dict_to_dcat
-from odpw.db.models import Dataset
+from new.core.model import Portal
 from odpw.db.dbm import PostgressDBM
-
+from odpw.db.models import Dataset
+from odpw.new.services.fetch_insert import dict_to_dcat
 from odpw.utils.dcat_access import getOrganization
 
 if __name__ == '__main__':

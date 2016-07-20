@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, SmallInteger, TIMESTAMP, BigInteger, ForeignKeyConstraint, \
-    Boolean, func, select, Float
+    Boolean, func, select, Float, distinct
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref, column_property, synonym
@@ -128,25 +128,39 @@ class PortalSnapshotQuality(Base):
     portal  = relationship("Portal", back_populates="snapshotsquality")
 
     cocu = Column(Float)
+    cocuN = Column(Integer)
     coce = Column(Float)
+    coceN = Column(Integer)
     coda = Column(Float)
+    codaN = Column(Integer)
     cofo = Column(Float)
+    cofoN = Column(Integer)
     coli = Column(Float)
+    coliN = Column(Integer)
     coac = Column(Float)
-
+    coacN = Column(Integer)
     exda = Column(Float)
+    exdaN = Column(Integer)
     exri = Column(Float)
+    exriN = Column(Integer)
     expr = Column(Float)
+    exprN = Column(Integer)
     exac = Column(Float)
+    exacN = Column(Integer)
     exdi = Column(Float)
+    exdiN = Column(Integer)
     exte = Column(Float)
+    exteN = Column(Integer)
     exsp = Column(Float)
+    exspN = Column(Integer)
     exco = Column(Float)
-
+    excoN = Column(Integer)
     opfo = Column(Float)
+    opfoN = Column(Integer)
     opma = Column(Float)
+    opmaN = Column(Integer)
     opli = Column(Float)
-
+    opliN = Column(Integer)
     datasets=Column(Integer)
 
     def __repr__(self):
@@ -158,8 +172,8 @@ class Dataset(Base):
     __tablename__ = tab_datasets
 
     id          = Column( String, primary_key=True)
-    snapshot    = Column( SmallInteger, primary_key=True)
-    portalid    = Column( String, primary_key=True)
+    snapshot    = Column( SmallInteger, primary_key=True, index=True)
+    portalid    = Column( String, primary_key=True, index=True)
     organisation= Column(String, index=True)
     md5         = Column(String, ForeignKey(tab_datasetsdata+'.md5'))
 
@@ -196,25 +210,26 @@ class DatasetQuality(Base):
     __tablename__ = tab_datasetsquality
 
     md5     = Column(String, ForeignKey(DatasetData.md5), primary_key=True)
-    cocu = Column(Float)
-    coce = Column(Float)
+    cocu = Column(Boolean)
+    coce = Column(Boolean)
     coda = Column(Float)
     cofo = Column(Float)
-    coli = Column(Float)
-    coac = Column(Float)
+    coli = Column(Boolean)
+    coac = Column(Boolean)
 
     exda = Column(Float)
     exri = Column(Float)
     expr = Column(Float)
-    exac = Column(Float)
+    exac = Column(Boolean)
     exdi = Column(Float)
     exte = Column(Float)
     exsp = Column(Float)
-    exco = Column(Float)
+    exco = Column(Boolean)
 
     opfo = Column(Float)
     opma = Column(Float)
-    opli = Column(Float)
+    opli = Column(Boolean)
+
 
     data = relationship("DatasetData", backref=backref("quality", uselist=False))
 
