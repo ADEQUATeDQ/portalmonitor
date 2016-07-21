@@ -1,6 +1,16 @@
 {% extends "odpw_layout.jinja" %}
 {% set active_page = "dashboard" -%}
 
+{% block headerstyle %}
+
+
+select{
+border-bottom: 1px solid;
+font-size:20px;
+}
+
+{% endblock %}
+
 
 {% block content %}
     <div class="ui grid">
@@ -25,7 +35,29 @@
         <div class="thirteen wide column ui grid" id="container">
 
             <div class="sixteen wide column black">
-                <h3> Portal {{portalid}}</h3>
+                <h3> Portal: {{portalid}}
+                            <select name="portal" class="ui search dropdown">
+                              <option value="">Skills</option>
+                            <option value="angular">Angular</option>
+                            <option value="css">CSS</option>
+                            <option value="design">Graphic Design</option>
+                            <option value="ember">Ember</option>
+                            <option value="html">HTML</option>
+                            <option value="ia">Information Architecture</option>
+                            <option value="javascript">Javascript</option>
+                            <option value="mech">Mechanical Engineering</option>
+                            <option value="meteor">Meteor</option>
+                            <option value="node">NodeJS</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="python">Python</option>
+                            <option value="rails">Rails</option>
+                            <option value="react">React</option>
+                            <option value="repair">Kitchen Repair</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="ui">UI Design</option>
+                            <option value="ux">User Experience</option>
+                            </select>
+                </h3>
             </div>
             <div class="row">
                 <div class="right floated five wide column large">
@@ -39,15 +71,15 @@
                         <i class="icon angle left"></i>
                     {% endif %}
 
-                        <div class="ui upward dropdown item">
-                            <i class="calendar icon"></i>
-                            <div class="menu">
-                                {% for sn in data.snapshots.list %}
-                                    <div class="item" data-value="{{sn}}">{{snapshot|getWeekString}}</div>
-                                {% endfor %}
+                    <div class="ui dropdown item">
+                        <i class="calendar icon"></i>
+                        <div class="menu">
+                            {% for sn in data.snapshots.list %}
+                                <div class="item" data-value="{{sn}}">{{snapshot|getWeekString}}</div>
+                            {% endfor %}
 
-                            </div>
                         </div>
+                    </div>
                     {% if data.snapshots.next %}
                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next)}}"> <i class="icon angle right"></i></a>
                     {% else %}

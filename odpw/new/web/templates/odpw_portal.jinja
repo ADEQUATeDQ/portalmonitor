@@ -6,45 +6,46 @@ a:hover{
  background:black;
 }
 
+table thead{
+border-bottom: 1px solid;
+}
+
 {% endblock %}
 
 
 {% macro statsCard(data, label, key) -%}
 
-<a href="test" class="ui fluid card statsCard">
+<div href="test" class="ui card statsCard">
     <div class="content">
-        <span class="header">{{label}}</span>
-        <div class="meta">
-            <span class="date">{{data[key].distinct}} distinct {{label}}</span>
-        </div>
-        <div class="description">
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>License</th>
-                        <th>Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for l in data[key].top3Dist %}
-                    <tr>
-                        <td>
-                        {% if loop.index!=4 %}
-                            {{loop.index}}
-                            {% else %}
-                                -
-                                {% endif %}
-                        </td>
-                        <td>{{l[key]}}</td>
-                        <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <span class="header">{{data[key].distinct}} {{label}}
     </div>
-</a>
+    <div class="content" style="width:100%" >
+        <table class="ui very basic single line table" style="width:100px">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>License</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in data[key].top3Dist %}
+                <tr>
+                    <td>
+                    {% if loop.index!=4 %}
+                        {{loop.index}}
+                        {% else %}
+                            -
+                            {% endif %}
+                    </td>
+                    <td>{{l[key]}}</td>
+                    <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {%- endmacro %}
 
@@ -57,7 +58,8 @@ a:hover{
 
 <div class="thirteen wide column ui padded divided grid">
     <h2>General Portal Information</h2>
-    <div class="row">
+
+    <div class="column row">
         <div class="ui statistics column">
             <a class="statistic">
                 <div class="value">
@@ -80,13 +82,13 @@ a:hover{
                     22
                 </div>
                 <div class="label">
-                    Members
+                    Resources
                 </div>
             </div>
         </div>
     </div>
 
-        <div class="ui three cards">
+        <div class="ui doubling stackable  cards">
             {{statsCard(data, 'Licenses', 'license')}}
             {{statsCard(data, 'Formats', 'format')}}
             {{statsCard(data, 'Organisations', 'organisation')}}

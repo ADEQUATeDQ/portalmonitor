@@ -209,7 +209,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
     bulkInsert(bulk_obj,db)
     for k in bulk_obj:
         bulk_obj[k]=[]
-    log.info("InsertedDatasets", parsed=c,snapshot=snapshot)
+    log.info("InsertedDatasets", parsed=c, portalid=P.id ,snapshot=snapshot)
 
 
 #--*--*--*--*

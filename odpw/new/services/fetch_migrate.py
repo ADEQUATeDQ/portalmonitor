@@ -52,19 +52,21 @@ def fetchMigrate(obj):
 
     iter=DDataset.iter(dbm1.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
     insertDatasets(P,db, iter,snapshot)
-    s=db.Session
-    PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
-    PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
-    PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-
-    s.commit()
-    s.remove()
-
+    try:
+        s=db.Session
+        PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
+        PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+        PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
+        s.commit()
+        s.remove()
+    except Exception as exc:
+        ErrorHandler.handleError(log, "UpdatePortalSnapshot", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
     try:
         aggregatePortalQuality(db,P.id, snapshot)
     except Exception as exc:
         ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
 
+    print P, snapshot
     return (P, snapshot)
 
 

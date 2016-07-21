@@ -55,7 +55,7 @@ def portals():
         r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)
         ps=[]
         for P in r:
-            print 'P',P
+            #print 'P',P
             d={}
             d.update(row2dict(P[0]))
             d['snCount']=P[1]
