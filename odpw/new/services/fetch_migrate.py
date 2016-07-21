@@ -107,7 +107,7 @@ def cli(args,dbm):
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 
     pool = Pool(args.processors)
-    for x in pool.imap(fetchMigrate,tasks):
+    for x in pool.map(fetchMigrate,tasks):
         try:
 
             pid,sn =x[0].id, x[1]
