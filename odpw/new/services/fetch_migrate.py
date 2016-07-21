@@ -32,7 +32,7 @@ def fetchMigrate(obj):
     PMD= dbm1.getPortalMetaData(portalID=P.id, snapshot=snapshot)
     if PMD is None:
         log.info("Skipping ",portalid=P.id, snapshot=snapshot)
-        return
+        return (P, snapshot)
     PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
 
     if PMD.fetch_stats is not None and 'fetch_start' in PMD.fetch_stats:
