@@ -56,10 +56,12 @@ border-bottom: 1px solid;
 {% block portalcontent %}
 
 
-<div class="thirteen wide column ui padded divided grid">
+<!--<div class="thirteen wide column ui padded divided grid">-->
+<div class="ui equal width center aligned padded grid">
     <h2>General Portal Information</h2>
 
-    <div class="column row">
+    <div class="row">
+
         <div class="ui statistics column">
             <a class="statistic">
                 <div class="value">
@@ -87,13 +89,13 @@ border-bottom: 1px solid;
             </div>
         </div>
     </div>
-
+    <div class="row">
         <div class="ui doubling stackable  cards">
             {{statsCard(data, 'Licenses', 'license')}}
             {{statsCard(data, 'Formats', 'format')}}
             {{statsCard(data, 'Organisations', 'organisation')}}
         </div>
-
+    </div>
 
 </div>
 

@@ -125,7 +125,6 @@ def start ():
         args.func(args , dbm)
     except OperationalError as e:
         log.fatal("DB Connection Exception: ", msg=e.message)
-        
     except Exception as e:
         log.fatal("Uncaught exception", exc_info=True)
     end = time.time()
