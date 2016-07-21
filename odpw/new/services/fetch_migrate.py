@@ -69,7 +69,7 @@ def fetchMigrate(obj):
 
         print P, snapshot
         return (P, snapshot)
-    except Exception as e:
+    except Exception as exc:
         ErrorHandler.handleError(log, "NoIdeaWhat happend", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
         return (P, snapshot)
 
