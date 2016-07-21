@@ -84,12 +84,6 @@ def aggregatePortalInfo(db, portalid, snapshot):
             return stats
         ds=PS.datasetCount
 
-        #formats
-
-        #licenses
-
-        #organisations
-
         for key, cFunc, dFunc in [
                         ('organisation',db.organisationDist, db.distinctFormats)
                         ,('license',db.licenseDist,db.distinctLicenses)

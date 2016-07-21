@@ -64,7 +64,7 @@ def portals():
             d['datasets']=P[4]
             d['resources']=P[5]
             d['licenses']=current_app.config['dbc'].distinctLicenses(snapshot=P[3], portalid=P[0].id).count()
-            print d
+            #print d
             ps.append(d)
         return render_template('odpw_portals.jinja', data=ps)
 

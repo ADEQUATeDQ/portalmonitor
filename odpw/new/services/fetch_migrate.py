@@ -21,54 +21,57 @@ from odpw.new.core.db import DBClient, DBManager
 
 
 def fetchMigrate(obj):
+    try:
 
-    P, dbConf, snapshot = obj[0],obj[1],obj[2]
+        P, dbConf, snapshot = obj[0],obj[1],obj[2]
 
-    dbm = DBManager(**dbConf)
-    db= DBClient(dbm)
+        dbm = DBManager(**dbConf)
+        db= DBClient(dbm)
 
 
-    dbm1=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
-    PMD= dbm1.getPortalMetaData(portalID=P.id, snapshot=snapshot)
-    if PMD is None:
-        log.info("Skipping ",portalid=P.id, snapshot=snapshot)
+        dbm1=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
+        PMD= dbm1.getPortalMetaData(portalID=P.id, snapshot=snapshot)
+        if PMD is None:
+            log.info("Skipping ",portalid=P.id, snapshot=snapshot)
+            return (P, snapshot)
+        PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
+
+        if PMD.fetch_stats is not None and 'fetch_start' in PMD.fetch_stats:
+
+            start= datetime.datetime.strptime(PMD.fetch_stats['fetch_start'], "%Y-%m-%dT%H:%M:%S.%f")
+            end= datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if 'fetch_end' in PMD.fetch_stats and PMD.fetch_stats['fetch_end'] is not None else None
+            PS.start=start
+            PS.end=end
+            PS.exc=PMD.fetch_stats['exception']
+            PS.status=PMD.fetch_stats['status']
+        else:
+            PS.start=None
+            PS.end=None
+        db.add(PS)
+
+        from odpw.db.models import Dataset as DDataset
+
+        iter=DDataset.iter(dbm1.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
+        insertDatasets(P,db, iter,snapshot)
+        try:
+            s=db.Session
+            PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
+            PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+            PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
+            s.commit()
+            s.remove()
+        except Exception as exc:
+            ErrorHandler.handleError(log, "UpdatePortalSnapshot", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
+        try:
+            aggregatePortalQuality(db,P.id, snapshot)
+        except Exception as exc:
+            ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
+
+        print P, snapshot
         return (P, snapshot)
-    PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
-
-    if PMD.fetch_stats is not None and 'fetch_start' in PMD.fetch_stats:
-
-        start= datetime.datetime.strptime(PMD.fetch_stats['fetch_start'], "%Y-%m-%dT%H:%M:%S.%f")
-        end= datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if 'fetch_end' in PMD.fetch_stats and PMD.fetch_stats['fetch_end'] is not None else None
-        PS.start=start
-        PS.end=end
-        PS.exc=PMD.fetch_stats['exception']
-        PS.status=PMD.fetch_stats['status']
-    else:
-        PS.start=None
-        PS.end=None
-    db.add(PS)
-
-    from odpw.db.models import Dataset as DDataset
-
-    iter=DDataset.iter(dbm1.getDatasetsAsStream(portalID=P.id, snapshot=snapshot))
-    insertDatasets(P,db, iter,snapshot)
-    try:
-        s=db.Session
-        PS= s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
-        PS.datasetCount= s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
-        PS.resourceCount=s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-        s.commit()
-        s.remove()
-    except Exception as exc:
-        ErrorHandler.handleError(log, "UpdatePortalSnapshot", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
-    try:
-        aggregatePortalQuality(db,P.id, snapshot)
-    except Exception as exc:
-        ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
-
-    print P, snapshot
-    return (P, snapshot)
-
+    except Exception as e:
+        ErrorHandler.handleError(log, "NoIdeaWhat happend", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
+        return (P, snapshot)
 
 #--*--*--*--*
 def help():
