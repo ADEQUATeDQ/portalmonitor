@@ -1,10 +1,11 @@
 import hashlib
 import json
 
-import datetime
 import yaml
 
 from odpw.new.core.model import Base
+import structlog
+log =structlog.get_logger()
 
 
 def readDBConfFromFile(config):
@@ -14,6 +15,7 @@ def readDBConfFromFile(config):
             config = yaml.load(f_conf)
             if 'db' in config:
                 dbConf.update(config['db'])
+    log.info("DBConfig", conf=dbConf)
     return dbConf
 
 

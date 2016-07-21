@@ -1,8 +1,9 @@
 from odpw.new.core.db import DBClient, DBManager
-from sqlalchemy import exists, func, distinct
 
-from new.core.model import  Dataset, MetaResource, Base, ResourceInfo, DatasetData, PortalSnapshot
+from new.core.model import  Base
 
+import structlog
+log =structlog.get_logger()
 
 def getLabel(seconds):
     m, s = divmod(seconds, 60)
@@ -14,8 +15,8 @@ def getLabel(seconds):
 if __name__ == '__main__':
 
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    #dbm.db_DropEverything()
-    #dbm.init(Base)
+    dbm.db_DropEverything()
+    dbm.init(Base)
 
     db= DBClient(dbm)
 

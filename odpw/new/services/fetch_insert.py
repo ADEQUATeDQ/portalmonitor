@@ -1,14 +1,12 @@
 import datetime
-import json
 from multiprocessing import Pool
 
-import rdflib
 import structlog
-
+log =structlog.get_logger()
 from odpw.new.quality import dcat_analyser
 from odpw.new.utils.utils_snapshot import getCurrentSnapshot
 
-log =structlog.get_logger()
+
 import urlnorm
 
 

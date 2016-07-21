@@ -85,7 +85,7 @@ def cli(args,dbm):
     db= DBClient(dbm)
 
     tasks=[]
-    if args.portalid:
+    if args.portalid is not None:
         P = db.Session.query(Portal).filter(Portal.id==args.portalid).one()
         if P is None:
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
