@@ -65,6 +65,7 @@ def fetchMigrate(obj):
     except Exception as exc:
         ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
 
+    return (P, snapshot)
 
 
 #--*--*--*--*
@@ -91,10 +92,12 @@ def cli(args,dbm):
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            tasks.append((P, dbConf,sn))
+            log.info("ADDING", portalid=P.id, snapshot=sn)
+            tasks.append((P, dbConf, sn))
     else:
         for P in db.Session.query(Portal):
-            tasks.append((P, dbConf,sn))
+            log.info("ADDING", portalid=P.id, snapshot=sn)
+            tasks.append((P, dbConf, sn))
 
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 
