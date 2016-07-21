@@ -1,6 +1,9 @@
+from collections import defaultdict
+
 import os
+import sqlalchemy
 import structlog
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, inspect
 from sqlalchemy import event
 from sqlalchemy import exc
 from sqlalchemy import exists
@@ -20,6 +23,69 @@ from odpw.new.core.model import DatasetData, DatasetQuality, Dataset, Base, Port
     tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource
 
 log =structlog.get_logger()
+
+
+
+def process_keyed_tuple(kt):
+    for i in kt:
+        if i is not None:
+            inspect(i)  # discard result, just show that inspect() works
+
+
+def process_object(o):
+    inspect(o)  # discard result, just show that inspect() works
+
+
+def dictate(r):
+    # KeyedTuples are recognized by the real function dictate(), iterated over
+    # and each item gets inspected
+    if isinstance(r, tuple):
+            return process_keyed_tuple(r)
+    else:
+        # This type is unknown, then treated as an object and inspected(),
+        # which fails.
+        process_object(r)
+
+def to_dict(model_instance, query_instance=None):
+	if hasattr(model_instance, '__table__'):
+		return {c.name: str(getattr(model_instance, c.name)) for c in model_instance.__table__.columns}
+	else:
+		cols = query_instance.column_descriptions
+		return { cols[i]['name'] : model_instance[i]  for i in range(len(cols)) }
+
+def query_to_dict(rset):
+    result = defaultdict(list)
+    for obj in rset:
+        print type(obj)
+        print dir(obj)
+        print obj._asdict()
+        print obj._fields
+        print dict(obj)
+        dictate(obj)
+
+        if isinstance(obj, tuple):
+            print row2dict(obj)
+
+        instance = inspect(obj)
+        for key, x in instance.attrs.items():
+            result[key].append(x.value)
+    return result
+
+_row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+
+def row2dict(r):
+
+    if hasattr(r, '_fields'):
+        d={}
+        for field in r._fields:
+            rf= r.__getattribute__(field)
+            if isinstance(rf, Base):
+                d.update(_row2dict(rf))
+            else:
+                d[field]=rf
+        return d
+    if isinstance(r, Base):
+        return _row2dict(r)
 
 
 def add_engine_pidguard(engine):
@@ -281,11 +347,18 @@ class DBClient(object):
         self.Session.commit
 
     def portals(self):
-        return Portal.query.all()
+        return Portal.query
 
     def portalsSnapshots(self,snapshot):
         return PortalSnapshot.query\
-            .filter(PortalSnapshot.snapshot==snapshot).all()
+            .filter(PortalSnapshot.snapshot==snapshot)
+
+    def portalSnapshot(self,snapshot, portalid):
+        return PortalSnapshot.query\
+            .filter(PortalSnapshot.snapshot==snapshot)\
+            .filter(PortalSnapshot.portalid==portalid)
+
+
 
     def portalsQuality(self,snapshot):
         return PortalSnapshotQuality.query\
@@ -364,37 +437,84 @@ class DBClient(object):
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
 
-            q=q.group_by(ResourceInfo.status).all()
+            q=q.group_by(ResourceInfo.status)
+            q=q.order_by(func.count(ResourceInfo.status).desc())
 
             return q
 
     def organisationDist(self, snapshot, portalid=None):
         with self.session_scope() as session:
-            q= session.query(Dataset.organisation,func.count(Dataset.organisation))\
+            q= session.query(Dataset.organisation,func.count(Dataset.organisation).label('count'))\
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
-            q=q.group_by(Dataset.organisation).all()
-            return q
-
-    def licenseDist(self, snapshot, portalid=None):
-        with self.session_scope() as session:
-            q= session.query(DatasetData.license,func.count(DatasetData.license)).join(Dataset)\
-                .filter(Dataset.snapshot==snapshot)
-            if portalid:
-                q=q.filter(Dataset.portalid==portalid)
-            q=q.group_by(DatasetData.license).all()
+            q=q.group_by(Dataset.organisation)
+            q=q.order_by(func.count(Dataset.organisation).desc())
             return q
 
 
-    def validURLDist(self, snapshot,portalid=None):
+
+    def formatDist(self, snapshot, portalid=None):
         with self.session_scope() as session:
-            q= session.query(MetaResource.valid,func.count(MetaResource.valid))\
+            q= session.query(MetaResource.format, func.count().label('count'))\
                 .join(Dataset,Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
 
-            q=q.group_by(MetaResource.valid).all()
+            q=q.group_by(MetaResource.format)
+            q=q.order_by(func.count(MetaResource.format).desc())
+            return q
+    def distinctFormats(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(MetaResource).distinct(MetaResource.format)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+
+            return q
+
+    def distinctFormats(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(MetaResource).distinct(MetaResource.format)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+            return q
+
+    def licenseDist(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(DatasetData.license,func.count().label('count')).join(Dataset)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            q=q.group_by(DatasetData.license)
+            q=q.order_by(func.count(DatasetData.license).desc())
+            return q
+
+    def distinctLicenses(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(DatasetData).distinct(DatasetData.license)\
+                .join(Dataset)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            return q
+
+
+    def validURLDist(self, snapshot,portalid=None):
+        with self.session_scope() as session:
+            q= session.query(MetaResource.valid, func.count().label('count'))\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+
+            q=q.group_by(MetaResource.valid)
+            q=q.order_by(func.count(MetaResource.valid).desc())
 
             return q

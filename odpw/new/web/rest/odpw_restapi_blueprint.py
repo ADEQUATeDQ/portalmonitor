@@ -10,7 +10,7 @@ from flask import Blueprint, jsonify, render_template, Response
 from flask import make_response, request, current_app
 from sqlalchemy import and_
 
-from odpw.new.utils.helper_functions import row2dict
+from odpw.new.core.db import row2dict
 from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, ResourceInfo, Base
 from odpw.new.web.cache import cache
 

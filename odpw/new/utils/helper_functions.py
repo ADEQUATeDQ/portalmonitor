@@ -28,14 +28,4 @@ def extractMimeType(ct):
         return str(ct)[:ct.find(";")].strip()
     return ct.strip()
 
-_row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
-def row2dict(r):
-    if isinstance(r, Base):
-        return _row2dict(r)
-    elif len(r)>1:
-        print r
-        d={}
-        for i in range(0, len(r)):
-            if r[i] is not None:
-                d.update(_row2dict(r[i]))
-        return d
+

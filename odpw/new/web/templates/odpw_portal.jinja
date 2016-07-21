@@ -1,5 +1,57 @@
 {% extends "odpw_portal_layout.jinja" %}
 
+
+{% block headerstyle %}
+a:hover{
+ background:black;
+}
+
+{% endblock %}
+
+
+{% macro statsCard(data, label, key) -%}
+
+<a href="test" class="ui fluid card statsCard">
+    <div class="content">
+        <span class="header">{{label}}</span>
+        <div class="meta">
+            <span class="date">{{data[key].distinct}} distinct {{label}}</span>
+        </div>
+        <div class="description">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>License</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in data[key].top3Dist %}
+                    <tr>
+                        <td>
+                        {% if loop.index!=4 %}
+                            {{loop.index}}
+                            {% else %}
+                                -
+                                {% endif %}
+                        </td>
+                        <td>{{l[key]}}</td>
+                        <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</a>
+
+{%- endmacro %}
+
+
+
+
+
 {% block portalcontent %}
 
 
@@ -7,14 +59,14 @@
     <h2>General Portal Information</h2>
     <div class="row">
         <div class="ui statistics column">
-            <div class="statistic">
+            <a class="statistic">
                 <div class="value">
                     {{data.datasets}}
                 </div>
                 <div class="label">
                     Datasets
                 </div>
-            </div>
+            </a>
             <div class="statistic">
                 <div class="value">
                     {{data.snapshots.list|length}}
@@ -33,6 +85,12 @@
             </div>
         </div>
     </div>
+
+        <div class="ui three cards">
+            {{statsCard(data, 'Licenses', 'license')}}
+            {{statsCard(data, 'Formats', 'format')}}
+            {{statsCard(data, 'Organisations', 'organisation')}}
+        </div>
 
 
 </div>

@@ -7,13 +7,15 @@ from bokeh.embed import components
 from bokeh.resources import INLINE
 from flask import Blueprint, current_app, render_template
 
-from odpw.new.utils.helper_functions import row2dict
-from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
-from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
-from odpw.new.web.ui.plots import fetchProcessChart, qualityChart, qa
+from odpw.new.services.aggregates import aggregatePortalInfo
 
+from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
+from odpw.new.core.db import row2dict
+
+from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
 from odpw.new.utils.timing import Timer
 
+from odpw.new.web.ui.plots import fetchProcessChart, qualityChart, qa
 from odpw.new.web.cache import cache
 
 ui = Blueprint('ui', __name__,
@@ -135,6 +137,7 @@ def portal(snapshot, portalid):
             data['datasets']=P[1]
             data['resources']=P[2]
         data.update(getResourceInfo(db,portalid,snapshot))
+        data.update(aggregatePortalInfo(db,portalid,snapshot))
 
 
         return render_template("odpw_portal.jinja",  snapshot=snapshot, portalid=portalid,data=data)
