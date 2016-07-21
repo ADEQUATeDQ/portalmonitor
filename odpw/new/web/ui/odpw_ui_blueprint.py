@@ -105,7 +105,7 @@ def getPortalInfos(db, portalid, snapshot):
         n=getNextWeek(snapshot)
         n=n if n in snapshots else None
         data={'snapshots':{'list':snapshots,'prev':p, 'next': n}}
-
+        data['portals']= [ row2dict(r) for r in db.portals().all()]
         return data
 
 def getResourceInfo(db, portalid, snapshot):

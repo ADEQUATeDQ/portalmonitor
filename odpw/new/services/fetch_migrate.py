@@ -105,5 +105,9 @@ def cli(args,dbm):
 
     pool = Pool(args.processors)
     for x in pool.imap(fetchMigrate,tasks):
-        pid,sn =x[0].id, x[1]
-        log.info("RECEIVED RESULT", portalid=pid, snapshot=sn)
+        try:
+
+            pid,sn =x[0].id, x[1]
+            log.info("RECEIVED RESULT", portalid=pid, snapshot=sn)
+        except Exception as exc:
+            ErrorHandler.handleError(log, "Pool.imap", exception=exc, result=x, exc_info=True)

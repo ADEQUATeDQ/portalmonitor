@@ -9,3 +9,18 @@ header#header img{
 nav#mainnav {
     padding-left:50px;
 }
+
+
+
+#portalSelect{
+    background:black;
+}
+#portalSelect .text, i{
+    color:white;
+}
+#portalSelect .search{
+    color:white;
+    border-bottom: 1px white;
+    border-bottom: 2px solid white;
+
+}
