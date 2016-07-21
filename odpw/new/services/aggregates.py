@@ -3,7 +3,7 @@ from collections import defaultdict
 import pandas as pd
 from sqlalchemy import inspect
 
-from new.core.db import row2dict
+from odpw.new.core.db import row2dict
 from odpw.new.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality
 from odpw.new.utils.timing import Timer
 
