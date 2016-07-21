@@ -1,9 +1,9 @@
 from abc import abstractmethod
 
-from new.quality.conformance_dcat import *
-from new.quality.existence_dcat import *
-from new.quality.open_dcat_format import *
-from new.quality.open_dcat_license import LicenseOpennessDCATAnalyser
+from odpw.new.quality.conformance_dcat import *
+from odpw.new.quality.existence_dcat import *
+from odpw.new.quality.open_dcat_format import *
+from odpw.new.quality.open_dcat_license import LicenseOpennessDCATAnalyser
 from odpw.utils.util import ErrorHandler
 
 import structlog
