@@ -107,10 +107,7 @@ def cli(args,dbm):
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 
     pool = Pool(args.processors)
-    for x in pool.map(fetchMigrate,tasks):
-        try:
-
-            pid,sn =x[0].id, x[1]
-            log.info("RECEIVED RESULT", portalid=pid, snapshot=sn)
-        except Exception as exc:
-            ErrorHandler.handleError(log, "Pool.imap", exception=exc, result=x, exc_info=True)
+    results = pool.map(fetchMigrate,tasks)
+    pool.close()
+    pool.join()
+    print(results)
