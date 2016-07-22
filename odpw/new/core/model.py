@@ -47,14 +47,16 @@ class Portal(Base):
 
     @hybrid_property
     def snapshot_count(self):
-        return self.snapshots.count()
+        return len(self.snapshots)
     @snapshot_count.expression
+
     def snapshot_count(cls):
         return select([func.count(PortalSnapshot.snapshot)])\
             .where(PortalSnapshot.portalid == cls.id).label("snapshot_count")
 
     @hybrid_property
     def first_snapshot(self):
+        print [s for s in self.snapshots]
         return min([s.snapshot for s in self.snapshots])
 
     @first_snapshot.expression
@@ -116,8 +118,8 @@ class PortalSnapshot(Base):
     datasets = relationship("Dataset", back_populates="portalsnapshot")
 
     def __repr__(self):
-        return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s)>" % (
-            self.portalid, self.snapshot, self.start, self.end, self.status)
+        return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s,ds=%s,res=%s)>" % (
+            self.portalid, self.snapshot, self.start, self.end, self.status,self.datasetCount,self.resourceCount)
 
 
 class PortalSnapshotQuality(Base):

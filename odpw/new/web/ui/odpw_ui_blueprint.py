@@ -7,15 +7,13 @@ from bokeh.embed import components
 from bokeh.resources import INLINE
 from flask import Blueprint, current_app, render_template
 
-from odpw.new.services.aggregates import aggregatePortalInfo
-
-from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
+from odpw.new.utils.plots import fetchProcessChart, qualityChart, qa, portalsScatter
+from odpw.new.utils.statistics import portalSnapshotQualityDF
 from odpw.new.core.db import row2dict
-
-from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
+from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
+from odpw.new.services.aggregates import aggregatePortalInfo
 from odpw.new.utils.timing import Timer
-
-from odpw.new.web.ui.plots import fetchProcessChart, qualityChart, qa
+from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
 from odpw.new.web.cache import cache
 
 ui = Blueprint('ui', __name__,
@@ -49,9 +47,8 @@ def timer():
     return render_template('timer.jinja', stats=Timer.getStats())
 
 
-@ui.route('/portals', methods=['GET'])
-def portals():
-    with Timer(key="portals"):
+def getPortalsInfo():
+    with Timer(key="portals", verbose=True):
         r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)
         ps=[]
         for P in r:
@@ -63,14 +60,25 @@ def portals():
             d['snLast']=P[3]
             d['datasets']=P[4]
             d['resources']=P[5]
-            d['licenses']=current_app.config['dbc'].distinctLicenses(snapshot=P[3], portalid=P[0].id).count()
+            with Timer(key="portalsLicenses"):
+                d['licenses']=current_app.config['dbc'].distinctLicenses(snapshot=P[3], portalid=P[0].id).count()
             #print d
             ps.append(d)
-        return render_template('odpw_portals.jinja', data=ps)
+    return ps
+
+@ui.route('/portalslist', methods=['GET'])
+def portalslist():
+    ps=getPortalsInfo()
+    return render_template('odpw_portals.jinja', data=ps)
+
+@ui.route('/portalstable', methods=['GET'])
+def portalstable():
+    ps=getPortalsInfo()
+    return render_template('odpw_portals_table.jinja', data=ps)
 
 @ui.route('/system', methods=['GET'])
 def system():
-    with Timer(key="system"):
+    with Timer(key="system" , verbose=True):
         return render_template("odpw_system_info.jinja")
 
 @ui.route('/system/fetch', methods=['GET'])
@@ -91,13 +99,35 @@ def systemfetch():
             css_resources=css_resources
         )
 
+@ui.route('/portals/portalsstats', methods=['GET'])
+def portalssize():
+    with Timer(key="portalsstats", verbose=True):
+        db=current_app.config['dbc']
+
+
+        results=[row2dict(r) for r in db.Session.query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
+        df=pd.DataFrame(results)
+
+        p= portalsScatter(df)
+        script, div= components(p)
+
+        js_resources = INLINE.render_js()
+        css_resources = INLINE.render_css()
+
+        return render_template("odpw_portals_stats.jinja",
+            plot_script=script,
+            plot_div=div,
+            js_resources=js_resources,
+            css_resources=css_resources
+        )
+
 
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 ### PORTAL
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 @cache.cached(timeout=300)
 def getPortalInfos(db, portalid, snapshot):
-    with Timer(key="getPortalInfos"):
+    with Timer(key="getPortalInfos", verbose=True):
         snapshots=[i[0] for i in db.Session.query(PortalSnapshot.snapshot).filter(PortalSnapshot.portalid==portalid).all()]
 
         p=getPreviousWeek(snapshot)
@@ -109,6 +139,7 @@ def getPortalInfos(db, portalid, snapshot):
         return data
 
 def getResourceInfo(db, portalid, snapshot):
+
     data={}
 
     data['valid']={}
@@ -126,7 +157,7 @@ def getResourceInfo(db, portalid, snapshot):
 
 @ui.route('/portal/<portalid>/<int:snapshot>', methods=['GET'])
 def portal(snapshot, portalid):
-    with Timer(key="portal"):
+    with Timer(key="portal",verbose=True):
         db=current_app.config['dbc']
 
         data=getPortalInfos(db,portalid,snapshot)
@@ -146,55 +177,39 @@ def portal(snapshot, portalid):
 
 @ui.route('/portal/<portalid>/<int:snapshot>/resources', methods=['GET'])
 def portalRes(snapshot, portalid):
-    db=current_app.config['dbc']
+    with Timer(key="portalRes",verbose=True):
+        db=current_app.config['dbc']
 
-    data=getResourceInfo(db, portalid, snapshot)
+        data=getResourceInfo(db, portalid, snapshot)
 
-    data['uris']= [row2dict(i) for i in db.getResourceInfos(snapshot,portalid=portalid) ]
+        data['uris']= [row2dict(i) for i in db.getResourceInfos(snapshot,portalid=portalid) ]
 
-    data.update(getPortalInfos(db,portalid,snapshot))
-    return render_template("odpw_portal_resources.jinja", data=data, snapshot=snapshot, portalid=portalid)
+        data.update(getPortalInfos(db,portalid,snapshot))
+        return render_template("odpw_portal_resources.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 @ui.route('/portal/<portalid>/<int:snapshot>/quality', methods=['GET'])
 def portalQuality(snapshot, portalid):
+    with Timer(key="portalQuality",verbose=True):
 
-    db=current_app.config['dbc']
-    data=None
-    for r in db.Session.query(PortalSnapshotQuality)\
-        .filter(PortalSnapshotQuality.portalid==portalid)\
-        .filter(PortalSnapshotQuality.snapshot==snapshot):
-        data=row2dict(r)
-        break
-    d=[]
+        db=current_app.config['dbc']
+        df=portalSnapshotQualityDF(db, portalid, snapshot)
 
-    datasets= int(data['datasets'])
-    for inD in qa:
-        for k , v in inD['metrics'].items():
-            k=k.lower()
-            value=float(data[k])
-            perc=int(data[k+'N'])/(datasets*1.0) if datasets>0 else 0
-            c= { 'Metric':k, 'Dimension':inD['dimension'],
-                 'dim_color':inD['color'], 'value':value, 'perc':perc}
-            c.update(v)
-            d.append(c)
-    df = pd.DataFrame(d)
+        with Timer(key="dataDF", verbose=True) as t:
+            p= qualityChart(df)
 
-    with Timer(key="dataDF", verbose=True) as t:
-        p= qualityChart(df)
+        script, div= components(p)
 
-    script, div= components(p)
+        js_resources = INLINE.render_js()
+        css_resources = INLINE.render_css()
 
-    js_resources = INLINE.render_js()
-    css_resources = INLINE.render_css()
-
-    db=current_app.config['dbc']
-    data = getPortalInfos(db,portalid,snapshot)
-    return render_template("odpw_portal_quality.jinja",
-        plot_script=script
-        ,plot_div=div
-        ,js_resources=js_resources
-        ,css_resources=css_resources
-        ,snapshot=snapshot
-        , portalid=portalid
-        , data=data
-    )
+        db=current_app.config['dbc']
+        data = getPortalInfos(db,portalid,snapshot)
+        return render_template("odpw_portal_quality.jinja",
+            plot_script=script
+            ,plot_div=div
+            ,js_resources=js_resources
+            ,css_resources=css_resources
+            ,snapshot=snapshot
+            , portalid=portalid
+            , data=data
+        )

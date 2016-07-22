@@ -1,34 +1,6 @@
-{% extends "odpw_layout.jinja" %}
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "System information" -%}
 
+{% block systemcontent %}
 
-{% block content %}
-    <div class="ui grid">
-        <div class="three wide column" style="background: black;">
-              <div class="ui secondary sticky inverted fixed vertical fluid menu">
-                    <a href="{{ url_for('ui.system')}}" class="item active">
-                        Info
-                    </a>
-                    <a href="{{ url_for('ui.systemfetch')}}" class="item">
-                        Fetch process
-                    </a>
-              </div>
-        </div>
-
-        <div class="thirteen wide column" id="example1">
-            <h2>System Information</h2>
-            <div class="" >
-
-            </div>
-        </div>
-    </div>
-
-
-{% endblock %}
-
-
-{% block script %}
-    $('.ui.sticky')
-        .sticky({
-            context: '#example1'
-        });
 {% endblock %}

@@ -8,7 +8,8 @@ from bokeh.resources import INLINE
 from bokeh.util.browser import view
 from jinja2 import Template
 
-from new.services.aggregates import aggregatePortalInfo
+from odpw.new.services.aggregates import aggregatePortalInfo
+from odpw.new.utils.plots import portalsScatter
 from odpw.new.core.db import DBClient, DBManager, query_to_dict, to_dict, row2dict
 from odpw.new.core.model import Portal
 
@@ -40,6 +41,7 @@ def showPlot(p, label="bokeh"):
         <body>
                 <div class="embed-wrapper">
                 {{ div }}
+
                 </div>
 
         </body>
@@ -67,29 +69,7 @@ def portalSize(db):
     results=[row2dict(r) for r in db.Session.query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
     df=pd.DataFrame(results)
 
-    df=df.fillna(0)
-    print df.info()
-
-    def get_dataset(df, name):
-        df1 = df[df['software'] == name].copy()
-        del df1['software']
-        return ColumnDataSource(data=df1)
-
-    ckan = get_dataset(df,"CKAN")
-    socrata = get_dataset(df,"Socrata")
-    opendatasoft = get_dataset(df,"OpenDataSoft")
-
-
-
-    p = figure(plot_width=700)
-    p.circle(x='datasetCount', y='resourceCount', size=20, source=ckan, legend='CKAN')
-    p.circle(x='datasetCount', y='resourceCount', size=20, source=socrata, legend='Socrata', color='green')
-    p.circle(x='datasetCount', y='resourceCount', size=20, source=opendatasoft, legend='OpenDataSoft', color='red')
-
-
-    p = Bar(df, label='iso', values='datasetCount', agg='count', stack='software',
-        title="Distribution of portals by software and iso", legend='top_left',y_axis_type="log")
-
+    p= portalsScatter(df)
     showPlot(p,'scatter')
 
 
@@ -102,7 +82,8 @@ if __name__ == '__main__':
 
     portalid='data_cityofdeleon_org'
 
-    #portalSize(db)
+    portalSize(db)
+
     snapshot=1628
     import pprint
     pprint.pprint(aggregatePortalInfo(db,portalid,snapshot))

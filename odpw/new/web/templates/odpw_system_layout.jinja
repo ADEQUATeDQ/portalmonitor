@@ -1,0 +1,43 @@
+{% extends "odpw_layout.jinja" %}
+{% set active_page = "system" -%}
+
+
+{% block content %}
+    <div class="ui grid">
+        <div class="three wide column" style="background: black;">
+            <div class="ui secondary sticky fixed vertical inverted fluid labeled icon menu">
+
+                {% set navigation_bar = [
+                    ('ui.system', 'info', 'Info'),
+                    ('ui.systemfetch', 'fetch', 'Fetch process'),
+                    ]
+                -%}
+                {% set active_sub_page = active_sub_page|default('ui.system') -%}
+                {% for href,  icon, caption in navigation_bar %}
+                    <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                        <i class="{{ icon|e }} icon"></i>
+                        {{ caption|e }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="thirteen wide column ui grid" id="container">
+            <div class="sixteen wide column black">
+                <h3>{{ title }}</h3>
+            </div>
+            {% block systemcontent %}
+            {% endblock %}
+        </div>
+   </div>
+{% endblock %}
+
+
+{% block script %}
+
+$('.ui.sticky')
+  .sticky({
+    context: '#container'
+  });
+
+
+{% endblock %}

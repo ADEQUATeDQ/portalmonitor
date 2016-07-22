@@ -1,9 +1,6 @@
-{% extends "odpw_layout.jinja" %}
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "Fetch statistics for the last ten weeks" -%}
 
-
-{% macro portalCard(portal) -%}
-
-{%- endmacro %}
 
 {% block headcss %}
     {{ css_resources }}
@@ -14,37 +11,11 @@
 {% endblock %}
 
 
-{% block content %}
+{% block systemcontent %}
     <div class="ui grid">
-        <div class="three wide column" style="background: black;">
-              <div class="ui secondary sticky inverted fixed vertical fluid menu">
-                    <a href="{{ url_for('ui.system')}}" class="item">
-                        Info
-                    </a>
-                    <a href="{{ url_for('ui.systemfetch')}}" class="item active">
-                        Fetch process
-                    </a>
-              </div>
-        </div>
-
-        <div class="thirteen wide column" id="example1">
-            <h2>Fetch statistics for the last ten weeks</h2>
-            <div class="" >
-                {{ plot_div }}
-                {{ plot_script }}
-            </div>
+        <div class="" >
+            {{ plot_div }}
+            {{ plot_script }}
         </div>
     </div>
-
-
 {% endblock %}
-
-
-
-
-{% block script %}
-$('.ui.sticky')
-  .sticky({
-    context: '#example1'
-  });
- {% endblock %}

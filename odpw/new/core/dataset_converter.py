@@ -695,9 +695,12 @@ def _add_triple_from_dict(graph, _dict, subject, predicate, key,
         _add_date_triple(graph, subject, predicate, value)
     elif value:
         # Normal text value
-        if 'label' in value:
-            d=json.loads(value)
-            value=d['label']
+        if '"label"' in value:
+            try:
+                d=json.loads(value)
+                value=d['label']
+            except:
+                value=value
 
         graph.add((subject, predicate, Literal(value)))
 

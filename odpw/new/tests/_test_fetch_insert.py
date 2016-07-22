@@ -1,68 +1,46 @@
 from multiprocessing import Pool
 
 import structlog
+
+from new.core.dataset_converter import dict_to_dcat
+from new.utils.helper_functions import md5
 from odpw.new.core.db import DBClient,DBManager
 
 from odpw.new.core.model import Portal
 from odpw.db.dbm import PostgressDBM
-from odpw.new.services.fetch_insert import fetchMigrate
+
 from odpw.utils.timer import Timer
 
 
 log =structlog.get_logger()
 import time
-#dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-def migrate(obj):
 
-    dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
-    db= DBClient(dbm)
-    time.sleep(1)
-    P= obj[0]
-    snapshot=obj[1]
-    try:
-        with Timer(key="TIMER:Migrate "+P.id, verbose=True):
-            dbm1=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
-
-            #P=db.Session.query(Portal).filter(Portal.id==Pid).first()
-            #print "Fetching",P.id, "snapshot",snapshot
-            fetchMigrate(P, snapshot, db, dbm1)
-    except Exception as e:
-        print "ERROR",e
-        import traceback
-        traceback.print_exc()
-    db.remove()
-    return (P, snapshot)
 
 if __name__ == '__main__':
     dbm= DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
     #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
 
-    #snapshot=1625
-    snapshots=[1628,1627]
-    #snapshots=[1619]
-    Ps=[]
-    tasks=[]
-    for P in db.Session.query(Portal):
-        if P.id=='data_wu_ac_at':
-            for sn in snapshots:
-                tasks.append((P, sn))
 
-    pool = Pool(4)
-    for x in pool.imap(migrate,tasks):
-        pid=x[0].id
-        sn=x[1]
-        log.info("RECEIVED RESULT", portalid=pid, snapshot=sn)
+    portalid='www_europeandataportal_eu'
+    snapshot=1629
 
-        #df= aggregateByPortal3(db, x[0].id, x[1])
-        #dfm=df.mean().round(decimals=2).copy()
-        #data={k:float(str(v)) for k,v  in dict(dfm).items()}
-        #data['datasets']=df.shape[0]
-        #PSQ= PortalSnapshotQuality(portalid=x[0].id, snapshot=x[1], **data)
-        #db.add(PSQ)
+    P=db.Session.query(Portal).filter(Portal.id==portalid).first()
+    dbm1=PostgressDBM(user='opwu', password='0pwu', host='portalwatch.ai.wu.ac.at', port=5432, db='portalwatch')
+    from odpw.db.models import Dataset as DDataset
+    iter=DDataset.iter(dbm1.getDatasetsAsStream(portalID=portalid, snapshot=snapshot))
+    for i, d in enumerate(iter):
 
-    #results = pool.map_async( migrate, tasks, getResult )
-    #pool.close()
-    #pool.join()
+        md5v=None if d.data is None else md5(d.data)
 
+        if md5v:
+            with Timer(key='dict_to_dcat'):
+                #analys quality
+                try:
+                    if d.id=='f974bbcf-35da-4902-9d5e-8d6a2c602981':
+                        d.dcat=dict_to_dcat(d.data, P)
+                except Exception as e:
+                    print e
+                    print d.data
+                    print d.id
+                    break

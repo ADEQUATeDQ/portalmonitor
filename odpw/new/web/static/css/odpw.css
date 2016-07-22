@@ -15,12 +15,30 @@ nav#mainnav {
 #portalSelect{
     background:black;
 }
-#portalSelect .text, i{
+
+#portalSelect .text, #portalSelect i{
     color:white;
 }
+a.statistic{
+    padding:5px;
+    border-radius: .28571429rem;
+    box-shadow: 0 1px 3px 0 #d4d4d5,0 0 0 1px #d4d4d5;
+    -webkit-transition: box-shadow .1s ease,-webkit-transform .1s ease;
+    transition: box-shadow .1s ease,transform .1s ease;
+}
+
+a.statistic:hover{
+    box-shadow: 0 1px 3px 0px #bcbdbd,0 0 0 1px #d4d4d5;
+    -webkit-transform: translateY(-3px);
+    -ms-transform: translateY(-3px);
+    transform: translateY(-3px);
+}
+
 #portalSelect .search{
     color:white;
     border-bottom: 1px white;
     border-bottom: 2px solid white;
 
 }
+
+.hideextra { white-space: nowrap; overflow: hidden; text-overflow:ellipsis; }

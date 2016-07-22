@@ -1,8 +1,9 @@
 from collections import defaultdict
 
 import numpy as np
+from bokeh.layouts import column, row
 from bokeh.models import NumeralTickFormatter, FuncTickFormatter, Text, Range1d, HoverTool, \
-    ColumnDataSource, pd
+    ColumnDataSource, pd, Spacer
 from bokeh.plotting import figure
 from numpy.ma import arange
 
@@ -51,6 +52,21 @@ qa=[existence, conformance, opendata]#, retrievability, accuracy]
 
 
 
+def hm(sec):
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+
+    if d==0:
+        return "%sh %sm"% (h, m)
+    else:
+        return "%sd %sh %sm"% (d,h, m)
+
+
+
+
+
+
 
 def fetchProcessChart(db, snapshot, n=10):
 
@@ -83,22 +99,15 @@ def fetchProcessChart(db, snapshot, n=10):
 
     cnts=defaultdict(int)
     from bokeh.palettes import OrRd9
-    bp = figure(plot_width=800, plot_height=400,y_axis_type="datetime",responsive=True,tools='')#,toolbar_location=None
+
+    bp = figure(plot_width=600, plot_height=300,y_axis_type="datetime",responsive=True,tools='')#,toolbar_location=None
     bp.toolbar.logo = None
     bp.toolbar_location = None
 
 
     bp.xaxis[0].formatter = NumeralTickFormatter(format="0.0%")
 
-    def hm(sec):
-        m, s = divmod(sec, 60)
-        h, m = divmod(m, 60)
-        d, h = divmod(h, 24)
 
-        if d==0:
-            return "%sh %sm"% (h, m)
-        else:
-            return "%sd %sh %sm"% (d,h, m)
     bp.yaxis.formatter=FuncTickFormatter.from_py_func(hm)
 
     bp.xaxis[0].axis_label = '% of portals'
@@ -127,9 +136,98 @@ def fetchProcessChart(db, snapshot, n=10):
         bp.add_glyph(no_olympics_glyph)
 
     bp.set(x_range=Range1d(0, mx*1.2))
+    bp.background_fill_color = "#fafafa"
     bp.legend.location = "top_left"
 
     return bp
+
+
+def portalsScatter(df):
+    df=df.fillna(0)
+
+    def get_dataset(df, name):
+        df1 = df[df['software'] == name].copy()
+        print df1.describe()
+        del df1['software']
+        return df1
+
+    ckan = get_dataset(df,"CKAN")
+    socrata = get_dataset(df,"Socrata")
+    opendatasoft = get_dataset(df,"OpenDataSoft")
+    all=df
+
+    hmax = 0
+    vmax = 0
+    print hmax, vmax
+
+    p = figure(   plot_width=400, plot_height=400
+                , min_border=10, min_border_left=50
+                , toolbar_location="above",responsive=True
+                ,y_axis_type="log",x_axis_type="log")
+    p.toolbar.logo = None
+    p.toolbar_location = None
+
+    ph = figure(toolbar_location=None, plot_width=p.plot_width, plot_height=200, x_range=p.x_range,
+                 min_border=10, min_border_left=50, y_axis_location="right",x_axis_type="log",responsive=True)
+
+    pv = figure(toolbar_location=None, plot_width=200, plot_height=p.plot_height,
+                y_range=p.y_range, min_border=10, y_axis_location="right",y_axis_type="log",responsive=True)
+
+
+    for i, item in enumerate([
+                        #(all, 'All','black')
+                        (ckan,'CKAN', '#3A5785')
+                        ,(socrata,'Socrata', 'green')
+                        ,(opendatasoft,'OpenDataSoft', 'red')
+                        ]):
+
+        s,l,c=item
+        source=ColumnDataSource(data=s)
+        p.scatter(x='datasetCount', y='resourceCount', size=3, source=source, color=c, legend=l)
+        p.background_fill_color = "#fafafa"
+
+        # create the horizontal histogram
+        maxV= s['datasetCount'].max()
+        bins= 10 ** np.linspace(np.log10(1), np.log10(maxV), 10)
+        hhist, hedges = np.histogram(s['datasetCount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
+        hzeros = np.zeros(len(hedges)-1)
+        hmax = max(hhist)*1.5 if max(hhist)*1.5>hmax else hmax
+
+        LINE_ARGS = dict(color=c, line_color=None)
+
+
+        ph.xgrid.grid_line_color = None
+        #ph.yaxis.major_label_orientation = np.pi/4
+        ph.background_fill_color = "#fafafa"
+
+        ph.quad(bottom=0, left=hedges[:-1], right=hedges[1:], top=hhist, color=c, line_color=c, alpha=0.5)
+        hh1 = ph.quad(bottom=0, left=hedges[:-1], right=hedges[1:], top=hzeros, alpha=0.5, **LINE_ARGS)
+        hh2 = ph.quad(bottom=0, left=hedges[:-1], right=hedges[1:], top=hzeros, alpha=0.1, **LINE_ARGS)
+
+        # create the vertical histogram
+        maxV= s['resourceCount'].max()
+        bins= 10 ** np.linspace(np.log10(1), np.log10(maxV), 10)
+        vhist, vedges = np.histogram(s['resourceCount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
+        vzeros = np.zeros(len(vedges)-1)
+        vmax = max(vhist)*1.5 if max(vhist)*1.5>vmax else vmax
+
+
+        pv.ygrid.grid_line_color = None
+        #pv.xaxis.major_label_orientation = np.pi/4
+        pv.background_fill_color = "#fafafa"
+
+        pv.quad(left=0, bottom=vedges[:-1], top=vedges[1:], right=vhist, color=c, line_color=c, alpha=0.5)
+        vh1 = pv.quad(left=0, bottom=vedges[:-1], top=vedges[1:], right=vzeros, alpha=0.5, **LINE_ARGS)
+        vh2 = pv.quad(left=0, bottom=vedges[:-1], top=vedges[1:], right=vzeros, alpha=0.1, **LINE_ARGS)
+
+    ph.set(y_range=Range1d(0, hmax))
+    pv.set(x_range=Range1d(0, vmax))
+
+    plots={'scatter':p,'data':ph,'res':pv}
+
+    layout = column(row(p, pv), row(ph, Spacer(width=200, height=200)))
+
+    return layout
 
 def qualityChart(df):
 
@@ -165,7 +263,7 @@ def qualityChart(df):
 
     tools = "reset"
     # create chart
-    p = figure(plot_width=width, plot_height=height, title="",
+    p = figure( plot_width=width, plot_height=height, title="",
         x_axis_type=None, y_axis_type=None,
         x_range=[-420, 420], y_range=[-420, 420],
         min_border=0
@@ -236,5 +334,5 @@ def qualityChart(df):
 
     #p.logo = None
     #p.toolbar_location = None
-
+    p.background_fill_color = "#fafafa"
     return p

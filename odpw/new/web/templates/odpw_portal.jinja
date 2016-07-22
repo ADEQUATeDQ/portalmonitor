@@ -1,51 +1,48 @@
 {% extends "odpw_portal_layout.jinja" %}
 
 
-{% block headerstyle %}
-a:hover{
- background:black;
-}
-
-table thead{
-border-bottom: 1px solid;
-}
-
-{% endblock %}
 
 
 {% macro statsCard(data, label, key) -%}
 
-<div href="test" class="ui card statsCard">
+<a href="test" class="ui card statsCard">
     <div class="content">
-        <span class="header">{{data[key].distinct}} {{label}}
+        <div class="ui statistic">
+                <div class="value">
+                    {{data[key].distinct}}
+                </div>
+                <div class="label">
+                    {{label}}
+                </div>
+            </div>
     </div>
-    <div class="content" style="width:100%" >
-        <table class="ui very basic single line table" style="width:100px">
+    <div class="content" >
+        <table class="ui basic  single line table" style="table-layout: fixed;" >
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>License</th>
+                    <th class="two wide">No</th>
+                    <th>{{label}}</th>
                     <th>Count</th>
                 </tr>
             </thead>
             <tbody>
                 {% for l in data[key].top3Dist %}
                 <tr>
-                    <td>
+                    <td  class="two wide">
                     {% if loop.index!=4 %}
                         {{loop.index}}
                         {% else %}
                             -
-                            {% endif %}
+                        {% endif %}
                     </td>
-                    <td>{{l[key]}}</td>
+                    <td class="hideextra">{{l[key]}}</td>
                     <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</a>
 
 {%- endmacro %}
 
@@ -57,7 +54,7 @@ border-bottom: 1px solid;
 
 
 <!--<div class="thirteen wide column ui padded divided grid">-->
-<div class="ui equal width center aligned padded grid">
+<div class="ui equal width center aligned padded  grid container">
     <h2>General Portal Information</h2>
 
     <div class="row">
@@ -89,10 +86,14 @@ border-bottom: 1px solid;
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="ui doubling stackable  cards">
+    <div class="row doubling stackable three column">
+        <div class="column">
             {{statsCard(data, 'Licenses', 'license')}}
+        </div>
+        <div class="column">
             {{statsCard(data, 'Formats', 'format')}}
+        </div>
+        <div class="column">
             {{statsCard(data, 'Organisations', 'organisation')}}
         </div>
     </div>

@@ -1,6 +1,7 @@
-{% extends "odpw_layout.jinja" %}
+{% extends "odpw_portals_layout.jinja" %}
+{% set title = "Portals List" -%}
 
-{% set active_page = "portals" -%}
+{% set active_sub_page="ui.portals" %}
 
 {% macro portalCard(portal) -%}
 <div class="ui flex raised card" style="min-width: 350px;">
@@ -35,14 +36,6 @@
                 </div>
                 <div class="statistic">
                     <div class="value">
-                      {{portal.licenses}}
-                    </div>
-                    <div class="label">
-                      Licenses
-                    </div>
-                </div>
-                <div class="statistic">
-                    <div class="value">
                       {{ portal.resources }}
                     </div>
                     <div class="label">
@@ -69,59 +62,34 @@
 {%- endmacro %}
 
 
-
-{% block content %}
-    <div class="ui grid">
-        <div class="three wide column" style="background: black;">
-            <div class="ui secondary sticky fixed vertical inverted fluid menu" style="margin-left:15px;padding-right:15px;">
-                <a class="item active" >
-                    <i class="grid layout icon"></i>Portals
-
-                </a>
-                <a class="item">
-                  Messages
-                </a>
-                <a class="item">
-                  Friends
-                </a>
-              </div>
-        </div>
-        <div class="thirteen wide column">
-            <br>
-            <div class="ui form">
-                <div class="fields">
-
-
-                    <h2 class="field">
-                        <span id="pCount">{{data|length}}</span> Portals
-                    </h2>
-                    <div class="six wide field">
-                         <div class="ui icon input">
-                            <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
-                                <i class="search icon"></i>
-                            </div>
-                    </div>
+{% block title %}
+<div class="ui sixteen wide column">
+    <div class="ui form row">
+        <div class="fields">
+            <h2 class="two wide field">
+                <span id="pCount" class="floated right">{{data|length}} Portals</span>
+            </h2>
+            <div class="six wide field">
+                <div class="ui icon input">
+                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
+                    <i class="search icon"></i>
                 </div>
             </div>
-            <br>
-
-
-            <div class="ui doubling stackable grid cards" id="example1">
-
-                {% for p in data %}
-                    {{portalCard(p)}}
-
-
-                {% endfor %}
-
+            <div class="ui right floated column">
+                <a href="{{url_for('ui.portalstable')}}"><i class="list layout icon"></i></a>
             </div>
         </div>
-   </div>
+    </div>
+</div>
+{% endblock %}
 
 
-
-
-
+{% block portalscontent %}
+    <div class="ui doubling stackable grid cards" id="example1">
+        {% for p in data %}
+            {{portalCard(p)}}
+        {% endfor %}
+    </div>
 {% endblock %}
 
 {% block script %}
@@ -153,7 +121,12 @@ $('.ui.sticky')
 	        }else
 	            $(this).hide();
 	    });
-	    $("#pCount").text(pCount)
+	    if (pCount==1){
+	        $("#pCount").text(pCount+" Portal")
+	    }else{
+	        $("#pCount").text(pCount+" Portals")
+	    }
+
 	}).keyup( function () {
 	    // fire the above change event after every letter
 	    $(this).change();

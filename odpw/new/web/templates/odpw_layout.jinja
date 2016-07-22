@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <title>
-            {% block title %} {% endblock %} Open Data Portal Watch
+            {% block maintitle %} {% endblock %} Open Data Portal Watch
         </title>
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -48,22 +48,22 @@
         </header>
 
     <!-- MAIN NAVIGATION -->
-        <nav id="mainnav" class="ui secondary pointing labeled icon menu" >
+        <nav id="mainnav" class="ui fluid secondary stackable pointing icon menu" >
             <div class="header item inverted">ODPW</div>
 
             {% set navigation_bar = [
                     ('ui.system','system', 'System'),
-                    ('ui.portals', 'portals', 'Portals'),
+                    ('ui.portalslist', 'portals', 'Portals'),
                     ('ui.spec', 'api', 'API'),
                 ]
             -%}
             {% set active_page = active_page|default('index') -%}
             {% for href, id, caption in navigation_bar %}
-                <a class="item {% if id == active_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                <a class="link item {% if id == active_page %}active{% endif%}" href="{{ url_for(href)|e }}">
                     {{ caption|e }}
                 </a>
             {% endfor %}
-            <a class="item"><i class="icon download"></i>Data</a>
+            <a class="link item"><i class="icon download"></i>Data</a>
             <a href="{{ url_for('ui.api')}}" class="item"><i class="icon code"></i>API</a>
             <div class="right menu">
                 <a class="ui item">About</a>
@@ -72,7 +72,8 @@
 
 
     <!-- CONTENT -->
-        <section class="ui  text">
+
+        <section class="ui bottom attached text">
             {% block content %}
             {% endblock %}
         </section>

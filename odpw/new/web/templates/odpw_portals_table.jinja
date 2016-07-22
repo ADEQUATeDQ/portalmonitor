@@ -1,0 +1,112 @@
+{% extends "odpw_portals_layout.jinja" %}
+{% set title = "Portals List" -%}
+
+{% set active_sub_page="ui.portals" %}
+
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+
+
+{% macro portalRow(portal) -%}
+<tr>
+    <td>{{portal.uri|get_domain}}</td>
+    <td><i class="{{portal.iso| lower}} flag "></i><span>{{portal.iso| lower}}</span></td>
+    <td><a href="{{portal.apiuri}}">API</a></td>
+    <td><a href="{{portal.uri}}">Homepage</a></td>
+    <td>{{portal.datasets}}</td>
+    <td>{{ portal.resources }}</td>
+    <td>{% if portal.snLast %}
+            <a href="{{url_for("ui.portal", portalid=portal.id, snapshot=portal.snLast)}}" class="ui button">
+                <i class="line chart icon"></i>
+                Dashboard
+            </a>
+        {% else %}
+            <div class="ui disabled button">
+                <i class="line chart icon"></i>
+                Dashboard
+            </div>
+        {% endif %}
+        </td>
+
+</tr>
+
+
+{%- endmacro %}
+
+
+{% block title %}
+<div class="ui sixteen wide column">
+    <div class="ui form row">
+        <div class="fields">
+            <h2 class="two wide field">
+                <span id="pCount" class="floated right">{{data|length}} Portals</span>
+            </h2>
+            <div class="six wide field">
+                <div class="ui icon input">
+                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
+                    <i class="search icon"></i>
+                </div>
+            </div>
+            <div class="ui right floated column">
+                <a href="{{url_for('ui.portalslist')}}"><i class="grid layout icon"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block portalscontent %}
+<table class="ui table" id="portalsTable">
+    <thead>
+        <tr>
+            <th class="six wide">Domain</th>
+            <th class="one wide">ISO</th>
+            <th class="one wide">API</th>
+            <th class="one wide">Homepage</th>
+            <th class="one wide">Datasets</th>
+            <th class="one wide">Resourcs</th>
+            <th class="one wide">Dashboard</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in data %}
+            {{portalRow(p)}}
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th class="ten wide">Domain</th>
+            <th class="one wide">ISO</th>
+            <th class="one wide">API</th>
+            <th class="one wide">Homepage</th>
+            <th class="one wide">Datasets</th>
+            <th class="one wide">Resourcs</th>
+            <th class="one wide">Dashboard</th>
+        </tr>
+    </tfoot>
+</table>
+
+
+{% endblock %}
+
+
+
+{% block script %}
+    {{ super() }}
+    $(document).ready(function() {
+        var table = $('#portalsTable').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+        });
+    })
+
+ {% endblock %}

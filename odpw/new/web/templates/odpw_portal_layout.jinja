@@ -1,7 +1,6 @@
 {% extends "odpw_layout.jinja" %}
-{% set active_page = "dashboard" -%}
 
-
+{% set active_sub_page = active_sub_page|default('ui.portal') -%}
 
 {% block content %}
     <div class="ui grid">
@@ -79,9 +78,14 @@
                         <i class="calendar icon"></i>
                         <div class="menu">
                             {% for sn in data.snapshots.list %}
-                                <div class="item" data-value="{{sn}}">{{snapshot|getWeekString}}</div>
-                            {% endfor %}
+                                <div class="item" data-value="{{sn}}">
+                                    <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=sn)}}">
+                                        {{sn|getWeekString}}
+                                    </a>
 
+
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
                     {% if data.snapshots.next %}
