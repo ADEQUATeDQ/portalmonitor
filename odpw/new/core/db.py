@@ -71,7 +71,19 @@ def query_to_dict(rset):
             result[key].append(x.value)
     return result
 
-_row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+#_row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+
+def _row2dict(r):
+    data={}
+    for c in r.__table__.columns:
+        att= getattr(r, c.name)
+        if hasattr(att,'encode'):
+            at=att.encode('utf-8')
+        else:
+            at=att
+        data[c.name]=str(att)
+
+    return data
 
 def row2dict(r):
 
@@ -151,7 +163,7 @@ class DBManager(object):
 
             self.dataset_insert_function = DDL(
                 """
-                CREATE OR REPLACE FUNCTION dataset_insert_trigger()
+                CREATE OR REPLACE FUNCTION dataset_insert_function()
                 RETURNS TRIGGER AS $$
 
                 DECLARE
@@ -198,12 +210,12 @@ class DBManager(object):
                 """
                 CREATE TRIGGER dataset_insert_trigger
                 BEFORE INSERT ON """+tab_datasets+"""
-                FOR EACH ROW EXECUTE PROCEDURE dataset_insert_trigger();
+                FOR EACH ROW EXECUTE PROCEDURE dataset_insert_function();
                 """
             )
             self.resourcesinfo_insert_function = DDL(
                 """
-                CREATE OR REPLACE FUNCTION resourcesinfo_insert_trigger()
+                CREATE OR REPLACE FUNCTION resourcesinfo_insert_function()
                 RETURNS TRIGGER AS $$
 
                 DECLARE
@@ -245,9 +257,14 @@ class DBManager(object):
                 """
                 CREATE TRIGGER resourcesinfo_insert_trigger
                 BEFORE INSERT ON """+tab_resourcesinfo+"""
-                FOR EACH ROW EXECUTE PROCEDURE resourcesinfo_insert_trigger();
+                FOR EACH ROW EXECUTE PROCEDURE resourcesinfo_insert_function();
                 """
             )
+            #event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
+            #event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
+            #event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_function)
+            #event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_trigger)
+
 
 
     def db_DropEverything(self):
@@ -295,11 +312,14 @@ class DBManager(object):
         log.info("DROP ALL")
         Base.metadata.drop_all(self.engine)
         log.info("CREATE ALL")
+
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
-        event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_function)
-        event.listen(Dataset.__table__, 'after_create', self.resourcesinfo_insert_trigger)
+        event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_function)
+        event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_trigger)
+
         Base.metadata.create_all(self.engine)
+
 
 
 
@@ -430,7 +450,7 @@ class DBClient(object):
 
     def statusCodeDist(self, snapshot,portalid=None):
         with self.session_scope() as session:
-            q= session.query(ResourceInfo.status,func.count(ResourceInfo.status))\
+            q= session.query(ResourceInfo.status,func.count())\
                 .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
                 .join(Dataset,Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)
@@ -438,18 +458,18 @@ class DBClient(object):
                 q=q.filter(Dataset.portalid==portalid)
 
             q=q.group_by(ResourceInfo.status)
-            q=q.order_by(func.count(ResourceInfo.status).desc())
+            q=q.order_by(func.count().desc())
 
             return q
 
     def organisationDist(self, snapshot, portalid=None):
         with self.session_scope() as session:
-            q= session.query(Dataset.organisation,func.count(Dataset.organisation).label('count'))\
+            q= session.query(Dataset.organisation,func.count().label('count'))\
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
             q=q.group_by(Dataset.organisation)
-            q=q.order_by(func.count(Dataset.organisation).desc())
+            q=q.order_by(func.count().desc())
             return q
 
 
@@ -463,7 +483,7 @@ class DBClient(object):
                 q=q.filter(Dataset.portalid==portalid)
 
             q=q.group_by(MetaResource.format)
-            q=q.order_by(func.count(MetaResource.format).desc())
+            q=q.order_by(func.count().desc())
             return q
     def distinctFormats(self, snapshot, portalid=None):
         with self.session_scope() as session:
@@ -493,7 +513,7 @@ class DBClient(object):
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
             q=q.group_by(DatasetData.license)
-            q=q.order_by(func.count(DatasetData.license).desc())
+            q=q.order_by(func.count().desc())
             return q
 
     def distinctLicenses(self, snapshot, portalid=None):

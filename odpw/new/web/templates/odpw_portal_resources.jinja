@@ -1,5 +1,5 @@
 {% extends "odpw_portal_layout.jinja" %}
-
+{% set active_sub_page = "ui.portalRes" -%}
 
 {% block headcss %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
@@ -47,7 +47,7 @@
         <div class="ui statistics">
             <div class="statistic">
                 <div class="value">
-                  {{ data.valid }}
+                  {{ data.resources.valid[true]+data.resources.valid[false] }}
                 </div>
                 <div class="label">
                   unique Resources
@@ -55,7 +55,7 @@
             </div>
             <div class="statistic">
                 <div class="value">
-                  {{ data.valid['True'] }}
+                  {{ data.resources.valid[true] }}
                 </div>
                 <div class="label">
                   valid HTTP URLs
@@ -63,7 +63,7 @@
             </div>
             <div class="statistic">
                 <div class="value">
-                  {{ data.status.200 }}
+                  {{ data.resources.status.200 }}
                 </div>
                 <div class="label">
                   available Resources

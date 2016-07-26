@@ -3,12 +3,12 @@ from collections import defaultdict
 import numpy as np
 from bokeh.layouts import column, row
 from bokeh.models import NumeralTickFormatter, FuncTickFormatter, Text, Range1d, HoverTool, \
-    ColumnDataSource, pd, Spacer
+    ColumnDataSource, pd, Spacer, Circle, Legend, TextAnnotation
 from bokeh.plotting import figure
 from numpy.ma import arange
 
 from odpw.new.core.model import PortalSnapshotQuality, PortalSnapshot
-from odpw.new.utils.utils_snapshot import getLastNSnapshots
+from odpw.new.utils.utils_snapshot import getLastNSnapshots, getWeekString, getWeekString1
 from odpw.new.web.rest.odpw_restapi_blueprint import row2dict
 
 
@@ -38,7 +38,7 @@ co['CoLi']={'label': 'License', 'color':'#C8E6C9'}
 conformance={'dimension':'Conformance', 'metrics':co, 'color':'#C8E6C9'}
 
 op={}
-op['OpFo']={'label': 'Format Openness information', 'color':'#F4511E'}
+op['OpFo']={'label': 'Format Openness', 'color':'#F4511E'}
 op['OpLi']={'label': 'License Openneness', 'color':'#FF8A65'}
 op['OpMa']={'label': 'Format machine readability', 'color':'#E64A19'}
 opendata={'dimension':'Open Data', 'metrics':op, 'color':'#E64A19'}
@@ -336,3 +336,103 @@ def qualityChart(df):
     #p.toolbar_location = None
     p.background_fill_color = "#fafafa"
     return p
+
+
+def evolSize(source,df):
+    p = figure(   plot_width=600, plot_height=200
+                , min_border=10, min_border_left=50
+                , toolbar_location="above",responsive=True)
+    p.background_fill_color = "#fafafa"
+    p.legend.location = "top_left"
+    p.toolbar.logo = None
+    p.toolbar_location = None
+
+    legends=[]
+
+    l=p.line(x='snapshot',y='datasetCount', line_width=2,source=source)
+    c=p.circle(x='snapshot',y='datasetCount', line_width=2,source=source)
+
+    hit_target =Circle(x='snapshot',y='datasetCount', size=10,line_color=None, fill_color=None)
+    hit_renderer = p.add_glyph(source, hit_target)
+
+    legends.append(("Datasets",[l,c]))
+    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@datasetCount"}))
+
+    #######
+    l=p.line(x='snapshot',y='resourceCount', line_width=2,source=source)
+    c=p.circle(x='snapshot',y='resourceCount', line_width=2,source=source)
+
+    hit_target =Circle(x='snapshot',y='resourceCount', size=10,line_color=None, fill_color=None)
+    hit_renderer = p.add_glyph(source, hit_target)
+
+    legends.append(("Resources",[l,c]))
+    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@resourceCount"}))
+
+
+    p.xaxis[0].ticker.desired_num_ticks = df.shape[0]
+
+    p.xaxis.formatter=FuncTickFormatter.from_py_func(getWeekString1)
+    p.axis.minor_tick_line_color = None
+
+    legend = Legend(legends=legends, location=(0, -30))
+
+    p.add_layout(legend, 'right')
+
+    p.xaxis[0].axis_label = 'Snapshot'
+    p.yaxis[0].axis_label = 'Count'
+
+    return p
+
+def evolutionCharts(df):
+
+
+    df['week']= df['snapshot'].apply(getWeekString)
+    df=df.sort(['snapshot'], ascending=[1])
+    source = ColumnDataSource(df)
+
+
+
+    plots={'size':evolSize(source,df)}
+
+    last=None
+    for q in qa:
+        pt = figure(   plot_width=600, plot_height=200
+                , min_border=10, min_border_left=50
+                , toolbar_location="above",responsive=True)
+        pt.background_fill_color = "#fafafa"
+        pt.legend.location = "top_left"
+        pt.toolbar.logo = None
+        pt.toolbar_location = None
+        hit_renderers = []
+        legends=[]
+        print 'q',q
+        for m,v in q['metrics'].items():
+            print 'm',m
+            print 'v',v
+            l=pt.line(x='snapshot',y=m.lower(), line_width=2,source=source, color=v['color'])
+            c=pt.circle(x='snapshot',y=m.lower(), line_width=2,source=source, color=v['color'])
+            # invisible circle used for hovering
+            hit_target =Circle(x='snapshot',y=m.lower(), size=10,line_color=None, fill_color=None)
+            hit_renderer = pt.add_glyph(source, hit_target)
+            #c.select(dict(type=HoverTool)).tooltips = {"Week": "@week",m:"@"+m.lower()}
+            #hit_renderers.append(hit_renderer)
+
+            legends.append((v['label']+" ["+m.lower()+"]",[l,c]))
+
+            pt.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':v['label'], "Week": "@week", 'Value':"@"+m.lower()}))
+            pt.xaxis[0].ticker.desired_num_ticks = df.shape[0]
+
+        pt.xaxis.formatter=FuncTickFormatter.from_py_func(getWeekString1)
+        pt.axis.minor_tick_line_color = None
+
+        legend = Legend(legends=legends, location=(0, -30))
+
+        pt.add_layout(legend, 'right')
+
+        pt.xaxis[0].axis_label = 'Snapshot'
+        pt.yaxis[0].axis_label = 'Average quality'
+
+        plots[q['dimension']]=pt
+        last=pt
+    print plots
+    return plots

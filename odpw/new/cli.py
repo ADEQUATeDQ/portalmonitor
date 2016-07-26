@@ -26,6 +26,11 @@ import odpw.new.services.fetch_insert as fetch
 import odpw.new.services.fetch_migrate as fetchM
 import odpw.new.services.resource_head as head
 
+import sys  # import sys package, if not already imported
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+
 submodules=[
     restAPI,
     ui,

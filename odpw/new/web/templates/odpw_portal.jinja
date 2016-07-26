@@ -3,9 +3,9 @@
 
 
 
-{% macro statsCard(data, label, key) -%}
+{% macro statsCard(data, label, key, href) -%}
 
-<a href="test" class="ui card statsCard">
+<a href="{{url_for(href,snapshot=snapshot, portalid=portalid)}}" class="ui card statsCard">
     <div class="content">
         <div class="ui statistic">
                 <div class="value">
@@ -88,13 +88,13 @@
     </div>
     <div class="row doubling stackable three column">
         <div class="column">
-            {{statsCard(data, 'Licenses', 'license')}}
+            {{statsCard(data, 'Licenses', 'license', 'ui.portalLicenses')}}
         </div>
         <div class="column">
-            {{statsCard(data, 'Formats', 'format')}}
+            {{statsCard(data, 'Formats', 'format', 'ui.portalFormats')}}
         </div>
         <div class="column">
-            {{statsCard(data, 'Organisations', 'organisation')}}
+            {{statsCard(data, 'Organisations', 'organisation', 'ui.portalOrganisations')}}
         </div>
     </div>
 

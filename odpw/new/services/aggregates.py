@@ -76,18 +76,17 @@ def aggregate(db, snapshot):
         aggregatePortalQuality(db,portalid,snapshot)
 
 
-def aggregatePortalInfo(db, portalid, snapshot):
+def aggregatePortalInfo(db, portalid, snapshot, limit=3):
     stats={}
     with Timer(key=portalid+'-agg', verbose=True):
-        PS= db.portalSnapshot(snapshot, portalid).first()
-        if PS is None:
-            return stats
-        ds=PS.datasetCount
+        ds= db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).count()
+
+        print 'dsCount', ds
 
         for key, cFunc, dFunc in [
                         ('organisation',db.organisationDist, db.distinctFormats)
                         ,('license',db.licenseDist,db.distinctLicenses)
-                        ,('format',db.formatDist,db.distinctFormats)
+                        ,('format', db.formatDist, db.distinctFormats)
                          ]:
 
             with Timer(key=portalid+'-'+key, verbose=True):
@@ -95,12 +94,17 @@ def aggregatePortalInfo(db, portalid, snapshot):
                 s=[]
                 q=cFunc(snapshot,portalid=portalid)
                 print str(q)
-                for i in q.limit(3):
+                if limit:
+                    q=q.limit(limit)
+                else:
+                    q=q.all()
+                for i in q:
                     d=row2dict(i)
                     print d
                     d['perc']=d['count']/(1.0*ds)
                     s.append(d)
                 t=sum(item['count'] for item in s)
+                print key, 'total',t
                 if ds-t != 0:
                     s.append({key:'Others', 'count':ds-t,'perc':(ds-t)/(1.0*ds)})
                 stats[key]={'distinct':cFunc(snapshot,portalid=portalid).count(),'top3Dist':s}

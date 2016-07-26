@@ -1,7 +1,10 @@
-from new.utils.timing import Timer
-from odpw.new.core.db import DBClient, DBManager
+from sqlalchemy import func
 
-from new.core.model import  Base, Portal, PortalSnapshot
+from new.utils.plots import qa
+from new.utils.timing import Timer
+from odpw.new.core.db import DBClient, DBManager, row2dict
+
+from odpw.new.core.model import  Base, Portal, PortalSnapshot, PortalSnapshotQuality
 
 import structlog
 log =structlog.get_logger()
@@ -21,25 +24,15 @@ if __name__ == '__main__':
 
     db= DBClient(dbm)
 
-    with Timer(verbose=True):
-        r=db.Session.query(Portal,  Portal.last_snapshot,Portal.first_snapshot,Portal.snapshot_count)
-        print str(r)
-        for i in r:
-            s=db.Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==i[1]).filter(PortalSnapshot.portalid==i[0].id)
-            for ii in s:
-                print ii
-            print i
 
-    #r=db.Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==1628)
-    #for i in r:
-    #    print i
+    q= [ i.lower() for q in qa for i,v in q['metrics'].items() ]
 
+    import pandas as pd
 
+    data=[]
+    for R in db.Session.query(PortalSnapshot).filter(PortalSnapshot.portalid=="data_wu_ac_at"):
+        data.append(row2dict(R))
 
-    portalid='data_wu_ac_at'
-    snapshot=1629
-    for r in db.organisationDist(snapshot,portalid):
-        print r
+    df=pd.DataFrame(data)
 
-    for r in db.licenseDist(snapshot,portalid):
-        print r
+    evolutionCharts(df)

@@ -9,9 +9,9 @@ from bokeh.util.browser import view
 from jinja2 import Template
 
 from odpw.new.services.aggregates import aggregatePortalInfo
-from odpw.new.utils.plots import portalsScatter
+from odpw.new.utils.plots import portalsScatter, evolutionCharts
 from odpw.new.core.db import DBClient, DBManager, query_to_dict, to_dict, row2dict
-from odpw.new.core.model import Portal
+from odpw.new.core.model import Portal, PortalSnapshot, PortalSnapshotQuality
 
 import pandas as pd
 
@@ -40,6 +40,7 @@ def showPlot(p, label="bokeh"):
         </head>
         <body>
                 <div class="embed-wrapper">
+
                 {{ div }}
 
                 </div>
@@ -80,12 +81,23 @@ if __name__ == '__main__':
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
     db= DBClient(dbm)
 
-    portalid='data_cityofdeleon_org'
+    portalid='data_gv_at'
 
-    portalSize(db)
+    #portalSize(db)
 
     snapshot=1628
     import pprint
-    pprint.pprint(aggregatePortalInfo(db,portalid,snapshot))
+    #pprint.pprint(aggregatePortalInfo(db,portalid,snapshot))
+
+    data={}
+    for R in db.Session.query(PortalSnapshot).filter(PortalSnapshot.portalid==portalid):
+        data[R.portalid+str(R.snapshot)]=row2dict(R)
+    for R in db.Session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.portalid==portalid):
+        data[R.portalid+str(R.snapshot)].update(row2dict(R))
+
+    df=pd.DataFrame([v for k,v in data.items()])
+    print df
+
+    showPlot(evolutionCharts(df))
 
     Timer.printStats()

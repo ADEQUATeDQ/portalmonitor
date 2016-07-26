@@ -78,12 +78,32 @@ def getPreviousWeek(snapshot):
     d = tofirstdayinisoweek(snapshot)
     return getSnapshotfromTime(d, timedelta(days=7), before=True)
 
+def getWeekString1(yearweek):
+    if yearweek is None or len(str(yearweek))==0:
+        return ''
+    year="'"+str(yearweek)[:2]
+    week=int(str(yearweek)[2:])
+    #d = d - timedelta(d.weekday())
+    #dd=(week)*7
+    #dlt = timedelta(days = dd)
+    #first= d + dlt
+
+    #dlt = timedelta(days = (week)*7)
+    #last= d + dlt + timedelta(days=6)
+
+    return 'W'+str(week)+'-'+str(year)
+
+    #return "{} {} - {} {}, {}".format(first.strftime("%b"), first.day,last.strftime("%b"),last.day,last.year)
+
+
 def getWeekString(yearweek):
     if yearweek is None or len(str(yearweek))==0:
         return ''
     first=tofirstdayinisoweek(yearweek)
     last=toLastdayinisoweek(yearweek)
     return "{} {} - {} {}, {}".format(first.strftime("%b"), first.day,last.strftime("%b"),last.day,last.year)
+
+
 
 
 def getLastNSnapshots(yearweek,n):

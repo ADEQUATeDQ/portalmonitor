@@ -1,15 +1,18 @@
 {% extends "odpw_layout.jinja" %}
 
-{% set active_sub_page = active_sub_page|default('ui.portal') -%}
+
+
 
 {% block content %}
     <div class="ui grid">
         <div class="three wide column" style="background: black;">
-            <div class="ui secondary sticky fixed vertical inverted fluid labeled icon menu">
+            <div class="ui secondary vertical inverted fluid labeled icon menu">
 
                 {% set navigation_bar = [
                     ('ui.portal', 'info', 'Info'),
                     ('ui.portalQuality', 'info', 'Quality'),
+                    ('ui.portalEvolution', 'info', 'Evolution'),
+                    ('ui.portalFormats', 'info', 'Stats'),
                     ('ui.portalRes', 'grid layout', 'Resources')
                     ]
                 -%}
@@ -77,7 +80,7 @@
                     <div class="ui dropdown item">
                         <i class="calendar icon"></i>
                         <div class="menu">
-                            {% for sn in data.snapshots.list %}
+                            {% for sn in data.snapshots.list| sort %}
                                 <div class="item" data-value="{{sn}}">
                                     <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=sn)}}">
                                         {{sn|getWeekString}}
@@ -110,10 +113,5 @@ $('.dropdown')
     transition: 'drop'
   })
 ;
-$('.ui.sticky')
-  .sticky({
-    context: '#container'
-  });
-
 
 {% endblock %}

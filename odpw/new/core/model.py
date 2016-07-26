@@ -47,6 +47,7 @@ class Portal(Base):
 
     @hybrid_property
     def snapshot_count(self):
+        print len(self.snapshots)
         return len(self.snapshots)
     @snapshot_count.expression
 

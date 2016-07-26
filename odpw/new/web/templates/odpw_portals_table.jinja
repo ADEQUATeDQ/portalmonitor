@@ -20,6 +20,7 @@
     <td><i class="{{portal.iso| lower}} flag "></i><span>{{portal.iso| lower}}</span></td>
     <td><a href="{{portal.apiuri}}">API</a></td>
     <td><a href="{{portal.uri}}">Homepage</a></td>
+    <td>{{portal.software}}</td>
     <td>{{portal.datasets}}</td>
     <td>{{ portal.resources }}</td>
     <td>{% if portal.snLast %}
@@ -71,6 +72,7 @@
             <th class="one wide">ISO</th>
             <th class="one wide">API</th>
             <th class="one wide">Homepage</th>
+            <td class="one wide">Software</td>
             <th class="one wide">Datasets</th>
             <th class="one wide">Resourcs</th>
             <th class="one wide">Dashboard</th>
@@ -83,13 +85,14 @@
     </tbody>
     <tfoot>
         <tr>
-            <th class="ten wide">Domain</th>
-            <th class="one wide">ISO</th>
-            <th class="one wide">API</th>
-            <th class="one wide">Homepage</th>
-            <th class="one wide">Datasets</th>
-            <th class="one wide">Resourcs</th>
-            <th class="one wide">Dashboard</th>
+            <td class="ten wide">Domain</td>
+            <td class="one wide">ISO</td>
+            <td class="one wide">API</td>
+            <td class="one wide">Homepage</td>
+            <td class="one wide">Software</td>
+            <td class="one wide">Datasets</td>
+            <td class="one wide">Resourcs</td>
+            <td class="one wide">Dashboard</td>
         </tr>
     </tfoot>
 </table>
