@@ -396,7 +396,7 @@ class Worker(Thread):
                 elif error is not None:
                     ErrorHandler.handleError(log, "handle_request", exception=error, url=uri, snapshot=self.snapshot,exc_info=True)
                     r['status']=getExceptionCode(error)
-                    r['exception']=getExceptionString(error)
+                    r['exc']=getExceptionString(error)
                 else:
                     with Timer(key="header_dict") as t:
                         header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
