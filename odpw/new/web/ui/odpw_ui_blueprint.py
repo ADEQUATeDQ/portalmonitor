@@ -75,7 +75,7 @@ def systemfetch():
 ### PORTAL
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 
-@cache.cached(timeout=300)
+#@cache.cached(timeout=300)
 def getPortalsInfo():
 
     with Timer(key="portals", verbose=True):
@@ -98,20 +98,20 @@ def getPortalsInfo():
     return ps
 
 @ui.route('/portalslist', methods=['GET'])
-@cache.cached(timeout=300)
+#@cache.cached(timeout=300)
 def portalslist():
     ps=getPortalsInfo()
     return render_template('odpw_portals.jinja', data=ps)
 
 @ui.route('/portalstable', methods=['GET'])
-@cache.cached(timeout=300)
+#@cache.cached(timeout=300)
 def portalstable():
     ps=getPortalsInfo()
     return render_template('odpw_portals_table.jinja', data=ps)
 
 
 @ui.route('/portals/portalsquality', methods=['GET'])
-@cache.cached(timeout=300)
+#@cache.cached(timeout=300)
 def portalsquality():
     with Timer(key="portalsquality", verbose=True):
         db=current_app.config['dbc']
@@ -137,7 +137,7 @@ def portalsquality():
         return render_template('odpw_portals_quality.jinja', data={'portals':results,'iso':resultsIso,'soft':resultSoft}, keys=keys, snapshot=snapshot)
 
 @ui.route('/portals/portalsstats', methods=['GET'])
-@cache.cached(timeout=300)
+#@cache.cached(timeout=300)
 def portalssize():
     with Timer(key="portalsstats", verbose=True):
         db=current_app.config['dbc']

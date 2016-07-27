@@ -9,9 +9,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='semantic/semantic.min.css')}}">
+        {% block headcss %} {% endblock %}
         <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/odpw.css')}}">
 
-        {% block headcss %} {% endblock %}
+
 
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -49,7 +50,7 @@
 
     <!-- MAIN NAVIGATION -->
         <nav id="mainnav" class="ui fluid secondary stackable pointing icon menu" >
-            <div class="header item inverted">ODPW</div>
+            <div class="header item" style="background: #373f43; color: #c8c0bc">ODPW</div>
 
             {% set navigation_bar = [
                     ('ui.system','system', 'System'),
@@ -73,14 +74,14 @@
 
     <!-- CONTENT -->
 
-        <section class="ui bottom attached text">
+        <section class="ui text">
             {% block content %}
             {% endblock %}
         </section>
 
     <!-- FOOTER -->
         <footer class="ui inverted vertical footer segment">
-            <div class="ui container">
+            <div class="ui  container">
                 <div class="ui stackable inverted divided equal height stackable grid">
                     <div class="three wide column">
                         <h4 class="ui inverted header">About</h4>

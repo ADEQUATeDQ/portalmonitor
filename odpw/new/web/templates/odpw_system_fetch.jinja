@@ -1,6 +1,7 @@
 {% extends "odpw_system_layout.jinja" %}
-{% set title = "Fetch statistics for the last ten weeks" -%}
+{% set title = "Fetch process elapsed time for the last ten weeks" -%}
 
+{% set active_sub_page = "ui.systemfetch" -%}
 
 {% block headcss %}
     {{ css_resources }}
@@ -12,10 +13,12 @@
 
 
 {% block systemcontent %}
-    <div class="ui grid">
-        <div class="" >
+    <div class="ui container grid">
+
+        <div class="row" style="height:100%" >
             {{ plot_div }}
-            {{ plot_script }}
+
         </div>
     </div>
+    {{ plot_script }}
 {% endblock %}

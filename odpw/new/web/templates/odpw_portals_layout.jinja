@@ -4,9 +4,9 @@
 
 
 {% block content %}
-    <div class="ui grid">
-        <div class="three wide column" style="background: black;">
-            <div class="ui secondary sticky fixed vertical inverted fluid labeled icon menu">
+    <div class="ui grid two equal width column">
+        <div class="two wide column background" >
+            <div class="ui secondary vertical inverted fluid labeled icon menu">
 
                 {% set navigation_bar = [
                     ('ui.portalslist', 'info', 'Portals List'),
@@ -24,9 +24,9 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="thirteen wide column ui grid" id="container">
-            <div class="sixteen wide column black">
-                <h3>{% block title %}{% endblock %}</h3>
+        <div class="column ui grid" id="container">
+            <div class="sixteen wide column background">
+                <h3 class="ui header">{% block title %}{% endblock %}</h3>
             </div>
             {% block portalscontent %}
             {% endblock %}

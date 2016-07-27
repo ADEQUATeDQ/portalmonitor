@@ -26,12 +26,12 @@
     <td>{% if portal.snLast %}
             <a href="{{url_for("ui.portal", portalid=portal.id, snapshot=portal.snLast)}}" class="ui button">
                 <i class="line chart icon"></i>
-                Dashboard
+
             </a>
         {% else %}
             <div class="ui disabled button">
                 <i class="line chart icon"></i>
-                Dashboard
+
             </div>
         {% endif %}
         </td>
@@ -43,24 +43,25 @@
 
 
 {% block title %}
-<div class="ui sixteen wide column">
-    <div class="ui form row">
-        <div class="fields">
+<div class="ui form ">
+        <div class=" fields">
             <h2 class="two wide field">
                 <span id="pCount" class="floated right">{{data|length}} Portals</span>
             </h2>
             <div class="six wide field">
                 <div class="ui icon input">
-                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
+                    <div class="ui  input">
+                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)" style="width:100%">
+                    </div>
                     <i class="search icon"></i>
                 </div>
             </div>
             <div class="ui right floated column">
-                <a href="{{url_for('ui.portalslist')}}"><i class="grid layout icon"></i></a>
+                <a href="{{url_for('ui.portalstable')}}"><i class="list layout icon"></i></a>
             </div>
         </div>
     </div>
-</div>
+
 {% endblock %}
 
 

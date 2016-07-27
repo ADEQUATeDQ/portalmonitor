@@ -505,9 +505,9 @@ def name():
     return 'Head'
 
 def setupCLI(pa):
-    pa.add_argument("-t","--threads",  help='Number of threads',  dest='threads', default=4)
-    pa.add_argument("-b","--batch",  help='Batch size',  dest='batch', default=100)
-    pa.add_argument("-d","--delay",  help='Default domain delay (in sec)',  dest='delay', default=5)
+    pa.add_argument("-t","--threads",  help='Number of threads',  dest='threads', default=4,type=int)
+    pa.add_argument("-b","--batch",  help='Batch size',  dest='batch', default=100,type=int)
+    pa.add_argument("-d","--delay",  help='Default domain delay (in sec)',  dest='delay', default=5,type=int)
 
 def cli(args,dbm):
 

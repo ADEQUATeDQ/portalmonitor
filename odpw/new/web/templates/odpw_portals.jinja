@@ -63,15 +63,16 @@
 
 
 {% block title %}
-<div class="ui sixteen wide column">
-    <div class="ui form row">
-        <div class="fields">
+    <div class="ui form ">
+        <div class=" fields">
             <h2 class="two wide field">
                 <span id="pCount" class="floated right">{{data|length}} Portals</span>
             </h2>
             <div class="six wide field">
                 <div class="ui icon input">
-                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
+                    <div class="ui  input">
+                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)" style="width:100%">
+                    </div>
                     <i class="search icon"></i>
                 </div>
             </div>
@@ -80,11 +81,13 @@
             </div>
         </div>
     </div>
-</div>
+
 {% endblock %}
 
 
 {% block portalscontent %}
+<br>
+<br>
     <div class="ui doubling stackable grid cards" id="example1">
         {% for p in data %}
             {{portalCard(p)}}
@@ -93,10 +96,7 @@
 {% endblock %}
 
 {% block script %}
-$('.ui.sticky')
-  .sticky({
-    context: '#example1'
-  });
+
   $('#filter').change( function () {
 	    var filter = $(this).val().toLowerCase().trim();
 	    var filter_tags = filter.split(" ");

@@ -1,3 +1,7 @@
+body{
+    color: #373f43;
+}
+
 header#header{
     height:100px; 
     margin-top:10px;
@@ -7,9 +11,12 @@ header#header img{
 }
 
 nav#mainnav {
-    padding-left:50px;
+
 }
 
+.background{
+background-color: #373f43;
+}
 
 
 #portalSelect{

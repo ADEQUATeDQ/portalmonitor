@@ -240,8 +240,8 @@ def qualityChart(df):
         key_color[r['Metric']]= r['color']
 
 
-    width = 800
-    height = 800
+    width = 400
+    height = 400
     inner_radius = 90
     outer_radius = 300 - 10
 

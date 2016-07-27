@@ -4,8 +4,8 @@
 
 
 {% block content %}
-    <div class="ui grid">
-        <div class="three wide column" style="background: black;">
+    <div class="ui grid two equal width column">
+        <div class="two wide column background" >
             <div class="ui secondary vertical inverted fluid labeled icon menu">
 
                 {% set navigation_bar = [
@@ -25,9 +25,9 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="thirteen wide column ui grid" id="container">
-            <div class="sixteen wide column black">
-                <h3> Portal: {{portalid}}
+        <div class="column ui grid" id="container">
+            <div class="sixteen wide column background">
+                <h3 class="ui header" style="color:white"> Portal: {{portalid}}
                 <!--<div class=" labeled icon ui selection search dropdown" id="portalSelect">
                     <input name="gender" type="hidden" value="default">
                     <i class="dropdown icon"></i>
@@ -80,6 +80,10 @@
                     <div class="ui dropdown item">
                         <i class="calendar icon"></i>
                         <div class="menu">
+                            <div class="header">
+                                <i class="calendar icon"></i>
+                                {{data.snapshots.list|length}} Snapshots
+                            </div>
                             {% for sn in data.snapshots.list| sort %}
                                 <div class="item" data-value="{{sn}}">
                                     <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=sn)}}">
