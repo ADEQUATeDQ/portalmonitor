@@ -1,5 +1,7 @@
 import datetime
 from multiprocessing import Pool
+from random import randint
+from time import sleep
 
 import structlog
 log =structlog.get_logger()
@@ -22,7 +24,7 @@ from odpw.new.core.db import DBClient, DBManager
 
 def fetchMigrate(obj):
     try:
-
+        sleep(randint(1,5))
         P, dbConf, snapshot = obj[0],obj[1],obj[2]
 
         dbm = DBManager(**dbConf)
@@ -42,8 +44,9 @@ def fetchMigrate(obj):
             end= datetime.datetime.strptime(PMD.fetch_stats['fetch_end'], "%Y-%m-%dT%H:%M:%S.%f") if 'fetch_end' in PMD.fetch_stats and PMD.fetch_stats['fetch_end'] is not None else None
             PS.start=start
             PS.end=end
-            PS.exc=PMD.fetch_stats['exception']
-            PS.status=PMD.fetch_stats['status']
+
+            PS.exc=PMD.fetch_stats['exception'] if 'exception' in PMD.fetch_stats else None
+            PS.status=PMD.fetch_stats['status'] if 'status' in PMD.fetch_stats else -1
         else:
             PS.start=None
             PS.end=None
