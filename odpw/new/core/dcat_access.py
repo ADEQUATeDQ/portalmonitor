@@ -13,8 +13,8 @@ from odpw.new.core.dataset_converter import DCAT, DCT, VCARD, FOAF
 def accessDataset(dataset, key ):
     value=[]
     key=str(key)
-    for dcat_el in dataset['dcat']:
-    #for dcat_el in getattr(dataset,'dcat',[]):
+    #for dcat_el in dataset['dcat']:
+    for dcat_el in getattr(dataset,'dcat',[]):
         if str(DCAT.Dataset) in dcat_el.get('@type',[]):
             for f in dcat_el.get(key,[]):
                 v=None
