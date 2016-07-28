@@ -64,6 +64,7 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
 
 def fix_socrata_graph(g, dataset_dict, portal_url):
     # add additional info
+    d=json.loads(g.serialize(format='json-ld'))
     if 'view' in dataset_dict and isinstance(dataset_dict['view'], dict):
         data = dataset_dict['view']
         try:
@@ -75,6 +76,7 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
             for s, p, o in g.triples( (dataset_node, None, None) ):
                 g.remove((s, p, o))
                 g.add((dataset_ref, p, o))
+            g.add((dataset_ref, RDF.type, DCAT.Dataset))
 
             # owner
             if 'owner' in data and isinstance(data['owner'], dict) and 'displayName' in data['owner']:
@@ -91,6 +93,12 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
                 g.add((contact_details, RDF.type, VCARD.Organization))
                 g.add((dataset_ref, DCAT.contactPoint, contact_details))
                 g.add((contact_details, VCARD.fn, Literal(author)))
+
+            #title
+            #if 'name' in data:
+
+            #    g.add((dataset_ref, DCT.title, Literal('name')))
+
         except Exception as e:
             pass
         try:

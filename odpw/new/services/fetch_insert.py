@@ -188,6 +188,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
                 #DATATSET
                 title=getTitle(d)
                 title = title[0] if len(title)>0 else None
+
                 D= Dataset(id=d.id,
                        snapshot=d.snapshot,
                        portalid=d.portal_id,
