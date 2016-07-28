@@ -4,7 +4,8 @@
 {% set active_sub_page="ui.portals" %}
 
 {% macro portalCard(portal) -%}
-<div class="ui flex raised card" style="min-width: 350px;">
+
+<div class="ui fluid card" style="min-width: 350px;">
     <div class="content">
         <div class="header">
             <span class="searchable">{{portal.uri|get_domain}}</span>
@@ -77,7 +78,7 @@
                 </div>
             </div>
             <div class="ui right floated column">
-                <a href="{{url_for('ui.portalstable')}}"><i class="list layout icon"></i></a>
+                <a href="{{url_for('ui.portalstable')}}"><i class="table icon"></i></a>
             </div>
         </div>
     </div>
@@ -86,12 +87,13 @@
 
 
 {% block portalscontent %}
-<br>
-<br>
-    <div class="ui doubling stackable grid cards" id="example1">
+
+<div class="sixteen wide column ">
+    <div class="ui three column padded grid cards" id="example1">
         {% for p in data %}
             {{portalCard(p)}}
         {% endfor %}
+    </div>
     </div>
 {% endblock %}
 

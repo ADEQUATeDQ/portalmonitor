@@ -19,8 +19,8 @@ def getLabel(seconds):
 if __name__ == '__main__':
 
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    #dbm.db_DropEverything()
-    #dbm.init(Base)
+    dbm.db_DropEverything()
+    dbm.init(Base)
 
     db= DBClient(dbm)
 
@@ -35,4 +35,4 @@ if __name__ == '__main__':
 
     df=pd.DataFrame(data)
 
-    evolutionCharts(df)
+    #evolutionCharts(df)

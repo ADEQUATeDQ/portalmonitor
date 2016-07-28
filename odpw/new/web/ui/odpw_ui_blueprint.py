@@ -1,17 +1,20 @@
+import ast
 import datetime
+import json
 from urlparse import urlparse
 
 import jinja2
 import pandas as pd
 from bokeh.embed import components
 from bokeh.resources import INLINE
-from flask import Blueprint, current_app, render_template
+from flask import Blueprint, current_app, render_template, jsonify
+from markupsafe import Markup
 from sqlalchemy import func
 
 from odpw.new.utils.plots import fetchProcessChart, qualityChart, qa, portalsScatter, evolutionCharts
 from odpw.new.utils.statistics import portalSnapshotQualityDF
 from odpw.new.core.db import row2dict
-from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
+from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, Dataset, DatasetData, DatasetQuality
 from odpw.new.services.aggregates import aggregatePortalInfo
 from odpw.new.utils.timing import Timer
 from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
@@ -32,7 +35,7 @@ ui.add_app_template_filter(getWeekString)
 
 
 @ui.route('/', methods=['GET'])
-def help():
+def index():
     return render_template('index.jinja')
 
 @ui.route('/spec', methods=['GET'])
@@ -164,16 +167,16 @@ def portalssize():
 ### PORTAL
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 @cache.cached(timeout=300)
-def getPortalInfos(db, portalid, snapshot):
+def getPortalInfos(Session, portalid, snapshot):
     with Timer(key="getPortalInfos", verbose=True):
-        snapshots=[i[0] for i in db.Session.query(PortalSnapshot.snapshot).filter(PortalSnapshot.portalid==portalid).all()]
+        snapshots=[i[0] for i in Session.query(PortalSnapshot.snapshot).filter(PortalSnapshot.portalid==portalid).all()]
 
         p=getPreviousWeek(snapshot)
         p=p if p in snapshots else None
         n=getNextWeek(snapshot)
         n=n if n in snapshots else None
         data={'snapshots':{'list':snapshots,'prev':p, 'next': n}}
-        data['portals']= [ row2dict(r) for r in db.portals().all()]
+        data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
         return data
 
 def getResourceInfo(db, portalid, snapshot):
@@ -197,9 +200,9 @@ def getResourceInfo(db, portalid, snapshot):
 @ui.route('/portal/<portalid>/<int:snapshot>', methods=['GET'])
 def portal(snapshot, portalid):
     with Timer(key="portal",verbose=True):
+        Session=current_app.config['dbsession']
         db=current_app.config['dbc']
-
-        data=getPortalInfos(db,portalid,snapshot)
+        data=getPortalInfos(Session,portalid,snapshot)
 
         with Timer(key="portalQuery",verbose=True):
             r=current_app.config['dbsession'].query(Portal, Portal.datasetCount, Portal.resourceCount).filter(Portal.id==portalid)
@@ -222,10 +225,11 @@ def portalRes(snapshot, portalid):
         db=current_app.config['dbc']
 
         data=getResourceInfo(db, portalid, snapshot)
-        print data
+
         data['uris']= [row2dict(i) for i in db.getResourceInfos(snapshot,portalid=portalid) ]
 
-        data.update(getPortalInfos(db,portalid,snapshot))
+        Session=current_app.config['dbsession']
+        data.update(getPortalInfos(Session,portalid,snapshot))
 
         return render_template("odpw_portal_resources.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
@@ -249,7 +253,9 @@ def portalEvolution(snapshot, portalid):
         css_resources = INLINE.render_css()
 
         db=current_app.config['dbc']
-        data = getPortalInfos(db,portalid,snapshot)
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
+
         return render_template("odpw_portal_evolution.jinja",
             plot_script=script
             ,plot_div=div
@@ -267,7 +273,8 @@ def portalFormats(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
         db=current_app.config['dbc']
 
-        data=getPortalInfos(db,portalid,snapshot)
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
         data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
@@ -277,7 +284,8 @@ def portalLicenses(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
         db=current_app.config['dbc']
 
-        data=getPortalInfos(db,portalid,snapshot)
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
         data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
@@ -288,10 +296,32 @@ def portalOrganisations(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
         db=current_app.config['dbc']
 
-        data=getPortalInfos(db,portalid,snapshot)
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
         data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
+
+def getPortalDatasets(Session, portalid,snapshot):
+    return {"datasets": [ row2dict(r) for r in Session.query(Dataset.id).filter(Dataset.portalid==portalid).filter(Dataset.snapshot==snapshot).all()]}
+
+
+@ui.route('/portal/<portalid>/<int:snapshot>/dataset', methods=['GET'], defaults={'dataset': None})
+@ui.route('/portal/<portalid>/<int:snapshot>/dataset/<dataset>', methods=['GET'])
+def portalDataset(snapshot, portalid, dataset):
+    with Timer(key="portalDataset",verbose=True):
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
+
+        data.update(getPortalDatasets(Session, portalid,snapshot))
+
+        if dataset:
+            r= Session.query(DatasetData).join(Dataset).filter(Dataset.id==dataset).join(DatasetQuality).add_entity(DatasetQuality).first()
+            data['datasetData']=row2dict(r)
+            data['json']=ast.literal_eval(data['datasetData']['raw'])
+
+
+        return render_template("odpw_portal_dataset.jinja", data=data, snapshot=snapshot, portalid=portalid, dataset=dataset, qa=qa)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/quality', methods=['GET'])
@@ -309,8 +339,8 @@ def portalQuality(snapshot, portalid):
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        db=current_app.config['dbc']
-        data = getPortalInfos(db,portalid,snapshot)
+        Session=current_app.config['dbsession']
+        data = getPortalInfos(Session,portalid,snapshot)
         return render_template("odpw_portal_quality.jinja",
             plot_script=script
             ,plot_div=div

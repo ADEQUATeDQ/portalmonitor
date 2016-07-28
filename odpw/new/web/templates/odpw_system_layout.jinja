@@ -23,12 +23,17 @@
         </div>
         <div class="column ui grid" id="container">
             <div class="sixteen wide column background">
-                <h3 class="ui header" style="color:white">{{ title }}</h3>
+                <h3 class="ui header " style="color:white">{{ title }}</h3>
             </div>
-            {% block systemcontent %}
-            {% endblock %}
+            <div class="sixteen wide column ">
+                <div class="row grid ui container">
+                    {% block systemcontent %}
+
+                    {% endblock %}
+                </div>
+            </div>
         </div>
-   </div>
+    </div>
 {% endblock %}
 
 

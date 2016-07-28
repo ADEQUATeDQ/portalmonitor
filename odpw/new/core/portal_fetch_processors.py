@@ -188,7 +188,7 @@ class CKAN(PortalProcessor):
 
 class Socrata(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, sn, dcat=True):
-        api = urlparse.urljoin(Portal.url, '/api/')
+        api = urlparse.urljoin(Portal.uri, '/api/')
         page = 1
         processed=set([])
 
@@ -245,7 +245,7 @@ class OpenDataSoft(PortalProcessor):
 
         while True:
             query = '/api/datasets/1.0/search?rows=' + str(rows) + '&start=' + str(start)
-            resp = requests.get(urlparse.urljoin(Portal.url, query), verify=False)
+            resp = requests.get(urlparse.urljoin(Portal.uri, query), verify=False)
             res = resp.json()
             datasets = res['datasets']
             if datasets:

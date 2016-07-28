@@ -38,34 +38,33 @@
     <body>
 
     <!-- HEADER -->
-        <header id="header" class="ui grid">
+        <header id="header" class="ui vertical segment">
             <h1 class="ui header fifteen wide column">
                 <div class="content">
                     Open Data Portal Watch
                     <div class="sub header">Quality Assessment and Monitoring of 261 Open Data Portals</div>
                 </div>
-                <img  class="ui tiny image" src="{{ url_for('.static', filename='img/wu.png')}}">
+                <img  class="ui small image" src="{{ url_for('.static', filename='img/wu.png')}}">
             </h1>
         </header>
 
     <!-- MAIN NAVIGATION -->
-        <nav id="mainnav" class="ui fluid secondary stackable pointing icon menu" >
-            <div class="header item" style="background: #373f43; color: #c8c0bc">ODPW</div>
-
+        <nav id="mainnav" class="ui  fluid secondary stackable pointing icon menu " >
             {% set navigation_bar = [
-                    ('ui.system','system', 'System'),
-                    ('ui.portalslist', 'portals', 'Portals'),
-                    ('ui.spec', 'api', 'API'),
+                    ('ui.index','odpw', 'ODPW', 'info'),
+                    ('ui.system','system', 'System','server'),
+                    ('ui.portalslist', 'portals', 'Portals','grid layout'),
+                    ('ui.api', 'api', 'API','code'),
                 ]
             -%}
             {% set active_page = active_page|default('index') -%}
-            {% for href, id, caption in navigation_bar %}
+            {% for href, id, caption, icon  in navigation_bar %}
                 <a class="link item {% if id == active_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                    <i class="icon {{icon}}"></i>
                     {{ caption|e }}
                 </a>
             {% endfor %}
             <a class="link item"><i class="icon download"></i>Data</a>
-            <a href="{{ url_for('ui.api')}}" class="item"><i class="icon code"></i>API</a>
             <div class="right menu">
                 <a class="ui item">About</a>
             </div>
@@ -79,12 +78,12 @@
             {% endblock %}
         </section>
 
-    <!-- FOOTER -->
-        <footer class="ui inverted vertical footer segment">
+    <!-- FOOTER
+        <footer class="ui background vertical footer segment">
             <div class="ui  container">
                 <div class="ui stackable inverted divided equal height stackable grid">
                     <div class="three wide column">
-                        <h4 class="ui inverted header">About</h4>
+                        <h4 class="ui grey header">About</h4>
                         <div class="ui inverted link list">
                             <a href="#" class="item">Sitemap</a>
                             <a href="#" class="item">Contact Us</a>
@@ -108,7 +107,7 @@
                 </div>
             </div>
         </footer>
-
+ -->
     <!-- SCRIPTS -->
         <script>
             {% block script %} {% endblock %}

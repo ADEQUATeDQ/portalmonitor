@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy as np
 from bokeh.layouts import column, row
 from bokeh.models import NumeralTickFormatter, FuncTickFormatter, Text, Range1d, HoverTool, \
-    ColumnDataSource, pd, Spacer, Circle, Legend, TextAnnotation
+    ColumnDataSource, pd, Spacer, Circle, Legend, TextAnnotation, LinearAxis
 from bokeh.plotting import figure
 from numpy.ma import arange
 
@@ -97,7 +97,6 @@ def fetchProcessChart(db, snapshot, n=10):
 
     print data
 
-    cnts=defaultdict(int)
     from bokeh.palettes import OrRd9
 
     bp = figure(plot_width=600, plot_height=300,y_axis_type="datetime",responsive=True,tools='')#,toolbar_location=None
@@ -115,6 +114,8 @@ def fetchProcessChart(db, snapshot, n=10):
 
     mx=None
     c=0
+
+
     for sn in sorted(data.keys()):
         d=data[sn]
 
@@ -124,19 +125,34 @@ def fetchProcessChart(db, snapshot, n=10):
         mx=max(x) if max(x)>mx else mx
         #print x
         # plot the sorted data:
-        bp.circle(x,y, size=5, alpha=0.5, legend=str(sn), color=OrRd9[c])
-        bp.line(x,y, line_width=2,line_color=OrRd9[c],legend=str(sn))
+
+
+
+        if sn == 1630:
+            ci=bp.circle(x,y, size=5, alpha=0.5,  color='red', legend="current week: "+getWeekString(sn))
+            li=bp.line(x,y, line_width=2,line_color='red', legend="current week: "+getWeekString(sn))
+        else:
+            ci=bp.circle(x,y, size=5, alpha=0.5,  color='gray')
+            li=bp.line(x,y, line_width=2,line_color='gray')
+            #hit_target =Circle(x,y, size=10,line_color=None, fill_color=None)
+
+
+            #c.select(dict(type=HoverTool)).tooltips = {"Week": "@week",m:"@"+m.lower()}
+            #hit_renderers.append(hit_renderer)
+
+            bp.add_tools(HoverTool(renderers=[li], tooltips={"Week": getWeekString(sn)}))
 
         c+=1
         #bp.text(,y[-1], line_width=2,line_color=OrRd9[c],legend=str(sn))
 
-        no_olympics_glyph = Text(x=x[-1], y=y[-1], x_offset=100, text=["%s of %s portals"%(len(d),cnts[sn])],
+        no_olympics_glyph = Text(x=x[-1], y=y[-1], x_offset=100, text=["%s of %s portals"%(len(d), cnts[sn])],
             text_align="right", text_baseline="top",
             text_font_size="9pt", text_font_style="italic", text_color="black")
         bp.add_glyph(no_olympics_glyph)
 
     bp.set(x_range=Range1d(0, mx*1.2))
     bp.background_fill_color = "#fafafa"
+
     bp.legend.location = "top_left"
 
     return bp
@@ -147,7 +163,7 @@ def portalsScatter(df):
 
     def get_dataset(df, name):
         df1 = df[df['software'] == name].copy()
-        print df1.describe()
+        print name,df1.describe()
         del df1['software']
         return df1
 
@@ -167,6 +183,12 @@ def portalsScatter(df):
     p.toolbar.logo = None
     p.toolbar_location = None
 
+
+    #p.xaxis[0].axis_label = '#Datasets'
+    #p.yaxis[0].axis_label = '#Resources'
+    p.background_fill_color = "#fafafa"
+
+
     ph = figure(toolbar_location=None, plot_width=p.plot_width, plot_height=200, x_range=p.x_range,
                  min_border=10, min_border_left=50, y_axis_location="right",x_axis_type="log",responsive=True)
 
@@ -176,15 +198,15 @@ def portalsScatter(df):
 
     for i, item in enumerate([
                         #(all, 'All','black')
-                        (ckan,'CKAN', '#3A5785')
-                        ,(socrata,'Socrata', 'green')
-                        ,(opendatasoft,'OpenDataSoft', 'red')
+                        #(ckan,'CKAN', '#3A5785')
+                        #,(socrata,'Socrata', 'green')
+                        (opendatasoft,'OpenDataSoft', 'red')
                         ]):
 
         s,l,c=item
         source=ColumnDataSource(data=s)
         p.scatter(x='datasetCount', y='resourceCount', size=3, source=source, color=c, legend=l)
-        p.background_fill_color = "#fafafa"
+
 
         # create the horizontal histogram
         maxV= s['datasetCount'].max()
@@ -220,10 +242,11 @@ def portalsScatter(df):
         vh1 = pv.quad(left=0, bottom=vedges[:-1], top=vedges[1:], right=vzeros, alpha=0.5, **LINE_ARGS)
         vh2 = pv.quad(left=0, bottom=vedges[:-1], top=vedges[1:], right=vzeros, alpha=0.1, **LINE_ARGS)
 
-    ph.set(y_range=Range1d(0, hmax))
-    pv.set(x_range=Range1d(0, vmax))
+    ph.set(y_range=Range1d(0.1, hmax))
+    pv.set(x_range=Range1d(0.1, vmax))
 
-    plots={'scatter':p,'data':ph,'res':pv}
+    #plots={'scatter':p,'data':ph,'res':pv}
+    p.legend.location = "bottom_right"
 
     layout = column(row(p, pv), row(ph, Spacer(width=200, height=200)))
 
@@ -414,6 +437,7 @@ def evolutionCharts(df):
             # invisible circle used for hovering
             hit_target =Circle(x='snapshot',y=m.lower(), size=10,line_color=None, fill_color=None)
             hit_renderer = pt.add_glyph(source, hit_target)
+
             #c.select(dict(type=HoverTool)).tooltips = {"Week": "@week",m:"@"+m.lower()}
             #hit_renderers.append(hit_renderer)
 

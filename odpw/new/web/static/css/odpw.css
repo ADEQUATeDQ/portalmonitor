@@ -3,19 +3,22 @@ body{
 }
 
 header#header{
-    height:100px; 
-    margin-top:10px;
+    padding-left:20px;
+    height:120px;
+
 }
 header#header img{
     float: right;
 }
 
 nav#mainnav {
-
+margin-top:0px;
 }
 
 .background{
-background-color: #373f43;
+
+background-color: #373f43!important;
+    color: #fff!important;
 }
 
 

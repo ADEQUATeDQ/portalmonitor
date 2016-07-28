@@ -178,7 +178,8 @@ class Dataset(Base):
     snapshot    = Column( SmallInteger, primary_key=True, index=True)
     portalid    = Column( String, primary_key=True, index=True)
     organisation= Column(String, index=True)
-    md5         = Column(String, ForeignKey(tab_datasetsdata+'.md5'))
+    title       = Column(String, index=True)
+    md5         = Column(String, ForeignKey(tab_datasetsdata+'.md5'), index=True)
 
 
     __table_args__ = (ForeignKeyConstraint([portalid, snapshot],
@@ -203,7 +204,7 @@ class DatasetData(Base):
     modified = Column(TIMESTAMP)
     created = Column(TIMESTAMP)
     organisation = Column(String, index=True)
-    license = Column(String)
+    license = Column(String, index=True)
 
     def __repr__(self):
         return "<DatasetData(md5=%s, data=%s)>" % (
@@ -212,7 +213,7 @@ class DatasetData(Base):
 class DatasetQuality(Base):
     __tablename__ = tab_datasetsquality
 
-    md5     = Column(String, ForeignKey(DatasetData.md5), primary_key=True)
+    md5     = Column(String, ForeignKey(DatasetData.md5), primary_key=True, index=True)
     cocu = Column(Boolean)
     coce = Column(Boolean)
     coda = Column(Float)

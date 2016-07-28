@@ -13,12 +13,26 @@
 
 
 {% block systemcontent %}
-    <div class="ui container grid">
 
-        <div class="row" style="height:100%" >
-            {{ plot_div }}
 
-        </div>
-    </div>
+            <div class="ui fourteen wide column centered" style="width: 20%; display: inline-block;" id="plot">
+            {{ plot_div |indent(4)|safe}}
+            </div>
+
+
+
     {{ plot_script }}
+{% endblock %}
+
+
+{% block script %}
+
+$(document).ready(function() {
+    var plot = Bokeh.Collections("Plot").models[0];
+    plot.set("plot_width", $('#plot').width());
+    plot.set("plot_height", $('#plot').height());
+    console.log($('#plot').width())
+
+});
+
 {% endblock %}

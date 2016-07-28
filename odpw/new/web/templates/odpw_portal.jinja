@@ -60,7 +60,7 @@
     <div class="row">
 
         <div class="ui statistics column">
-            <a class="statistic">
+            <a href="{{url_for('ui.portalDataset',snapshot=snapshot, portalid=portalid)}}" class="statistic">
                 <div class="value">
                     {{data.datasets}}
                 </div>
@@ -68,22 +68,22 @@
                     Datasets
                 </div>
             </a>
-            <div class="statistic">
+            <a href="{{url_for('ui.portalEvolution',snapshot=snapshot, portalid=portalid)}}" class="statistic">
                 <div class="value">
                     {{data.snapshots.list|length}}
                 </div>
                 <div class="label">
                     Snapshots
                 </div>
-            </div>
-            <div class="statistic">
+            </a>
+            <a href="{{url_for('ui.portalRes',snapshot=snapshot, portalid=portalid)}}" class="statistic">
                 <div class="value">
                     22
                 </div>
                 <div class="label">
                     Resources
                 </div>
-            </div>
+            </a>
         </div>
     </div>
     <div class="row doubling stackable three column cards">

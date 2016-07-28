@@ -21,7 +21,7 @@ from odpw.new.core.model import Dataset, DatasetData, PortalSnapshot, MetaResour
 from odpw.new.core.dataset_converter import dict_to_dcat
 from odpw.new.core.dcat_access import getDistributionAccessURLs, getDistributionDownloadURLs, getDistributionFormatWithURL, \
     getDistributionMediaTypeWithURL, getDistributionSizeWithURL, getDistributionCreationDateWithURL, \
-    getDistributionModificationDateWithURL, getOrganization, getCreationDate, getModificationDate, getLicense
+    getDistributionModificationDateWithURL, getOrganization, getCreationDate, getModificationDate, getLicense, getTitle
 from odpw.new.core.parsing import toDatetime, normaliseFormat
 from odpw.new.core.portal_fetch_processors import getPortalProcessor
 from odpw.new.core.db import DBClient, DBManager
@@ -164,6 +164,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
                 with Timer(key='dict_to_dcat'):
                     #analys quality
                     d.dcat=dict_to_dcat(d.data, P)
+
                 DD=None
                 with Timer(key='db.datasetdataExists(md5v)'):
                     process = not db.datasetdataExists(md5v)
@@ -185,11 +186,16 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
                         pass
                         #print "AND AGAIN",md5v, db.datasetdataExists(md5v)
                 #DATATSET
+                title=getTitle(d)
+                title = title[0] if len(title)>0 else None
                 D= Dataset(id=d.id,
                        snapshot=d.snapshot,
                        portalid=d.portal_id,
                        md5=md5v,
-                       organisation=DD.organisation if DD else getOrganization(d))
+                       organisation=DD.organisation if DD else getOrganization(d),
+                       title=title
+                           )
+
                 bulk_obj['d'].append(D)
             else:
                 D= Dataset(id=d.id,
