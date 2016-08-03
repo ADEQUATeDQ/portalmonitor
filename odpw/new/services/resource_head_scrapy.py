@@ -102,7 +102,7 @@ class HeadLookups( CrawlSpider ):
                       # callback=self.success,
                       # errback=self.error,
                       dont_filter=True,
-                      meta={'handle_httpstatus_all':True})
+                      meta={'handle_httpstatus_list': range(200,220)+range( 400, 427 ) + range( 500, 511 )})
             self.crawler.engine.schedule(r,self)
 
         log.info("Scheduled", uris=len(uris), stats=stats)
@@ -122,7 +122,6 @@ class HeadLookups( CrawlSpider ):
 
 
     def start_requests(self):
-        print 'here'
         q=self.db.getUnfetchedResources(self.snapshot, batch=self.batch)
         uris= [ uri[0] for uri in q ]
         stats=defaultdict(int)
@@ -138,10 +137,19 @@ class HeadLookups( CrawlSpider ):
                           # callback=self.success,
                           # errback=self.error,
                           dont_filter=True,
-                          meta={'handle_httpstatus_all':True})
-        print 'here'
+                          meta={'handle_httpstatus_list': range(200,220)+range( 400, 427 ) + range( 500, 511 )})
+
         log.info("InitScheduled", uris=len(uris), stats=stats)
     def parse(self,response):
+        if response.status==400:
+            #400 Method not supported -> HTTP HEAD
+            # Switch to HTTP GET with a minuum download size of 1 byte, catch exception in ErrorHandling middleware
+            r= Request(response.url,
+                          dont_filter=True,
+                          meta={'handle_httpstatus_list': range(200,220)+range( 400, 427 ) + range( 500, 511 ),'download_maxsize':1})
+            return r
+
+
         r={
             'snapshot':self.snapshot
             ,'uri':response.url
@@ -152,7 +160,6 @@ class HeadLookups( CrawlSpider ):
             ,'mime':None
             ,'size':None
         }
-
         try:
             header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
 
@@ -168,10 +175,18 @@ class HeadLookups( CrawlSpider ):
                     r['size']=header_dict['content-length'][0]
                 else:
                     r['size']=0
+
+            if 'redirect_urls' in response.request.meta and len(response.request.meta.get('redirect_urls'))>0:
+                r['uri']= response.request.meta.get('redirect_urls')[0]
+                r['header']['redirect_urls']=response.request.meta.get('redirect_urls')
+
         except Exception as e:
             ErrorHandler.handleError('parse',exception=e)
 
+
         self.count+=1
+        if self.count%(self.batch/10)==0:
+            log.info("Processed another", count=self.count, batch=self.batch)
         if self.count  > (self.batch/2):
             try:
                 self.scheduleURLs()

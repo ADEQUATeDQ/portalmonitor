@@ -1,5 +1,7 @@
 
 import structlog
+import twisted
+
 log = structlog.get_logger()
 import scrapy
 from scrapy import signals
@@ -12,18 +14,20 @@ class ErrorHandling(object):
 
 
     def process_response(self, request, response, spider):
+
         return response
 
     def process_exception(self, request, exception, spider):
         status=600
         if isinstance(exception, KeyError):
-        #    print 'KeyError',exception.message
             status=601
         if isinstance(exception, scrapy.exceptions.IgnoreRequest):
-        #    print 'IgnoreRequest',exception.message
             status=602
         if isinstance(exception,scrapy.exceptions.NotSupported):
             status=603
+        if isinstance(exception,twisted.internet.defer.CancelledError):
+            return Response(url=request.url, status=200,  request=request, headers=request.headers)
+
         request.meta['exc']=getExceptionString(exception)
         return Response(url=request.url, status=status, request=request)
 
