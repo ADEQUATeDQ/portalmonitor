@@ -23,7 +23,7 @@ from contextlib import closing
 
 from Queue import Queue
 
-from odpw.new.core.db import DBClient
+from odpw.new.core.api import DBClient
 from odpw.new.utils.timing import Timer,timer
 from odpw.new.utils.utils_snapshot import getCurrentSnapshot
 from odpw.new.utils.error_handling import TimeoutError, ErrorHandler, getExceptionCode, getExceptionString
@@ -57,8 +57,8 @@ def resourceMigrate(snapshot, db, dbm):
           }
         RI=ResourceInfo(**r)
 
-        if not db.resourceinfoExists(RI.uri,RI.snapshot):
-            if db.metaresourceExists(RI.uri):
+        if not db.exist_resourceinfo(RI.uri, RI.snapshot):
+            if db.exist_metaresource(RI.uri):
                 batch.append(RI)
                 print len(batch)
             else:

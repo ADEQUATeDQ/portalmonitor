@@ -24,7 +24,8 @@ from odpw.new.core.dcat_access import getDistributionAccessURLs, getDistribution
     getDistributionModificationDateWithURL, getOrganization, getCreationDate, getModificationDate, getLicense, getTitle
 from odpw.new.core.parsing import toDatetime, normaliseFormat
 from odpw.new.core.portal_fetch_processors import getPortalProcessor
-from odpw.new.core.db import DBClient, DBManager
+from odpw.new.core.db import  DBManager
+from odpw.new.core.api import DBClient
 
 def fetchHttp(obj):
     P, dbConf, snapshot = obj[0],obj[1],obj[2]
@@ -167,7 +168,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
 
                 DD=None
                 with Timer(key='db.datasetdataExists(md5v)'):
-                    process = not db.datasetdataExists(md5v)
+                    process = not db.exist_datasetdata(md5v)
                 if process:
                     #DATATSET DATA
                     DD=createDatasetData(md5v,d)

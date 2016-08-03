@@ -18,8 +18,8 @@ from odpw.new.services.fetch_insert import insertDatasets
 
 
 from odpw.new.core.model import Dataset, PortalSnapshot, MetaResource, Portal
-from odpw.new.core.db import DBClient, DBManager
-
+from odpw.new.core.db import  DBManager
+from odpw.new.core.api import DBClient
 
 
 def fetchMigrate(obj):

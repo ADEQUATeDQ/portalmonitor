@@ -13,9 +13,9 @@
 
 
 {% block systemcontent %}
-
-
-            <div class="ui fourteen wide column centered" style="width: 20%; display: inline-block;" id="plot">
+    <div class="ui fourteen wide column centered">
+    <p>The following chart shows the time elapsed to fetch the content of all portals for the last 10 weeks. Red highlighted is the status of the fetch process for the current week.
+    The x-axis shows the percentage of processed portals and the y-axis the total time elapsed.</p>
             {{ plot_div |indent(4)|safe}}
             </div>
 
@@ -28,10 +28,6 @@
 {% block script %}
 
 $(document).ready(function() {
-    var plot = Bokeh.Collections("Plot").models[0];
-    plot.set("plot_width", $('#plot').width());
-    plot.set("plot_height", $('#plot').height());
-    console.log($('#plot').width())
 
 });
 

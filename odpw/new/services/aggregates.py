@@ -3,6 +3,8 @@ from collections import defaultdict
 import pandas as pd
 from sqlalchemy import inspect
 
+from odpw.new.core.api import organisationDist, licenseDist, formatDist, distinctLicenses, distinctFormats, \
+    distinctOrganisations
 from odpw.new.core.db import row2dict
 from odpw.new.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality
 from odpw.new.utils.timing import Timer
@@ -76,24 +78,24 @@ def aggregate(db, snapshot):
         aggregatePortalQuality(db,portalid,snapshot)
 
 
-def aggregatePortalInfo(db, portalid, snapshot, limit=3):
+def aggregatePortalInfo(session, portalid, snapshot, limit=3):
     stats={}
     with Timer(key=portalid+'-agg', verbose=True):
-        ds= db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).count()
+        ds= session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).count()
 
         print 'dsCount', ds
 
         for key, cFunc, dFunc in [
-                        ('organisation',db.organisationDist, db.distinctFormats)
-                        ,('license',db.licenseDist,db.distinctLicenses)
-                        ,('format', db.formatDist, db.distinctFormats)
+                        ('organisation',organisationDist, distinctOrganisations)
+                        ,('license',licenseDist,distinctLicenses)
+                        ,('format', formatDist, distinctFormats)
                          ]:
 
             with Timer(key=portalid+'-'+key, verbose=True):
 
                 s=[]
-                q=cFunc(snapshot,portalid=portalid)
-                print str(q)
+                q=cFunc(session,snapshot,portalid=portalid)
+                print portalid+'-'+key,'query',str(q)
                 if limit:
                     q=q.limit(limit)
                 else:
@@ -107,7 +109,7 @@ def aggregatePortalInfo(db, portalid, snapshot, limit=3):
                 print key, 'total',t
                 if ds-t != 0:
                     s.append({key:'Others', 'count':ds-t,'perc':(ds-t)/(1.0*ds)})
-                stats[key]={'distinct':cFunc(snapshot,portalid=portalid).count(),'top3Dist':s}
+                stats[key]={'distinct':cFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
 
     return stats
 

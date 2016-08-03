@@ -7,25 +7,11 @@ from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
 from tornado.wsgi import WSGIContainer
 
-from odpw.new.web.cache import cache
-from odpw.new.web.ui.odpw_ui_blueprint import ui
+from odpw.new.web_rest.cache import cache
+from odpw.new.web_rest.ui.odpw_ui_blueprint import ui
 
-from odpw.new.core.db import DBClient
-
-
-
+from odpw.new.core.api import DBClient
 from flask import Flask, jsonify, request
-
-
-
-# Also add the handler to Flask's logger for cases
-#  where Werkzeug isn't used as the underlying WSGI server.
-
-
-
-
-# database session registry object, configured from
-# create_app factory
 
 class MainHandler(RequestHandler):
     def get(self):

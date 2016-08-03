@@ -55,6 +55,8 @@
                     ('ui.system','system', 'System','server'),
                     ('ui.portalslist', 'portals', 'Portals','grid layout'),
                     ('ui.api', 'api', 'API','code'),
+                    ('ui.qualitymetrics', 'quality', 'Quality Measures','code'),
+
                 ]
             -%}
             {% set active_page = active_page|default('index') -%}
@@ -66,7 +68,7 @@
             {% endfor %}
             <a class="link item"><i class="icon download"></i>Data</a>
             <div class="right menu">
-                <a class="ui item">About</a>
+                <a href="{{url_for('ui.about')}}" class="ui item {% if id == active_page %}active{% endif%}">About</a>
             </div>
         </nav>
 

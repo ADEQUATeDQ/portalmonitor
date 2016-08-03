@@ -3,7 +3,7 @@ from urlparse import urlparse
 import pycountry
 from odpw.new.core.db import DBClient, DBManager
 
-from new.core.model import Portal, Base
+from odpw.new.core.model import Portal, Base
 from odpw.db.dbm import PostgressDBM
 
 

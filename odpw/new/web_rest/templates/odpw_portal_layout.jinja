@@ -70,7 +70,11 @@
                     Week: {{snapshot|getWeekString}}
 
                     {% if data.snapshots.prev %}
-                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                        {% if active_sub_page=='ui.portalDataset' %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
+                        {% else %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                        {% endif %}
                         <i class="icon angle left"></i>
                         </a>
                     {% else %}
@@ -96,7 +100,14 @@
                         </div>
                     </div>
                     {% if data.snapshots.next %}
-                       <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next)}}"> <i class="icon angle right"></i></a>
+                        {% if active_sub_page=='ui.portalDataset' %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next,dataset=dataset.id)}}">
+                        {% else %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next)}}">
+                        {% endif %}
+                            <i class="icon angle right"></i>
+                        </a>
+
                     {% else %}
                         <i class="icon angle right"></i>
                     {% endif %}
@@ -114,7 +125,10 @@
 $('.dropdown')
   .dropdown({
     // you can use any ui transition
-    transition: 'drop'
+    transition: 'drop',
+    fullTextSearch:true,
+    sortSelect: true,
+    match:'text'
   })
 ;
 

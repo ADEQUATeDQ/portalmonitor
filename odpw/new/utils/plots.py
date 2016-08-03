@@ -1,46 +1,67 @@
 from collections import defaultdict
 
 import numpy as np
+from bokeh.charts import Bar
 from bokeh.layouts import column, row
 from bokeh.models import NumeralTickFormatter, FuncTickFormatter, Text, Range1d, HoverTool, \
-    ColumnDataSource, pd, Spacer, Circle, Legend, TextAnnotation, LinearAxis
+    ColumnDataSource, pd, Spacer, Circle, Legend, TextAnnotation, LinearAxis, GlyphRenderer
 from bokeh.plotting import figure
 from numpy.ma import arange
 
 from odpw.new.core.model import PortalSnapshotQuality, PortalSnapshot
 from odpw.new.utils.utils_snapshot import getLastNSnapshots, getWeekString, getWeekString1
-from odpw.new.web.rest.odpw_restapi_blueprint import row2dict
+
 
 
 ex={}
-ex['ExAc']={'label': 'Access', 'color':'#311B92' }
-ex['ExCo']={'label': 'Contact', 'color':'#4527A0'}
-ex['ExDa']={'label': 'Date', 'color':'#512DA8'}
-ex['ExDi']={'label': 'Discovery', 'color':'#5E35B1'}
-ex['ExPr']={'label': 'Preservation', 'color':'#673AB7'}
-ex['ExRi']={'label': 'Rights', 'color':'#7E57C2'}
-ex['ExSp']={'label': 'Spatial', 'color':'#9575CD'}
-ex['ExTe']={'label': 'Temporal', 'color':'#B39DDB'}
+ex['ExAc']={'label': 'Access', 'color':'#311B92'
+                ,'description':'Does the meta data contain access information for the resources?'}
+ex['ExCo']={'label': 'Contact', 'color':'#4527A0'
+                ,'description':'Does the meta data contain information to contact the data provider or publisher?'}
+ex['ExDa']={'label': 'Date', 'color':'#512DA8'
+                ,'description':'Does the meta data contain information about creation and modification date of metadata and resources respectively?'}
+ex['ExDi']={'label': 'Discovery', 'color':'#5E35B1'
+                ,'description':'Does the meta data contain information that can help to discover/search datasets?'}
+ex['ExPr']={'label': 'Preservation', 'color':'#673AB7'
+                ,'description':'Does the meta data contain information about format, size or update frequency of the resources?'}
+ex['ExRi']={'label': 'Rights', 'color':'#7E57C2'
+                ,'description':'Does the meta data contain information about the license of the dataset or resource.?'}
+ex['ExSp']={'label': 'Spatial', 'color':'#9575CD'
+                ,'description':'Does the meta data contain spatial information?'}
+ex['ExTe']={'label': 'Temporal', 'color':'#B39DDB'
+                ,'description':'Does the meta data contain temporal information?'}
 existence={'dimension':'Existence','metrics':ex, 'color':'#B39DDB'}
 
 ac={}
-ac['AcFo']={'label': 'Format', 'color':'#00838F'}
-ac['AcSi']={'label': 'Size', 'color':'#0097A7'}
+ac['AcFo']={'label': 'Format', 'color':'#00838F'
+    ,'description':'Does the meta data contain information that can help to discover/search datasets?'}
+ac['AcSi']={'label': 'Size', 'color':'#0097A7'
+    ,'description':'Does the meta data contain information that can help to discover/search datasets?'}
 accuracy={'dimension':'Accurracy', 'metrics':ac, 'color':'#0097A7'}
 
 co={}
-co['CoAc']={'label': 'AccessURL', 'color':'#388E3C'}
-co['CoCE']={'label': 'ContactEmail', 'color':'#1B5E20'}
-co['CoCU']={'label': 'ContactURL', 'color':'#43A047'}
-co['CoDa']={'label': 'DateFormat', 'color':'#66BB6A'}
-co['CoFo']={'label': 'FileFormat', 'color':'#A5D6A7'}
-co['CoLi']={'label': 'License', 'color':'#C8E6C9'}
+co['CoAc']={'label': 'AccessURL', 'color':'#388E3C'
+    ,'description':'Are the available values of access properties valid HTTP URLs?'}
+co['CoCE']={'label': 'ContactEmail', 'color':'#1B5E20'
+    ,'description':'Are the available values of contact properties valid emails?'}
+
+co['CoCU']={'label': 'ContactURL', 'color':'#43A047'
+    ,'description':'Are the available values of contact properties valid HTTP URLs?'}
+co['CoDa']={'label': 'DateFormat', 'color':'#66BB6A'
+    ,'description':'Is date information specified in a valid date format?'}
+co['CoFo']={'label': 'FileFormat', 'color':'#A5D6A7'
+    ,'description':'Is the specified file format or media type registered by IANA?'}
+co['CoLi']={'label': 'License', 'color':'#C8E6C9'
+    ,'description':'Can the license be mapped to the list of licenses reviewed by <a href="http://opendefinition.org/">opendefinition.org</a>?'}
 conformance={'dimension':'Conformance', 'metrics':co, 'color':'#C8E6C9'}
 
 op={}
-op['OpFo']={'label': 'Format Openness', 'color':'#F4511E'}
-op['OpLi']={'label': 'License Openneness', 'color':'#FF8A65'}
-op['OpMa']={'label': 'Format machine readability', 'color':'#E64A19'}
+op['OpFo']={'label': 'Format Openness', 'color':'#F4511E'
+    ,'description':'Is the file format based on an open standard?'}
+op['OpLi']={'label': 'License Openneness', 'color':'#FF8A65'
+    ,'description':'s the used license conform to the open definition?'}
+op['OpMa']={'label': 'Format machine readability', 'color':'#E64A19'
+    ,'description':'Can the file format be considered as machine readable?'}
 opendata={'dimension':'Open Data', 'metrics':op, 'color':'#E64A19'}
 
 re={}
@@ -68,7 +89,7 @@ def hm(sec):
 
 
 
-def fetchProcessChart(db, snapshot, n=10):
+def fetchProcessChart(db, snapshot, n=3):
 
     snapshots=getLastNSnapshots(snapshot,n)
     nWeeksago=snapshots[-1]
@@ -92,10 +113,9 @@ def fetchProcessChart(db, snapshot, n=10):
             for dur in durations:
                 delta=( start-gstart).total_seconds() + dur
                 dd.append(delta)
+        #print len(dd)
         data[sn]=dd
 
-
-    print data
 
     from bokeh.palettes import OrRd9
 
@@ -128,7 +148,7 @@ def fetchProcessChart(db, snapshot, n=10):
 
 
 
-        if sn == 1630:
+        if sn == max(data.keys()):
             ci=bp.circle(x,y, size=5, alpha=0.5,  color='red', legend="current week: "+getWeekString(sn))
             li=bp.line(x,y, line_width=2,line_color='red', legend="current week: "+getWeekString(sn))
         else:
@@ -144,7 +164,7 @@ def fetchProcessChart(db, snapshot, n=10):
 
         c+=1
         #bp.text(,y[-1], line_width=2,line_color=OrRd9[c],legend=str(sn))
-
+        print x[-1],y[-1]
         no_olympics_glyph = Text(x=x[-1], y=y[-1], x_offset=100, text=["%s of %s portals"%(len(d), cnts[sn])],
             text_align="right", text_baseline="top",
             text_font_size="9pt", text_font_style="italic", text_color="black")
@@ -198,9 +218,9 @@ def portalsScatter(df):
 
     for i, item in enumerate([
                         #(all, 'All','black')
-                        #(ckan,'CKAN', '#3A5785')
-                        #,(socrata,'Socrata', 'green')
-                        (opendatasoft,'OpenDataSoft', 'red')
+                        (ckan,'CKAN', '#3A5785')
+                        ,(socrata,'Socrata', 'green')
+                        ,(opendatasoft,'OpenDataSoft', 'red')
                         ]):
 
         s,l,c=item
@@ -458,5 +478,49 @@ def evolutionCharts(df):
 
         plots[q['dimension']]=pt
         last=pt
-    print plots
+
     return plots
+
+
+def systemEvolutionBarPlot(df, yLabel, values):
+    p = Bar(df, label='snapshot', values=values, agg='sum', stack='software',
+        legend='bottom_left', bar_width=0.4, xlabel="Snapshots", ylabel=yLabel, responsive=True, height=200,tools='hover')
+
+    glyph_renderers = p.select(GlyphRenderer)
+    bar_source = [glyph_renderers[i].data_source for i in range(len(glyph_renderers))]
+    hover = p.select(HoverTool)
+    hover.tooltips = [
+        ('software',' @software'),
+        ('value', '@height'),
+    ]
+    p.xaxis.formatter=FuncTickFormatter.from_py_func(getWeekString1)
+    p.axis.minor_tick_line_color = None
+
+    p.background_fill_color = "#fafafa"
+    p.legend.location = "top_left"
+    p.toolbar.logo = None
+    p.toolbar_location = None
+
+    legend=p.legend[0].legends
+    p.legend[0].legends=[]
+    l = Legend(legends=legend, location=(0, -30))
+    p.add_layout(l, 'right')
+
+    return p
+
+def systemEvolutionPlot(df):
+    df=df.sort(['snapshot','count'], ascending=[1,0])
+
+    print df
+
+    p= systemEvolutionBarPlot(df,yLabel="#Portals", values='count')
+    pd= systemEvolutionBarPlot(df,yLabel="#Datasets", values='datasets')
+    pr= systemEvolutionBarPlot(df,yLabel="#Resources", values='resources')
+
+
+
+
+
+
+
+    return {'portals':p,'datasets':pd,'resources':pr}

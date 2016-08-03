@@ -196,7 +196,7 @@ class Dataset(Base):
 class DatasetData(Base):
     __tablename__ = tab_datasetsdata
 
-    md5 = Column(String, primary_key=True,index=True, nullable=False)
+    md5 = Column(String, primary_key=True, index=True, nullable=False)
     raw = Column(JSONB)
     dataset  = relationship("Dataset", back_populates="data")
     resources  = relationship("MetaResource", back_populates="dataset")

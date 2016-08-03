@@ -58,8 +58,8 @@ def consumer_queue(proc_id, queue):
                 queue.put('STOP')
                 break
             with Timer(key="checkExistence"):
-                if not db.resourceinfoExists(RI.uri, RI.snapshot):
-                    if db.metaresourceExists(RI.uri):
+                if not db.exist_resourceinfo(RI.uri, RI.snapshot):
+                    if db.exist_metaresource(RI.uri):
                         batch.append(RI)
                     else:
                         log.warn("URI missing", uri=RI.uri)
@@ -69,8 +69,8 @@ def consumer_queue(proc_id, queue):
                 for i in xrange(batchSize):
                     RI = queue.get(proc_id, 1)
                     with Timer(key="checkExistence"):
-                        if not db.resourceinfoExists(RI.uri,RI.snapshot):
-                            if db.metaresourceExists(RI.uri):
+                        if not db.exist_resourceinfo(RI.uri, RI.snapshot):
+                            if db.exist_metaresource(RI.uri):
                                 batch.append(RI)
                             else:
                                 log.warn("URI missing", uri=RI.uri)

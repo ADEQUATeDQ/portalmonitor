@@ -10,6 +10,7 @@
                 {% set navigation_bar = [
                     ('ui.system', 'info', 'Info'),
                     ('ui.systemfetch', 'fetch', 'Fetch process'),
+                    ('ui.systemevolv', 'evolv', 'Evolution'),
                     ]
                 -%}
                 {% set active_sub_page = active_sub_page|default('ui.system') -%}
@@ -26,7 +27,7 @@
                 <h3 class="ui header " style="color:white">{{ title }}</h3>
             </div>
             <div class="sixteen wide column ">
-                <div class="row grid ui container">
+                <div class="row grid ui">
                     {% block systemcontent %}
 
                     {% endblock %}

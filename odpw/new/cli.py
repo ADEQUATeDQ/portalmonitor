@@ -20,11 +20,12 @@ from odpw.new.utils.helper_functions import readDBConfFromFile
 from odpw.new.utils.timing import Timer
 
 #SERVICES
-import odpw.new.web.rest.rest as restAPI
-import odpw.new.web.ui.server as ui
+import odpw.new.web_rest.rest.rest as restAPI
+import odpw.new.web_rest.ui.server as ui
 import odpw.new.services.fetch_insert as fetch
 import odpw.new.services.fetch_migrate as fetchM
 import odpw.new.services.resource_head as head
+import odpw.new.services.resource_head_scrapy as head_scrapy
 
 import sys  # import sys package, if not already imported
 reload(sys)
@@ -35,7 +36,7 @@ submodules=[
     restAPI,
     ui,
     fetch,fetchM,
-    head
+    head,head_scrapy
   ]
 
 

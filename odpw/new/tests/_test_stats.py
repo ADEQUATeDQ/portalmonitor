@@ -7,11 +7,13 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from bokeh.util.browser import view
 from jinja2 import Template
+from sqlalchemy import func, and_
 
 from odpw.new.services.aggregates import aggregatePortalInfo
-from odpw.new.utils.plots import portalsScatter, evolutionCharts
+from odpw.new.utils.plots import portalsScatter, evolutionCharts, systemEvolutionPlot
 from odpw.new.core.db import DBClient, DBManager, query_to_dict, to_dict, row2dict
-from odpw.new.core.model import Portal, PortalSnapshot, PortalSnapshotQuality
+from odpw.new.core.model import Portal, PortalSnapshot, PortalSnapshotQuality, MetaResource, DatasetData, Dataset, \
+    DatasetQuality, ResourceInfo
 
 import pandas as pd
 
@@ -74,21 +76,7 @@ def portalSize(db):
     showPlot(p,'scatter')
 
 
-
-
-if __name__ == '__main__':
-
-    dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    db= DBClient(dbm)
-
-    portalid='data_gv_at'
-
-    #portalSize(db)
-
-    snapshot=1628
-    import pprint
-    #pprint.pprint(aggregatePortalInfo(db,portalid,snapshot))
-
+def evolution(db):
     data={}
     for R in db.Session.query(PortalSnapshot).filter(PortalSnapshot.portalid==portalid):
         data[R.portalid+str(R.snapshot)]=row2dict(R)
@@ -99,5 +87,41 @@ if __name__ == '__main__':
     print df
 
     showPlot(evolutionCharts(df))
+
+
+def headstats(db):
+    with Timer(verbose=True):
+        print str(db.Session.query(func.count(func.distinct(MetaResource.uri))).filter(MetaResource.valid==True).join(DatasetData).join(Dataset).filter(Dataset.snapshot==1630))
+    with Timer(verbose=True):
+        print str(db.Session.query(func.count(func.distinct(MetaResource.uri))).filter(MetaResource.valid==True).join(Dataset, Dataset.md5==MetaResource.md5).filter(Dataset.snapshot==1630))
+    with Timer(verbose=True):
+        print db.statusCodeDist(1630).all()
+
+
+def systemEvolution(db):
+
+    t= db.Session.query(PortalSnapshot.snapshot.label('snapshot'), Portal.software,PortalSnapshot.datasetCount,PortalSnapshot.resourceCount).join(Portal).subquery()
+
+    data=[ row2dict(r) for r in db.Session.query(t.c.snapshot, t.c.software, func.count().label('count'),func.sum(t.c.resourceCount).label('resources'),func.sum(t.c.datasetCount).label('datasets')).group_by(t.c.snapshot,t.c.software).all()]
+
+    df= pd.DataFrame(data)
+    print df
+
+    p=systemEvolutionPlot(df)
+    showPlot(p['datasets'])
+
+
+if __name__ == '__main__':
+
+    dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    db= DBClient(dbm)
+
+    portalid='data_gv_at'
+
+
+    systemEvolution(db)
+
+
+
 
     Timer.printStats()

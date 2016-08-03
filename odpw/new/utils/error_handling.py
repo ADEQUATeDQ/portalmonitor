@@ -50,6 +50,27 @@ class ErrorHandler():
                 print " ",exc, count
         print '<<<','--*'*25
 
+
+
+errorStatus={
+    702:'Connection Error'
+    ,703:'Connection Timeout'
+    ,704:'Read Timeout'
+
+    ,705:'HTTPError'
+    ,706:'TooManyRedirects'
+    ,707:'Timeout'
+    ,801:'ValueError'
+    ,802:'TimeoutError'
+    ,901:'InvalidUrl'
+
+    ,902:'InvalidSchema'
+    ,903:'MissingSchema'
+    ,600:'Not Specified'
+    ,666:'Robots.txt'
+}
+
+
 def getExceptionCode(e):
     #connection erorrs
     try:

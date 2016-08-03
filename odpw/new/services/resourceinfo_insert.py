@@ -1,6 +1,6 @@
 import structlog
 
-from new.core.model import ResourceInfo
+from odpw.new.core.model import ResourceInfo
 from utils.timer import Timer
 
 log =structlog.get_logger()
@@ -31,8 +31,8 @@ def resourceMigrate(snapshot, db, dbm):
         }
         RI=ResourceInfo(**r)
 
-        if not db.resourceinfoExists(RI.uri,RI.snapshot):
-            if db.metaresourceExists(RI.uri):
+        if not db.exist_resourceinfo(RI.uri, RI.snapshot):
+            if db.exist_metaresource(RI.uri):
                 batch.append(RI)
                 print len(batch)
             else:
