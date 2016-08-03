@@ -118,24 +118,24 @@ def is_bool(cell):
 
 def get_type(cell):
     if is_string(cell):
-        if is_empty(cell): return Type.empty
-        if cell == 'dict': return Type.dict
-        if cell == 'list': return Type.list
-        if is_mail_to(cell): return Type.email
-        if is_http_url(cell): return Type.http_url
-        if is_https_url(cell): return Type.https_url
-        if is_ftp_url(cell): return Type.ftp_url
-        if is_relative_url(cell): return Type.relative_url
-        if is_integer(cell): return Type.integer
-        if is_float(cell): return Type.float
-        if data_utils.is_yes_no(cell): return Type.yes_no
-        if is_bool(cell): return Type.bool
-        if is_date(cell): return Type.date
-        if data_utils.is_phone(cell): return Type.phone
-        if is_word(cell): return Type.word
-        if is_text(cell): return Type.text
-        return Type.string
-    if is_integer(cell): return Type.integer
-    if is_float(cell): return Type.float
-    if is_bool(cell): return Type.bool
-    return Type.unknown
+        if is_empty(cell): return 'empty'
+        if cell == 'dict': return 'dict'
+        if cell == 'list': return 'list'
+        if is_mail_to(cell): return 'email'
+        if is_http_url(cell): return 'http_url'
+        if is_https_url(cell): return 'https_url'
+        if is_ftp_url(cell): return 'ftp_url'
+        if is_relative_url(cell): return 'relative_url'
+        if is_integer(cell): return 'integer'
+        if is_float(cell): return 'float'
+        if data_utils.is_yes_no(cell): return 'yes_no'
+        if is_bool(cell): return 'bool'
+        if is_date(cell): return 'date'
+        if data_utils.is_phone(cell): return 'phone'
+        if is_word(cell): return 'word'
+        if is_text(cell): return 'text'
+        return 'string'
+    if is_integer(cell): return 'integer'
+    if is_float(cell): return 'float'
+    if is_bool(cell): return 'bool'
+    return 'unknown'
