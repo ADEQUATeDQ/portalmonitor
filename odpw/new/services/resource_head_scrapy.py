@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+__author__ = 'jumbrich'
 import datetime
 from collections import defaultdict
 
@@ -8,10 +9,10 @@ from time import sleep
 
 from scrapy.exceptions import DontCloseSpider
 
-from new.utils.error_handling import ErrorHandler
+from odpw.new.utils.error_handling import ErrorHandler
 from odpw.new.utils.helper_functions import extractMimeType
 
-__author__ = 'jumbrich'
+
 from odpw.new.core.api import DBClient
 from odpw.new.utils.utils_snapshot import getCurrentSnapshot
 from scrapy.http.request import Request
