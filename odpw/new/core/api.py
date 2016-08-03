@@ -2,9 +2,9 @@ import pandas as pd
 from sqlalchemy import func, exists
 from sqlalchemy.orm import scoped_session
 
-from new.core.db import row2dict
-from new.core.model import PortalSnapshotQuality
-from new.utils.plots import qa
+from odpw.new.core.db import row2dict
+from odpw.new.core.model import PortalSnapshotQuality
+from odpw.new.utils.plots import qa
 
 from odpw.new.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
     tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource
