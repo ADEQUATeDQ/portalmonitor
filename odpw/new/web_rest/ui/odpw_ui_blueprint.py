@@ -319,7 +319,7 @@ def portalFormats(snapshot, portalid):
 
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
-        data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
+        data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
@@ -330,7 +330,7 @@ def portalLicenses(snapshot, portalid):
 
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
-        data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
+        data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
@@ -342,7 +342,7 @@ def portalOrganisations(snapshot, portalid):
 
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
-        data.update(aggregatePortalInfo(db,portalid,snapshot, limit=None))
+        data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
         return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 

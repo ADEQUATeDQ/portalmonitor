@@ -64,13 +64,14 @@ class PostgresInsert(object):
             }
             RI=ResourceInfo(**r)
 
-            self.items.append(RI)
+            spider.db.add(RI)
             log.info("HEAD RESPONSE", uri=RI.uri, status=RI.status)
-            if len(self.items) >= self.batch:
-                self.bulkInsert(spider)
+
+            #if len(self.items) >= self.batch:
+            #    self.bulkInsert(spider)
 
         except Exception as e:
-            print e
+            ErrorHandler.handleError(log, 'process_item',exception=e)
 
     def bulkInsert(self,spider):
         try:
@@ -78,4 +79,4 @@ class PostgresInsert(object):
             spider.db.bulkadd(self.items)
             self.items=[]
         except Exception as e:
-            ErrorHandler.handleError('bulkInsert',exception=e)
+            ErrorHandler.handleError(log, 'bulkInsert',exception=e)

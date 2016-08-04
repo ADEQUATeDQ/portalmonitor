@@ -39,7 +39,7 @@ class HeadLookups( CrawlSpider ):
         #print self.db, self.snapshot
 
     custom_settings = {
-        "BATCH_INSERT":100,
+        "BATCH_INSERT":1,
         #http://doc.scrapy.org/en/latest/topics/settings.html#std:setting-SPIDER_MIDDLEWARES
         'ROBOTSTXT_ENABLED':True,
         'ROBOTSTXT_OBEY':True,
@@ -94,7 +94,7 @@ class HeadLookups( CrawlSpider ):
         for u in uris:
             try:
                 from urlparse import urlparse
-                parsed_uri = urlparse( 'http://stackoverflow.com/questions/1234567/blah-blah-blah-blah' )
+                parsed_uri = urlparse( u )
                 domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
                 stats[domain]+=1
             except:
@@ -113,7 +113,7 @@ class HeadLookups( CrawlSpider ):
             self.scheduleURLs()
             raise DontCloseSpider
         except Exception as e:
-            ErrorHandler.handleError('spider_idle',exception=e)
+            ErrorHandler.handleError(log,'spider_idle',exception=e)
 
         #new_url = ... #pop url from  database
         #if new_url:
@@ -129,7 +129,7 @@ class HeadLookups( CrawlSpider ):
         for u in uris:
             try:
                 from urlparse import urlparse
-                parsed_uri = urlparse( 'http://stackoverflow.com/questions/1234567/blah-blah-blah-blah' )
+                parsed_uri = urlparse( u )
                 domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
                 stats[domain]+=1
             except:
@@ -182,7 +182,7 @@ class HeadLookups( CrawlSpider ):
                 r['header']['redirect_urls']=response.request.meta.get('redirect_urls')
 
         except Exception as e:
-            ErrorHandler.handleError('parse',exception=e)
+            ErrorHandler.handleError(log, 'parse',exception=e)
 
 
         self.count+=1
@@ -193,7 +193,7 @@ class HeadLookups( CrawlSpider ):
                 self.scheduleURLs()
                 self.count=0
             except Exception as e:
-                ErrorHandler.handleError('spider_idle',exception=e)
+                ErrorHandler.handleError(log,'spider_idle',exception=e)
         return r
 
 
