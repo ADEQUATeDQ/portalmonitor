@@ -150,25 +150,22 @@ class HeadLookups( CrawlSpider ):
                           meta={'handle_httpstatus_list': self.http_code_range,'download_maxsize':1})
             return r
 
-
         r={
             'snapshot':self.snapshot
             ,'uri':response.url
             ,'timestamp':datetime.datetime.now()
             ,'status':response.status
-            ,'exc':response.meta['exc'] if 'exc' in response.meta else None
+            ,'exc':response.meta.get('exc',None)
             ,'header':response
             ,'mime':None
             ,'size':None
         }
         try:
             header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
-
             if 'content-type' in header_dict and len(header_dict['content-type'])>0:
                 r['mime']= extractMimeType(header_dict['content-type'][0])
             else:
                 r['mime']='missing'
-
             r['header']=header_dict
 
             if response.status == 200:
@@ -196,13 +193,6 @@ class HeadLookups( CrawlSpider ):
             except Exception as e:
                 ErrorHandler.handleError(log,'spider_idle',exception=e)
         return r
-
-
-
-
-
-
-
 
 def help():
     return "perform head lookups"

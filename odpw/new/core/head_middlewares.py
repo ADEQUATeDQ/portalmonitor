@@ -4,7 +4,6 @@ import twisted
 
 log = structlog.get_logger()
 import scrapy
-from scrapy import signals
 from scrapy.http import Response
 
 from odpw.new.utils.error_handling import getExceptionString, ErrorHandler
@@ -14,10 +13,10 @@ class ErrorHandling(object):
 
 
     def process_response(self, request, response, spider):
-
         return response
 
     def process_exception(self, request, exception, spider):
+        ErrorHandler.handleError(log, 'process_exception',exception=exception)
         status=600
         if isinstance(exception, KeyError):
             status=601
@@ -65,10 +64,8 @@ class PostgresInsert(object):
             RI=ResourceInfo(**r)
 
             spider.db.add(RI)
-            log.info("HEAD RESPONSE", uri=RI.uri, status=RI.status)
+            log.info("HEAD RESPONSE", uri=RI.uri, status=RI.status, exc=RI.exc)
 
-            #if len(self.items) >= self.batch:
-            #    self.bulkInsert(spider)
 
         except Exception as e:
             ErrorHandler.handleError(log, 'process_item',exception=e)
