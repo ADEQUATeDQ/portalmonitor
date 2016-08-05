@@ -95,7 +95,7 @@ class HeadLookups( CrawlSpider ):
             try:
                 from urlparse import urlparse
                 parsed_uri = urlparse( u )
-                domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+                domain = '{uri.netloc}'.format(uri=parsed_uri)
                 stats[domain]+=1
             except:
                 pass
@@ -187,7 +187,8 @@ class HeadLookups( CrawlSpider ):
 
         self.count+=1
         if self.count%(self.batch/10)==0:
-            log.info("Processed another", count=self.count, batch=self.batch)
+            log.info("Processed another", count=self.count, batch=self.batch, scheduled=len(self.crawler.engine.slot.scheduler), inProgress=len(self.crawler.engine.slot.inprogress))
+
         if self.count  > (self.batch/2):
             try:
                 self.scheduleURLs()
