@@ -124,7 +124,10 @@ def getExceptionString(e):
             except Exception:
                 return str(type(e))+":"+str(e.extra_msg)
         else:
-            return str(type(e))+":"+str(e.message)
+            if e.message:
+                return str(type(e))+":"+str(e.message)
+            if e.message:
+                return str(type(e))+":"
     except Exception as e:
         log.error("Get Exception string", exctype=type(e), excmsg=e.message,exc_info=True)
         return 601

@@ -16,18 +16,27 @@ class ErrorHandling(object):
         return response
 
     def process_exception(self, request, exception, spider):
-        ErrorHandler.handleError(log, 'process_exception',exception=exception)
+        ErrorHandler.handleError(log, 'process_exception',exception=exception, uri=request.url)
         status=600
         if isinstance(exception, KeyError):
             status=601
-        if isinstance(exception, scrapy.exceptions.IgnoreRequest):
+        elif isinstance(exception, scrapy.exceptions.IgnoreRequest):
             status=602
-        if isinstance(exception,scrapy.exceptions.NotSupported):
+            request.meta['exc']='Robots.txt'
+        elif isinstance(exception,scrapy.exceptions.NotSupported):
             status=603
-        if isinstance(exception,twisted.internet.defer.CancelledError):
+            request.meta['exc']='Not_supported protocol'
+        elif isinstance(exception,twisted.internet.defer.CancelledError):
             return Response(url=request.url, status=200,  request=request, headers=request.headers)
+        elif isinstance(exception,twisted.internet.error.DNSLookupError):
+            status=604
+            request.meta['exc']='DNSLookup'
+        elif isinstance(exception,    twisted.internet.error.ConnectError):
+            status=605
+            request.meta['exc']='Connection lost'
+        else:
+            request.meta['exc']=str(type(exception))
 
-        request.meta['exc']=getExceptionString(exception)
         return Response(url=request.url, status=status, request=request)
 
 class PostgresInsert(object):
@@ -56,10 +65,14 @@ class PostgresInsert(object):
 
     def process_item(self, item, spider):
         try:
-            r={ 'snapshot':item['snapshot'] ,'uri':item['uri']
-                ,'timestamp':item['timestamp'] ,'status':item['status']
-                ,'exc':item['exc'] ,'header':item['header']
-                ,'mime':item['mime'] ,'size':item['size']
+            r={ 'snapshot':item['snapshot']
+                ,'uri':item['uri']
+                ,'timestamp':item['timestamp']
+                ,'status':item['status']
+                ,'exc':item['exc']
+                ,'header':item['header']
+                ,'mime':item['mime']
+                ,'size':item['size']
             }
             RI=ResourceInfo(**r)
 

@@ -275,7 +275,7 @@ class ResourceInfo(Base):
     snapshot= Column(SmallInteger, primary_key=True)
     timestamp= Column(TIMESTAMP)
     status=Column(SmallInteger)
-    exc=(String)
+    exc=Column(String)
     header=Column(JSONB)
     mime=Column(String)
     size=Column(BigInteger)

@@ -1,10 +1,11 @@
 from sqlalchemy import func
 
-from new.utils.plots import qa
-from new.utils.timing import Timer
-from odpw.new.core.db import DBClient, DBManager, row2dict
+from odpw.new.core.api import DBClient
+from odpw.new.utils.plots import qa
+from odpw.new.utils.timing import Timer
+from odpw.new.core.db import DBManager, row2dict
 
-from odpw.new.core.model import  Base, Portal, PortalSnapshot, PortalSnapshotQuality
+from odpw.new.core.model import  Base, Portal, PortalSnapshot, PortalSnapshotQuality, ResourceInfo
 
 import structlog
 log =structlog.get_logger()
@@ -19,11 +20,22 @@ def getLabel(seconds):
 if __name__ == '__main__':
 
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    dbm.db_DropEverything()
-    dbm.init(Base)
+    #dbm.db_DropEverything()
+    #dbm.init(Base)
 
     db= DBClient(dbm)
 
+    r={ 'snapshot':1632
+                ,'uri':'http://'
+                ,'timestamp':None
+                ,'status':200
+                ,'exc':'exec'
+                ,'header':{}
+                ,'mime':None
+                ,'size':None
+            }
+    RI=ResourceInfo(**r)
+    db.add(RI)
 
     q= [ i.lower() for q in qa for i,v in q['metrics'].items() ]
 

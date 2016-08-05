@@ -37,7 +37,7 @@ class HeadLookups( CrawlSpider ):
         dispatcher.connect(self.spider_idle, signals.spider_idle)
         self.count=0
         #print self.db, self.snapshot
-        self.http_code_range=range(200,220)+range( 400, 427 ) + range( 500, 511 )+ range( 600, 620 )+ range( 700, 720 )+ range( 800, 820 )+ range( 00, 920 )
+        self.http_code_range=range(200,220)+range( 400, 427 ) + range( 500, 511 )+ range( 600, 620 )+ range( 700, 720 )+ range( 800, 820 )+ range( 900, 920 )
     custom_settings = {
         "BATCH_INSERT":1,
         #http://doc.scrapy.org/en/latest/topics/settings.html#std:setting-SPIDER_MIDDLEWARES
