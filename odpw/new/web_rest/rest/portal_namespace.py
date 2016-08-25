@@ -5,10 +5,10 @@ import json
 from flask import make_response, request, current_app
 from sqlalchemy import and_
 
+from odpw.new.utils.timing import Timer
 from odpw.new.web_rest.rest.odpw_restapi import api
 from odpw.new.core.db import row2dict
-from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot
-
+from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, ResourceInfo, MetaResource, Dataset
 
 import logging
 
@@ -51,6 +51,25 @@ class PortalSnapshotQuality1(Resource):
         data=[row2dict(r) for r in q.all()]
 
         return data
+
+@ns.route('/<portalid>/<int:snapshot>/resources')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+class PortalSnapshotResources(Resource):
+    def get(self, portalid,snapshot):
+        with Timer(key="PortalSnapshotResources.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(ResourceInfo)\
+                .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
+                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(ResourceInfo.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)
+            print str(q)
+            data=[row2dict(r) for r in q.all()]
+
+            return data
+
 
 
 

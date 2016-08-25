@@ -300,12 +300,15 @@ def statusCodeDist(session, snapshot,portalid=None):
     q= session.query(ResourceInfo.status,func.count())\
         .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
         .join(Dataset,Dataset.md5==MetaResource.md5)\
-        .filter(Dataset.snapshot==snapshot)
+        .filter(Dataset.snapshot==snapshot)\
+        .filter(ResourceInfo.snapshot==snapshot)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
 
     q=q.group_by(ResourceInfo.status)
     q=q.order_by(func.count().desc())
+
+    print str(q)
 
     return q
 

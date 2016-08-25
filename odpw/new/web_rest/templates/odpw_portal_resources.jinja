@@ -3,23 +3,44 @@
 
 {% block headcss %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
-
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.2/css/buttons.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.semanticui.min.css">
 {% endblock %}
 {% block headscripts %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
-    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.1/js/dataTables.buttons.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.1/js/buttons.print.min.js"></script>
 
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.1/js/buttons.colVis.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.1/js/buttons.flash.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.12/js/dataTables.semanticui.min.js"></script>
+
+
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.semanticui.min.js"></script>
+
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.1/js/buttons.colVis.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.1/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.1/js/buttons.html5.min.js"></script>
+
+
+
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.2/js/buttons.print.min.js"></script>
+    //code.jquery.com/jquery-1.12.3.js
+
+
+
+
+
+//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js
+
+
 {% endblock %}
 
 {% macro resourceTable(data) -%}
 <div id="test">
-
+<h3 class="ui header">HTTP HEADER REPORT</h3>
 </div>
 <table class="ui celled table" id="resources" cellspacing="0" width="100%">
   <thead>
@@ -43,11 +64,11 @@
 {% block portalcontent %}
 
 <!-- How many resources -->
-    <div class="ui segment">
+    <div class="ui container centered ">
         <div class="ui statistics">
             <div class="statistic">
                 <div class="value">
-                  {{ data.resources.valid[true]+data.resources.valid[false] }}
+                  {{ data.resources }}
                 </div>
                 <div class="label">
                   unique Resources
@@ -55,24 +76,33 @@
             </div>
             <div class="statistic">
                 <div class="value">
-                  {{ data.resources.valid[true] }}
+                  {% if  data.resourcesInfo.valid[true] %}
+                    {{ data.resourcesInfo.valid[true] }}
+                   {% else %}
+                    0
+                    {% endif %}
                 </div>
                 <div class="label">
-                  valid HTTP URLs
+                  valid URLs
                 </div>
             </div>
             <div class="statistic">
                 <div class="value">
-                  {{ data.resources.status.200 }}
+                    {% if  data.resourcesInfo.status.200 %}
+                        {{ data.resourcesInfo.status.200 }}
+                    {% else %}
+                        0
+                    {% endif %}
+                    /{{ data.resourcesInfo.status.items()|sum(attribute="1")}}
                 </div>
                 <div class="label">
-                  available Resources
+                  HTTP 200 OK
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="ui segment">
+    <div class="ui container">
         {{ resourceTable()}}
     </div>
 
@@ -82,7 +112,7 @@
     {{ super() }}
     snapshot={{ snapshot|safe }}
     portalid="{{ portalid|safe }}"
-    url="http://localhost:5122//api/portal/"+portalid+"/"+snapshot+"/resources"
+    url="http://localhost:5123/api/portal/"+portalid+"/"+snapshot+"/resources"
     console.log(url)
 
 
@@ -100,7 +130,7 @@
         {
             dom: 'lfrBtip',
             lengthChange: false,
-            buttons: [ 'copy', 'excel', 'pdf' ]
+            buttons: [ 'csv', 'excel', 'pdf' ]
             ,"data": j
             ,"dataSrc": ""
             ,"columns": [

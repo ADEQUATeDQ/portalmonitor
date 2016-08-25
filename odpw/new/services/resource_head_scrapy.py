@@ -36,6 +36,8 @@ class HeadLookups( CrawlSpider ):
         self.batch=kwargs['batch']
         dispatcher.connect(self.spider_idle, signals.spider_idle)
         self.count=0
+        self.seen=set([])
+
         #print self.db, self.snapshot
         self.http_code_range=range(200,220)+range( 400, 427 ) + range( 500, 511 )+ range( 600, 620 )+ range( 700, 720 )+ range( 800, 820 )+ range( 900, 920 )
     custom_settings = {
@@ -91,6 +93,7 @@ class HeadLookups( CrawlSpider ):
 
         stats=defaultdict(int)
 
+        c=0
         for u in uris:
             try:
                 from urlparse import urlparse
@@ -99,14 +102,15 @@ class HeadLookups( CrawlSpider ):
                 stats[domain]+=1
             except:
                 pass
-            r= Request(u,method='HEAD',
-                      # callback=self.success,
-                      # errback=self.error,
-                      dont_filter=True,
-                      meta={'handle_httpstatus_list': self.http_code_range})
-            self.crawler.engine.schedule(r,self)
+            if u not in self.seen:
+                r= Request(u,method='HEAD',
+                          dont_filter=True,
+                          meta={'handle_httpstatus_list': self.http_code_range})
+                self.crawler.engine.schedule(r,self)
+                self.seen.add(u)
+                c+=1
 
-        log.info("Scheduled", uris=len(uris), stats=stats)
+        log.info("Scheduled", uris=len(uris), added=c, stats=stats)
 
     def spider_idle(self, spider):
         try:
@@ -134,11 +138,13 @@ class HeadLookups( CrawlSpider ):
                 stats[domain]+=1
             except:
                 pass
-            yield Request(u,method='HEAD',
+            if u not in self.seen:
+                yield Request(u,method='HEAD',
                           # callback=self.success,
                           # errback=self.error,
                           dont_filter=True,
                           meta={'handle_httpstatus_list': self.http_code_range})
+                self.seen.add(u)
 
         log.info("InitScheduled", uris=len(uris), stats=stats)
     def parse(self,response):
@@ -201,7 +207,7 @@ def name():
 
 def setupCLI(pa):
     pa.add_argument("-t","--threads",  help='Number of threads',  dest='threads', default=4,type=int)
-    pa.add_argument("-b","--batch",  help='Batch size',  dest='batch', default=10000,type=int)
+    pa.add_argument("-b","--batch",  help='Batch size',  dest='batch', default=100000,type=int)
     pa.add_argument("-d","--delay",  help='Default domain delay (in sec)',  dest='delay', default=5,type=int)
 
 def cli(args, dbm):

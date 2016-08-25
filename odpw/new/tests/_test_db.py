@@ -9,7 +9,7 @@ from odpw.new.core.model import  Base, Portal, PortalSnapshot, PortalSnapshotQua
 
 import structlog
 log =structlog.get_logger()
-
+import sys
 def getLabel(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
@@ -19,6 +19,11 @@ def getLabel(seconds):
 
 if __name__ == '__main__':
 
+
+    http_code_range=range(200,220)+range( 400, 427 ) + range( 500, 511 )+ range( 600, 620 )+ range( 700, 720 )+ range( 800, 820 )+ range( 900, 920 )
+    print http_code_range
+
+    sys.exit(0)
     dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
     #dbm.db_DropEverything()
     #dbm.init(Base)
