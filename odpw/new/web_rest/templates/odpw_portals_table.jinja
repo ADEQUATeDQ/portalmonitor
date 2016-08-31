@@ -45,24 +45,12 @@
 
 {% block title %}
 <div class="ui form ">
-        <div class=" fields">
-            <h2 class="two wide field">
-                <span id="pCount" class="floated right">{{data|length}} Portals</span>
-            </h2>
-            <div class="six wide field">
-                <div class="ui icon input">
-                    <div class="ui  input">
-                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)" style="width:100%">
-                    </div>
-                    <i class="search icon"></i>
-                </div>
-            </div>
-            <div class="ui right floated column">
-                <a href="{{url_for('ui.portalstable')}}"><i class="list layout icon"></i></a>
-            </div>
-        </div>
+    <div class=" fields">
+        <h2 class="two wide field">
+            <span id="pCount" class="floated right">{{data|length}} Portals</span>
+        </h2>
     </div>
-
+</div>
 {% endblock %}
 
 

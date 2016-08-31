@@ -1,6 +1,7 @@
 import ast
 import datetime
 import json
+from collections import defaultdict
 from urlparse import urlparse
 
 import jinja2
@@ -20,7 +21,8 @@ from odpw.new.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, D
     MetaResource, ResourceInfo
 from odpw.new.services.aggregates import aggregatePortalInfo
 from odpw.new.utils.timing import Timer
-from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek
+from odpw.new.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek, \
+    getLastNSnapshots
 from odpw.new.web_rest.cache import cache
 
 ui = Blueprint('ui', __name__,
@@ -67,13 +69,66 @@ def system():
     with Timer(key="system" , verbose=True):
         return render_template("odpw_system_info.jinja")
 
+@ui.route('/system/changes', methods=['GET'])
+def systemchanges():
+    with Timer(key="systemchanges"):
+        Session=current_app.config['dbsession']
+        cursn=getSnapshotfromTime(datetime.datetime.now())
+        prevWeek=getPreviousWeek(cursn)
+
+        data_cur={r.portalid:r for r in Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==cursn)}
+        data_prev={r.portalid:r for r in Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==prevWeek)}
+
+
+        data={'status_change':{},'ds_change':{},'res_change':{}}
+        for pid,ps in data_cur.items():
+            if pid in data_prev:
+                if ps.status == data_prev[pid].status:
+                    if ps.datasetCount != data_prev[pid].datasetCount:
+                        data['ds_change'][pid]={'from':data_prev[pid].datasetCount, 'to':ps.datasetCount}
+                    elif ps.resourceCount != data_prev[pid].resourceCount:
+                        data['res_change'][pid]={'from':data_prev[pid].resourceCount, 'to':ps.resourceCount}
+                else:
+                    data['status_change'][pid]={'from':data_prev[pid].status, 'to':ps.status}
+
+        data['from']=prevWeek
+        data['to']=cursn
+
+        return render_template("odpw_system_changes.jinja", data=data)
+
 @ui.route('/system/fetch', methods=['GET'])
 def systemfetch():
     with Timer(key="systemfetch"):
-        db=current_app.config['dbc']
+        Session=current_app.config['dbsession']
         cursn=getSnapshotfromTime(datetime.datetime.now())
 
-        p= fetchProcessChart(db,cursn)
+
+        snapshots=getLastNSnapshots(cursn,n=5)
+        nWeeksago=snapshots[-1]
+
+        cnts=defaultdict(int)
+        data={}
+        for r in Session.query(PortalSnapshot.snapshot, PortalSnapshot.start, PortalSnapshot.end-PortalSnapshot.start).filter(PortalSnapshot.snapshot>nWeeksago):
+            sn,start, dur = r[0], r[1],r[2]
+            cnts[sn]+=1
+
+            d=data.setdefault(sn,{})
+            if dur is not None:
+                ds=d.setdefault(start,[])
+                ds.append(dur.total_seconds())
+
+        for sn, d in data.items():
+            dd=[]
+            gstart= min(d.keys())
+
+            for start, durations in d.items():
+                for dur in durations:
+                    delta=( start-gstart).total_seconds() + dur
+                    dd.append(delta)
+            data[sn]=dd
+
+
+        p= fetchProcessChart(data, cnts)
         script, div= components(p)
 
         js_resources = INLINE.render_js()
@@ -85,22 +140,24 @@ def systemfetch():
             js_resources=js_resources,
             css_resources=css_resources
         )
-@ui.route('/system/evolution', methods=['GET'])
-def systemevolv():
-    with Timer(key="systemevolv"):
-        db=current_app.config['dbc']
 
-        t= db.Session.query(PortalSnapshot.snapshot.label('snapshot'), Portal.software,PortalSnapshot.datasetCount,PortalSnapshot.resourceCount).join(Portal).subquery()
-        q=db.Session.query(t.c.snapshot, t.c.software, func.count().label('count'),func.sum(t.c.resourceCount).label('resources'),func.sum(t.c.datasetCount).label('datasets')).group_by(t.c.snapshot,t.c.software)
-        data=[ row2dict(r) for r in q.all()]
+@ui.route('/system/evolution', methods=['GET'])
+@cache.cached(timeout=300)
+def systemevolv():
+    with Timer(key="systemevolv", verbose=True):
+        Session=current_app.config['dbsession']
+
+        with Timer(key="systemevolvQuery", verbose=True):
+            t= Session.query(PortalSnapshot.snapshot.label('snapshot'), Portal.software,PortalSnapshot.datasetCount,PortalSnapshot.resourceCount).join(Portal).subquery()
+            q= Session.query(t.c.snapshot, t.c.software, func.count().label('count'),func.sum(t.c.resourceCount).label('resources'),func.sum(t.c.datasetCount).label('datasets')).group_by(t.c.snapshot,t.c.software)
+            data=[ row2dict(r) for r in q.all()]
 
         #data=[ row2dict(r) for r in db.Session.query(t.c.snapshot, t.c.software, func.count().label('count')).group_by(t.c.snapshot,t.c.software).all()]
 
-        df= pd.DataFrame(data)
+            df= pd.DataFrame(data)
 
         p=systemEvolutionPlot(df)
         script, div= components(p)
-        print div
 
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
@@ -121,10 +178,6 @@ def systemevolv():
 def getPortalsInfo():
 
     with Timer(key="portals", verbose=True):
-        db=current_app.config['dbc']
-
-
-
         ps=[]
         r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)
         print str(r)
@@ -160,10 +213,10 @@ def portalstable():
 #@cache.cached(timeout=300)
 def portalsquality():
     with Timer(key="portalsquality", verbose=True):
-        db=current_app.config['dbc']
+        Session=current_app.config['dbsession']
 
         snapshot=getPreviousWeek(getSnapshotfromTime(datetime.datetime.now()))
-        results=[row2dict(r) for r in db.Session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
+        results=[row2dict(r) for r in Session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
         keys=[ i.lower() for q in qa for i in q['metrics'] ]
         df=pd.DataFrame(results)
@@ -187,10 +240,10 @@ def portalsquality():
 #@cache.cached(timeout=300)
 def portalssize():
     with Timer(key="portalsstats", verbose=True):
-        db=current_app.config['dbc']
+        Session=current_app.config['dbsession']
 
 
-        results=[row2dict(r) for r in db.Session.query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
+        results=[row2dict(r) for r in Session.query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
         df=pd.DataFrame(results)
 
         p= portalsScatter(df)
@@ -274,7 +327,6 @@ def portal(snapshot, portalid):
 @ui.route('/portal/<portalid>/<int:snapshot>/resources', methods=['GET'])
 def portalRes(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
-        db=current_app.config['dbc']
         Session=current_app.config['dbsession']
 
         data=getResourceInfo(Session, portalid, snapshot)
@@ -296,11 +348,11 @@ def portalRes(snapshot, portalid):
 @ui.route('/portal/<portalid>/<int:snapshot>/evolution', methods=['GET'])
 def portalEvolution(snapshot, portalid):
     with Timer(key="portalEvolution",verbose=True):
-        db=current_app.config['dbc']
+        Session=current_app.config['dbsession']
         data={}
-        for R in db.Session.query(PortalSnapshot).filter(PortalSnapshot.portalid==portalid):
+        for R in Session.query(PortalSnapshot).filter(PortalSnapshot.portalid==portalid):
             data[R.portalid+str(R.snapshot)]=row2dict(R)
-        for R in db.Session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.portalid==portalid):
+        for R in Session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.portalid==portalid):
             data[R.portalid+str(R.snapshot)].update(row2dict(R))
 
         df=pd.DataFrame([v for k,v in data.items()])
@@ -310,8 +362,6 @@ def portalEvolution(snapshot, portalid):
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        db=current_app.config['dbc']
-        Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
 
         return render_template("odpw_portal_evolution.jinja",
@@ -329,8 +379,6 @@ def portalEvolution(snapshot, portalid):
 @ui.route('/portal/<portalid>/<int:snapshot>/dist/formats', methods=['GET'])
 def portalFormats(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
-        db=current_app.config['dbc']
-
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
@@ -341,8 +389,6 @@ def portalFormats(snapshot, portalid):
 @ui.route('/portal/<portalid>/<int:snapshot>/dist/licenses', methods=['GET'])
 def portalLicenses(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
-        db=current_app.config['dbc']
-
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
@@ -354,8 +400,6 @@ def portalLicenses(snapshot, portalid):
 @ui.route('/portal/<portalid>/<int:snapshot>/dist/organisations', methods=['GET'])
 def portalOrganisations(snapshot, portalid):
     with Timer(key="portalRes",verbose=True):
-        db=current_app.config['dbc']
-
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]

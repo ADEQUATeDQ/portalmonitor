@@ -19,6 +19,8 @@ from scrapy.http.request import Request
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import CrawlSpider
 from scrapy.utils.project import get_project_settings
+from urlparse import urlparse
+
 
 import structlog
 log = structlog.get_logger()
@@ -95,20 +97,22 @@ class HeadLookups( CrawlSpider ):
 
         c=0
         for u in uris:
-            try:
-                from urlparse import urlparse
-                parsed_uri = urlparse( u )
-                domain = '{uri.netloc}'.format(uri=parsed_uri)
-                stats[domain]+=1
-            except:
-                pass
             if u not in self.seen:
-                r= Request(u,method='HEAD',
+                self.seen.add(u)
+                try:
+                    parsed_uri = urlparse( u )
+                    domain = '{uri.netloc}'.format(uri=parsed_uri)
+                    stats[domain]+=1
+                    r= Request(u,method='HEAD',
                           dont_filter=True,
                           meta={'handle_httpstatus_list': self.http_code_range})
-                self.crawler.engine.schedule(r,self)
-                self.seen.add(u)
-                c+=1
+                    self.crawler.engine.schedule(r,self)
+
+                    c+=1
+                except:
+                    pass
+            else:
+                log.info("Already scheduled or crawled", uri=u)
 
         log.info("Scheduled", uris=len(uris), added=c, stats=stats)
 
@@ -131,20 +135,24 @@ class HeadLookups( CrawlSpider ):
         uris= [ uri[0] for uri in q ]
         stats=defaultdict(int)
         for u in uris:
-            try:
-                from urlparse import urlparse
-                parsed_uri = urlparse( u )
-                domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-                stats[domain]+=1
-            except:
-                pass
             if u not in self.seen:
-                yield Request(u,method='HEAD',
+                self.seen.add(u)
+                try:
+
+                    from urlparse import urlparse
+                    parsed_uri = urlparse( u )
+                    domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+                    stats[domain]+=1
+
+                    yield Request(u,method='HEAD',
                           # callback=self.success,
                           # errback=self.error,
                           dont_filter=True,
                           meta={'handle_httpstatus_list': self.http_code_range})
-                self.seen.add(u)
+                except:
+                    pass
+            else:
+                log.info("Already scheduled or crawled", uri=u)
 
         log.info("InitScheduled", uris=len(uris), stats=stats)
     def parse(self,response):

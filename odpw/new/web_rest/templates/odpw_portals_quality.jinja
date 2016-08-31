@@ -85,7 +85,7 @@
             <th class="one wide">Country</th>
             <th class="one wide">Count</th>
             {% for k in keys %}
-                <td>{{ k }}</td>
+                <td>{{ k}}</td>
             {% endfor %}
         </tr>
     </tfoot>
@@ -103,7 +103,7 @@
     <td><i class="{{iso.iso| lower}} flag "></i><span>{{iso.iso| lower}}</span></td>
     <td>{{iso.count}}</td>
     {% for k in keys %}
-        <td>{{ iso[k] }}</td>
+        <td>{{ iso[k] | float|round(2) }}</td>
     {% endfor %}
 </tr>
 {%- endmacro %}
@@ -142,7 +142,7 @@
     <td>{{soft.software}}</td>
     <td>{{soft.count}}</td>
     {% for k in keys %}
-        <td>{{ soft[k] }}</td>
+        <td>{{ soft[k] | float|round(2)}}</td>
     {% endfor %}
 </tr>
 {%- endmacro %}
@@ -152,18 +152,9 @@
 <div class="ui sixteen wide column">
     <div class="ui form row">
         <div class="fields">
-            <h2 class="two wide field">
-                <span id="pCount" class="floated right">{{data|length}} Portals</span>
-            </h2>
-            <div class="six wide field">
-                <div class="ui icon input">
-                    <input id="filter" type="text" placeholder="Filter ... (by URI, Software, ISO)">
-                    <i class="search icon"></i>
-                </div>
-            </div>
-            <div class="ui right floated column">
-                <a href="{{url_for('ui.portalslist')}}"><i class="grid layout icon"></i></a>
-            </div>
+            <h3 class="six wide field">
+                <span id="pCount" class="floated right">Aggregated quality metrics</span>
+            </h3>
         </div>
     </div>
 </div>

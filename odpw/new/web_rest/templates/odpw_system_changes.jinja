@@ -1,0 +1,94 @@
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "High level changes compared to last snapshot" -%}
+
+{% set active_sub_page = "ui.systemchanges" -%}
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+
+{% macro table(tabledata, label,extra, to, from) -%}
+<h3 class="ui center aligned icon header">
+            {{tabledata|length}} {{label}}
+        </h3>
+ <table  class="ui single line fixed  table">
+        <thead>
+            <tr>
+                <th>Portal</th>
+                <th>last week {{from | getWeekString}}</th>
+                <th>this week {{to | getWeekString}}</th>
+                {% if extra %}
+                    <th>in/decrease by</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for p,d in tabledata.iteritems() %}
+                <tr>
+                    <td>{{p}}</td>
+                    <td>{{d.from}}</td>
+                    <td>{{d.to}}</td>
+
+                {% if extra %}
+                    <td>
+                    {% if d.from >= d.to %}
+                        <i class="arrow  down icon"></i> {{d.from - d.to}} datasets
+                    {% else %}
+                        <i class="arrow line up icon"></i> {{d.to - d.from}} datasets
+                    {% endif %}
+                    </td>
+                {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{%- endmacro %}
+
+
+
+{% block systemcontent %}
+{{data.from}}
+<div class="ui middle aligned page grid">
+    <div class="eight wide column">
+        <div class="ui red message">blah blah</div>
+    </div>
+</div>
+    <div class="ui segment centered container">
+        <h2>{{data.ds_change|length + data.res_change|length + data.status_change|length}} Portals with changes </h2>
+    </div>
+    <div class="ui segment centered container">
+        {{ table(data.status_change, 'Status changes', false, data.to, data.from)}}
+    </div>
+
+    <div class="ui segment centered container">
+        {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from)}}
+        </div>
+    </div>
+
+    <div class="ui segment centered container">    {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
+    </div>
+
+{% endblock %}
+
+{% block script %}
+
+    {{ super() }}
+    $(document).ready(function() {
+
+        $('#tabs .item')
+         .tab()
+        ;
+        $('.table').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+    })
+
+ {% endblock %}

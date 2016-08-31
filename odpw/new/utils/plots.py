@@ -8,6 +8,7 @@ from bokeh.models import NumeralTickFormatter, FuncTickFormatter, Text, Range1d,
 from bokeh.plotting import figure
 from numpy.ma import arange
 
+from odpw.new.utils.timing import Timer
 from odpw.new.core.model import PortalSnapshotQuality, PortalSnapshot
 from odpw.new.utils.utils_snapshot import getLastNSnapshots, getWeekString, getWeekString1
 
@@ -87,10 +88,13 @@ def hm(sec):
 
 
 
+def getFetchProcessChart(db, snapshot, n=3):
 
+    data,cnts = getData(db, snapshot,n=n)
 
-def fetchProcessChart(db, snapshot, n=3):
+    return fetchProcessChart(data,cnts)
 
+def getData(db, snapshot, n=3):
     snapshots=getLastNSnapshots(snapshot,n)
     nWeeksago=snapshots[-1]
 
@@ -115,26 +119,21 @@ def fetchProcessChart(db, snapshot, n=3):
                 dd.append(delta)
         #print len(dd)
         data[sn]=dd
+    return data,cnts
 
-
-    from bokeh.palettes import OrRd9
+def fetchProcessChart(data,cnts):
 
     bp = figure(plot_width=600, plot_height=300,y_axis_type="datetime",responsive=True,tools='')#,toolbar_location=None
     bp.toolbar.logo = None
     bp.toolbar_location = None
 
-
     bp.xaxis[0].formatter = NumeralTickFormatter(format="0.0%")
-
-
-    bp.yaxis.formatter=FuncTickFormatter.from_py_func(hm)
-
+    bp.yaxis[0].formatter=FuncTickFormatter.from_py_func(hm)
     bp.xaxis[0].axis_label = '% of portals'
     bp.yaxis[0].axis_label = 'Time elapsed'
 
     mx=None
     c=0
-
 
     for sn in sorted(data.keys()):
         d=data[sn]
@@ -143,10 +142,6 @@ def fetchProcessChart(db, snapshot, n=3):
         y=[e for e in d_sorted] #datetime.datetime.fromtimestamp(e)
         x = 1. * arange(len(d)) / (len(d) - 1)
         mx=max(x) if max(x)>mx else mx
-        #print x
-        # plot the sorted data:
-
-
 
         if sn == max(data.keys()):
             ci=bp.circle(x,y, size=5, alpha=0.5,  color='red', legend="current week: "+getWeekString(sn))
@@ -164,7 +159,6 @@ def fetchProcessChart(db, snapshot, n=3):
 
         c+=1
         #bp.text(,y[-1], line_width=2,line_color=OrRd9[c],legend=str(sn))
-        print x[-1],y[-1]
         no_olympics_glyph = Text(x=x[-1], y=y[-1], x_offset=100, text=["%s of %s portals"%(len(d), cnts[sn])],
             text_align="right", text_baseline="top",
             text_font_size="9pt", text_font_style="italic", text_color="black")
@@ -483,44 +477,37 @@ def evolutionCharts(df):
 
 
 def systemEvolutionBarPlot(df, yLabel, values):
-    p = Bar(df, label='snapshot', values=values, agg='sum', stack='software',
-        legend='bottom_left', bar_width=0.4, xlabel="Snapshots", ylabel=yLabel, responsive=True, height=200,tools='hover')
+    with Timer(key='systemEvolutionBarPlot', verbose=True):
+        p = Bar(df, label='snapshot', values=values, agg='sum', stack='software',
+            legend='bottom_left', bar_width=0.4, xlabel="Snapshots", ylabel=yLabel, responsive=True, height=200,tools='hover')
 
-    glyph_renderers = p.select(GlyphRenderer)
-    bar_source = [glyph_renderers[i].data_source for i in range(len(glyph_renderers))]
-    hover = p.select(HoverTool)
-    hover.tooltips = [
-        ('software',' @software'),
-        ('value', '@height'),
-    ]
-    p.xaxis.formatter=FuncTickFormatter.from_py_func(getWeekString1)
-    p.axis.minor_tick_line_color = None
+        glyph_renderers = p.select(GlyphRenderer)
+        bar_source = [glyph_renderers[i].data_source for i in range(len(glyph_renderers))]
+        hover = p.select(HoverTool)
+        hover.tooltips = [
+            ('software',' @software'),
+            ('value', '@height'),
+        ]
+        p.xaxis.formatter=FuncTickFormatter.from_py_func(getWeekString1)
+        p.axis.minor_tick_line_color = None
 
-    p.background_fill_color = "#fafafa"
-    p.legend.location = "top_left"
-    p.toolbar.logo = None
-    p.toolbar_location = None
+        p.background_fill_color = "#fafafa"
+        p.legend.location = "top_left"
+        p.toolbar.logo = None
+        p.toolbar_location = None
 
-    legend=p.legend[0].legends
-    p.legend[0].legends=[]
-    l = Legend(legends=legend, location=(0, -30))
-    p.add_layout(l, 'right')
+        legend=p.legend[0].legends
+        p.legend[0].legends=[]
+        l = Legend(legends=legend, location=(0, -30))
+        p.add_layout(l, 'right')
 
-    return p
+        return p
 
 def systemEvolutionPlot(df):
     df=df.sort(['snapshot','count'], ascending=[1,0])
 
-    print df
-
     p= systemEvolutionBarPlot(df,yLabel="#Portals", values='count')
     pd= systemEvolutionBarPlot(df,yLabel="#Datasets", values='datasets')
     pr= systemEvolutionBarPlot(df,yLabel="#Resources", values='resources')
-
-
-
-
-
-
 
     return {'portals':p,'datasets':pd,'resources':pr}

@@ -227,7 +227,7 @@ class DBClient(object):
     def getUnfetchedResources(self,snapshot, portalid=None, batch=None):
         with self.session_scope() as session:
             q=session.query(MetaResource.uri)\
-                .join(Dataset,Dataset.md5==MetaResource.md5)\
+                .join(Dataset, Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
@@ -247,12 +247,7 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
-
             return q
-
-
-
-
 
 
     def portalSnapshotQualityDF(self, portalid, snapshot):
