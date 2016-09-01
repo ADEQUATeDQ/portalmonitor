@@ -16,7 +16,7 @@
 <h3 class="ui center aligned icon header">
             {{tabledata|length}} {{label}}
         </h3>
- <table  class="ui single line fixed  table">
+ <table  class="ui single line fixed  table" style="width:100%;">
         <thead>
             <tr>
                 <th>Portal</th>
@@ -52,25 +52,20 @@
 
 
 {% block systemcontent %}
-{{data.from}}
-<div class="ui middle aligned page grid">
-    <div class="eight wide column">
-        <div class="ui red message">blah blah</div>
-    </div>
-</div>
-    <div class="ui segment centered container">
+
+    <div class="ui  centered container">
         <h2>{{data.ds_change|length + data.res_change|length + data.status_change|length}} Portals with changes </h2>
     </div>
-    <div class="ui segment centered container">
+    <div class="ui  centered container">
         {{ table(data.status_change, 'Status changes', false, data.to, data.from)}}
     </div>
-
-    <div class="ui segment centered container">
+<br>
+    <div class="ui   container">
         {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from)}}
         </div>
     </div>
-
-    <div class="ui segment centered container">    {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
+    <br>
+    <div class="ui   container">    {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
     </div>
 
 {% endblock %}

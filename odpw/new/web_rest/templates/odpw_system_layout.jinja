@@ -9,9 +9,9 @@
 
                 {% set navigation_bar = [
                     ('ui.system', 'info', 'Info'),
-                    ('ui.systemfetch', 'fetch', 'Fetch process'),
-                    ('ui.systemevolv', 'evolv', 'Evolution'),
-                    ('ui.systemchanges', 'change', 'Changes'),
+                    ('ui.systemfetch', 'spinner loading', 'Fetch process'),
+                    ('ui.systemevolv', 'line chart', 'Evolution'),
+                    ('ui.systemchanges', 'exchange', 'Changes'),
                     ]
                 -%}
                 {% set active_sub_page = active_sub_page|default('ui.system') -%}

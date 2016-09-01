@@ -177,7 +177,7 @@ def portalsScatter(df):
 
     def get_dataset(df, name):
         df1 = df[df['software'] == name].copy()
-        print name,df1.describe()
+        #print name,df1.describe()
         del df1['software']
         return df1
 
@@ -188,7 +188,7 @@ def portalsScatter(df):
 
     hmax = 0
     vmax = 0
-    print hmax, vmax
+    #print hmax, vmax
 
     p = figure(   plot_width=400, plot_height=400
                 , min_border=10, min_border_left=50

@@ -20,7 +20,8 @@ setup(
     #            'odpw.reporting',
     #            'odpw.server','odpw.server.handler',
     #             'odpw.utils','odpw.resources',  ],
-    package_data={'odpw.resources':['iana/*'],'odpw.server':server_files},
+    #package_data={'odpw.resources':['iana/*'],'odpw.server':server_files},
+    package_data = {'odpw' : files },
     include_package_data = True,
     url='',
     license='',
@@ -42,8 +43,18 @@ setup(
         'jinja2',
         'tornado',
         'pyyaml',
-        'psycopg2'
-        
+        'psycopg2',
+        'bokeh',
+        'pybloom',
+        'python-dateutil',
+        'python-nvd3',
+        'Scrapy',
+        'py-lru-cache'
+        'queuelib',
+        'rdflib',
+        'rdflib-jsonld'
+        'tldextract',
+        'Twisted'
     ],
 
 )

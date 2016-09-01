@@ -83,8 +83,8 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
     with Timer(key=portalid+'-agg', verbose=True):
         ds= session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).count()
 
-        print 'dsCount', ds
-
+        #print 'dsCount', ds
+        #TODO fix resource count
         for key, cFunc, dFunc in [
                         ('organisation',organisationDist, distinctOrganisations)
                         ,('license',licenseDist,distinctLicenses)
@@ -95,18 +95,18 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
 
                 s=[]
                 q=cFunc(session,snapshot,portalid=portalid)
-                print portalid+'-'+key,'query',str(q)
+                #print portalid+'-'+key,'query',str(q)
                 if limit:
                     q=q.limit(limit)
                 else:
                     q=q.all()
                 for i in q:
                     d=row2dict(i)
-                    print d
+                    #print d
                     d['perc']=d['count']/(1.0*ds)
                     s.append(d)
                 t=sum(item['count'] for item in s)
-                print key, 'total',t
+                #print key, 'total',t
                 if ds-t != 0:
                     s.append({key:'Others', 'count':ds-t,'perc':(ds-t)/(1.0*ds)})
                 stats[key]={'distinct':cFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
