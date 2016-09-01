@@ -52,7 +52,7 @@ setup(
         'py-lru-cache'
         'queuelib',
         'rdflib',
-        'rdflib-jsonld'
+        'rdflib-jsonld',
         'tldextract',
         'Twisted'
     ],
