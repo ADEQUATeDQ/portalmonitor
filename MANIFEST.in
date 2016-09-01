@@ -1,1 +1,1 @@
-recursive-include odpw/resources *
+recursive-include odpw/resources odpw/resources/iana *
