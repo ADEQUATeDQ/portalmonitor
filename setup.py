@@ -48,14 +48,14 @@ setup(
         'pybloom',
         'python-dateutil',
         'python-nvd3',
-        'Scrapy',
-        'py-lru-cache'
+        'scrapy',
+        'py-lru-cache',
         'queuelib',
         'rdflib',
         'rdflib-jsonld',
         'tldextract',
         'Twisted',
-        'matplotlib'
+        'matplotlib',
     ],
 
 )
