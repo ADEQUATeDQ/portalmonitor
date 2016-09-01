@@ -54,7 +54,8 @@ setup(
         'rdflib',
         'rdflib-jsonld',
         'tldextract',
-        'Twisted'
+        'Twisted',
+        'matplotlib'
     ],
 
 )
