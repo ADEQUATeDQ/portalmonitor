@@ -23,6 +23,7 @@ import odpw.web_rest.ui.server as ui
 import odpw.services.fetch_insert as fetch
 #import fetch_migrate as fetchM
 import odpw.services.resource_head as head
+import odpw.services.init_db as initdb
 import odpw.services.resource_head_scrapy as head_scrapy
 
 import sys  # import sys package, if not already imported
@@ -32,6 +33,7 @@ sys.setdefaultencoding('utf-8')
 
 submodules=[
     restAPI,
+    initdb,
     ui,
     fetch,#fetchM,
     head,head_scrapy
