@@ -46,7 +46,7 @@ setup(
         'networkx',
         'flask',
         'flask-swagger',
-        'flask-cache'
+        'flask-cache',
         'flask-restplus'
     ],
 
