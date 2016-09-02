@@ -307,9 +307,6 @@ class DBManager(object):
 
     def init(self, Base):
 
-        log.info("DROP ALL")
-        Base.metadata.drop_all(self.engine)
-        log.info("CREATE ALL")
 
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
