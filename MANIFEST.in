@@ -1,0 +1,2 @@
+recursive-include odpw/resources/iana *
+recursive-include odpw/resources/logging *
