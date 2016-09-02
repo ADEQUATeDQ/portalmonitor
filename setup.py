@@ -3,10 +3,10 @@ from setuptools import setup,find_packages
 files = ["resources/*"]
 
 setup(
-    name='odpwnew',
+    name='odpw',
     version='0.1',
-    packages = ['odpw'],
-    package_data={'odpw':files},
+    packages = ['odpw',],
+    #package_data={'odpw':files},
 
     include_package_data = True,
     url='',
