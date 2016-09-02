@@ -44,7 +44,7 @@ setup(
         'reppy',
         'dictdiffer',
         'networkx',
-        'flask',
+        'Flask',
         'Flask-Cache',
         'flask-restplus'
     ],
