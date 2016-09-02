@@ -3,12 +3,11 @@ from multiprocessing import Pool
 
 import structlog
 log =structlog.get_logger()
-from quality.dcat_analysers import dcat_analyser
-from odpw.utils.utils_snapshot import getCurrentSnapshot
-
 
 import urlnorm
 
+from odpw.quality.dcat_analysers import dcat_analyser
+from odpw.utils.utils_snapshot import getCurrentSnapshot
 
 from odpw.services.aggregates import aggregatePortalQuality
 
