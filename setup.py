@@ -45,7 +45,6 @@ setup(
         'dictdiffer',
         'networkx',
         'flask',
-        'flask-swagger',
         'flask-cache',
         'flask-restplus'
     ],
