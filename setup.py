@@ -2,10 +2,11 @@
 from setuptools import setup,find_packages
 files = ["resources/*"]
 
+print find_packages()
 setup(
     name='odpw',
     version='0.1',
-    packages = ['odpw',],
+    packages = find_packages(),
     #package_data={'odpw':files},
 
     include_package_data = True,
