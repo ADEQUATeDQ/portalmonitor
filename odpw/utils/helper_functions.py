@@ -13,8 +13,10 @@ def readDBConfFromFile(config):
     if config:
         with open(config) as f_conf:
             config = yaml.load(f_conf)
-            if 'db' in config:
+            if config is not None and 'db' in config:
                 dbConf.update(config['db'])
+            if config is None:
+                log.error("Cannot load config file")
     log.info("DBConfig", conf=dbConf)
     return dbConf
 

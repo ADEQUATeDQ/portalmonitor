@@ -81,7 +81,7 @@ def cli(args,dbm):
     conf={
         'url_prefix_rest':'/api',
          'url_prefix_ui':'/ui'
-        ,'port':5123
+        ,'port':80
     }
     if args.config:
         with open(args.config) as f_conf:
