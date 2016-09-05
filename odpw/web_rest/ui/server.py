@@ -107,5 +107,5 @@ def cli(args,dbm):
     #application.listen(conf['port'])
     print "Listinging on ui: http://localhost:"+str(conf['port'])+"/"+conf['url_prefix_ui'], "api: http://localhost:"+str(conf['port'])+"/"+conf['url_prefix_rest']
     log.info("Server running", ui="http://localhost:"+str(conf['port'])+"/"+conf['url_prefix_ui'],api="http://localhost:"+str(conf['port'])+"/"+conf['url_prefix_rest'])
-    app.run(threaded=True, port=conf['port'])
+    app.run(threaded=True, port=conf['port'],host='0.0.0.0')
     #IOLoop.instance().start()
