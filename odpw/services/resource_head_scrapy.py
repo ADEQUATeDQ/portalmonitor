@@ -84,7 +84,7 @@ class HeadLookups( CrawlSpider ):
             'file': None, 's3': None, 'ftp': None
         },
         'ITEM_PIPELINES': {
-            'odpw.new.core.head_middlewares.PostgresInsert': 300
+            'odpw.new.core.head_middlewares.ResourceInfoInserter': 300
         }
     }
 

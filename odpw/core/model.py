@@ -28,6 +28,8 @@ tab_datasetsdata=tmp+'datasetsdata'
 
 tab_resources=tmp+'metaresources'
 tab_resourcesinfo=tmp+'resourcesinfo'
+tab_resourcescrawllog=tmp+'resourcescrawllog'
+
 
 tab_organisations=tmp+'organisations'
 tab_organisationssnapshot=tmp+'organisationsnapshot'
@@ -280,3 +282,22 @@ class ResourceInfo(Base):
     mime=Column(String)
     size=Column(BigInteger)
 
+
+class ResourceCrawlLog(Base):
+    __tablename__ = tab_resourcescrawllog
+
+    uri= Column(String, primary_key=True)
+    snapshot= Column(SmallInteger, primary_key=True)
+    timestamp= Column(TIMESTAMP, primary_key=True)
+    status=Column(SmallInteger)
+
+    exc=Column(String)
+    header=Column(JSONB)
+    mime=Column(String)
+    size=Column(BigInteger)
+
+    referrer=Column( String)
+    disklocation=Column( String)
+    digest=Column( String)
+    contentchanged=Column( Integer)
+    domain=Column( String)
