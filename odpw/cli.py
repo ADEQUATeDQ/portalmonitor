@@ -25,6 +25,7 @@ import odpw.services.fetch_insert as fetch
 import odpw.services.resource_head as head
 import odpw.services.init_db as initdb
 import odpw.services.resource_head_scrapy as head_scrapy
+import odpw.services.addPortal as addPortal
 
 import sys  # import sys package, if not already imported
 reload(sys)
@@ -36,7 +37,8 @@ submodules=[
     initdb,
     ui,
     fetch,#fetchM,
-    head,head_scrapy
+    head,head_scrapy,
+    addPortal
   ]
 
 def config_logging():
