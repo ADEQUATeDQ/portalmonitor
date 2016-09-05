@@ -8,7 +8,9 @@ setup(
     version='0.1',
     packages = find_packages(),
     #package_data={'odpw':files},
-
+    #package_data={
+    #'static': 'odpw/web_rest/static/*',
+    #'templates': 'odpw/web_rest/templates/*'},
     include_package_data = True,
     url='',
     license='',
