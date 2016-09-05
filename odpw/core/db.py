@@ -17,7 +17,7 @@ from sqlalchemy.schema import (
     )
 from sqlalchemy.sql.ddl import DropConstraint
 
-from odpw.core.model import  Dataset, Base, tab_datasets, tab_resourcesinfo, ResourceInfo
+from odpw.core.model import  Dataset, Base, tab_datasets, tab_resourcesinfo, ResourceInfo, tab_resourcescrawllog
 
 log =structlog.get_logger()
 
@@ -234,6 +234,7 @@ class DBManager(object):
                           || ')) INHERITS ("""+tab_resourcesinfo+""")';
 
                         -- Indexes are defined per child, so we assign a default index that uses the partition columns
+                        EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_pkey') || ' PRIMARY KEY (uri, snapshot)';
                         EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_status') || ' ON '||quote_ident(_table_name) || ' (status)';
                         EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_uri') || ' ON '||quote_ident(_table_name) || ' (uri)';
                       END IF;
@@ -258,10 +259,59 @@ class DBManager(object):
                 FOR EACH ROW EXECUTE PROCEDURE resourcesinfo_insert_function();
                 """
             )
-            #event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
-            #event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
-            #event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_function)
-            #event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_trigger)
+
+
+            self.resourcescrawllog_insert_function = DDL(
+                """
+                CREATE OR REPLACE FUNCTION resourcescrawllog_insert_function()
+                RETURNS TRIGGER AS $$
+
+                DECLARE
+                    _snapshot smallint;
+                    _table_name text;
+
+                BEGIN
+                    _snapshot := NEW.snapshot;
+                    _table_name := '"""+tab_resourcescrawllog+"""_' || _snapshot;
+
+                    PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
+
+                      IF NOT FOUND THEN
+                        EXECUTE
+                          'CREATE TABLE '
+                          || quote_ident(_table_name)
+                          || ' (CHECK ("snapshot" = '
+                          || _snapshot::smallint
+                          || ')) INHERITS ("""+tab_resourcescrawllog+""")';
+
+                        -- Indexes are defined per child, so we assign a default index that uses the partition columns
+                        EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_pkey') || ' PRIMARY KEY (uri, snapshot, timestamp)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_status') || ' ON '||quote_ident(_table_name) || ' (status)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_uri') || ' ON '||quote_ident(_table_name) || ' (uri)';
+                        EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_domain') || ' ON '||quote_ident(_table_name) || ' (domain)';
+                      END IF;
+
+                      EXECUTE
+                        'INSERT INTO '
+                        || quote_ident(_table_name)
+                        || ' VALUES ($1.*)'
+                      USING NEW;
+
+
+
+                      RETURN NULL;
+                END;
+
+                $$ LANGUAGE plpgsql;
+                """)
+            self.resourcescrawllog_insert_trigger = DDL(
+                """
+                CREATE TRIGGER resourcescrawllog_insert_trigger
+                BEFORE INSERT ON """+tab_resourcescrawllog+"""
+                FOR EACH ROW EXECUTE PROCEDURE resourcescrawllog_insert_function();
+                """
+            )
+
 
 
 

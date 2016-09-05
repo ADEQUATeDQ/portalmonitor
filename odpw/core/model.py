@@ -289,7 +289,7 @@ class ResourceCrawlLog(Base):
     uri= Column(String, primary_key=True)
     snapshot= Column(SmallInteger, primary_key=True)
     timestamp= Column(TIMESTAMP, primary_key=True)
-    status=Column(SmallInteger)
+    status=Column(SmallInteger, index=True)
 
     exc=Column(String)
     header=Column(JSONB)
@@ -300,4 +300,4 @@ class ResourceCrawlLog(Base):
     disklocation=Column( String)
     digest=Column( String)
     contentchanged=Column( Integer)
-    domain=Column( String)
+    domain=Column( String, index=True)
