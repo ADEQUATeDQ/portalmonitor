@@ -29,3 +29,4 @@ networkx
 Flask
 Flask-Cache
 flask-restplus
+flexx
