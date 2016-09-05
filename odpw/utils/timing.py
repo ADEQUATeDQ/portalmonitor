@@ -1,3 +1,4 @@
+import sys
 from faststat.faststat import _sigfigs
 
 __author__ = 'jumbrich'
