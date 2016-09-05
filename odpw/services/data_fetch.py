@@ -196,9 +196,9 @@ class DataMonitorSpider( CrawlSpider ):
 
 
 def help():
-    return "Crawler"
+    return "Download all resources"
 def name():
-    return 'Crawler'
+    return 'DataFetch'
 
 def setupCLI(pa):
     pass

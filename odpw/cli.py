@@ -37,7 +37,7 @@ submodules=[
     initdb,
     ui,
     fetch,#fetchM,
-    head,head_scrapy,
+    head_scrapy,
     addPortal
   ]
 

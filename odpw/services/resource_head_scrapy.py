@@ -211,7 +211,7 @@ class HeadLookups( CrawlSpider ):
 def help():
     return "perform head lookups"
 def name():
-    return 'Head1'
+    return 'Head'
 
 def setupCLI(pa):
     pa.add_argument("-t","--threads",  help='Number of threads',  dest='threads', default=4,type=int)
