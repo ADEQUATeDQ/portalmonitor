@@ -26,6 +26,7 @@ import odpw.services.resource_head as head
 import odpw.services.init_db as initdb
 import odpw.services.resource_head_scrapy as head_scrapy
 import odpw.services.addPortal as addPortal
+import odpw.services.data_fetch as datafetch
 
 import sys  # import sys package, if not already imported
 reload(sys)
@@ -36,6 +37,7 @@ submodules=[
     restAPI,
     initdb,
     ui,
+    datafetch,
     fetch,#fetchM,
     head_scrapy,
     addPortal

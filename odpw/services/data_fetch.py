@@ -19,7 +19,7 @@ import structlog
 from odpw.core.api import DBClient
 from odpw.utils.error_handling import ErrorHandler
 from odpw.utils.helper_functions import extractMimeType
-from utils.utils_snapshot import getCurrentSnapshot
+from odpw.utils.utils_snapshot import getCurrentSnapshot
 
 log = structlog.get_logger()
 
@@ -81,14 +81,14 @@ class DataMonitorSpider( CrawlSpider ):
             'scrapy.downloadermiddlewares.chunked.ChunkedTransferMiddleware': 830,
             'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
             #'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
-            'odpw.new.core.head_middlewares.FileDownloader': 851,
-            'odpw.new.core.head_middlewares.ErrorHandling': 852,
+            'odpw.new.core.scrapy_middlewares.FileDownloader': 851,
+            'odpw.new.core.scrapy_middlewares.ErrorHandling': 852,
         },
         'DOWNLOAD_HANDLERS': {
             'file': None, 's3': None, 'ftp': None
         },
         'ITEM_PIPELINES': {
-            'odpw.new.core.head_middlewares.CrawlLogInserter': 300
+            'odpw.new.core.scrapy_middlewares.CrawlLogInserter': 300
         }
     }
 
