@@ -65,7 +65,7 @@ class DataMonitorSpider( CrawlSpider ):
         #'DOWNLOAD_DELAY'
 
         'DOWNLOADER_MIDDLEWARES_BASE':{
-            'odpw.new.core.head_middlewares.DownloadTimer': 0,
+            'odpw.core.scrapy_middlewares.DownloadTimer': 0,
             'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 100,
             #'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
             'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
