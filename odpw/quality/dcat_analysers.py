@@ -1,9 +1,7 @@
-from odpw.core import dcat_access
 from odpw.quality.conformance_dcat import *
 
 from odpw.quality.existence_dcat import *
 from odpw.utils.error_handling import ErrorHandler
-from odpw.quality import Analyser
 from odpw.quality.open_dcat_format import *
 from odpw.quality.open_dcat_license import LicenseOpennessDCATAnalyser
 

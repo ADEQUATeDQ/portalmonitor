@@ -41,7 +41,7 @@ class DataMonitorSpider( CrawlSpider ):
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(DataMonitorSpider, cls).from_crawler(crawler, *args, **kwargs)
-        crawler.signals.connect(spider.handle_spider_closed, signals.spider_closed)
+        #crawler.signals.connect(spider.handle_spider_closed, signals.spider_closed)
         return spider
 
     custom_settings = {
