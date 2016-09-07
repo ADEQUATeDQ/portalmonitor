@@ -1,7 +1,7 @@
 import structlog
 
 from odpw.core.model import ResourceInfo
-from utils.timer import Timer
+from odpw.utils.timer import Timer
 
 log =structlog.get_logger()
 

@@ -81,14 +81,14 @@ class DataMonitorSpider( CrawlSpider ):
             'scrapy.downloadermiddlewares.chunked.ChunkedTransferMiddleware': 830,
             'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
             #'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
-            'odpw.new.core.scrapy_middlewares.FileDownloader': 851,
-            'odpw.new.core.scrapy_middlewares.ErrorHandling': 852,
+            'odpw.core.scrapy_middlewares.FileDownloader': 851,
+            'odpw.core.scrapy_middlewares.ErrorHandling': 852,
         },
         'DOWNLOAD_HANDLERS': {
             'file': None, 's3': None, 'ftp': None
         },
         'ITEM_PIPELINES': {
-            'odpw.new.core.scrapy_middlewares.CrawlLogInserter': 300
+            'odpw.core.scrapy_middlewares.CrawlLogInserter': 300
         }
     }
 
