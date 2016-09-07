@@ -24,8 +24,6 @@ error_classes=[
     ,(twisted.internet.error.DNSLookupError,606)
     ,(twisted.internet.error.TCPTimedOutError,607)
     ,(twisted.internet.error.TimeoutError,608)
-    ,(twisted.web._newclient.ResponseFailed,609)
-    ,(twisted.web._newclient.ResponseNeverReceived,610)
     ]
 
 class ErrorHandling(object):

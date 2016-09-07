@@ -1,17 +1,16 @@
 import datetime
-import json
+
 import os
 from collections import defaultdict
 
 import scrapy
 import yaml
-from scrapy.exceptions import IgnoreRequest
+
 from urlparse import urlparse
 from scrapy.http.request import Request
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import CrawlSpider
-from scrapy.utils.project import get_project_settings
-from scrapy import signals
+
 
 
 import structlog
@@ -219,8 +218,8 @@ def cli(args, dbm):
     sn = getCurrentSnapshot()
     api = DBClient(dbm=dbm)
 
-    settings=get_project_settings()
-    crawler = CrawlerProcess(settings)
+    #settings=get_project_settings()
+    crawler = CrawlerProcess()
     #crawler.signals.connect(callback, signal=signals.spider_closed)
     crawler.crawl(DataMonitorSpider, api=api, datadir=datadir,snapshot=sn)
 
