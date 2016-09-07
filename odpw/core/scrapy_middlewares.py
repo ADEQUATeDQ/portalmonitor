@@ -176,7 +176,7 @@ class FileDownloader(object):
         log.info("FileLocation", uri=uri, disk=fileLocation)
         return fileLocation
 
-current_milli_time = lambda: int(round(datetime.time.time() * 1000))
+current_milli_time = lambda: int(round(datetime.time() * 1000))
 class DownloadTimer(object):
 
     def process_request(self, request, spider):
