@@ -127,7 +127,7 @@ class FileDownloader(object):
             #build new response
             request.meta['error']=None
 
-            if 'domain' not in request.meta['domain']:
+            if 'domain' not in request.meta:
                 domain=''
                 try:
                     parsed_uri = urlparse( response.url )

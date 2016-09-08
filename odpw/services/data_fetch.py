@@ -214,7 +214,7 @@ def cli(args, dbm):
     if datadir is None:
         log.error("No data dir specified in config", config=args.config)
         return
-
+    log.info("Init datadir", datadir=datadir)
     sn = getCurrentSnapshot()
     api = DBClient(dbm=dbm)
 
