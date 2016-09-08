@@ -130,7 +130,9 @@ class CKAN(PortalProcessor):
             p_count=0
             # TODO parameter:
             NOT_SUPPORTED_PENALITY = 100
+            TIMEOUT_PENALITY = 100
             not_supported_count = 0
+            timeout_counts = 0
             for entity in package_list:
                 #WAIT between two consecutive GET requests
 
@@ -154,7 +156,7 @@ class CKAN(PortalProcessor):
                                 extras_to_dict(data)
                                 props['data']=data
                         except Exception as e:
-                            ErrorHandler.handleError(log,'FetchDataset', exception=e,pid=Portal.id, did=entity,
+                            ErrorHandler.handleError(log,'c ', exception=e,pid=Portal.id, did=entity,
                                exc_info=True)
                             props['status']=getExceptionCode(e)
                             props['exception']=getExceptionString(e)
@@ -177,7 +179,11 @@ class CKAN(PortalProcessor):
                         
                         now = time.time()
                         if now-starttime>timeout:
-                            raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
+                            timeout_counts+=1
+
+                            if timeout_counts>TIMEOUT_PENALITY:
+                                log.warning("TimeoutErrorLimitExceeded", pid=Portal.id)
+                                raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
                         
                         if d.id not in processed_ids:
                             processed_ids.add(d.id)
@@ -185,7 +191,7 @@ class CKAN(PortalProcessor):
                             
             progressIndicator(p_count, tt, label=Portal.id+"_single",elapsed=time.time()-tstart)
         except Exception as e:
-            if len(processed_ids)==0:
+            if len(processed_ids)==0 or isinstance(e,TimeoutError):
                 raise e
 
 
