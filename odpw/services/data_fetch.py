@@ -44,7 +44,7 @@ class DataMonitorSpider( CrawlSpider ):
         return spider
 
     custom_settings = {
-        "BATCH_INSERT":100,
+        "BATCH_INSERT":1,
         #http://doc.scrapy.org/en/latest/topics/settings.html#std:setting-SPIDER_MIDDLEWARES
         'ROBOTSTXT_ENABLED':True,
         'ROBOTSTXT_OBEY':True,
@@ -122,6 +122,7 @@ class DataMonitorSpider( CrawlSpider ):
                               'handle_httpstatus_all': True
                               ,'domain':domain
                               ,'referrer'  : None
+                              ,'snapshot':self.snapshot
                           })
             self.crawler.stats.inc_value('seeds')
             c=+1

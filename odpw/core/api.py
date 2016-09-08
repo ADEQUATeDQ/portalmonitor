@@ -3,7 +3,7 @@ from sqlalchemy import func, exists
 from sqlalchemy.orm import scoped_session
 
 from odpw.core.db import row2dict
-from odpw.core.model import PortalSnapshotQuality
+from odpw.core.model import PortalSnapshotQuality, ResourceCrawlLog
 from odpw.utils.plots import qa
 
 from odpw.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
@@ -73,6 +73,15 @@ class DBClient(object):
     def datasetqualityExists(self, md5):
         with self.session_scope() as session:
             return session.query(DatasetQuality).filter_by(md5=md5).first()
+
+    def getContentLocation(self, uri=None, digest=None):
+        with self.session_scope() as session:
+            q= session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri==uri).filter(ResourceCrawlLog.digest==digest).first()
+            return q
+    def getLastDigest(self, uri):
+        with self.session_scope() as session:
+            q= session.query(ResourceCrawlLog.digest).filter(ResourceCrawlLog.uri==uri).filter(ResourceCrawlLog.status==200).order_by(ResourceCrawlLog.timestamp.desc()).first()
+            return q
 
     #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
     ### PORTALS
