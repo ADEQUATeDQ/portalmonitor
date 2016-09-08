@@ -4,6 +4,7 @@ import hashlib
 import os
 import time
 import urllib
+from urlparse import urlparse
 
 import structlog
 import sys
@@ -126,6 +127,14 @@ class FileDownloader(object):
             #build new response
             request.meta['error']=None
 
+            if 'domain' not in request.meta['domain']:
+                domain=''
+                try:
+                    parsed_uri = urlparse( response.url )
+                    domain = '{uri.netloc}'.format(uri=parsed_uri)
+                except:
+                    domain='error'
+                request.meta['domain']=domain
             #create folder and file
             domain=request.meta['domain']
 

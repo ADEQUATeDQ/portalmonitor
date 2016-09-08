@@ -295,6 +295,7 @@ class ResourceCrawlLog(Base):
     header=Column(JSONB)
     mime=Column(String)
     size=Column(BigInteger)
+    crawltime=Column(BigInteger)
 
     referrer=Column( String)
     disklocation=Column( String)
