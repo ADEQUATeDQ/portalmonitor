@@ -335,7 +335,7 @@ def qualityChart(df):
 
 
     g1_hover = HoverTool(renderers=[g_r1],
-                         tooltips=[('value', '@value'), ('Metric', '@label'),('Dimension', '@Dimension'),('Percentage', '@perc')])
+                         tooltips=[('quality value', '@value'), ('Metric', '@label'),('Dimension', '@Dimension'),('Percentage of datasets', '@perc')])
     p.add_tools(g1_hover)
     #Mrtrics labels
     labels = np.array([c / 100.0 for c in range(0, 110, 10)]) #

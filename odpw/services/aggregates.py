@@ -63,15 +63,22 @@ def aggregatePortalQuality(db, portalid, snapshot):
     data={}
     with Timer(key=portalid+'-mean', verbose=True):
         if df.shape[0] != 0:
-            for c in boolTypeCol:
-                df[c]=df[c].apply(bool)
+
+            for i in boolTypeCol:
+                if isinstance(df[i].dtype, bool):
+                    df[i]=df[i].apply(bool).astype(int)
+                else:
+                    df[i]=df[i].replace(True,1)
+                    df[i]=df[i].replace(False,0)
+                #df[c]=df[c].apply(bool).astype(int)
 
             data={ k:float(str(v[['mean']]['mean'].round(decimals=2))) for k,v  in dict(df.describe()).items()}
             data.update({ k+'N':int(v[['count']]['count']) for k,v  in dict(df.describe()).items()})
 
     data['datasets']=df.shape[0]
     PSQ= PortalSnapshotQuality(portalid=portalid, snapshot=snapshot, **data)
-    db.add(PSQ)
+    #db.add(PSQ)
+    return PSQ
 
 def aggregate(db, snapshot):
     for portalid in  db.Session.query(Dataset.portalid).distinct():
