@@ -39,35 +39,66 @@ ui.add_app_template_filter(get_domain)
 ui.add_app_template_filter(getWeekString)
 
 
+##-----------Helper Functions -----------##
+
+def render(templateName, data=None,**kwargs):
+
+    """
+    FLask Jinja rendering function
+    :param templateName: jinja template name
+    :param data: json data for the template
+    :return: html
+    """
+
+    portalCount=getPortalCount()
+    print portalCount
+    print kwargs
+    if data is None:
+        data={}
+    print data
+    data['portalCount']=portalCount
+    print "##",data
+    with Timer(key="renderHTML", verbose=True) as t:
+        return render_template(templateName, data=data,**kwargs)
+
+
+@cache.cached(timeout=300,key_prefix='getPortalCount')
+def getPortalCount():
+
+    with Timer(key="getPortalCount", verbose=True):
+        return current_app.config['dbsession'].query(Portal.id).count()
+
+
+
 @ui.route('/', methods=['GET'])
 def index():
-    return render_template('index.jinja')
+    return render('index.jinja')
 
 @ui.route('/about', methods=['GET'])
 def about():
-    return render_template('about.jinja')
+    return render('about.jinja')
 
 @ui.route('/quality', methods=['GET'])
 def qualitymetrics():
-    return render_template('quality_metrics.jinja',qa=qa)
+    return render('quality_metrics.jinja',qa=qa)
 
 @ui.route('/spec', methods=['GET'])
 def spec():
-    return render_template('spec.json', host="localhost:5122/", basePath="api")
+    return render('spec.json', data={'host':"localhost:5123/", 'basePath':"api"})
 
 @ui.route('/api', methods=['GET'])
 def api():
-    return render_template('apiui.jinja')
+    return render('apiui.jinja')
 
 @ui.route('/timer', methods=['GET'])
 def timer():
     print Timer.getStats()
-    return render_template('timer.jinja', stats=Timer.getStats())
+    return render('timer.jinja', data={'stats':Timer.getStats()})
 
 @ui.route('/system', methods=['GET'])
 def system():
     with Timer(key="system" , verbose=True):
-        return render_template("odpw_system_info.jinja")
+        return render("odpw_system_info.jinja")
 
 @ui.route('/system/changes', methods=['GET'])
 def systemchanges():
@@ -94,7 +125,7 @@ def systemchanges():
         data['from']=prevWeek
         data['to']=cursn
 
-        return render_template("odpw_system_changes.jinja", data=data)
+        return render("odpw_system_changes.jinja", data=data)
 
 @ui.route('/system/fetch', methods=['GET'])
 def systemfetch():
@@ -134,7 +165,7 @@ def systemfetch():
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        return render_template("odpw_system_fetch.jinja",
+        return render("odpw_system_fetch.jinja",
             plot_script=script,
             plot_div=div,
             js_resources=js_resources,
@@ -162,7 +193,7 @@ def systemevolv():
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        return render_template("odpw_system_evolution.jinja",
+        return render("odpw_system_evolution.jinja",
             plot_script=script,
             plot_div=div,
             js_resources=js_resources,
@@ -174,8 +205,9 @@ def systemevolv():
 ### PORTAL
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 
-@cache.cached(timeout=300)
+@cache.cached(timeout=300, key_prefix='getPortalsInfo')
 def getPortalsInfo():
+
 
     with Timer(key="getPortalsInfo", verbose=True):
         ps=[]
@@ -200,14 +232,14 @@ def getPortalsInfo():
 def portalslist():
     with Timer(key="portalslist", verbose=True):
         ps=getPortalsInfo()
-        return render_template('odpw_portals.jinja', data=ps)
+        return render('odpw_portals.jinja', data={'portals':ps})
 
 @ui.route('/portalstable', methods=['GET'])
 #@cache.cached(timeout=300)
 def portalstable():
     with Timer(key="portalstable", verbose=True):
         ps=getPortalsInfo()
-        return render_template('odpw_portals_table.jinja', data=ps)
+        return render('odpw_portals_table.jinja', data={'portals':ps})
 
 
 @ui.route('/portals/portalsquality', methods=['GET'])
@@ -217,12 +249,17 @@ def portalsquality():
         Session=current_app.config['dbsession']
 
         snapshot=getPreviousWeek(getSnapshotfromTime(datetime.datetime.now()))
+        snapshot=getSnapshotfromTime(datetime.datetime.now())
+
         results=[row2dict(r) for r in Session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
         keys=[ i.lower() for q in qa for i in q['metrics'] ]
         df=pd.DataFrame(results)
 
+        print df
         for c in keys:
+            print c,df[c]
+            print '___'*10
             df[c]=df[c].convert_objects(convert_numeric=True)
 
         dfiso= df.groupby(['iso'])
@@ -235,7 +272,7 @@ def portalsquality():
              .join(pd.DataFrame(dfsoft.size(),columns=['count']))
         resultSoft= dfsoft.reset_index().to_dict(orient='records')
 
-        return render_template('odpw_portals_quality.jinja', data={'portals':results,'iso':resultsIso,'soft':resultSoft}, keys=keys, snapshot=snapshot)
+        return render('odpw_portals_quality.jinja', data={'portals':results,'iso':resultsIso,'soft':resultSoft}, keys=keys, snapshot=snapshot)
 
 @ui.route('/portals/portalsstats', methods=['GET'])
 #@cache.cached(timeout=300)
@@ -253,7 +290,7 @@ def portalssize():
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        return render_template("odpw_portals_stats.jinja",
+        return render("odpw_portals_stats.jinja",
             plot_script=script,
             plot_div=div,
             js_resources=js_resources,
@@ -283,7 +320,7 @@ def portaldash():
         cursn=getSnapshotfromTime(datetime.datetime.now())
         Session=current_app.config['dbsession']
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
-        return render_template("odpw_portaldash.jinja",  data=data, snapshot=cursn)
+        return render("odpw_portaldash.jinja",  data=data, snapshot=cursn)
 
 
 def getResourceInfo(session, portalid, snapshot):
@@ -322,7 +359,7 @@ def portal(snapshot, portalid):
         data.update(aggregatePortalInfo(Session,portalid,snapshot))
 
 
-        return render_template("odpw_portal.jinja",  snapshot=snapshot, portalid=portalid,data=data)
+        return render("odpw_portal.jinja",  snapshot=snapshot, portalid=portalid,data=data)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/resources', methods=['GET'])
@@ -342,7 +379,7 @@ def portalRes(snapshot, portalid):
             for P in r:
                 data['resources']=P[0]
 
-        return render_template("odpw_portal_resources.jinja", data=data, snapshot=snapshot, portalid=portalid)
+        return render("odpw_portal_resources.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 
 
@@ -365,7 +402,7 @@ def portalEvolution(snapshot, portalid):
 
         data = getPortalInfos(Session,portalid,snapshot)
 
-        return render_template("odpw_portal_evolution.jinja",
+        return render("odpw_portal_evolution.jinja",
             plot_script=script
             ,plot_div=div
             ,js_resources=js_resources
@@ -385,7 +422,7 @@ def portalFormats(snapshot, portalid):
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
         data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
-        return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
+        return render("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dist/licenses', methods=['GET'])
 def portalLicenses(snapshot, portalid):
@@ -395,7 +432,7 @@ def portalLicenses(snapshot, portalid):
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
         data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
-        return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
+        return render("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dist/organisations', methods=['GET'])
@@ -406,7 +443,7 @@ def portalOrganisations(snapshot, portalid):
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
         data.update(aggregatePortalInfo(Session,portalid,snapshot, limit=None))
 
-        return render_template("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
+        return render("odpw_portal_dist.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 def getPortalDatasets(Session, portalid,snapshot):
     with Timer(key="getPortalDatasets",verbose=True):
@@ -449,7 +486,7 @@ def portalDataset(snapshot, portalid, dataset):
             data['versions']=[row2dict(r) for r in q.all()]
             print data['versions']
 
-        return render_template("odpw_portal_dataset.jinja", data=data, snapshot=snapshot, portalid=portalid, dataset=dd, qa=qa, error=errorStatus)
+        return render("odpw_portal_dataset.jinja", data=data, snapshot=snapshot, portalid=portalid, dataset=dd, qa=qa, error=errorStatus)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/quality', methods=['GET'])
@@ -470,7 +507,7 @@ def portalQuality(snapshot, portalid):
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
         data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
-        return render_template("odpw_portal_quality.jinja",
+        return render("odpw_portal_quality.jinja",
             plot_script=script
             ,plot_div=div
             ,js_resources=js_resources

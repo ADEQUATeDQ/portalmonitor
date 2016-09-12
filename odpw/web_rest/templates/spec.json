@@ -5,11 +5,11 @@
         "description": "Open Data Portal Watch API",
         "version": "1.0.0"
     },
-    "host": "{{host}}",
+    "host": "{{data.host}}",
     "schemes": [
         "http"
     ],
-    "basePath": "{{basePath}}",
+    "basePath": "{{data.basePath}}",
     "paths": {
         "/portals": {
             "get": {

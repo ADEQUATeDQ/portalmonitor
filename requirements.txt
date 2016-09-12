@@ -27,6 +27,6 @@ reppy
 dictdiffer
 networkx
 Flask
-Flask-Cache
+Flask-Caching
 flask-restplus
 flexx

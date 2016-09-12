@@ -4,8 +4,8 @@ from odpw.services.aggregates import aggregatePortalQuality
 from utils.plots import qualityChart
 
 if __name__ == '__main__':
-    #dbm=DBManager(user='adequatecli', password='4dequat3', host='localhost', port=5433, db='adequate')
-    dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
+    dbm=DBManager(user='adequatecli', password='4dequat3', host='localhost', port=5433, db='adequate')
+    #dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
 
     #dbm= DBManager(user='opwu', password='0pwu', host='datamonitor-data.ai.wu.ac.at', port=5432, db='portalwatch')
     db= DBClient(dbm)
@@ -14,9 +14,9 @@ if __name__ == '__main__':
 
 
 
-    portalid='www_opendataportal_at'
+    portalid='data_gv_at'
 
-    #PSQ= aggregatePortalQuality(db, portalid,snapshot)
+    PSQ= aggregatePortalQuality(db, portalid,snapshot)
     #print PSQ.exac
 
     q=db.portalSnapshotQuality(portalid,snapshot)

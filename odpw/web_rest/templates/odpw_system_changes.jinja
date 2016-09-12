@@ -56,17 +56,24 @@
     <div class="ui  centered container">
         <h2>{{data.ds_change|length + data.res_change|length + data.status_change|length}} Portals with changes </h2>
     </div>
-    <div class="ui  centered container">
-        {{ table(data.status_change, 'Status changes', false, data.to, data.from)}}
-    </div>
-<br>
-    <div class="ui   container">
-        {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from)}}
+    {% if data.status_change| length >0 %}
+        <div class="ui  centered container">
+            {{ table(data.status_change, 'Status changes', false, data.to, data.from)}}
         </div>
-    </div>
+    {% endif %}
     <br>
-    <div class="ui   container">    {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
-    </div>
+    {% if data.ds_change| length >0 %}
+        <div class="ui   container">
+            {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from)}}
+            </div>
+        </div>
+    {% endif %}
+    <br>
+    {% if data.res_change| length >0 %}
+        <div class="ui   container">
+            {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
+        </div>
+    {% endif %}
 
 {% endblock %}
 

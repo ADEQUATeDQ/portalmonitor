@@ -65,11 +65,14 @@ def aggregatePortalQuality(db, portalid, snapshot):
         if df.shape[0] != 0:
 
             for i in boolTypeCol:
-                if isinstance(df[i].dtype, bool):
-                    df[i]=df[i].apply(bool).astype(int)
+                print i, df[i].dtype
+                print df[i]
+                if df[i].dtype.name == 'bool':
+                    df[i]=df[i].astype(int)
                 else:
                     df[i]=df[i].replace(True,1)
                     df[i]=df[i].replace(False,0)
+                print df[i]
                 #df[c]=df[c].apply(bool).astype(int)
 
             data={ k:float(str(v[['mean']]['mean'].round(decimals=2))) for k,v  in dict(df.describe()).items()}
@@ -77,7 +80,7 @@ def aggregatePortalQuality(db, portalid, snapshot):
 
     data['datasets']=df.shape[0]
     PSQ= PortalSnapshotQuality(portalid=portalid, snapshot=snapshot, **data)
-    #db.add(PSQ)
+    db.add(PSQ)
     return PSQ
 
 def aggregate(db, snapshot):

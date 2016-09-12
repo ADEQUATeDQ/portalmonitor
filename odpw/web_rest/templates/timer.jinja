@@ -14,7 +14,7 @@
 
 
 {% block content %}
-    <div class="ui grid">
+    <div class="ui grid one column centered">
         <h2>Performance stats</h2>
 
         <table class="ui celled table" id="timingStats" cellspacing="0" width="100%">
@@ -43,7 +43,7 @@
                 </tr>
             </tfoot>
             <tbody>
-            {% for m,s in stats.iteritems() %}
+            {% for m,s in data.stats.iteritems() %}
                 <tr>
                     <td>{{m}}</td>
                     <td>{{s.calls}}</td>

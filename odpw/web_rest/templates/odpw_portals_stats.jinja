@@ -3,7 +3,7 @@
 {% set active_sub_page="ui.portalssize" %}
 
 {% block title %}
-<h3>Portals dataset and resource distribution</h3>
+<h3>Portals dataset and resource distribution for week {{snapshot| getWeekString}}</h3>
 {% endblock %}
 
 
@@ -17,6 +17,7 @@
 
 
 {% block portalscontent %}
+<h4>Scatter plot of no. of datasets vs no. of resources</h4>
     <div class="ui grid container">
         <div class=" row">
             <div class="thirteen wide   column">

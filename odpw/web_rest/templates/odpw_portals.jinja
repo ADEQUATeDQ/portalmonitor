@@ -67,7 +67,7 @@
     <div class="ui form ">
         <div class=" fields">
             <h2 class="two wide field">
-                <span id="pCount" class="floated right">{{data|length}} Portals</span>
+                <span id="pCount" class="floated white right">{{data.portals|length}} Portals</span>
             </h2>
             <div class="six wide field">
                 <div class="ui icon input">
@@ -90,7 +90,7 @@
 
 <div class="sixteen wide column ">
     <div class="ui three column padded grid cards" id="example1">
-        {% for p in data %}
+        {% for p in data.portals %}
             {{portalCard(p)}}
         {% endfor %}
     </div>
