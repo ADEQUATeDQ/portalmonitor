@@ -31,7 +31,7 @@ def fetchHttp(obj):
     log.info("HTTPInsert", portalid=P.id, snapshot=snapshot)
 
     dbm = DBManager(**dbConf)
-    db= DBClient(dbm)
+    db = DBClient(dbm)
 
     with Timer(key='InsertPortal', verbose=True):
         PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
@@ -39,8 +39,7 @@ def fetchHttp(obj):
         db.add(PS)
         try:
             processor=getPortalProcessor(P)
-
-            iter=processor.generateFetchDatasetIter(P, snapshot)
+            iter=processor.generateFetchDatasetIter(P,PS, snapshot)
             insertDatasets(P,db,iter,snapshot)
             status=200
             exc=None
@@ -49,11 +48,11 @@ def fetchHttp(obj):
             status=getExceptionCode(exc)
             exc=getExceptionString(exc)
 
-
         #update the portalsnapshot object with dataset and resource count and end time
         s = db.Session
         PS = s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
-        PS.datasetCount = s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+        PS.datasetsFetched = s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+        PS.datasetCount=PortalSnapshot.datasetCount
         PS.resourceCount =s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
         PS.end = datetime.datetime.now()
         PS.exc=exc
@@ -66,8 +65,6 @@ def fetchHttp(obj):
             aggregatePortalQuality(db,P.id, snapshot)
         except Exception as exc:
             ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
-
-
 
     return (P, snapshot)
 
