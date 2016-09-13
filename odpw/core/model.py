@@ -112,6 +112,7 @@ class PortalSnapshot(Base):
     status      = Column(SmallInteger)
     exc         = Column(String)
     datasetCount    = Column(Integer)
+    datasetsFetched    = Column(Integer)
     resourceCount   = Column(Integer)
 
     @hybrid_property

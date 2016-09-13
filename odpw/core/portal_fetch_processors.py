@@ -31,7 +31,7 @@ def getPortalProcessor(P):
         raise NotImplementedError(P.software + ' is not implemented')
 
 class PortalProcessor:
-    def generateFetchDatasetIter(self, Portal, sn):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn):
         raise NotImplementedError("Should have implemented this")
 
 class CKAN(PortalProcessor):
@@ -42,8 +42,6 @@ class CKAN(PortalProcessor):
             return attempt*attempt*5
 
     def _get_datasets(self, api, timeout_attempts, rows, start, portal_id):
-        #using timeout_attempts attempts
-
         for attempt in xrange(timeout_attempts):
             time.sleep(self._waiting_time(attempt))
             try:
@@ -58,7 +56,7 @@ class CKAN(PortalProcessor):
                     raise e
         raise e
 
-    def generateFetchDatasetIter(self, Portal, sn, timeout_attempts=5, timeout=24*60*60):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn, timeout_attempts=5, timeout=24*60*60):
         starttime=time.time()
         api = ckanapi.RemoteCKAN(Portal.apiuri, get_only=True)
         start=0
@@ -74,6 +72,7 @@ class CKAN(PortalProcessor):
         try:
             response = api.action.package_search(rows=0)
             total = response["count"]
+            PortalSnapshot.datasetCount=total
             p_steps=total/10
             if p_steps ==0:
                 p_steps=1
@@ -109,12 +108,12 @@ class CKAN(PortalProcessor):
 
                         except Exception as e:
                             ErrorHandler.handleError(log,"CKANDSFetchDatasetBatchError", pid=Portal.id, did=datasetID, exception=e, exc_info=True)
-
                     rows = min([int(rows*1.2),1000])
                 else:
                     break
             progressIndicator(p_count, total, label=Portal.id+"_batch",elapsed=time.time()-tstart)
         except TimeoutError as e:
+
             raise e
         except Exception as e:
             ErrorHandler.handleError(log,"CKANDSFetchBatchError", pid=Portal.id, exception=e, exc_info=True)
@@ -124,6 +123,7 @@ class CKAN(PortalProcessor):
                 log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
             #len(package_list)
             tt=len(package_list)
+            PortalSnapshot.datasetCount=tt
             p_steps=tt/100
             if p_steps == 0:
                 p_steps=1
@@ -194,9 +194,8 @@ class CKAN(PortalProcessor):
             if len(processed_ids)==0 or isinstance(e,TimeoutError):
                 raise e
 
-
 class Socrata(PortalProcessor):
-    def generateFetchDatasetIter(self, Portal, sn, dcat=True):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn, dcat=True):
         api = urlparse.urljoin(Portal.uri, '/api/')
         page = 1
         processed=set([])
@@ -235,7 +234,6 @@ class Socrata(PortalProcessor):
                         log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
                     yield d
             page += 1
-
     def _dcat(self, id, api):
         url = urlparse.urljoin(api, 'dcat.rdf/' + id)
         resp = requests.get(url, verify=False)
@@ -244,10 +242,8 @@ class Socrata(PortalProcessor):
             return resp.text
         return None
 
-
-
 class OpenDataSoft(PortalProcessor):
-    def generateFetchDatasetIter(self, Portal, sn):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn):
         start=0
         rows=1000000
         processed=set([])
@@ -276,7 +272,6 @@ class OpenDataSoft(PortalProcessor):
                         yield d
             else:
                 break
-
 
 def getPackageList(apiurl):
     """ Try api 3 and api 2 to get the full package list"""
@@ -325,17 +320,7 @@ def getPackageList(apiurl):
             raise ex
     return package_list, status
 
-
 def getPackage(apiurl, id):
-    #ex =None
-    #package = None
-    #try:
-    #    package = api.action.package_show(id=id)
-    #    return package, 200
-    #except Exception as e:
-    #    ex = e
-
-    #ex1=None
     try:
         url = urlparse.urljoin(apiurl, "api/2/rest/dataset/" + id)
         resp = requests.get(url, verify=False)
@@ -347,14 +332,6 @@ def getPackage(apiurl, id):
     except Exception as ex:
         ErrorHandler.handleError(log, "getPackageList", exception=ex, exc_info=True, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
         raise ex
-
-    #we have no package
-    #if ex and ex1:
-    #    ErrorHandler.handleError(log, "getPackageList", exception=ex1, exc_info=True, api=api, id=id, apiurl=apiurl, excShowtype=type(ex), excShowmsg=ex.message)
-    #    raise ex1
-    #else:
-    #    return package
-
 
 class Model(object):
 
@@ -374,7 +351,6 @@ class Model(object):
         return self.__hash
 
 class Dataset(Model):
-
 
     def __init__(self, snapshot, portalID, did, data=None, **kwargs):
         super(Dataset,self).__init__(**{'snapshot':snapshot,'portal_id':portalID,'id':did})
