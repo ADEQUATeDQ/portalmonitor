@@ -96,6 +96,7 @@ class HeadLookups( CrawlSpider ):
         stats=defaultdict(int)
 
         c=0
+        d=0
         for u in uris:
             if u not in self.seen:
                 self.seen.add(u)
@@ -110,11 +111,12 @@ class HeadLookups( CrawlSpider ):
 
                     c+=1
                 except:
-                    pass
+                    continue
             else:
+                d+=1
                 log.info("Already scheduled or crawled", uri=u)
 
-        log.info("Scheduled", uris=len(uris), added=c, stats=stats)
+        log.info("Scheduled", uris=len(uris), added=c, seen=d)
 
     def spider_idle(self, spider):
         try:
@@ -134,6 +136,8 @@ class HeadLookups( CrawlSpider ):
         q=self.db.getUnfetchedResources(self.snapshot, batch=self.batch)
         uris= [ uri[0] for uri in q ]
         stats=defaultdict(int)
+        c=0
+        d=0
         for u in uris:
             if u not in self.seen:
                 self.seen.add(u)
@@ -149,12 +153,14 @@ class HeadLookups( CrawlSpider ):
                           # errback=self.error,
                           dont_filter=True,
                           meta={'handle_httpstatus_list': self.http_code_range})
+                    c+=1
                 except:
-                    pass
+                    continue
             else:
+                d+=1
                 log.info("Already scheduled or crawled", uri=u)
 
-        log.info("InitScheduled", uris=len(uris), stats=stats)
+        log.info("InitScheduled", uris=len(uris), seen=d, added=c)
     def parse(self,response):
         if response.status==400:
             #400 Method not supported -> HTTP HEAD
@@ -193,7 +199,7 @@ class HeadLookups( CrawlSpider ):
                 r['header']['redirect_urls']=response.request.meta.get('redirect_urls')
 
         except Exception as e:
-            ErrorHandler.handleError(log, 'parse',exception=e)
+            ErrorHandler.handleError(log, 'parse', exception=e)
 
 
         self.count+=1

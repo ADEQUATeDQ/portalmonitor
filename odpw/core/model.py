@@ -249,8 +249,8 @@ class DatasetQuality(Base):
 class MetaResource(Base):
     __tablename__ = tab_resources
 
-    uri = Column(String, primary_key=True)
-    md5 = Column(String,ForeignKey(DatasetData.md5), primary_key=True )
+    uri = Column(String, primary_key=True, index=True)
+    md5 = Column(String,ForeignKey(DatasetData.md5), primary_key=True,index=True )
     valid = Column(Boolean)
     format = Column(String)
     media = Column(String)
