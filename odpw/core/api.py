@@ -141,7 +141,8 @@ class DBClient(object):
             q= session.query(ResourceInfo.status,func.count())\
                 .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
                 .join(Dataset,Dataset.md5==MetaResource.md5)\
-                .filter(Dataset.snapshot==snapshot)
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(ResourceInfo.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
 
@@ -240,7 +241,7 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
-                    ~exists().where(MetaResource.uri== ResourceInfo.uri))
+                    ~exists().where(MetaResource.uri== ResourceInfo.uri).where(ResourceInfo.snapshot==snapshot))
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
             if batch:

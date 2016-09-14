@@ -50,6 +50,7 @@ class ResourceInfoInserter(object):
     def __init__(self, batch):
         self.items=[]
         self.batch=batch
+        self.inserted=0
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -84,8 +85,8 @@ class ResourceInfoInserter(object):
             RI=ResourceInfo(**r)
 
             spider.db.add(RI)
-            log.info("HEAD RESPONSE", uri=RI.uri, status=RI.status, exc=RI.exc)
-
+            self.inserted+=1
+            log.info("HEAD RESPONSE", uri=RI.uri, status=RI.status, exc=RI.exc,inserted=self.inserted)
 
         except Exception as e:
             ErrorHandler.handleError(log, 'process_item',exception=e)
