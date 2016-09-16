@@ -17,7 +17,7 @@ def readDBConfFromFile(config):
                 dbConf.update(config['db'])
             if config is None:
                 log.error("Cannot load config file")
-    log.info("DBConfig", conf=dbConf)
+    #log.info("DBConfig", conf=dbConf)
     return dbConf
 
 

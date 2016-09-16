@@ -34,6 +34,8 @@ tab_resourcescrawllog=tmp+'resourcescrawllog'
 tab_organisations=tmp+'organisations'
 tab_organisationssnapshot=tmp+'organisationsnapshot'
 
+tab_resourceshistory=tmp+'resourceshistory'
+
 class Portal(Base):
     __tablename__ = tab_portals
 
@@ -303,3 +305,13 @@ class ResourceCrawlLog(Base):
     digest=Column( String)
     contentchanged=Column( Integer)
     domain=Column( String, index=True)
+
+
+
+class ResourceHistory(Base):
+    __tablename__ = tab_resourceshistory
+
+    uri= Column(String, primary_key=True)
+    snapshot= Column(SmallInteger, primary_key=True)
+    modified= Column(TIMESTAMP)
+    source=Column(String, primary_key=True)

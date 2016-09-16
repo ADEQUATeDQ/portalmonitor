@@ -3,7 +3,7 @@ from sqlalchemy import func, exists
 from sqlalchemy.orm import scoped_session
 
 from odpw.core.db import row2dict
-from odpw.core.model import PortalSnapshotQuality, ResourceCrawlLog
+from odpw.core.model import PortalSnapshotQuality, ResourceCrawlLog, ResourceHistory
 from odpw.utils.plots import qa
 
 from odpw.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
@@ -260,6 +260,22 @@ class DBClient(object):
             return q
 
 
+    def getMetaResource(self, snapshot, portalid=None):
+        with self.session_scope() as session:
+            q= session.query(MetaResource)\
+                .join(Dataset, Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            return q
+
+    def getResourceInfoByURI(self, uri, snapshot):
+        with self.session_scope() as session:
+            q= session.query(ResourceInfo)\
+                .filter(ResourceInfo.uri==uri)\
+                .filter(ResourceInfo.snapshot==snapshot)
+            return q
+
     def portalSnapshotQualityDF(self, portalid, snapshot):
 
         q= self.portalSnapshotQuality(portalid,snapshot)
@@ -281,6 +297,14 @@ class DBClient(object):
                 d.append(c)
         return pd.DataFrame(d)
 
+    def getResourcesHistory(self, uri, source=None):
+        with self.session_scope() as session:
+            q= session.query(ResourceHistory)\
+                .filter(ResourceHistory.uri==uri)
+            if source:
+                q=q.filter(ResourceHistory.source==source)
+            q=q.order_by(ResourceHistory.snapshot.asc())
+            return q
 
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 ### PORTAL
