@@ -38,7 +38,8 @@ class HeadLookups( CrawlSpider ):
         self.batch=kwargs['batch']
         dispatcher.connect(self.spider_idle, signals.spider_idle)
         self.count=0
-        self.seen=set([])
+        self.seen=kwargs['seen']
+
 
         #print self.db, self.snapshot
         self.http_code_range=range(200,220)+range( 400, 427 ) + range( 500, 511 )+ range( 600, 620 )+ range( 700, 720 )+ range( 800, 820 )+ range( 900, 920 )
@@ -204,7 +205,7 @@ class HeadLookups( CrawlSpider ):
 
         self.count+=1
         if self.count%(self.batch/10)==0:
-            log.info("Processed another", count=self.count, batch=self.batch, scheduled=len(self.crawler.engine.slot.scheduler), inProgress=len(self.crawler.engine.slot.inprogress))
+            log.info("Crawl status", seen=len(self.seen), count=self.count, batch=self.batch, scheduled=len(self.crawler.engine.slot.scheduler), inProgress=len(self.crawler.engine.slot.inprogress))
 
         if self.count  > (self.batch/2):
             try:
@@ -232,6 +233,7 @@ def cli(args, dbm):
     settings=get_project_settings()
     crawler = CrawlerProcess(settings)
 
-    crawler.crawl(HeadLookups,snapshot=sn, db=db, batch=args.batch)
+    seen=set([])
+    crawler.crawl(HeadLookups,snapshot=sn, db=db, batch=args.batch, seen=seen)
 
     crawler.start()
