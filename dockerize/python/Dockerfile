@@ -95,8 +95,8 @@ RUN set -ex \
 	&& apk del .build-deps \
 	&& rm -rf /usr/src/python ~/.cache
 
-RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-RUN apk --update add --no-cache \
+#RUN echo "http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk --update add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     lapack-dev \
     gcc \
     freetype-dev
