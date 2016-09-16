@@ -31,3 +31,4 @@ Flask-Caching
 flask-restplus
 flexx
 isoweek
+statsmodel
