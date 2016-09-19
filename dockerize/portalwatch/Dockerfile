@@ -1,4 +1,4 @@
-from alpine-python:latest
+from odpw_python:latest
 
 # This just creates the folder in the Docker image at the
 # install path we defined above.
