@@ -26,8 +26,8 @@ geomet
 reppy
 dictdiffer
 networkx
-Flask
-Flask-Caching
+flask
+flask-Caching
 flask-restplus
 flexx
 isoweek
