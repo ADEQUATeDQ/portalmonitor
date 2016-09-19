@@ -101,7 +101,7 @@ RUN set -ex \
 #    gcc \
 #    freetype-dev
 
-ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base py-scipy py-scipy-dev bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
+ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
 RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
   && apk add --update --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ $PKGS \
   && pip install --upgrade pip \
@@ -117,3 +117,40 @@ RUN cd /usr/bin \
   && ln -sf pip2.7 pip
 
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
+
+RUN echo @testing http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories \
+    && apk add --update --no-cache \
+        curl \
+        g++ \
+        pkgconfig \
+        freetype-dev \
+        py-numpy-dev@testing \
+        ca-certificates \
+    && update-ca-certificates \
+    && pip install --no-cache-dir setuptools numpy matplotlib scipy \
+    && find /usr/local -depth \
+        \( \
+            \( -type d -a -name test -o -name tests \) \
+            -o \
+            \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
+        \) -exec rm -rf '{}' + \
+    && apk add --virtual .python-deps \
+        python \
+        py-numpy \
+        freetype \
+        libpng \
+    && apk del \
+        curl \
+        g++ \
+        gcc \
+        pkgconfig \
+        libc-dev \
+        ncurses-dev \
+        openssl-dev \
+        zlib-dev \
+        libpng-dev \
+        freetype-dev \
+        python-dev \
+        cython-dev \
+        py-numpy-dev \
+    && rm -rf /usr/src/python ~/.cache
