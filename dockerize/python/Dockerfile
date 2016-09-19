@@ -1,26 +1,3 @@
-docker logo
-Dashboard
-Explore
-Organizations
-
-Create
- Create Repository
- Create Automated Build
- Create Organization
-jueumb
-My Profile
-Documentation
-Help
-Settings
-Log out
-PUBLIC | AUTOMATED BUILD
-bamx23/scipy-alpine
-Last pushed: 2 months ago
-Repo Info
-Tags
-Dockerfile
-Build Details
-Dockerfile
 FROM alpine:3.4
 
 ENV LANG C.UTF-8
