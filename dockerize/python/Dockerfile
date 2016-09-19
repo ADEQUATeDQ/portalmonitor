@@ -90,6 +90,15 @@ RUN set -ex \
 	&& apk del .build-deps \
 	&& rm -rf /usr/src/python ~/.cache
 
+
+
+ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
+RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
+  && apk add --update --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ $PKGS \
+  && pip install --upgrade pip \
+  && rm /var/cache/apk/*
+  #&& apk del --purge *-dev build-base \
+  #&& rm -rf /tmp/* /var/cache/apk/* /root/.cache/*
 COPY libs/* /tmp/
 # Build BLAS and LAPACK
 RUN source /tmp/blas.sh
@@ -112,14 +121,6 @@ RUN rm -rf /tmp/*
 
 # Remove all the extra build stuff
 RUN apk del build-base "*-dev"
-
-ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
-RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
-  && apk add --update --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ $PKGS \
-  && pip install --upgrade pip \
-  && rm /var/cache/apk/*
-  #&& apk del --purge *-dev build-base \
-  #&& rm -rf /tmp/* /var/cache/apk/* /root/.cache/*
 
 # make some useful symlinks that are expected to exist
 RUN cd /usr/bin \
