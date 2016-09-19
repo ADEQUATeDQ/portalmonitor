@@ -103,7 +103,7 @@ RUN set -ex \
 
 ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base py-scipy py-scipy-dev bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
 RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
-  && apk add --update $PKGS \
+  && apk add --update --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ $PKGS \
   && pip install --upgrade pip \
   && rm /var/cache/apk/*
   #&& apk del --purge *-dev build-base \
