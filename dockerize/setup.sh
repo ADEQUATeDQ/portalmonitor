@@ -2,6 +2,7 @@
 
 BASE=`pwd`
 PYTHON=$BASE/python
+PYTHON_TAG=odpw_python
 PW=$BASE/portalwatch
 PW_TAG=odpw
 
@@ -29,6 +30,12 @@ DBDATA=$DATA/data/dbdata
 DBDATA_TAG=dbdata
 LOGS_TAG=logdata
 DATADIR_TAG=datadir
+
+preparePython(){
+  docker rmi $PYTHON_TAG
+  cd $PYTHON
+  docker build --tag $PYTHON_TAG .
+}
 
 prepareDataContainers(){
   echo "prepareDataContainers"
@@ -100,15 +107,12 @@ prepareODPWUI(){
   docker run -d -p 82:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
 }
 
-
 prepareDataContainers
 prepareODPW
 prepareODPWMeta
 prepareODPWHead
 prepareODPWData
 prepareODPWUI
-
-
 
 #PSQL into datastore
 #docker run -it --rm --link datastore:db postgres psql -h db -U adequatecli adequate
