@@ -57,6 +57,8 @@ RUN set -ex \
 		tk \
 		tk-dev \
 		zlib-dev \
+		py-scipy \
+     py-scipy-dev \
 # add build deps before removing fetch deps in case there's overlap
 	&& apk del .fetch-deps \
 	\
