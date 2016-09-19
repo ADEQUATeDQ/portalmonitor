@@ -2,6 +2,7 @@ FROM alpine:3.4
 
 ENV LANG C.UTF-8
 
+
 RUN echo @testing http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories \
     && apk add --update --no-cache \
         curl \
