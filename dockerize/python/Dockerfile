@@ -107,7 +107,8 @@ RUN source /tmp/lapack.sh
 
 # Install numpy and pandas
 #RUN pip install --upgrade pip
-RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install -v numpy==1.9.0
+RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install numpy
+RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install scipy
 #RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install -v pandas==0.14.1
 
 # Clean up
@@ -131,38 +132,3 @@ RUN cd /usr/bin \
   && ln -sf pip2.7 pip
 
 RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
-
-RUN echo @testing http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories \
-    && apk add --update --no-cache \
-        curl \
-        g++ \
-        pkgconfig \
-        freetype-dev \
-        ca-certificates \
-    && update-ca-certificates \
-    && pip install --no-cache-dir setuptools numpy matplotlib scipy \
-    && find /usr/local -depth \
-        \( \
-            \( -type d -a -name test -o -name tests \) \
-            -o \
-            \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
-        \) -exec rm -rf '{}' + \
-    && apk add --virtual .python-deps \
-        python \
-        py-numpy \
-        freetype \
-        libpng \
-    && apk del \
-        curl \
-        g++ \
-        gcc \
-        pkgconfig \
-        libc-dev \
-        ncurses-dev \
-        openssl-dev \
-        zlib-dev \
-        libpng-dev \
-        freetype-dev \
-        python-dev \
-        cython-dev \
-    && rm -rf /usr/src/python ~/.cache
