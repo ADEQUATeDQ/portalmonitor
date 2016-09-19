@@ -57,8 +57,6 @@ RUN set -ex \
 		tk \
 		tk-dev \
 		zlib-dev \
-		py-scipy \
-     py-scipy-dev \
 # add build deps before removing fetch deps in case there's overlap
 	&& apk del .fetch-deps \
 	\
@@ -103,7 +101,7 @@ RUN set -ex \
 #    gcc \
 #    freetype-dev
 
-ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
+ENV PKGS='curl  postgresql-dev libjpeg-turbo-dev zlib-dev libffi-dev openssl-dev musl build-base py-scipy py-scipy-dev bash git openssh openssl  gfortran freetype-dev libjpeg-turbo-dev libpng-dev rsyslog gcc libxslt-dev  libxml2-dev libxml2 libxslt libffi-dev ca-certificates'
 RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
   && apk add --update $PKGS \
   && pip install --upgrade pip \
