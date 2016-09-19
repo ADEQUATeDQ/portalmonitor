@@ -117,14 +117,14 @@ RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install
 RUN mv ~/src/BLAS/libfblas.a /tmp/
 RUN mv ~/src/lapack-3.5.0/liblapack.a /tmp/
 RUN rm -rf ~/src
-RUN rm -rf ~/.cache/pip
+#RUN rm -rf ~/.cache/pip
 RUN mkdir -p ~/src/BLAS ~/src/lapack-3.5.0
 RUN mv /tmp/libfblas.a ~/src/BLAS/libfblas.a
 RUN mv /tmp/liblapack.a ~/src/lapack-3.5.0/liblapack.a
 RUN rm -rf /tmp/*
 
 # Remove all the extra build stuff
-RUN apk del build-base "*-dev"
+#RUN apk del build-base "*-dev"
 
 # make some useful symlinks that are expected to exist
 RUN cd /usr/bin \
