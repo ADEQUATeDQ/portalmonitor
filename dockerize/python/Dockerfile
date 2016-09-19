@@ -99,15 +99,16 @@ RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/
   && rm /var/cache/apk/*
   #&& apk del --purge *-dev build-base \
   #&& rm -rf /tmp/* /var/cache/apk/* /root/.cache/*
+
 COPY libs/* /tmp/
 # Build BLAS and LAPACK
 RUN source /tmp/blas.sh
 RUN source /tmp/lapack.sh
 
 # Install numpy and pandas
-RUN pip install --upgrade pip
+#RUN pip install --upgrade pip
 RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install -v numpy==1.9.0
-RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install -v pandas==0.14.1
+#RUN BLAS=~/src/BLAS/libfblas.a LAPACK=~/src/lapack-3.5.0/liblapack.a pip install -v pandas==0.14.1
 
 # Clean up
 RUN mv ~/src/BLAS/libfblas.a /tmp/
