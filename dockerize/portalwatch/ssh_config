@@ -1,4 +1,0 @@
-host git.ai.wu.ac.at
-    HostName git.ai.wu.ac.at
-    IdentityFile /adequate-portalharvester/repo-key
-StrictHostKeyChecking no
