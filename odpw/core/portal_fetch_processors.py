@@ -72,7 +72,7 @@ class CKAN(PortalProcessor):
         try:
             response = api.action.package_search(rows=0)
             total = response["count"]
-            PortalSnapshot.datasetCount=total
+            PortalSnapshot.datasetcount=total
             p_steps=total/10
             if p_steps ==0:
                 p_steps=1
@@ -123,7 +123,7 @@ class CKAN(PortalProcessor):
                 log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
             #len(package_list)
             tt=len(package_list)
-            PortalSnapshot.datasetCount=tt
+            PortalSnapshot.datasetcount=tt
             p_steps=tt/100
             if p_steps == 0:
                 p_steps=1
