@@ -1,0 +1,105 @@
+{% extends "odpw_portals_layout.jinja" %}
+{% set title = "Portals List" -%}
+
+{% set active_sub_page="ui.portals" %}
+
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+
+{% endblock %}
+
+
+
+{% macro portalRow(portal) -%}
+<tr>
+    <td>{{portal.uri|get_domain}}</td>
+    <td><i class="{{portal.iso| lower}} flag "></i><span>{{portal.iso| lower}}</span></td>
+    <td><a href="{{portal.apiuri}}">API</a></td>
+    <td><a href="{{portal.uri}}">Homepage</a></td>
+    <td>{{portal.software  }}</td>
+    <td>{{portal.datasets if portal.datasets else -1}}</td>
+    <td>{{ portal.resources if portal.resources else -1}}</td>
+    <td>{% if portal.snLast %}
+            <a href="{{url_for("ui.portal", portalid=portal.id, snapshot=portal.snLast)}}" class="ui button">
+                <i class="line chart icon"></i>
+
+            </a>
+        {% else %}
+            <div class="ui disabled button">
+                <i class="line chart icon"></i>
+
+            </div>
+        {% endif %}
+        </td>
+
+</tr>
+
+
+{%- endmacro %}
+
+
+{% block title %}
+<div class="ui form ">
+    <div class=" fields">
+        <h2 class="two wide field">
+            <span id="pCount" class="floated white right">{{data|length}} Portals</span>
+        </h2>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block portalscontent %}
+<table class="ui table" id="portalsTable">
+    <thead>
+        <tr>
+            <th class="six wide">Domain</th>
+            <th class="one wide">ISO</th>
+            <th class="one wide">API</th>
+            <th class="one wide">Homepage</th>
+            <td class="one wide">Software</td>
+            <th class="one wide">Datasets</th>
+            <th class="one wide">Resourcs</th>
+            <th class="one wide">Dashboard</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in data.portals %}
+            {{ portalRow(p)  }}
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td class="six wide">Domain</td>
+            <td class="one wide">ISO</td>
+            <td class="one wide">API</td>
+            <td class="one wide">Homepage</td>
+            <td class="one wide">Software</td>
+            <td class="one wide">Datasets</td>
+            <td class="one wide">Resourcs</td>
+            <td class="one wide">Dashboard</td>
+        </tr>
+    </tfoot>
+</table>
+
+
+{% endblock %}
+
+
+
+{% block script %}
+    {{ super() }}
+    $(document).ready(function() {
+        var table = $('#portalsTable').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false
+        });
+    })
+
+ {% endblock %}

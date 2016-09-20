@@ -1,0 +1,47 @@
+{% extends "odpw_layout.jinja" %}
+{% set active_page = "system" -%}
+
+
+{% block content %}
+    <div class="ui grid two equal width column">
+        <div class="two wide column background" >
+            <div class="ui secondary vertical inverted fluid labeled icon menu">
+
+                {% set navigation_bar = [
+                    ('ui.system', 'info', 'Info'),
+                    ('ui.systemfetch', 'spinner loading', 'Fetch process'),
+                    ('ui.systemevolv', 'line chart', 'Evolution'),
+                    ('ui.systemchanges', 'exchange', 'Changes'),
+                    ]
+                -%}
+                {% set active_sub_page = active_sub_page|default('ui.system') -%}
+                {% for href,  icon, caption in navigation_bar %}
+                    <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                        <i class="{{ icon|e }} icon"></i>
+                        {{ caption|e }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="column ui grid" id="container">
+            <div class="sixteen wide column background">
+                <h3 class="ui header white">{{ title }}</h3>
+            </div>
+            <div class="sixteen wide column ">
+                <div class="row grid ui">
+                    {% block systemcontent %}
+
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block script %}
+
+
+
+
+{% endblock %}

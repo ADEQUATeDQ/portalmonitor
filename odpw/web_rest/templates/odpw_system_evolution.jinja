@@ -1,0 +1,43 @@
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "Evolution of number of portals, dataset and resources " -%}
+
+{% set active_sub_page = "ui.systemevolv" -%}
+
+{% block headcss %}
+    {{ css_resources }}
+{% endblock %}
+
+{% block headscripts %}
+    {{ js_resources }}
+{% endblock %}
+
+
+{% block systemcontent %}
+
+
+            <div class="ui fourteen wide column centered" id="plot">
+                <h3 class="ui header">Portals</h3>
+            {{ plot_div.portals |indent(4)|safe}}
+            </div>
+            <div class="ui fourteen wide column centered" id="plot">
+                <h3 class="ui header">Datasets</h3>
+                {{ plot_div.datasets |indent(4)|safe}}
+            </div>
+            <div class="ui fourteen wide column centered" id="plot">
+                <h3 class="ui header">Resources</h3>
+                {{ plot_div.resources |indent(4)|safe}}
+            </div>
+
+
+
+    {{ plot_script }}
+{% endblock %}
+
+
+{% block script %}
+
+$(document).ready(function() {
+
+});
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% set active_sub_page = "ui.portalEvolution" -%}
+
+
+{% block headcss %}
+    {{ css_resources }}
+{% endblock %}
+
+{% block headscripts %}
+    {{ js_resources }}
+{% endblock %}
+
+
+
+{% block portalcontent %}
+<div class="thirteen wide column ui padded divided grid">
+    <h2>Portal Evolution</h2>
+
+        <div class="ui padded text  segment">
+            <h2 class="ui header">Portal Size</h2>
+            {{ plot_div['size'] }}
+        </div>
+
+        <div class="ui padded text  segment">
+            <h2 class="ui header">Existence Metrics</h2>
+            {{ plot_div['Existence'] }}
+        </div>
+
+        <div class="ui padded text  segment">
+            <h2 class="ui header">Conformance Metrics</h2>
+            {{ plot_div['Conformance'] }}
+        </div>
+        <div class="ui padded text  segment">
+            <h2 class="ui header">Open Data Metrics</h2>
+            {{ plot_div['Open Data'] }}
+        </div>
+
+        {{ plot_script }}
+
+</div>
+
+{% endblock %}
+

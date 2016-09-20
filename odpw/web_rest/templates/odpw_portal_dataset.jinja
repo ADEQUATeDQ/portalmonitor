@@ -1,0 +1,229 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% set active_sub_page = "ui.portalDataset" -%}
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+{% endblock %}
+
+{% macro distTable(data, key, label) -%}
+<table class="ui celled table" id="table{{label}}" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>{{label}}</th>
+            <th>count</th>
+            <th>percentage</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>{{label}}</th>
+            <th>count</th>
+            <th>percentage</th>
+        </tr>
+    </tfoot>
+    <tbody>
+        {% for l in data[key].top3Dist %}
+        <tr>
+            <td class="hideextra">{{l[key]}}</td>
+            <td>{{l.count}}</td>
+             <td>({{ (l.perc*100)| round(2)}}%)</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{%- endmacro %}
+
+
+{% block portalcontent %}
+    <div class="ui padded centered fifteen wide column ">
+        <div class="ui fluid card">
+            <div class="content">
+                <div class="header">Dataset:
+                    {% if dataset %}
+                        {{dataset.title}}
+                    {% else %}
+                        Please select
+                    {% endif %}
+
+                    <div class="ui left pointing scrolling dropdown icon">
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="ui left search icon input">
+                                <i class="search icon"></i>
+                                <input type="text" name="search" placeholder="Search datasets...">
+                            </div>
+                            <div class="header">
+                                <i class="tags icon"></i>
+                                Dataset
+                            </div>
+                            {% for dataset in data.datasets%}
+                            <div  class="item">
+                                <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=snapshot, dataset=dataset.id)}}">
+                                    {{dataset.title}}
+                                </a>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            {% if data.json %}
+            <div class="content">
+                <div class="header">{{data.versions|length}} Version(s)</div>
+                <div class="meta">
+                    {% for v in data.versions %}
+                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.min, dataset=dataset.id)}}">{{v.min|getWeekString}} - {{v.max|getWeekString}}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="content">
+                <div class="description">
+                    <div class="ui vertical segment">
+                        <div class="ui two column doubling padded very relaxed grid">
+                            <div class="column">
+                                <h3 class="ui header"> Raw JSON metadata</h3>
+                                <pre  class="prettyprint" id="json" style="height: 400px"></pre>
+                            </div>
+                            <div class="ui vertical divider">
+
+                            </div>
+                            <div class="column">
+                                <h2 class="ui header"> Quality assessment</h2>
+
+                                {% for k in qa %}
+                                    <div class="ui horizontal divider">{{k.dimension}} Metrics</div>
+                                    <div class="ui three column padded grid">
+
+                                    {% for kk,d in k.metrics.iteritems() %}
+
+                                        {% set m = kk| lower -%}
+                                        <div class="  column">
+                                            <div class="ui label" style="color:{{d.color}}"">{{d.label}}
+                                                <div class="detail">{{ data.datasetData[m]}}</div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="description">
+                    <h3 class="ui header"> {{data['resources']| length}} Resource(s)</h3>
+
+                    <div class="ui container">
+                        <div class="ui divided items">
+                            {% for r in data['resources'] %}
+                                <div class="item">
+                                    <div class="content">
+                                        {% if 'status' in r and r.status=='200' %}
+                                            <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
+                                        {% elif 'status' in r %}
+                                           <div class="ui label red ribbon">HTTP {{error[r.status|int]}}</div>
+                                        {% else %}
+                                           <div class="ui label ribbon">No HTTP information</div>
+                                        {% endif %}
+                                        <div class="header">
+                                            <a {% if 'status' in r and r.status=='200' %}href="{{r.uri}}" {% endif %}class="header">{{r.uri}}</a>
+                                        </div>
+                                        {% if 'status' in r %}
+                                        <div class="meta">
+                                            inspected at: {{r.timestamp}}
+
+                                        </div>
+                                        {% if 'header' in r and r.header %}
+                                            <div class="description">
+                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:100px">{{r.header}}</pre>
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="extra">
+                                            <div class="ui label">{{r.format}}</div>
+                                            <div class="ui label">{{r.mime}}</div>
+                                            <div class="ui label"><i class="calendar icon"></i> metadata created:<div class="detail">{{r.created}}</div></div>
+
+                                            {% if r.modified != 'None' %}
+                                                <div class="ui label">metadata modified <div class="detail">{{r.modified}}</div></div> {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+
+    {% if data.json %}
+        data={{ data.json|tojson }}
+        document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);
+    {% endif %}
+
+    function toJson(el, data){
+        data={{ data|tojson }}
+        document.getElementById(el).innerHTML = JSON.stringify(data, undefined, 2);
+    }
+
+     $(document).ready(function() {
+
+        $('#tabs .item')
+         .tab()
+        ;
+        $('#tableFormat').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+        $('#tableOrganisation').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+
+        $('#tableLicense').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+
+        {% for r in data['resources'] %}
+           {% if 'header' in r %}
+                he= {{r.header|tojson}}
+                console.log(he)
+                document.getElementById("{{r.uri}}").innerHTML = JSON.stringify(he, undefined, 2);
+
+           {% endif %}
+        {% endfor %}
+
+        $('.json').each(function(){
+            console.log($(this).text());
+            $(this).text(JSON.stringify($(this).text(), undefined, 2));
+        })
+
+    })
+ {% endblock %}

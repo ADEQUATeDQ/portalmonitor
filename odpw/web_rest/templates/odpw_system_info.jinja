@@ -1,0 +1,37 @@
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "System information" -%}
+
+{% block systemcontent %}
+
+<div class="ui container text">
+
+    <h2 class="ui center aligned icon header">
+      Technology
+    </h2>
+    <p>The core of the Open Data portal watch system is implemented using Python.</p>
+    <h3 clas="ui header">Backend</h3>
+    <p>The backend technoligy stack currently consists of Postgres 9.4 to store the collected metadata and several python modules for harvesting, assessing and analysing the metadata.</p>
+
+    <h3 clas="ui header">Frontend</h3>
+    <p>The current frontend technoligy stack uses Python Flask and Tornado as HTTP server and JQuery and the <a href="http://semantic-ui.com/">Semantic UI</a>, a modern front-end development framework, powered by LESS and jQuery.</p>
+
+    <h2 class="ui center aligned icon header">
+      HTTP Lookups
+    </h2>
+    <p>We perform all our requests from the following <span class="ui label">IP address: 137.208.107.58</span></p>
+    <h3 clas="ui header">Harvesting metadata</h3>
+
+    The framework accesses the available APIs for the monitored portals nce a week.
+    We try to minimise the number of requests on the servers by applying <i>wait times of 1-5 seconds</i> between two consecutive requests on the same domain
+    and use pagination for APIs
+
+    <h3 clas="ui header">HTTP HEAD lookups</h3>
+
+
+    As pat of one of our quality metrics, the system performs HTTP HEAD lookups on the resources to check their availability using threading.
+    Our system respects the policies specified in the <a href="http://www.robotstxt.org/">robots.txt</a> file.
+    To prevent denial of services attacks, we use wait times between consecutive HEAD lookups on the same domain.
+    The per-domain wait time is either extracted from the robots.txt or set to a default value of 5 seconds.
+</div>
+
+{% endblock %}

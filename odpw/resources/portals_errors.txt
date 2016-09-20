@@ -1,0 +1,11 @@
+
+http://opendata.provincia.lucca.it/SpodCkanApi/api
+http://www.daten.rlp.de/api
+https://data.sa.gov.au/api
+https://opendata.bayern.de/
+https://data.cacs.org
+http://data.austintexas.gov
+http://nmfs.socrata.com
+https://data.baltimorecity.gov
+https://data.austintexas.gov
+

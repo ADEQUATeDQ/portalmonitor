@@ -1,0 +1,34 @@
+{% extends "odpw_system_layout.jinja" %}
+{% set title = "Fetch process elapsed time for the last ten weeks" -%}
+
+{% set active_sub_page = "ui.systemfetch" -%}
+
+{% block headcss %}
+    {{ css_resources }}
+{% endblock %}
+
+{% block headscripts %}
+    {{ js_resources }}
+{% endblock %}
+
+
+{% block systemcontent %}
+    <div class="ui fourteen wide column centered">
+    <p>The following chart shows the time elapsed to fetch the content of all portals for the last 10 weeks. Red highlighted is the status of the fetch process for the current week.
+    The x-axis shows the percentage of processed portals and the y-axis the total time elapsed.</p>
+            {{ plot_div |indent(4)|safe}}
+            </div>
+
+
+
+    {{ plot_script }}
+{% endblock %}
+
+
+{% block script %}
+
+$(document).ready(function() {
+
+});
+
+{% endblock %}

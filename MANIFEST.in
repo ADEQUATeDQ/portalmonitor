@@ -1,0 +1,4 @@
+recursive-include odpw/resources/iana *
+recursive-include odpw/resources/logging *
+recursive-include odpw/web_rest/templates *
+recursive-include odpw/web_rest/static *

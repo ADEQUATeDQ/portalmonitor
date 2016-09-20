@@ -1,0 +1,135 @@
+{% extends "odpw_layout.jinja" %}
+
+
+
+
+{% block content %}
+    <div class="ui grid two equal width column">
+        <div class="two wide column background" >
+            <div class="ui secondary vertical inverted fluid labeled icon menu">
+
+                {% set navigation_bar = [
+                    ('ui.portal', 'info', 'Info'),
+                    ('ui.portalQuality', 'info', 'Quality'),
+                    ('ui.portalEvolution', 'info', 'Evolution'),
+                    ('ui.portalFormats', 'info', 'Stats'),
+                    ('ui.portalRes', 'grid layout', 'Resources')
+                    ]
+                -%}
+                {% set active_sub_page = active_sub_page|default('ui.portal') -%}
+                {% for href,  icon, caption in navigation_bar %}
+                    <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href, portalid=portalid, snapshot=snapshot)|e }}">
+                        <i class="{{ icon|e }} icon"></i>
+                        {{ caption|e }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="column ui grid" id="container">
+            <div class="sixteen wide column background">
+                <h3 class="ui header" style="color:white"> Portal: {{portalid}}
+                    <!--<div class=" labeled icon ui selection search dropdown" id="portalSelect">
+                        <input name="gender" type="hidden" value="default">
+                        <i class="dropdown icon"></i>
+                        <div class="text">{{portalid}}</div>
+                        <div class="menu">
+
+                            <div class="item" data-value="0">Value</div>
+                            <div class="item" data-value="1">Another Value</div>
+                            <div class="item" data-value="default">{{portalid}}</div>
+                        </div>
+                     </div>
+                     -->
+                    <div class="ui left pointing scrolling dropdown icon">
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="ui left search icon input">
+                                <i class="search icon"></i>
+                                <input type="text" name="search" placeholder="Search portal...">
+                            </div>
+                            <div class="header">
+                                <i class="tags icon"></i>
+                                Portals
+                            </div>
+                            {% for portal in data.portals%}
+                            <div  class="item">
+                                <a href="{{url_for(active_sub_page, portalid=portal.id, snapshot=snapshot)}}">
+                                    <i class="{{portal.iso| lower}} flag "></i>
+                                    {{portal.uri|get_domain}} ({{portal.software}})
+                                </a>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+
+                </h3>
+            </div>
+            <div class="row">
+                <div class="right floated five wide column large">
+                    Week: {{snapshot|getWeekString}}
+
+                    {% if data.snapshots.prev %}
+                        {% if active_sub_page=='ui.portalDataset' %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
+                        {% else %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                        {% endif %}
+                        <i class="icon angle left"></i>
+                        </a>
+                    {% else %}
+                        <i class="icon angle left"></i>
+                    {% endif %}
+
+                    <div class="ui dropdown item">
+                        <i class="calendar icon"></i>
+                        <div class="menu">
+                            <div class="header">
+                                <i class="calendar icon"></i>
+                                {{data.snapshots.list|length}} Snapshots
+                            </div>
+                            {% for sn in data.snapshots.list| sort %}
+                                <div class="item" data-value="{{sn}}">
+                                    <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=sn)}}">
+                                        {{sn|getWeekString}}
+                                    </a>
+
+
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if data.snapshots.next %}
+                        {% if active_sub_page=='ui.portalDataset' %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next,dataset=dataset.id)}}">
+                        {% else %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.next)}}">
+                        {% endif %}
+                            <i class="icon angle right"></i>
+                        </a>
+
+                    {% else %}
+                        <i class="icon angle right"></i>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% block portalcontent %}
+            {% endblock %}
+        </div>
+   </div>
+{% endblock %}
+
+
+{% block script %}
+$('.dropdown')
+  .dropdown({
+    // you can use any ui transition
+    transition: 'drop',
+    fullTextSearch:true,
+    sortSelect: true,
+    match:'text'
+  })
+;
+
+{% endblock %}

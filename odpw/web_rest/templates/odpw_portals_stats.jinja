@@ -1,0 +1,32 @@
+{% extends "odpw_portals_layout.jinja" %}
+{% set title = "Portals dataset and resource distribution" -%}
+{% set active_sub_page="ui.portalssize" %}
+
+{% block title %}
+<h3>Portals dataset and resource distribution for week {{snapshot| getWeekString}}</h3>
+{% endblock %}
+
+
+{% block headcss %}
+    {{ css_resources }}
+{% endblock %}
+
+{% block headscripts %}
+    {{ js_resources }}
+{% endblock %}
+
+
+{% block portalscontent %}
+<h4>Scatter plot of no. of datasets vs no. of resources</h4>
+    <div class="ui grid container">
+        <div class=" row">
+            <div class="thirteen wide   column">
+                {{ plot_div }}
+            </div>
+
+        </div>
+
+            {{ plot_script }}
+
+    </div>
+{% endblock %}

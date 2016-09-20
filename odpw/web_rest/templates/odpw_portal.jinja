@@ -1,0 +1,108 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+
+
+
+{% macro statsCard(data, label, key, href) -%}
+
+<a href="{{url_for(href,snapshot=snapshot, portalid=portalid)}}" class="ui card fluid statsCard">
+    <div class="content">
+        <div class="ui statistic">
+                <div class="value">
+                    {{data[key].distinct}}
+                </div>
+                <div class="label">
+                    {{label}}
+                </div>
+            </div>
+    </div>
+    <div class="content" >
+        <table class="ui basic  single line table" style="table-layout: fixed;" >
+            <thead>
+                <tr>
+                    <th class="two wide">No</th>
+                    <th>{{label}}</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in data[key].top3Dist %}
+                <tr>
+                    <td  class="two wide">
+                    {% if loop.index!=4 %}
+                        {{loop.index}}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="hideextra">{{l[key]}}</td>
+                    <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</a>
+
+{%- endmacro %}
+
+
+
+
+
+{% block portalcontent %}
+
+
+<!--<div class="thirteen wide column ui padded divided grid">-->
+<div class="ui equal width center aligned padded  grid container">
+    <h2>General Portal Information</h2>
+
+    <div class="row">
+
+        <div class="ui statistics column">
+            <a href="{{url_for('ui.portalDataset',snapshot=snapshot, portalid=portalid)}}" class="statistic">
+                <div class="value">
+                    {{data.datasets}}
+                </div>
+                <div class="label">
+                    Datasets
+                </div>
+            </a>
+            <a href="{{url_for('ui.portalEvolution',snapshot=snapshot, portalid=portalid)}}" class="statistic">
+                <div class="value">
+                    {{data.snapshots.list|length}}
+                </div>
+                <div class="label">
+                    Snapshots
+                </div>
+            </a>
+            <a href="{{url_for('ui.portalRes',snapshot=snapshot, portalid=portalid)}}" class="statistic">
+                <div class="value">
+
+                    {{data.resources}}
+                </div>
+                <div class="label">
+                    Resources
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="row doubling stackable three column cards">
+
+        <div class="column">
+            {{statsCard(data, 'Licenses', 'license', 'ui.portalLicenses')}}
+        </div>
+        <div class="column">
+            {{statsCard(data, 'Formats', 'format', 'ui.portalFormats')}}
+        </div>
+        <div class="column">
+            {{statsCard(data, 'Organisations', 'organisation', 'ui.portalOrganisations')}}
+        </div>
+    </div>
+
+</div>
+
+
+{{data}}
+
+{% endblock %}
