@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>
+            {% block maintitle %} {% endblock %} Open Data Portal Watch
+        </title>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='semantic/semantic.min.css')}}">
+        {% block headcss %} {% endblock %}
+        <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='css/odpw.css')}}">
+
+
+
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="{{ url_for('.static', filename='semantic/semantic.min.js')}}"></script>
+
+        {% block headscripts %}  {% endblock %}
+
+        <style>
+            .ui.card .meta {
+                font-size: 0.8em;
+            }
+            {% block headerstyle %}
+
+            {% endblock %}
+        </style>
+        <script>
+            {% block headscript %}
+
+            {% endblock %}
+        </script>
+    </head>
+
+    <body>
+
+    <!-- HEADER -->
+        <header id="header" class="ui vertical segment">
+            <h1 class="ui header fifteen wide column">
+                <div class="content">
+                    Open Data Portal Watch
+                    <div class="sub header">Quality Assessment and Monitoring of {{data.portalCount}} Open Data Portals</div>
+                </div>
+                <img  class="ui small image" src="{{ url_for('.static', filename='img/wu.png')}}">
+            </h1>
+        </header>
+
+    <!-- MAIN NAVIGATION -->
+        <nav id="mainnav" class="ui  fluid secondary stackable pointing icon menu " >
+            {% set navigation_bar = [
+                    ('ui.index','odpw', 'ODPW', 'info'),
+                    ('ui.system','system', 'System','server'),
+                    ('ui.portalslist', 'portals', 'Portals','grid layout'),
+                    ('ui.api', 'api', 'API','code'),
+                    ('ui.qualitymetrics', 'quality', 'Quality Measures','code'),
+
+                ]
+            -%}
+            {% set active_page = active_page|default('index') -%}
+            {% for href, id, caption, icon  in navigation_bar %}
+                <a class="link item {% if id == active_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                    <i class="icon {{icon}}"></i>
+                    {{ caption|e }}
+                </a>
+            {% endfor %}
+            <a class="link item"><i class="icon download"></i>Data</a>
+            <div class="right menu">
+                <a href="{{url_for('ui.about')}}" class="ui item {% if id == active_page %}active{% endif%}">About</a>
+            </div>
+        </nav>
+
+
+    <!-- CONTENT -->
+
+        <section class="ui text">
+            {% block content %}
+            {% endblock %}
+        </section>
+
+    <!-- FOOTER
+        <footer class="ui background vertical footer segment">
+            <div class="ui  container">
+                <div class="ui stackable inverted divided equal height stackable grid">
+                    <div class="three wide column">
+                        <h4 class="ui grey header">About</h4>
+                        <div class="ui inverted link list">
+                            <a href="#" class="item">Sitemap</a>
+                            <a href="#" class="item">Contact Us</a>
+                            <a href="#" class="item">Religious Ceremonies</a>
+                            <a href="#" class="item">Gazebo Plans</a>
+                        </div>
+                    </div>
+                    <div class="three wide column">
+                        <h4 class="ui inverted header">Services</h4>
+                        <div class="ui inverted link list">
+                            <a href="#" class="item">Banana Pre-Order</a>
+                            <a href="#" class="item">DNA FAQ</a>
+                            <a href="#" class="item">How To Access</a>
+                            <a href="#" class="item">Favorite X-Men</a>
+                        </div>
+                    </div>
+                    <div class="seven wide column">
+                        <h4 class="ui inverted header">Footer Header</h4>
+                        <p>Extra space for a call to action inside the footer that could help re-engage users.</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+ -->
+    <!-- SCRIPTS -->
+        <script>
+            {% block script %} {% endblock %}
+        </script>
+    </body>
+</html>

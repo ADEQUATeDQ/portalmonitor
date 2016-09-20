@@ -1,7 +1,10 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+<<<<<<< HEAD
 *$py.class
+=======
+>>>>>>> v2
 
 # C extensions
 *.so
@@ -43,7 +46,10 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+<<<<<<< HEAD
 .hypothesis/
+=======
+>>>>>>> v2
 
 # Translations
 *.mo
@@ -51,6 +57,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+<<<<<<< HEAD
 local_settings.py
 
 # Flask stuff:
@@ -59,6 +66,8 @@ instance/
 
 # Scrapy stuff:
 .scrapy
+=======
+>>>>>>> v2
 
 # Sphinx documentation
 docs/_build/
@@ -66,6 +75,7 @@ docs/_build/
 # PyBuilder
 target/
 
+<<<<<<< HEAD
 # IPython Notebook
 .ipynb_checkpoints
 
@@ -87,3 +97,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+=======
+# PyCharm
+*.idea/
+
+# Any tmp folder
+**tmp/
+>>>>>>> v2

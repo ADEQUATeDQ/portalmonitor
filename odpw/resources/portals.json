@@ -1,0 +1,1570 @@
+{
+    "africaopendata_org": {
+        "api": "", 
+        "countryCode": "IRL", 
+        "software": "CKAN", 
+        "url": "http://africaopendata.org/"
+    }, 
+    "annuario_comune_fi_it": {
+        "api": "",
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://annuario.comune.fi.it/"
+    }, 
+    "belohorizonte_azure-eastus-prod_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://belohorizonte.azure-eastus-prod.socrata.com"
+    }, 
+    "berkeley_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://berkeley.demo.socrata.com"
+    }, 
+    "bermuda_io": {
+        "api": "", 
+        "countryCode": "IOT", 
+        "software": "CKAN", 
+        "url": "http://bermuda.io/"
+    }, 
+    "beta_avoindata_fi": {
+        "api": "https://beta.avoindata.fi/data/fi/", 
+        "countryCode": "FIN", 
+        "software": "CKAN", 
+        "url": "http://beta.avoindata.fi/"
+    }, 
+    "bistrotdepays_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://bistrotdepays.opendatasoft.com"
+    }, 
+    "bmgf_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://bmgf.demo.socrata.com"
+    }, 
+    "bristol_azure-westeurope-prod_socrata_com": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "Socrata", 
+        "url": "https://bristol.azure-westeurope-prod.socrata.com"
+    }, 
+    "bronx_lehman_cuny_edu": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://bronx.lehman.cuny.edu"
+    }, 
+    "bythenumbers_sco_ca_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://bythenumbers.sco.ca.gov"
+    }, 
+    "catalogodatos_gub_uy": {
+        "api": "", 
+        "countryCode": "URY", 
+        "software": "CKAN", 
+        "url": "https://catalogodatos.gub.uy/"
+    }, 
+    "catalogue_datalocale_fr": {
+        "api": "",
+        "countryCode": "FRA", 
+        "software": "CKAN", 
+        "url": "http://catalogue.datalocale.fr/"
+    }, 
+    "cdph_data_ca_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://cdph.data.ca.gov"
+    },
+    "ckanau_org": {
+        "api": "",
+        "countryCode": "AUS",
+        "software": "CKAN",
+        "url": "http://ckanau.org/"
+    },
+    "ckan_gsi_go_jp": {
+        "api": "", 
+        "countryCode": "JPN", 
+        "software": "CKAN", 
+        "url": "http://ckan.gsi.go.jp/"
+    },
+    "ckan_odp_jig_jp": {
+        "api": "",
+        "countryCode": "JPN",
+        "software": "CKAN",
+        "url": "http://ckan.odp.jig.jp/"
+    },
+    "ckan_okfn_gr": {
+        "api": "", 
+        "countryCode": "GRC", 
+        "software": "CKAN", 
+        "url": "http://ckan.okfn.gr/"
+    }, 
+    "controllerdata_lacity_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://controllerdata.lacity.org"
+    },
+    "dados_al_gov_br": {
+        "api": "",
+        "countryCode": "BRA",
+        "software": "CKAN",
+        "url": "http://dados.al.gov.br/"
+    },
+    "dados_gov_br": {
+        "api": "http://dados.gov.br/", 
+        "countryCode": "BRA", 
+        "software": "CKAN", 
+        "url": "http://dados.gov.br"
+    }, 
+    "dados_recife_pe_gov_br": {
+        "api": "", 
+        "countryCode": "BRA", 
+        "software": "CKAN", 
+        "url": "http://dados.recife.pe.gov.br/"
+    }, 
+    "dados_rs_gov_br": {
+        "api": "", 
+        "countryCode": "BRA", 
+        "software": "CKAN", 
+        "url": "http://dados.rs.gov.br/"
+    }, 
+    "dadosabertos_senado_gov_br": {
+        "api": "", 
+        "countryCode": "BRA", 
+        "software": "CKAN", 
+        "url": "http://dadosabertos.senado.gov.br/"
+    },
+    "danepubliczne_gov_pl": {
+        "api": "",
+        "countryCode": "POL",
+        "software": "CKAN",
+        "url": "https://danepubliczne.gov.pl/"
+    },
+    "dartportal_leeds_ac_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://dartportal.leeds.ac.uk/"
+    }, 
+    "data_acgov_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.acgov.org"
+    }, 
+    "data_act_gov_au": {
+        "api": "", 
+        "countryCode": "AUS", 
+        "software": "Socrata", 
+        "url": "https://data.act.gov.au"
+    }, 
+    "data_albanyny_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.albanyny.gov"
+    }, 
+    "data_atf_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.atf.gov"
+    }, 
+    "data_austintexas_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.austintexas.gov"
+    }, 
+    "data_baltimorecity_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.baltimorecity.gov"
+    }, 
+    "data_bris_ac_uk_data_": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "https://data.bris.ac.uk/data/"
+    }, 
+    "data_buenosaires_gob_ar": {
+        "api": "", 
+        "countryCode": "ARG", 
+        "software": "CKAN", 
+        "url": "http://data.buenosaires.gob.ar/"
+    }, 
+    "data_burlingtonvt_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.burlingtonvt.gov"
+    },
+    "data_cdc_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.cdc.gov"
+    }, 
+    "data_cityofboston_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.cityofboston.gov"
+    }, 
+    "data_cityofchicago_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.cityofchicago.org"
+    }, 
+    "data_cityofdeleon_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.cityofdeleon.org"
+    }, 
+    "data_cityofmadison_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.cityofmadison.com"
+    }, 
+    "data_cityofnewyork_us": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.cityofnewyork.us"
+    }, 
+    "data_cityofsantacruz_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.cityofsantacruz.com/"
+    }, 
+    "data_cityoftacoma_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.cityoftacoma.org"
+    }, 
+    "data_cms_hhs_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.cms.hhs.gov"
+    }, 
+    "data_colorado_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.colorado.gov"
+    }, 
+    "data_ct_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.ct.gov"
+    }, 
+    "data_culvercity_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.culvercity.org"
+    }, 
+    "data_datamontana_us": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.datamontana.us"
+    }, 
+    "data_dcpcsb_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.dcpcsb.org"
+    }, 
+    "data_edmonton_ca": {
+        "api": "", 
+        "countryCode": "CAN", 
+        "software": "Socrata", 
+        "url": "http://data.edmonton.ca"
+    }, 
+    "data_edostate_gov_ng": {
+        "api": "", 
+        "countryCode": "NGA", 
+        "software": "CKAN", 
+        "url": "http://data.edostate.gov.ng/"
+    }, 
+    "data_eindhoven_nl": {
+        "api": "", 
+        "countryCode": "NLD", 
+        "software": "Socrata", 
+        "url": "http://data.eindhoven.nl"
+    }, 
+    "data_energystar_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.energystar.gov"
+    }, 
+    "data_glasgow_gov_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://data.glasgow.gov.uk/"
+    }, 
+    "data_gov": {
+        "api": "http://catalog.data.gov/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.gov/"
+    }, 
+    "data_gov_au": {
+        "api": "", 
+        "countryCode": "AUS", 
+        "software": "CKAN", 
+        "url": "http://data.gov.au/"
+    },
+    "data_gov_bf": {
+        "api": "",
+        "countryCode": "BFA",
+        "software": "CKAN",
+        "url": "http://data.gov.bf/"
+    },
+    "data_gov_hk_en_": {
+        "api": "https://data.gov.hk/en-data/", 
+        "countryCode": "HKG", 
+        "software": "CKAN", 
+        "url": "https://data.gov.hk/en/"
+    },
+    "data_gov_gr": {
+        "api": "",
+        "countryCode": "GRC",
+        "software": "CKAN",
+        "url": "https://data.gov.gr/"
+    },
+    "data_gov_hr": {
+        "api": "",
+        "countryCode": "HRV",
+        "software": "CKAN",
+        "url": "http://data.gov.hr/"
+    },
+    "data_gov_ie": {
+        "api": "", 
+        "countryCode": "IRL", 
+        "software": "CKAN", 
+        "url": "http://data.gov.ie/"
+    },
+    "data_gov_md": {
+        "api": "http://data.gov.md/ckan/api/",
+        "countryCode": "MDA",
+        "software": "CKAN",
+        "url": "http://data.gov.md/"
+    },
+    "data_gov_ro": {
+        "api": "", 
+        "countryCode": "ROU", 
+        "software": "CKAN", 
+        "url": "http://data.gov.ro/"
+    }, 
+    "data_gov_sk": {
+        "api": "",
+        "countryCode": "SVK", 
+        "software": "CKAN", 
+        "url": "http://data.gov.sk/"
+    }, 
+    "data_gov_uk": {
+        "api": "",
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://data.gov.uk/"
+    },
+    "data_go_id": {
+        "api": "",
+        "countryCode": "IDN",
+        "software": "CKAN",
+        "url": "http://data.go.id/"
+    },
+    "data_graz_gv_at": {
+        "api": "http://ckan.data.graz.gv.at/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.graz.gv.at/"
+    }, 
+    "data_grcity_us": {
+        "api": "",
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.grcity.us/"
+    }, 
+    "data_gv_at": {
+        "api": "http://www.data.gv.at/katalog/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.gv.at"
+    }, 
+    "data_hartford_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.hartford.gov"
+    }, 
+    "data_hawaii_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.hawaii.gov"
+    }, 
+    "data_hdx_rwlabs_org": {
+        "api": "", 
+        "countryCode": "LUX", 
+        "software": "CKAN", 
+        "url": "https://data.hdx.rwlabs.org/"
+    }, 
+    "data_honolulu_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.honolulu.gov"
+    }, 
+    "data_iledefrance_fr": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://data.iledefrance.fr"
+    }, 
+    "data_illinois_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.illinois.gov"
+    }, 
+    "data_illinois_gov_belleville": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.illinois.gov/belleville"
+    }, 
+    "data_illinois_gov_champaign": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.illinois.gov/champaign"
+    }, 
+    "data_illinois_gov_rockford": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.illinois.gov/rockford"
+    }, 
+    "data_kcmo_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.kcmo.org"
+    }, 
+    "data_kingcounty_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.kingcounty.gov"
+    }, 
+    "data_kk_dk": {
+        "api": "", 
+        "countryCode": "DNK", 
+        "software": "CKAN", 
+        "url": "http://data.kk.dk/"
+    }, 
+    "data_ktn_gv_at": {
+        "api": "http://ckan.data.ktn.gv.at/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.ktn.gv.at/"
+    }, 
+    "data_lexingtonky_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.lexingtonky.gov/"
+    }, 
+    "data_linz_gv_at": {
+        "api": "http://ckan.data.linz.gv.at/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.linz.gv.at/"
+    }, 
+    "data_london_gov_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://data.london.gov.uk/"
+    }, 
+    "data_maryland_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.maryland.gov"
+    }, 
+    "data_medicare_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.medicare.gov"
+    }, 
+    "data_michigan_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.michigan.gov"
+    }, 
+    "data_mo_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.mo.gov"
+    }, 
+    "data_montgomerycountymd_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.montgomerycountymd.gov"
+    }, 
+    "data_murphytx_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.murphytx.org"
+    }, 
+    "data_nfpa_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.nfpa.org"
+    }, 
+    "data_nhm_ac_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://data.nhm.ac.uk/"
+    }, 
+    "data_nj_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.nj.gov"
+    }, 
+    "data_noaa_gov_dataset": {
+        "api": "https://data.noaa.gov/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "https://data.noaa.gov/dataset"
+    }, 
+    "data_nola_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.nola.gov"
+    }, 
+    "data_nsw_gov_au": {
+        "api": "http://data.nsw.gov.au/data/", 
+        "countryCode": "AUS", 
+        "software": "CKAN", 
+        "url": "http://data.nsw.gov.au/"
+    }, 
+    "data_ny_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.ny.gov"
+    }, 
+    "data_oaklandnet_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.oaklandnet.com"
+    }, 
+    "data_ohouston_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.ohouston.org/"
+    }, 
+    "data_ok_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.ok.gov"
+    }, 
+    "data_opencolorado_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.opencolorado.org/"
+    }, 
+    "data_openpolice_ru": {
+        "api": "",
+        "countryCode": "RUS", 
+        "software": "CKAN", 
+        "url": "http://data.openpolice.ru/"
+    }, 
+    "data_openva_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://data.openva.com/"
+    }, 
+    "data_oregon_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.oregon.gov"
+    }, 
+    "data_ottawa_ca": {
+        "api": "", 
+        "countryCode": "CAN", 
+        "software": "CKAN", 
+        "url": "http://data.ottawa.ca/"
+    }, 
+    "data_overheid_nl": {
+        "api": "https://data.overheid.nl/data/", 
+        "countryCode": "NLD", 
+        "software": "CKAN", 
+        "url": "https://data.overheid.nl/"
+    }, 
+    "data_providenceri_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.providenceri.gov"
+    }, 
+    "data_qld_gov_au": {
+        "api": "https://data.qld.gov.au/", 
+        "countryCode": "AUS", 
+        "software": "CKAN", 
+        "url": "http://data.qld.gov.au/"
+    }, 
+    "data_raleighnc_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.raleighnc.gov"
+    }, 
+    "data_redmond_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.redmond.gov"
+    }, 
+    "data_rio_rj_gov_br": {
+        "api": "", 
+        "countryCode": "BRA", 
+        "software": "CKAN", 
+        "url": "http://data.rio.rj.gov.br/"
+    }, 
+    "data_sa_gov_au": {
+        "api": "https://data.sa.gov.au/data/", 
+        "countryCode": "AUS", 
+        "software": "CKAN", 
+        "url": "https://data.sa.gov.au/"
+    }, 
+    "data_salzburgerland_com": {
+        "api": "http://data.salzburgerland.com/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.salzburgerland.com"
+    }, 
+    "data_seattle_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.seattle.gov"
+    }, 
+    "data_sfgov_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.sfgov.org"
+    },
+    "data_somervillema_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.somervillema.gov"
+    }, 
+    "data_southbendin_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.southbendin.gov"
+    }, 
+    "data_stadt-zuerich_ch": {
+        "api": "", 
+        "countryCode": "CHE", 
+        "software": "CKAN", 
+        "url": "https://data.stadt-zuerich.ch/"
+    }, 
+    "data_surrey_ca": {
+        "api": "", 
+        "countryCode": "CAN", 
+        "software": "CKAN", 
+        "url": "http://data.surrey.ca/"
+    }, 
+    "data_tainan_gov_tw": {
+        "api": "", 
+        "countryCode": "TWN", 
+        "software": "CKAN", 
+        "url": "http://data.tainan.gov.tw/"
+    }, 
+    "data_taxpayer_net": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.taxpayer.net"
+    }, 
+    "data_ug": {
+        "api": "http://catalog.data.ug/", 
+        "countryCode": "UGA", 
+        "software": "CKAN", 
+        "url": "http://data.ug/"
+    }, 
+    "data_undp_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.undp.org"
+    }, 
+    "data_upf_edu_en_main": {
+        "api": "http://data.upf.edu/en/", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://data.upf.edu/en/main"
+    }, 
+    "data_vermont_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.vermont.gov"
+    }, 
+    "data_wa_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.wa.gov"
+    }, 
+    "data_weatherfordtx_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.weatherfordtx.gov"
+    }, 
+    "data_wellingtonfl_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://data.wellingtonfl.gov"
+    }, 
+    "data_winnipeg_ca": {
+        "api": "", 
+        "countryCode": "CAN", 
+        "software": "Socrata", 
+        "url": "http://data.winnipeg.ca"
+    }, 
+    "data_wokingham_gov_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "Socrata", 
+        "url": "http://data.wokingham.gov.uk"
+    }, 
+    "data_wu_ac_at": {
+        "api": "", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "http://data.wu.ac.at/"
+    },
+    "data_zagreb_hr": {
+        "api": "",
+        "countryCode": "HRV",
+        "software": "CKAN",
+        "url": "http://data.zagreb.hr/"
+    },
+    "datacatalog_cookcountyil_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://datacatalog.cookcountyil.gov"
+    }, 
+    "dataforjapan_org": {
+        "api": "http://dataforjapan.org/", 
+        "countryCode": "JPN", 
+        "software": "CKAN", 
+        "url": "http://dataforjapan.org"
+    }, 
+    "datagm_org_uk": {
+        "api": "http://datagm.org.uk/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://datagm.org.uk"
+    }, 
+    "datahub_io": {
+        "api": "", 
+        "countryCode": "USA",
+        "software": "CKAN", 
+        "url": "http://datahub.io/"
+    },
+    "datameti_go_jp_data_": {
+        "api": "", 
+        "countryCode": "JPN", 
+        "software": "CKAN", 
+        "url": "http://datameti.go.jp/data/"
+    }, 
+    "datamx_io": {
+        "api": "", 
+        "countryCode": "IOT", 
+        "software": "CKAN", 
+        "url": "http://datamx.io/"
+    }, 
+    "datapilot_american_edu": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://datapilot.american.edu"
+    }, 
+    "dataratp_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://dataratp.opendatasoft.com"
+    }, 
+    "daten_rlp_de": {
+        "api": "http://www.daten.rlp.de/", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://daten.rlp.de/"
+    }, 
+    "dati_lazio_it": {
+        "api": "http://dati.lazio.it/catalog/it/", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "https://dati.lazio.it/"
+    }, 
+    "dati_lombardia_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "Socrata", 
+        "url": "https://dati.lombardia.it"
+    }, 
+    "dati_toscana_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://dati.toscana.it/"
+    }, 
+    "dati_trentino_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://dati.trentino.it/"
+    }, 
+    "dati_veneto_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://dati.veneto.it/"
+    }, 
+    "datos_alcobendas_org": {
+        "api": "", 
+        "countryCode": "IRL", 
+        "software": "CKAN", 
+        "url": "http://datos.alcobendas.org/"
+    }, 
+    "datos_argentina_gob_ar": {
+        "api": "", 
+        "countryCode": "ARG", 
+        "software": "CKAN", 
+        "url": "http://datos.argentina.gob.ar/"
+    }, 
+    "datos_codeandomexico_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://datos.codeandomexico.org/"
+    },
+    "datos_gob_mx": {
+        "api": "http://catalogo.datos.gob.mx/", 
+        "countryCode": "MEX", 
+        "software": "CKAN", 
+        "url": "http://datos.gob.mx/"
+    }, 
+    "datosabiertos_ec": {
+        "api": "",
+        "countryCode": "ECU", 
+        "software": "CKAN", 
+        "url": "http://datosabiertos.ec/"
+    }, 
+    "datosabiertos_malaga_eu": {
+        "api": "", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://datosabiertos.malaga.eu/"
+    }, 
+    "datospublicos_org": {
+        "api": "",
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://datospublicos.org/"
+    }, 
+    "donnees_ville_montreal_qc_ca": {
+        "api": "", 
+        "countryCode": "CAN", 
+        "software": "CKAN", 
+        "url": "http://donnees.ville.montreal.qc.ca/"
+    }, 
+    "donnees_ville_sherbrooke_qc_ca": {
+        "api": "",
+        "countryCode": "CAN", 
+        "software": "CKAN", 
+        "url": "http://donnees.ville.sherbrooke.qc.ca/"
+    }, 
+    "dot_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://dot.demo.socrata.com"
+    }, 
+    "drdsi_jrc_ec_europa_eu": {
+        "api": "", 
+        "countryCode": "", 
+        "software": "CKAN", 
+        "url": "http://drdsi.jrc.ec.europa.eu/"
+    }, 
+    "edx_netl_doe_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "https://edx.netl.doe.gov/"
+    },
+    "exploredata_gov_ro": {
+        "api": "", 
+        "countryCode": "ROU", 
+        "software": "Socrata", 
+        "url": "https://exploredata.gov.ro"
+    }, 
+    "finances_worldbank_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://finances.worldbank.org"
+    }, 
+    "gavaobert_gavaciutat_cat": {
+        "api": "", 
+        "countryCode": "ESP", 
+        "software": "Socrata", 
+        "url": "https://gavaobert.gavaciutat.cat"
+    }, 
+    "geothermaldata_org": {
+        "api": "http://search.geothermaldata.org/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://geothermaldata.org/"
+    }, 
+    "gisdata_mn_gov": {
+        "api": "http://gisdata.mn.gov/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://gisdata.mn.gov"
+    }, 
+    "govdata_de": {
+        "api": "https://www.govdata.de/ckan/", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://govdata.de"
+    }, 
+    "hampton_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://hampton.demo.socrata.com"
+    },
+    "health_data_ny_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://health.data.ny.gov"
+    }, 
+    "healthdata_nj_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://healthdata.nj.gov"
+    }, 
+    "healthmeasures_aspe_hhs_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://healthmeasures.aspe.hhs.gov"
+    }, 
+    "hubofdata_ru": {
+        "api": "", 
+        "countryCode": "RUS", 
+        "software": "CKAN", 
+        "url": "http://hubofdata.ru/"
+    }, 
+    "iatiregistry_org": {
+        "api": "http://iatiregistry.org/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://iatiregistry.org"
+    }, 
+    "inforegio_azure-westeurope-prod_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://inforegio.azure-westeurope-prod.socrata.com"
+    }, 
+    "irs_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://irs.demo.socrata.com"
+    }, 
+    "leedsdatamill_org": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://leedsdatamill.org/"
+    }, 
+    "linkeddatacatalog_dws_informatik_uni-mannheim_de": {
+        "api": "", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://linkeddatacatalog.dws.informatik.uni-mannheim.de/"
+    }, 
+    "nats_demo_socrata_com_login": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://nats.demo.socrata.com/login"
+    },
+    "nycopendata_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://nycopendata.socrata.com"
+    }, 
+    "offenedaten_de": {
+        "api": "https://offenedaten.de/", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://offenedaten.de/"
+    }, 
+    "open-data_europa_eu": {
+        "api": "http://open-data.europa.eu/en/data/", 
+        "countryCode": "LUX", 
+        "software": "CKAN", 
+        "url": "http://open-data.europa.eu/"
+    },
+    "open_nrw": {
+        "api": "https://open.nrw/api/",
+        "countryCode": "DEU",
+        "software": "CKAN",
+        "url": "https://open.nrw/"
+    },
+    "open_whitehouse_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://open.whitehouse.gov"
+    }, 
+    "opencolorado_org": {
+        "api": "http://data.opencolorado.org/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://opencolorado.org/"
+    }, 
+    "opendata_aberdeencity_gov_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://opendata.aberdeencity.gov.uk/"
+    },
+    "opendata_aragon_es": {
+        "api": "http://opendata.aragon.es/catalogo/", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://opendata.aragon.es/"
+    }, 
+    "opendata_awt_be": {
+        "api": "", 
+        "countryCode": "BEL", 
+        "software": "CKAN", 
+        "url": "http://opendata.awt.be/"
+    }, 
+    "opendata_ayto-caceres_es": {
+        "api": "", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://opendata.ayto-caceres.es/"
+    }, 
+    "opendata_bayern_de": {
+        "api": "", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "https://opendata.bayern.de/"
+    }, 
+    "opendata_brussels_be": {
+        "api": "", 
+        "countryCode": "BEL", 
+        "software": "OpenDataSoft", 
+        "url": "http://opendata.brussels.be"
+    }, 
+    "opendata_caceres_es": {
+        "api": "", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://opendata.caceres.es/"
+    },
+    "opendata_cnmc_es": {
+        "api": "",
+        "countryCode": "ESP",
+        "software": "CKAN",
+        "url": "http://opendata.cnmc.es/"
+    },
+    "opendata_comune_bari_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://opendata.comune.bari.it/"
+    },
+    "opendata_government_bg": {
+        "api": "",
+        "countryCode": "BGR",
+        "software": "CKAN",
+        "url": "https://opendata.government.bg/"
+    },
+    "opendata_go_ke": {
+        "api": "", 
+        "countryCode": "KEN", 
+        "software": "Socrata", 
+        "url": "http://opendata.go.ke"
+    },
+    "opendata_go_tz": {
+        "api": "",
+        "countryCode": "TZA",
+        "software": "CKAN",
+        "url": "http://opendata.go.tz/"
+    },
+    "opendata_hu": {
+        "api": "", 
+        "countryCode": "HUN", 
+        "software": "CKAN", 
+        "url": "http://opendata.hu/"
+    }, 
+    "opendata_lasvegasnevada_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://opendata.lasvegasnevada.gov"
+    }, 
+    "opendata_lisra_jp": {
+        "api": "http://opendata.lisra.jp/", 
+        "countryCode": "JPN", 
+        "software": "CKAN", 
+        "url": "http://opendata.lisra.jp"
+    }, 
+    "opendata_opennorth_se": {
+        "api": "", 
+        "countryCode": "SWE", 
+        "software": "CKAN", 
+        "url": "http://opendata.opennorth.se/"
+    }, 
+    "opendata_paris_fr_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://opendata.paris.fr.opendatasoft.com"
+    },
+    "opendata_rubi_cat": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://opendata.rubi.cat"
+    }, 
+    "opendata_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://opendata.socrata.com"
+    },
+    "opendata_swiss": {
+        "api": "",
+        "countryCode": "CHE",
+        "software": "CKAN",
+        "url": "https://opendata.swiss/"
+    },
+    "opendatacanarias_es": {
+        "api": "http://opendatacanarias.es/datos/", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://opendatacanarias.es/"
+    },
+    "opendatadc_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://opendatadc.org/"
+    }, 
+    "opendatagortynia_gr": {
+        "api": "", 
+        "countryCode": "GRC", 
+        "software": "CKAN", 
+        "url": "http://opendatagortynia.gr/"
+    }, 
+    "opendatahub_gr": {
+        "api": "", 
+        "countryCode": "GRC", 
+        "software": "CKAN", 
+        "url": "http://opendatahub.gr/"
+    },
+    "www_opendatamalta_org": {
+        "api": "http://www.opendatamalta.org/ckan/api/",
+        "countryCode": "MLT",
+        "software": "CKAN",
+        "url": "http://www.opendatamalta.org/"
+    },
+    "opendatareno_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://opendatareno.org/"
+    }, 
+    "opengov_es": {
+        "api": "", 
+        "countryCode": "ESP", 
+        "software": "CKAN", 
+        "url": "http://opengov.es/"
+    },
+    "openresearchdata_ch": {
+        "api": "",
+        "countryCode": "CHE",
+        "software": "CKAN",
+        "url": "http://openresearchdata.ch/"
+    },
+    "opingogn_is": {
+        "api": "", 
+        "countryCode": "ISL", 
+        "software": "CKAN", 
+        "url": "http://opingogn.is/"
+    }, 
+    "oppnadata_se": {
+        "api": "http://oppnadata.se/", 
+        "countryCode": "SWE", 
+        "software": "CKAN", 
+        "url": "http://oppnadata.se"
+    }, 
+    "parisdata_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://parisdata.opendatasoft.com"
+    }, 
+    "performance_chattanooga_gov": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://performance.chattanooga.gov"
+    }, 
+    "performance_smcgov_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://performance.smcgov.org"
+    }, 
+    "performance_westsussex_gov_uk": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "Socrata", 
+        "url": "http://performance.westsussex.gov.uk"
+    }, 
+    "pod_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "OpenDataSoft", 
+        "url": "http://pod.opendatasoft.com"
+    }, 
+    "portal_openbelgium_be": {
+        "api": "http://portal.openbelgium.be/", 
+        "countryCode": "BEL", 
+        "software": "CKAN", 
+        "url": "http://portal.openbelgium.be"
+    }, 
+    "public_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "IRL", 
+        "software": "OpenDataSoft", 
+        "url": "http://public.opendatasoft.com"
+    }, 
+    "publicdata_eu": {
+        "api": "http://publicdata.eu/", 
+        "countryCode": "USA", 
+        "software": "CKAN", 
+        "url": "http://publicdata.eu"
+    }, 
+    "rdw_azure-westeurope-prod_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://rdw.azure-westeurope-prod.socrata.com"
+    }, 
+    "reportcard_santamonicayouth_net": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://reportcard.santamonicayouth.net"
+    }, 
+    "rs_ckan_net": {
+        "api": "", 
+        "countryCode": "SRB", 
+        "software": "CKAN", 
+        "url": "http://rs.ckan.net/"
+    }, 
+    "scisf_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "OpenDataSoft", 
+        "url": "http://scisf.opendatasoft.com"
+    }, 
+    "stat_cityofgainesville_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://stat.cityofgainesville.org"
+    }, 
+    "tourisme04_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://tourisme04.opendatasoft.com"
+    }, 
+    "tourisme62_opendatasoft_com": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "OpenDataSoft", 
+        "url": "http://tourisme62.opendatasoft.com"
+    },
+    "transparenz_hamburg_de": {
+        "api": "http://suche.transparenz.hamburg.de/api/",
+        "countryCode": "DEU",
+        "software": "CKAN",
+        "url": "http://transparenz.hamburg.de/"
+    },
+    "udct-data_aigid_jp": {
+        "api": "http://udct-data.aigid.jp/", 
+        "countryCode": "JPN", 
+        "software": "CKAN", 
+        "url": "http://udct-data.aigid.jp"
+    }, 
+    "westsacramento_demo_socrata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://westsacramento.demo.socrata.com"
+    }, 
+    "wfp_demo_socrata_com_login": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://wfp.demo.socrata.com/login"
+    }, 
+    "www_amsterdamopendata_nl": {
+        "api": "http://data.amsterdamopendata.nl/", 
+        "countryCode": "NLD", 
+        "software": "CKAN", 
+        "url": "http://www.amsterdamopendata.nl"
+    }, 
+    "www_civicdata_io": {
+        "api": "http://www.civicdata.io/", 
+        "countryCode": "IOT", 
+        "software": "CKAN", 
+        "url": "http://www.civicdata.io"
+    }, 
+    "www_consumerfinance_gov_complaintdatabase": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://data.consumerfinance.gov"
+    }, 
+    "www_criminalytics_org": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://www.criminalytics.org"
+    }, 
+    "www_dallasopendata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "https://www.dallasopendata.com"
+    }, 
+    "www_data_gc_ca": {
+        "api": "http://open.canada.ca/data/", 
+        "countryCode": "CAN", 
+        "software": "CKAN", 
+        "url": "http://www.data.gc.ca/"
+    },
+    "www_data_go_jp": {
+        "api": "http://www.data.go.jp/data/",
+        "countryCode": "JPN",
+        "software": "CKAN",
+        "url": "http://www.data.go.jp/"
+    },
+    "www_data_vic_gov_au": {
+        "api": "", 
+        "countryCode": "AUS", 
+        "software": "CKAN", 
+        "url": "https://www.data.vic.gov.au/"
+    }, 
+    "www_datagm_org_uk": {
+        "api": "http://www.datagm.org.uk/", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://www.datagm.org.uk"
+    },
+    "www_daten_rlp_de": {
+        "api": "", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://www.daten.rlp.de/"
+    }, 
+    "www_dati_friuliveneziagiulia_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "Socrata", 
+        "url": "https://www.dati.friuliveneziagiulia.it"
+    }, 
+    "www_datos_misiones_gov_ar": {
+        "api": "", 
+        "countryCode": "ARG", 
+        "software": "CKAN", 
+        "url": "http://www.datos.misiones.gov.ar/"
+    }, 
+    "www_edinburghopendata_info": {
+        "api": "", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://www.edinburghopendata.info/"
+    },
+    "www_europeandataportal_eu": {
+        "api": "http://www.europeandataportal.eu/data/api",
+        "countryCode": "",
+        "software": "CKAN",
+        "url": "http://www.europeandataportal.eu/"
+    },
+    "www_hri_fi": {
+        "api": "", 
+        "countryCode": "FIN", 
+        "software": "CKAN", 
+        "url": "http://www.hri.fi/"
+    }, 
+    "www_metrochicagodata_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://www.metrochicagodata.com"
+    }, 
+    "www_nosdonnees_fr": {
+        "api": "", 
+        "countryCode": "FRA", 
+        "software": "CKAN", 
+        "url": "http://www.nosdonnees.fr/"
+    }, 
+    "www_odaa_dk": {
+        "api": "", 
+        "countryCode": "DNK", 
+        "software": "CKAN", 
+        "url": "http://www.odaa.dk/"
+    }, 
+    "www_offene-daten_me": {
+        "api": "http://www.offene-daten.me/", 
+        "countryCode": "DEU",
+        "software": "CKAN", 
+        "url": "http://www.offene-daten.me"
+    }, 
+    "www_opendata-hro_de": {
+        "api": "", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "http://www.opendata-hro.de/"
+    }, 
+    "www_opendata_provincia_roma_it": {
+        "api": "", 
+        "countryCode": "ITA", 
+        "software": "CKAN", 
+        "url": "http://www.opendata.provincia.roma.it/"
+    }, 
+    "www_opendataforum_info": {
+        "api": "http://data.opendataforum.info/", 
+        "countryCode": "BEL", 
+        "software": "CKAN", 
+        "url": "http://www.opendataforum.info/"
+    }, 
+    "www_opendatanyc_com": {
+        "api": "", 
+        "countryCode": "USA", 
+        "software": "Socrata", 
+        "url": "http://www.opendatanyc.com"
+    },
+    "www_opendataphilly_org": {
+        "api": "",
+        "countryCode": "USA",
+        "software": "CKAN",
+        "url": "https://www.opendataphilly.org/"
+    },
+    "www_opendataportal_at": {
+        "api": "http://data.opendataportal.at/", 
+        "countryCode": "AUT", 
+        "software": "CKAN", 
+        "url": "https://www.opendataportal.at/"
+    }, 
+    "www_opengov-muenchen_de": {
+        "api": "", 
+        "countryCode": "DEU", 
+        "software": "CKAN", 
+        "url": "https://www.opengov-muenchen.de/"
+    }, 
+    "www_rotterdamopendata_nl": {
+        "api": "http://rotterdamopendata.nl/", 
+        "countryCode": "NLD", 
+        "software": "CKAN", 
+        "url": "http://www.rotterdamopendata.nl/"
+    },
+    "www_yorkopendata_org": {
+        "api": "http://data.yorkopendata.org/", 
+        "countryCode": "GBR", 
+        "software": "CKAN", 
+        "url": "http://www.yorkopendata.org/"
+    },
+    "LWBIN_Data_HUB": {
+        "api": "",
+        "countryCode": "CAN",
+        "software": "CKAN",
+        "url": "http://130.179.67.140/"
+    },
+    "daten_buergernetz_bz_it":{
+
+        "url":"http://daten.buergernetz.bz.it/de/",
+        "api":"http://daten.buergernetz.bz.it/de/api/3",
+        "countryCode": "ITA",
+        "software": "CKAN",
+    }
+
+}

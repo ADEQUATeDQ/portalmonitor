@@ -1,0 +1,30 @@
+{% extends "odpw_layout.jinja" %}
+
+{% set active_page = "quality" -%}
+{% block content %}
+<div class="ui  container">
+    <h2 class="ui header">Quality Measures</h2>
+    <div class="ui text vertical segment ">
+        Our current set of quality measures consists of 6 dimensions with a total of 19 metrics.
+    </div>
+
+
+    <div class="ui one column grid">
+        {% for q in qa %}
+        <div class="ui  column">
+            <div class="ui segment">
+            <h3 class="ui header">{{q.dimension}} Dimension</h3>
+
+            {% for m,s in q.metrics.iteritems() %}
+
+                <span class="ui ribbon label" style="background:{{s.color}}; color:white;">[{{m|lower}}]</span>
+                <span class="ui header">{{s.label}}</span>
+                <p>{{s.description}}</p>
+            {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+</div>
+{% endblock %}

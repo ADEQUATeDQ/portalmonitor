@@ -1,0 +1,327 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Open Data Portal Watch API",
+        "description": "Open Data Portal Watch API",
+        "version": "1.0.0"
+    },
+    "host": "{{data.host}}",
+    "schemes": [
+        "http"
+    ],
+    "basePath": "{{data.basePath}}",
+    "paths": {
+        "/portals": {
+            "get": {
+                "summary": "Get a list of all portals in the system",
+                "description": "Returns basic information about the ODPW registered portals",
+                "tags": [
+                    "Portals"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/portalbasic"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/portals.csv": {
+            "get": {
+                "summary": "Get a list of all portals in the system as CSV",
+                "description": "Get a list of all portals in the system as CSV",
+                "tags": [
+                    "Portals"
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date"
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/fetch": {
+            "get": {
+                "summary": "Get fetch information for all portals for the given snapshot",
+                "tags": [
+                    "Portals"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot \"(yyww)\"",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/portalfetch"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/fetch.csv": {
+            "get": {
+                "summary": "Get fetch information for all portals for the given snapshot as CSV",
+                "tags": [
+                    "Portals"
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot \"(yyww)\"",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date"
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/quality": {
+            "get": {
+                "summary": "Get aggregated quality information for all portals for the given snapshot",
+                "tags": [
+                    "Portals"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot \"(yyww)\"",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/portalquality"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/quality.csv": {
+            "get": {
+                "summary": "Get aggregated quality information for all portals for the given snapshot as CSV",
+                "description": "Get aggregated quality information for all portals for the given snapshot as CSV",
+                "tags": [
+                    "Portals"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "ID of pet to fetch",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "produces": [
+                    "text/csv"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date"
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/all": {
+            "get": {
+                "summary": "Get all details all portals for the given snapshot",
+                "tags": [
+                    "Portals"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot \"(yyww)\"",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/portalquality"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/portals/{snapshot}/all.csv": {
+            "get": {
+                "summary": "Get all details all portals for the given snapshot as CSV",
+                "description": "Get all details all portals for the given snapshot as CSV",
+                "tags": [
+                    "Portals"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "ID of pet to fetch",
+                    "required": true,
+                    "type": "integer"
+                }],
+                "produces": [
+                    "text/csv"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The content of the URL for the given date"
+                    }
+                }
+            }
+        },
+        "/portal/{portalid}/{snapshot}/all.csv": {
+            "get": {
+                "summary": "Get all details  the given snapshot and portal idas CSV",
+                "description": "Get all details all portals for the given snapshot as CSV",
+                "tags": [
+                    "Portal"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot",
+                    "required": true,
+                    "type": "integer"
+                },{
+                    "name": "portalid",
+                    "in": "path",
+                    "description": "Portalid",
+                    "required": true,
+                    "type": "string"
+                }
+              ],
+                "produces": [
+                    "text/csv"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+        ,"/portal/{portalid}/{snapshot}/all": {
+            "get": {
+                "summary": "Get all details  the given snapshot and portalid ",
+                "description": "Get all details all portals for the given snapshot",
+                "tags": [
+                    "Portal"
+                ],
+                "parameters": [{
+                    "name": "snapshot",
+                    "in": "path",
+                    "description": "snapshot",
+                    "required": true,
+                    "type": "integer"
+                },{
+                    "name": "portalid",
+                    "in": "path",
+                    "description": "Portalid",
+                    "required": true,
+                    "type": "string"
+                }
+              ],
+              "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+        ,
+    },
+    "definitions": {
+        "portalbasic": {
+            "type": "object",
+            "properties": {
+                "apiuri": {
+                    "type": "string"
+                },
+                "active": {
+                    "type": "boolean"
+                },
+                "iso": {
+                    "type": "string"
+                },
+                "software": {
+                    "type": "string"
+                },
+                "uri": {
+                    "type": "string"
+                }
+            }
+        },
+        "portalfetch": {
+            "type": "object",
+            "properties": {
+                "portalid": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "boolean"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "snapshot": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "exc": {
+                    "description": "Possible error message during fetch process",
+                    "type": "string"
+                }
+            }
+        },
+        "portalquality": {
+            "type": "object",
+            "properties": {
+                "portalid": {
+                    "type": "string"
+                },
+                "snapshot": {
+                    "type": "integer"
+                },
+                "datasets": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

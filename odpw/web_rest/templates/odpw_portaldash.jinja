@@ -1,0 +1,53 @@
+{% extends "odpw_layout.jinja" %}
+
+
+
+
+{% block content %}
+    <div class="ui segement">
+        <div class="column ui centered container" id="container">
+            <div class="centered sixteen wide column">
+                <h3 class="ui header" > Portal: Please select a portal
+                    <div class="ui left pointing scrolling dropdown icon">
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="ui left search icon input">
+                                <i class="search icon"></i>
+                                <input type="text" name="search" placeholder="Search portal...">
+                            </div>
+                            <div class="header">
+                                <i class="tags icon"></i>
+                                Portals
+                            </div>
+                            {% for portal in data.portals%}
+                            <div  class="item">
+                                <a href="{{url_for('ui.portal', portalid=portal.id, snapshot=snapshot)}}">
+                                    <i class="{{portal.iso| lower}} flag "></i>
+                                    {{portal.uri|get_domain}} ({{portal.software}})
+                                </a>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+
+                </h3>
+            </div>
+
+        </div>
+   </div>
+{% endblock %}
+
+
+{% block script %}
+$('.dropdown')
+  .dropdown({
+    // you can use any ui transition
+    transition: 'drop',
+    fullTextSearch:true,
+    sortSelect: true,
+    match:'text'
+  })
+;
+
+{% endblock %}

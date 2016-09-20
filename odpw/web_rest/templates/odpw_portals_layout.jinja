@@ -1,0 +1,51 @@
+{% extends "odpw_layout.jinja" %}
+
+{% set active_page = "portals" -%}
+
+
+{% block content %}
+    <div class="ui grid two equal width column">
+        <div class="two wide column background" >
+            <div class="ui secondary vertical inverted fluid labeled icon menu">
+
+                {% set navigation_bar = [
+                    ('ui.portalslist', 'grid layout', 'Portals List'),
+                    ('ui.portalssize', 'bar chart', 'Stats'),
+                    ('ui.portalsquality', 'star half empty', 'Quality'),
+
+                    ]
+                -%}
+                {% set active_sub_page = active_sub_page|default('ui.portal') -%}
+                {% for href,  icon, caption in navigation_bar %}
+                    <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href)|e }}">
+                        <i class="{{ icon|e }} icon"></i>
+                        {{ caption|e }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="column ui grid" id="container">
+            <div class="sixteen wide column background">
+                <h3 class="ui header">{% block title %}{% endblock %}</h3>
+            </div>
+            {% block portalscontent %}
+            {% endblock %}
+        </div>
+   </div>
+{% endblock %}
+
+
+{% block script %}
+$('.dropdown')
+  .dropdown({
+    // you can use any ui transition
+    transition: 'drop'
+  })
+;
+$('.ui.sticky')
+  .sticky({
+    context: '#container'
+  });
+
+
+{% endblock %}

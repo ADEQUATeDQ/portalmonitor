@@ -1,0 +1,94 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+
+{% set active_sub_page = "ui.portalLicenses" -%}
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% macro distTable(data, key, label) -%}
+<table class="ui celled table" id="table{{label}}" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>{{label}}</th>
+            <th>count</th>
+            <th>percentage</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>{{label}}</th>
+            <th>count</th>
+            <th>percentage</th>
+        </tr>
+    </tfoot>
+    <tbody>
+        {% for l in data[key].top3Dist %}
+        <tr>
+            <td class="hideextra">{{l[key]}}</td>
+            <td>{{l.count}}</td>
+             <td>({{ (l.perc*100)| round(2)}}%)</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{%- endmacro %}
+
+
+{% block portalcontent %}
+    <div class="ui top attached tabular menu" id="tabs">
+        <a class="active item" data-tab="formats">{{data.format.distinct}} Formats</a>
+        <a class="item" data-tab="orgas">{{data.organisation.distinct}} Organisations</a>
+        <a class="item" data-tab="licenses">{{data.license.distinct}} Licenses</a>
+    </div>
+    <div class="ui bottom attached active tab segment" data-tab="formats">
+        {{distTable(data, 'format','Format')}}
+    </div>
+    <div class="ui bottom attached tab segment" data-tab="orgas">
+        {{distTable(data, 'organisation','Organisation')}}
+    </div>
+    <div class="ui bottom attached tab segment" data-tab="licenses">
+        {{distTable(data, 'license','License')}}
+    </div>
+
+
+
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+     $(document).ready(function() {
+
+        $('#tabs .item')
+         .tab()
+        ;
+        $('#tableFormat').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+        $('#tableOrganisation').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+
+        $('#tableLicense').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+
+
+    })
+ {% endblock %}
