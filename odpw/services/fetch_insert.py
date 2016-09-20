@@ -38,29 +38,41 @@ def fetchHttp(obj):
 
         db.add(PS)
         try:
+
             processor=getPortalProcessor(P)
-            iter=processor.generateFetchDatasetIter(P,PS, snapshot)
+            iter=processor.generateFetchDatasetIter(P, PS, snapshot)
             insertDatasets(P,db,iter,snapshot)
             status=200
             exc=None
+            db.commit()
         except Exception as exc:
             ErrorHandler.handleError(log, "PortalFetchException", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
             status=getExceptionCode(exc)
             exc=getExceptionString(exc)
+        try:
+            #update the portalsnapshot object with dataset and resource count and end time
+            dsfetched=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
+            resCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
+            #dsCount=PortalSnapshot.datasetcount
 
-        #update the portalsnapshot object with dataset and resource count and end time
-        s = db.Session
-        PS = s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
-        PS.datasetsFetched = s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
-        PS.datasetCount=PortalSnapshot.datasetCount
-        PS.resourceCount =s.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-        PS.end = datetime.datetime.now()
-        PS.exc=exc
-        PS.status=status
+        except Exception as exc:
+            ErrorHandler.handleError(log, "PortalSnapshotUpdate", exception=exc, pid=P.id, snapshot=snapshot,
+                                     exc_info=True)
+        try:
+            s = db.Session
 
-        s.commit()
-        s.remove()
-
+            PS = s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
+            PS.datasetsfetched =dsfetched
+            PS.resourcecount =resCount
+            #PS.datasetcount = dsCount
+            PS.end = datetime.datetime.now()
+            PS.exc=exc
+            PS.status=status
+            s.commit()
+            #s.flush()
+            s.remove()
+        except Exception as exc:
+            ErrorHandler.handleError(log, "PortalSnapshotUpdate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
         try:
             aggregatePortalQuality(db,P.id, snapshot)
         except Exception as exc:

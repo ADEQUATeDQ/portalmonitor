@@ -113,9 +113,9 @@ class PortalSnapshot(Base):
     end         = Column(TIMESTAMP)
     status      = Column(SmallInteger)
     exc         = Column(String)
-    datasetCount    = Column(Integer)
-    datasetsFetched    = Column(Integer)
-    resourceCount   = Column(Integer)
+    datasetcount    = Column(Integer)
+    datasetsfetched    = Column(Integer)
+    resourcecount   = Column(Integer)
 
     @hybrid_property
     def fetchtime(self):
@@ -125,7 +125,7 @@ class PortalSnapshot(Base):
 
     def __repr__(self):
         return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s,ds=%s,res=%s)>" % (
-            self.portalid, self.snapshot, self.start, self.end, self.status,self.datasetCount,self.resourceCount)
+            self.portalid, self.snapshot, self.start, self.end, self.status,self.datasetcount,self.resourcecount)
 
 
 class PortalSnapshotQuality(Base):

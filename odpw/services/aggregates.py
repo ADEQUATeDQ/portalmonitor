@@ -1,5 +1,8 @@
 from collections import defaultdict
 
+import structlog
+log =structlog.get_logger()
+
 import pandas as pd
 from sqlalchemy import inspect
 
@@ -56,6 +59,7 @@ def aggregateByPortal3(db, portalid, snapshot):
 boolTypeCol=['cocu','coce','coli','coac','exac','exco','opli']
 
 def aggregatePortalQuality(db, portalid, snapshot):
+    log.info("Computing Aggregated Statistics", pid=portalid, snapshot=snapshot)
 
     with Timer(key=portalid+'-agg', verbose=True):
         df= aggregateByPortal3(db, portalid, snapshot)
