@@ -93,7 +93,7 @@ prepareODPWHead(){
   docker run -d --name $PWSSERVICE_HEAD_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_HEAD_TAG
 }
 
-prepareODPWData()){
+prepareODPWData(){
   docker rm $PWSSERVICE_DATA_TAG
   docker rmi $PWSSERVICE_DATA_TAG
   cd $PWSSERVICE_DATA; docker build --tag $PWSSERVICE_DATA_TAG .
@@ -107,6 +107,7 @@ prepareODPWUI(){
   docker run -d -p 82:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
 }
 
+preparePython
 prepareDataContainers
 prepareODPW
 prepareODPWMeta

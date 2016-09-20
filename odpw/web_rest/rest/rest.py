@@ -118,31 +118,3 @@ def cli(args,dbm):
     print "Listinging on http://localhost:"+str(conf['port'])+"/"+conf['url_prefix']
     log.info("Server running", url="http://localhost:"+str(conf['port'])+"/"+conf['url_prefix'])
     IOLoop.instance().start()
-
-if __name__ == "__main__":
-    dbm=DBManager(user='opwu', password='0pwu', host='localhost', port=1111, db='portalwatch')
-    conf={
-        'url_prefix':'api'
-        ,'port':5122
-    }
-    app=create_app(dbm,conf)
-
-    tr = WSGIContainer(app)
-
-    application = Application([
-        (r"/tornado", MainHandler),
-        (r".*", FallbackHandler, dict(fallback=tr)),
-    ])
-    print "here"
-    application.listen(5122)
-    print "Listinging on http://localhost:5122/api"
-    IOLoop.instance().start()
-
-
-
-
-#if __name__ == '__main__':
-
-
-
-#    app.run( debug=True, port=5123)

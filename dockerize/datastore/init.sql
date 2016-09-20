@@ -1,4 +1,4 @@
-CREATE USER adequatecli WITH PASSWORD  '4dequat3';
-CREATE DATABASE adequate;
-GRANT ALL PRIVILEGES ON DATABASE adequate TO adequatecli;
-ALTER DATABASE adequate OWNER TO adequatecli;
+CREATE USER adequatebot WITH PASSWORD  '4dequat3';
+CREATE DATABASE portalmonitor;
+GRANT ALL PRIVILEGES ON DATABASE portalmonitor TO adequatebot;
+ALTER DATABASE portalmonitor OWNER TO adequatebot;
