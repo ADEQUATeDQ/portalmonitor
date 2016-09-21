@@ -13,7 +13,9 @@
                     ('ui.portalQuality', 'info', 'Quality'),
                     ('ui.portalEvolution', 'info', 'Evolution'),
                     ('ui.portalFormats', 'info', 'Stats'),
-                    ('ui.portalRes', 'grid layout', 'Resources')
+                    ('ui.portalRes', 'grid layout', 'Availability'),
+                    ('ui.portalRes', 'grid layout', 'Resources'),
+                    ('ui.portalDataset', 'grid layout', 'Datasets')
                     ]
                 -%}
                 {% set active_sub_page = active_sub_page|default('ui.portal') -%}
@@ -72,6 +74,8 @@
                     {% if data.snapshots.prev %}
                         {% if active_sub_page=='ui.portalDataset' %}
                             <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
+                        {% elif active_sub_page=='ui.resourceInfo' %}
+                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,uri=uri)}}">
                         {% else %}
                             <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
                         {% endif %}
@@ -90,9 +94,18 @@
                             </div>
                             {% for sn in data.snapshots.list| sort %}
                                 <div class="item" data-value="{{sn}}">
-                                    <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=sn)}}">
+
+                                    {% if active_sub_page=='ui.portalDataset' %}
+                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
+                                    {% elif active_sub_page=='ui.resourceInfo' %}
+                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,uri=uri)}}">
+                                    {% else %}
+                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                                    {% endif %}
                                         {{sn|getWeekString}}
                                     </a>
+
+
 
 
                                 </div>

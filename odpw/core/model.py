@@ -79,23 +79,23 @@ class Portal(Base):
             .where(PortalSnapshot.portalid == cls.id).label("last_snapshot")
 
     @hybrid_property
-    def datasetCount(self):
-        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().datasetCount
+    def datasetcount(self):
+        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().datasetcount
 
-    @datasetCount.expression
-    def datasetCount(cls):
-        q=select([PortalSnapshot.datasetCount])\
-            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("datasetCount")
+    @datasetcount.expression
+    def datasetcount(cls):
+        q=select([PortalSnapshot.datasetcount])\
+            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("datasetcount")
         return q
 
     @hybrid_property
-    def resourceCount(self):
-        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().resourceCount
+    def resourcecount(self):
+        return self.snapshots.order_by(PortalSnapshot.snapshot.desc()).one().resourcecount
 
-    @resourceCount.expression
-    def resourceCount(cls):
-        q=select([PortalSnapshot.resourceCount])\
-            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("resourceCount")
+    @resourcecount.expression
+    def resourcecount(cls):
+        q=select([PortalSnapshot.resourcecount])\
+            .where(PortalSnapshot.portalid == cls.id).order_by(PortalSnapshot.snapshot.desc()).limit(1).label("resourcecount")
         return q
 
     def __repr__(self):
