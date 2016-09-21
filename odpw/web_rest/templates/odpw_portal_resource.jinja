@@ -1,6 +1,6 @@
 {% extends "odpw_portal_layout.jinja" %}
 
-{% set active_sub_page = "ui.portalDataset" -%}
+{% set active_sub_page = "ui.resourceInfo" -%}
 
 {% block headcss %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
@@ -13,42 +13,15 @@
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 {% endblock %}
 
-{% macro distTable(data, key, label) -%}
-<table class="ui celled table" id="table{{label}}" cellspacing="0" width="100%">
-    <thead>
-        <tr>
-            <th>{{label}}</th>
-            <th>count</th>
-            <th>percentage</th>
-        </tr>
-    </thead>
-    <tfoot>
-        <tr>
-            <th>{{label}}</th>
-            <th>count</th>
-            <th>percentage</th>
-        </tr>
-    </tfoot>
-    <tbody>
-        {% for l in data[key].top3Dist %}
-        <tr>
-            <td class="hideextra">{{l[key]}}</td>
-            <td>{{l.count}}</td>
-             <td>({{ (l.perc*100)| round(2)}}%)</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{%- endmacro %}
 
 
 {% block portalcontent %}
     <div class="ui padded centered fifteen wide column ">
         <div class="ui fluid card">
             <div class="content">
-                <div class="header">Dataset:
-                    {% if dataset %}
-                        {{dataset.title}}
+                <div class="header">Resource:
+                    {% if uri %}
+                        {{uri}}
                     {% else %}
                         Please select
                     {% endif %}
@@ -58,16 +31,16 @@
                         <div class="menu">
                             <div class="ui left search icon input">
                                 <i class="search icon"></i>
-                                <input type="text" name="search" placeholder="Search datasets...">
+                                <input type="text" name="search" placeholder="Search resources...">
                             </div>
                             <div class="header">
                                 <i class="tags icon"></i>
                                 Dataset
                             </div>
-                            {% for dataset in data.datasets%}
+                            {% for r in data.resources%}
                             <div  class="item">
-                                <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=snapshot, dataset=dataset.id)}}">
-                                    {{dataset.title}}
+                                <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=snapshot, uri=r.uri)}}">
+                                    {{r.uri}}
                                 </a>
                             </div>
                             {% endfor %}
@@ -78,57 +51,13 @@
 
 
             </div>
-            {% if data.json %}
-            <div class="content">
-                <div class="header">{{data.versions|length}} Version(s)</div>
-                <div class="meta">
-                    {% for v in data.versions %}
-                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.min, dataset=dataset.id)}}">{{v.min|getWeekString}} - {{v.max|getWeekString}}</a>
-                    {% endfor %}
-                </div>
-            </div>
             <div class="content">
                 <div class="description">
-                    <div class="ui vertical segment">
-                        <div class="ui two column doubling padded very relaxed grid">
-                            <div class="column">
-                                <h3 class="ui header"> Raw JSON metadata</h3>
-                                <pre  class="prettyprint" id="json" style="height: 400px"></pre>
-                            </div>
-                            <div class="ui vertical divider">
-
-                            </div>
-                            <div class="column">
-                                <h2 class="ui header"> Quality assessment</h2>
-
-                                {% for k in qa %}
-                                    <div class="ui horizontal divider">{{k.dimension}} Metrics</div>
-                                    <div class="ui three column padded grid">
-
-                                    {% for kk,d in k.metrics.iteritems() %}
-
-                                        {% set m = kk| lower -%}
-                                        <div class="  column">
-                                            <div class="ui label" style="color:{{d.color}}"">{{d.label}}
-                                                <div class="detail">{{ data.datasetData[m]}}</div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="content">
-                <div class="description">
-                    <h3 class="ui header"> {{data['resources']| length}} Resource(s)</h3>
+                    <h3 class="ui header"> {{data['resourceInfo']| length}} Version(s)</h3>
 
                     <div class="ui container">
                         <div class="ui divided items">
-                            {% for r in data['resources'] %}
+                            {% for r in data['resourceInfo'] %}
                                 <div class="item">
                                     <div class="content">
                                         {% if 'status' in r and r.status=='200' %}
@@ -139,12 +68,11 @@
                                            <div class="ui label ribbon">No HTTP information</div>
                                         {% endif %}
                                         <div class="header">
-                                            <a {% if 'status' in r and r.status=='200' %}href="{{r.uri}}" {% endif %}class="header">{{r.uri}}</a>
-                                        </div>
-                                        {% if 'status' in r %}
-                                        <div class="meta">
                                             inspected at: {{r.timestamp}}
-
+                                        </div>
+                                        {% if r.exc %}
+                                        <div class="meta">
+                                            {{r.exc}}
                                         </div>
                                         {% if 'header' in r and r.header %}
                                             <div class="description">
@@ -153,12 +81,9 @@
                                         {% endif %}
 
                                         <div class="extra">
-                                            <div class="ui label">{{r.format}}</div>
+                                            <div class="ui label">{{r.size}}</div>
                                             <div class="ui label">{{r.mime}}</div>
-                                            <div class="ui label"><i class="calendar icon"></i> metadata created:<div class="detail">{{r.created}}</div></div>
 
-                                            {% if r.modified != 'None' %}
-                                                <div class="ui label">metadata modified <div class="detail">{{r.modified}}</div></div> {% endif %}
                                         </div>
                                         {% endif %}
                                     </div>
@@ -168,7 +93,6 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 {% endblock %}
