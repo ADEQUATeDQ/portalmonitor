@@ -248,6 +248,19 @@ class DBClient(object):
                 q=q.limit(batch)
             return q
 
+    def getDataUnfetchedResources(self,snapshot, portalid=None, batch=None):
+        with self.session_scope() as session:
+            q=session.query(MetaResource.uri)\
+                .join(Dataset, Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(MetaResource.valid==True)\
+                .filter(
+                    ~exists().where(MetaResource.uri== ResourceCrawlLog.uri).where(ResourceCrawlLog.snapshot==snapshot))
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            if batch:
+                q=q.limit(batch)
+            return q
 
     def getResourceInfos(self, snapshot, portalid=None):
         with self.session_scope() as session:
@@ -297,10 +310,11 @@ class DBClient(object):
                 d.append(c)
         return pd.DataFrame(d)
 
-    def getResourcesHistory(self, uri, source=None):
+    def getResourcesHistory(self, uri, md5, source=None):
         with self.session_scope() as session:
             q= session.query(ResourceHistory)\
-                .filter(ResourceHistory.uri==uri)
+                .filter(ResourceHistory.uri==uri)\
+                .filter(ResourceHistory.md5==md5)
             if source:
                 q=q.filter(ResourceHistory.source==source)
             q=q.order_by(ResourceHistory.snapshot.asc())
