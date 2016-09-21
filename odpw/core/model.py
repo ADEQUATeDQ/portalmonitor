@@ -35,6 +35,8 @@ tab_organisations=tmp+'organisations'
 tab_organisationssnapshot=tmp+'organisationsnapshot'
 
 tab_resourceshistory=tmp+'resourceshistory'
+tab_resourcesfreshness=tmp+'resourcesfreshness'
+
 
 class Portal(Base):
     __tablename__ = tab_portals
@@ -311,7 +313,28 @@ class ResourceCrawlLog(Base):
 class ResourceHistory(Base):
     __tablename__ = tab_resourceshistory
 
-    uri= Column(String, primary_key=True)
-    snapshot= Column(SmallInteger, primary_key=True)
-    modified= Column(TIMESTAMP)
-    source=Column(String, primary_key=True)
+    uri = Column(String, primary_key=True)
+    snapshot = Column(SmallInteger, primary_key=True)
+    md5 = Column(String,ForeignKey(DatasetData.md5), primary_key=True)
+    modified = Column(TIMESTAMP)
+    source = Column(String, primary_key=True)
+
+
+class ResourceFreshness(Base):
+    __tablename__ = tab_resourcesfreshness
+
+    uri = Column(String, primary_key=True)
+    snapshot = Column(SmallInteger, primary_key=True)
+    md5 = Column(String,ForeignKey(DatasetData.md5), primary_key=True)
+
+    a_cho_naive_header = Column(Float)
+    a_cho_impr_header = Column(Float)
+    a_emp_dist_header = Column(Float)
+    mark1_header = Column(Float)
+    mark2_header = Column(Float)
+
+    a_cho_naive_metadata = Column(Float)
+    a_cho_impr_metadata = Column(Float)
+    a_emp_dist_metadata = Column(Float)
+    mark1_metadata = Column(Float)
+    mark2_metadata = Column(Float)

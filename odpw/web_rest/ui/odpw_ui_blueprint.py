@@ -355,8 +355,6 @@ def portal(snapshot, portalid):
                 data['resources']=P[2]
 
         data.update(aggregatePortalInfo(Session,portalid,snapshot))
-
-
         return render("odpw_portal.jinja",  snapshot=snapshot, portalid=portalid,data=data)
 
 @ui.route('/portal/<portalid>/<int:snapshot>/resource/<path:uri>', methods=['GET'])
