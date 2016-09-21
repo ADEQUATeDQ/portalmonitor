@@ -3,7 +3,6 @@ structlog
 urlnorm
 sqlalchemy
 faststat
-urllib3
 ckanapi
 pandas
 numpy
