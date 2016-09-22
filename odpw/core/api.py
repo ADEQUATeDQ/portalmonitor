@@ -302,12 +302,14 @@ class DBClient(object):
         for inD in qa:
             for k , v in inD['metrics'].items():
                 k=k.lower()
-                value=float(data[k])
-                perc=int(data[k+'N'])/(datasets*1.0) if datasets>0 else 0
-                c= { 'Metric':k, 'Dimension':inD['dimension'],
-                     'dim_color':inD['color'], 'value':value, 'perc':perc}
-                c.update(v)
-                d.append(c)
+                # TODO what to do if metric has no value?
+                if data[k] != 'None':
+                    value=float(data[k])
+                    perc=int(data[k+'N'])/(datasets*1.0) if datasets>0 else 0
+                    c= { 'Metric':k, 'Dimension':inD['dimension'],
+                         'dim_color':inD['color'], 'value':value, 'perc':perc}
+                    c.update(v)
+                    d.append(c)
         return pd.DataFrame(d)
 
     def getResourcesHistory(self, uri, md5, source=None):

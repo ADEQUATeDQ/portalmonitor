@@ -95,14 +95,17 @@
                             {% for sn in data.snapshots.list| sort %}
                                 <div class="item" data-value="{{sn}}">
 
-                                    {% if active_sub_page=='ui.portalDataset' %}
-                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
-                                    {% elif active_sub_page=='ui.resourceInfo' %}
-                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,uri=uri)}}">
-                                    {% else %}
-                                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                                    {% if data.snapshots.prev %}
+                                        {% if active_sub_page=='ui.portalDataset' %}
+                                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,dataset=dataset.id)}}">
+                                        {% elif active_sub_page=='ui.resourceInfo' %}
+                                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev,uri=uri)}}">
+                                        {% else %}
+                                            <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=data.snapshots.prev)}}">
+                                        {% endif %}
                                     {% endif %}
-                                        {{sn|getWeekString}}
+
+                                    {{sn|getWeekString}}
                                     </a>
 
 
