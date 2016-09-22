@@ -1,14 +1,14 @@
 /*!
- * # Semantic UI 2.0.0 - Site
+ * # Semantic UI 2.2.3 - Site
  * http://github.com/semantic-org/semantic-ui/
  *
  *
- * Copyright 2015 Contributors
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
  */
-;(function ( $, window, document, undefined ) {
+
+;(function ($, window, document, undefined) {
 
 $.site = $.fn.site = function(parameters) {
   var
@@ -81,7 +81,7 @@ $.site = $.fn.site = function(parameters) {
       requestAnimationFrame: function() {
         module.debug('Normalizing requestAnimationFrame');
         if(window.requestAnimationFrame === undefined) {
-          module.debug('RequestAnimationFrame not available, normailizing event');
+          module.debug('RequestAnimationFrame not available, normalizing event');
           window.requestAnimationFrame = window.requestAnimationFrame
             || window.mozRequestAnimationFrame
             || window.webkitRequestAnimationFrame
@@ -484,4 +484,4 @@ $.extend($.expr[ ":" ], {
 });
 
 
-})( jQuery, window , document );
+})( jQuery, window, document );
