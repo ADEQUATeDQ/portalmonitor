@@ -2,6 +2,9 @@ import datetime
 from multiprocessing import Pool
 
 import structlog
+from scrapy.utils.url import escape_ajax
+from w3lib.url import safe_url_string
+
 log =structlog.get_logger()
 
 import urlnorm
@@ -129,6 +132,14 @@ def createMetaResources(md5v,dataset):
                 s=int(float(s)) if s is not None else None
             except Exception as e:
                 s=None
+
+            try:
+                s_uri = safe_url_string(uri, 'utf-8')
+                uri = escape_ajax(s_uri)
+            except Exception as exc:
+                ErrorHandler.handleError(log, "safe_url_string", exception=exc, md5=md5, uri=uri,
+                                         exc_info=True)
+                uri = uri
 
             MR= MetaResource(
                 uri = uri
