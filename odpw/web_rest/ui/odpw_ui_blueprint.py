@@ -24,6 +24,7 @@ from odpw.utils.timing import Timer
 from odpw.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek, \
     getLastNSnapshots
 from odpw.web_rest.cache import cache
+from web_rest.rest.odpw_restapi import api
 
 ui = Blueprint('ui', __name__,
                     template_folder='../templates',
@@ -87,7 +88,7 @@ def spec():
     return render('spec.json', data={'host':"localhost:5123/", 'basePath':"api"})
 
 @ui.route('/api', methods=['GET'])
-def api():
+def apispec():
     return render('apiui.jinja')
 
 @ui.route('/timer', methods=['GET'])
