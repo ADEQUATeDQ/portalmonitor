@@ -24,7 +24,7 @@ from odpw.utils.timing import Timer
 from odpw.utils.utils_snapshot import getWeekString, getSnapshotfromTime, getPreviousWeek, getNextWeek, \
     getLastNSnapshots
 from odpw.web_rest.cache import cache
-from web_rest.rest.odpw_restapi import api
+
 
 ui = Blueprint('ui', __name__,
                     template_folder='../templates',
