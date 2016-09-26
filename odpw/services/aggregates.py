@@ -69,14 +69,11 @@ def aggregatePortalQuality(db, portalid, snapshot):
         if df.shape[0] != 0:
 
             for i in boolTypeCol:
-                print i, df[i].dtype
-                print df[i]
                 if df[i].dtype.name == 'bool':
                     df[i]=df[i].astype(int)
                 else:
                     df[i]=df[i].replace(True,1)
                     df[i]=df[i].replace(False,0)
-                print df[i]
                 #df[c]=df[c].apply(bool).astype(int)
 
             data={ k:float(str(v[['mean']]['mean'].round(decimals=2))) for k,v  in dict(df.describe()).items()}
@@ -126,14 +123,3 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
                 stats[key]={'distinct':cFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
 
     return stats
-
-
-
-
-
-
-
-#opfo
-#opli
-#opma
-#cofo

@@ -1,4 +1,5 @@
 import pandas as pd
+from sqlalchemy import and_
 from sqlalchemy import func, exists
 from sqlalchemy.orm import scoped_session
 
@@ -234,6 +235,8 @@ class DBClient(object):
             q= session.query(DatasetData).filter(DatasetData.md5==md5).first()
             return q
 
+
+
     def getUnfetchedResources(self,snapshot, portalid=None, batch=None):
         with self.session_scope() as session:
             q=session.query(MetaResource.uri)\
@@ -241,7 +244,10 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
-                    ~exists().where(MetaResource.uri== ResourceInfo.uri).where(ResourceInfo.snapshot==snapshot))
+                #~exists().where(ResourceInfo.uri == MetaResource.uri).where(ResourceInfo.snapshot == snapshot)
+                    ~exists().where(
+                        and_( ResourceInfo.uri==MetaResource.uri, ResourceInfo.snapshot==snapshot))
+                )
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
             if batch:
@@ -255,7 +261,8 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
-                    ~exists().where(MetaResource.uri== ResourceCrawlLog.uri).where(ResourceCrawlLog.snapshot==snapshot))
+                    ~exists().where(and_(MetaResource.uri== ResourceCrawlLog.uri, ResourceCrawlLog.snapshot==snapshot))
+                )
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
             if batch:
