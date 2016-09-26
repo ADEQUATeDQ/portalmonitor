@@ -69,6 +69,7 @@ def create_app(dbm, conf):
 
     app = Flask(__name__)
 
+
     #app.config.from_object(config_object)
     app.engine = dbm.engine
     cache.init_app(app)
@@ -86,6 +87,15 @@ def create_app(dbm, conf):
     api.add_namespace(portal_namespace)
     api.add_namespace(portals_namespace)
     app.register_blueprint(blueprint)
+
+    #cors = CORS(app, resources={r"/v1/*": {"origins": "*"}})
+
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        return response
 
     @app.errorhandler(500)
     def internal_error(e):
