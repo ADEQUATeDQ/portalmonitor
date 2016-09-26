@@ -125,6 +125,15 @@ def createMetaResources(md5v,dataset):
             s=getDistributionSizeWithURL(dataset, uri)
             c=getDistributionCreationDateWithURL(dataset,uri)
             mod=getDistributionModificationDateWithURL(dataset,uri)
+            
+            try:
+                s_uri = safe_url_string(uri, 'utf-8')
+                uri = escape_ajax(s_uri)
+            except Exception as exc:
+                ErrorHandler.handleError(log, "safe_url_string", exception=exc, md5=md5, uri=uri,
+                                         exc_info=True)
+                uri = uri
+
             if uri in uris:
                 log.debug("WARNING, duplicate URI", dataset=dataset.id, md5=md5v, uri=uri,format=f,media=m)
                 continue
@@ -133,13 +142,7 @@ def createMetaResources(md5v,dataset):
             except Exception as e:
                 s=None
 
-            try:
-                s_uri = safe_url_string(uri, 'utf-8')
-                uri = escape_ajax(s_uri)
-            except Exception as exc:
-                ErrorHandler.handleError(log, "safe_url_string", exception=exc, md5=md5, uri=uri,
-                                         exc_info=True)
-                uri = uri
+
 
             MR= MetaResource(
                 uri = uri
