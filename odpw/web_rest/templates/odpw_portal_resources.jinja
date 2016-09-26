@@ -109,7 +109,7 @@
     {{ super() }}
     snapshot={{ snapshot|safe }}
     portalid="{{ portalid|safe }}"
-    url="http://localhost:5123/api/portal/"+portalid+"/"+snapshot+"/resources"
+    url="/api/portal/"+portalid+"/"+snapshot+"/resources"
     console.log(url)
 
 
