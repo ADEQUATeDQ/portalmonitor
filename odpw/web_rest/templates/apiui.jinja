@@ -35,7 +35,8 @@
           if (url && url.length > 1) {
             url = decodeURIComponent(url[1]);
           } else {
-            url = "/api/swagger.json";
+            url = '{{url_for("api.specs")}}';
+            //"/api/swagger.json";
           }
 
           // Pre load translate...

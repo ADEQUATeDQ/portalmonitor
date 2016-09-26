@@ -3,6 +3,7 @@ import json
 
 
 from flask import make_response, request, current_app
+from flask_restplus import cors
 from sqlalchemy import and_
 
 from odpw.utils.timing import Timer
@@ -54,7 +55,9 @@ class PortalSnapshotQuality1(Resource):
 
 @ns.route('/<portalid>/<int:snapshot>/resources')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+
 class PortalSnapshotResources(Resource):
+    @cors.crossdomain(origin='*')
     def get(self, portalid,snapshot):
         with Timer(key="PortalSnapshotResources.get",verbose=True):
             session=current_app.config['dbsession']
