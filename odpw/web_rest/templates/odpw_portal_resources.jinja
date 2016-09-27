@@ -35,7 +35,7 @@
 <div id="test">
 <h3 class="ui header">HTTP HEADER REPORT</h3>
 </div>
-<table class="ui celled table" id="resources" cellspacing="0" width="100%">
+<table class="ui celled table single line" id="resources" cellspacing="0" width="100%">
   <thead>
     <tr>
       <th>URI</th>
@@ -127,18 +127,22 @@
         var trHTML = '';
 
         $.each(data, function (i, item) {
-            trHTML += '<tr><td><a href="' + data[i].uri + '">'+data[i].uri+'</td>'
+            if( data[i].status > 600){
+                trHTML += '<tr class="error">''
+            }else{
+                trHTML += '<tr>''
+            }
+            trHTML += '<td><a href="' + data[i].uri + '">'+data[i].uri+'</td>'
 
             u='{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=ru)}}'
             u +=''+data[i].uri
             trHTML += '<td>' +'<a href="'+u+'" class="ui button"><i class="line chart icon"></i></a></td>'
 
-            if( data[i].status != 200){
+            if( data[i].status > 600){
                 trHTML += '<td>' + data[i].exc + '</td>';
             }else{
                 trHTML += '<td>' + data[i].status + '</td>';
             }
-
             trHTML += '<td>' + data[i].timestamp + '</td></tr>';
         });
         console.log(trHTML)
