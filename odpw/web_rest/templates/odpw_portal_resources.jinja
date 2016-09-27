@@ -38,7 +38,7 @@
 <table class="ui celled table single line" id="resources" cellspacing="0" width="100%">
   <thead>
     <tr>
-      <th>URI</th>
+      <th class="ten wide">URI</th>
       <th>Info</th>
       <th>status</th>
       <th>last checked</th>
@@ -139,7 +139,7 @@
             trHTML += '<td>' +'<a href="'+u+'" class="ui button"><i class="line chart icon"></i></a></td>'
 
             if( data[i].status > 600){
-                trHTML += '<td>' + data[i].exc + '</td>';
+                trHTML += '<td>' +data[i].status+' exc:'+ data[i].exc + '</td>';
             }else{
                 trHTML += '<td>' + data[i].status + '</td>';
             }
