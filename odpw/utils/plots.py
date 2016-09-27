@@ -219,13 +219,13 @@ def portalsScatter(df):
 
         s,l,c=item
         source=ColumnDataSource(data=s)
-        p.scatter(x='datasetCount', y='resourceCount', size=3, source=source, color=c, legend=l)
+        p.scatter(x='datasetcount', y='resourcecount', size=3, source=source, color=c, legend=l)
 
 
         # create the horizontal histogram
-        maxV= s['datasetCount'].max()
+        maxV= s['datasetcount'].max()
         bins= 10 ** np.linspace(np.log10(1), np.log10(maxV), 10)
-        hhist, hedges = np.histogram(s['datasetCount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
+        hhist, hedges = np.histogram(s['datasetcount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
         hzeros = np.zeros(len(hedges)-1)
         hmax = max(hhist)*1.5 if max(hhist)*1.5>hmax else hmax
 
@@ -241,9 +241,9 @@ def portalsScatter(df):
         hh2 = ph.quad(bottom=0, left=hedges[:-1], right=hedges[1:], top=hzeros, alpha=0.1, **LINE_ARGS)
 
         # create the vertical histogram
-        maxV= s['resourceCount'].max()
+        maxV= s['resourcecount'].max()
         bins= 10 ** np.linspace(np.log10(1), np.log10(maxV), 10)
-        vhist, vedges = np.histogram(s['resourceCount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
+        vhist, vedges = np.histogram(s['resourcecount'], bins=bins)#[0,5,10,50,100,500,1000,5000,10000,50000,100000]
         vzeros = np.zeros(len(vedges)-1)
         vmax = max(vhist)*1.5 if max(vhist)*1.5>vmax else vmax
 
@@ -386,24 +386,24 @@ def evolSize(source,df):
 
     legends=[]
 
-    l=p.line(x='snapshot',y='datasetCount', line_width=2,source=source)
-    c=p.circle(x='snapshot',y='datasetCount', line_width=2,source=source)
+    l=p.line(x='snapshot',y='datasetcount', line_width=2,source=source)
+    c=p.circle(x='snapshot',y='datasetcount', line_width=2,source=source)
 
-    hit_target =Circle(x='snapshot',y='datasetCount', size=10,line_color=None, fill_color=None)
+    hit_target =Circle(x='snapshot',y='datasetcount', size=10,line_color=None, fill_color=None)
     hit_renderer = p.add_glyph(source, hit_target)
 
     legends.append(("Datasets",[l,c]))
-    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@datasetCount"}))
+    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@datasetcount"}))
 
     #######
-    l=p.line(x='snapshot',y='resourceCount', line_width=2,source=source)
-    c=p.circle(x='snapshot',y='resourceCount', line_width=2,source=source)
+    l=p.line(x='snapshot',y='resourcecount', line_width=2,source=source)
+    c=p.circle(x='snapshot',y='resourcecount', line_width=2,source=source)
 
-    hit_target =Circle(x='snapshot',y='resourceCount', size=10,line_color=None, fill_color=None)
+    hit_target =Circle(x='snapshot',y='resourcecount', size=10,line_color=None, fill_color=None)
     hit_renderer = p.add_glyph(source, hit_target)
 
     legends.append(("Resources",[l,c]))
-    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@resourceCount"}))
+    p.add_tools(HoverTool(renderers=[hit_renderer], tooltips={'Metric':"Size", "Week": "@week", 'Value':"@resourcecount"}))
 
 
     p.xaxis[0].ticker.desired_num_ticks = df.shape[0]
