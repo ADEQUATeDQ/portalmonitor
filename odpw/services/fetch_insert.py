@@ -125,7 +125,6 @@ def createMetaResources(md5v,dataset):
             s=getDistributionSizeWithURL(dataset, uri)
             c=getDistributionCreationDateWithURL(dataset,uri)
             mod=getDistributionModificationDateWithURL(dataset,uri)
-            
             try:
                 s_uri = safe_url_string(uri, 'utf-8')
                 uri = escape_ajax(s_uri)
@@ -202,7 +201,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
                         bulk_obj['dq'].append(DQ)
 
                         #META RESOURCES
-                        MQs= createMetaResources(md5v,d)
+                        MQs= createMetaResources(md5v , d)
                         for MR in MQs:
                             bulk_obj['mr'].append(MR)
                     except Exception as e:
@@ -218,7 +217,7 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
                        md5=md5v,
                        organisation=DD.organisation if DD else getOrganization(d),
                        title=title
-                           )
+                        )
 
                 bulk_obj['d'].append(D)
             else:

@@ -1,3 +1,4 @@
+import json
 from ast import literal_eval
 import random
 import urlparse
@@ -6,11 +7,19 @@ import time
 import requests
 from pprint import pformat
 
+import xml.etree.cElementTree as ET
+import urllib2
+import rdflib
+from rdflib.namespace import RDF
+import StringIO
+
 #from odpw.db.models import Dataset
 
 
 import structlog
 
+from odpw.core import dcat_access
+from odpw.core.dataset_converter import namespaces, DCAT
 from odpw.utils import extras_to_dicts, extras_to_dict
 from odpw.utils.error_handling import ErrorHandler, TimeoutError, getExceptionCode, getExceptionString
 from odpw.utils.timing import progressIndicator, Timer
@@ -27,6 +36,8 @@ def getPortalProcessor(P):
         return Socrata()
     elif P.software == 'OpenDataSoft':
         return OpenDataSoft()
+    elif P.software == 'XMLDCAT':
+        return XMLDCAT()
     else:
         raise NotImplementedError(P.software + ' is not implemented')
 
@@ -61,7 +72,6 @@ class CKAN(PortalProcessor):
         api = ckanapi.RemoteCKAN(Portal.apiuri, get_only=True)
         start=0
         rows=1000
-
         p_count=0
         p_steps=1
         total=0
@@ -72,7 +82,7 @@ class CKAN(PortalProcessor):
         try:
             response = api.action.package_search(rows=0)
             total = response["count"]
-            PortalSnapshot.datasetcount=total
+            PortalSnapshot.datasetcount = total
             p_steps=total/10
             if p_steps ==0:
                 p_steps=1
@@ -117,82 +127,84 @@ class CKAN(PortalProcessor):
             raise e
         except Exception as e:
             ErrorHandler.handleError(log,"CKANDSFetchBatchError", pid=Portal.id, exception=e, exc_info=True)
-        try:
-            package_list, status = getPackageList(Portal.apiuri)
-            if total >0 and len(package_list) !=total:
-                log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
-            #len(package_list)
-            tt=len(package_list)
-            PortalSnapshot.datasetcount=tt
-            p_steps=tt/100
-            if p_steps == 0:
-                p_steps=1
-            p_count=0
-            # TODO parameter:
-            NOT_SUPPORTED_PENALITY = 100
-            TIMEOUT_PENALITY = 100
-            not_supported_count = 0
-            timeout_counts = 0
-            for entity in package_list:
-                #WAIT between two consecutive GET requests
 
-                if entity not in processed_ids and entity not in processed_names:
+        if len(processed_ids) != total:
+            log.info("Not all datasets processed", fetched=len(processed_ids), total=total)
 
-                    time.sleep(random.uniform(0.5, 1))
-                    log.debug("GETMetaData", pid=Portal.id, did=entity)
-                    with Timer(key="fetchDS("+Portal.id+")") as t, Timer(key="fetchDS") as t1:
-                        #fetchDataset(entity, stats, dbm, sn)
-                        props={
-                               'status':-1,
-                               'data':None,
-                               'exception':None,
-                                'software':Portal.software
-                               }
-                        try:
-                            resp, status = getPackage(apiurl=Portal.apiuri, id=entity)
-                            props['status']=status
-                            if resp:
-                                data = resp
-                                extras_to_dict(data)
-                                props['data']=data
-                        except Exception as e:
-                            ErrorHandler.handleError(log,'c ', exception=e,pid=Portal.id, did=entity,
-                               exc_info=True)
-                            props['status']=getExceptionCode(e)
-                            props['exception']=getExceptionString(e)
+            try:
+                package_list, status = getPackageList(Portal.apiuri)
+                if total >0 and len(package_list) !=total:
+                    log.info("PackageList_COUNT", total=total, pid=Portal.id, pl=len(package_list))
+                #len(package_list)
+                tt=len(package_list)
+                if total==0:
+                    PortalSnapshot.datasetcount=tt
+                p_steps=tt/100
+                if p_steps == 0:
+                    p_steps=1
+                p_count=0
+                # TODO parameter:
+                NOT_SUPPORTED_PENALITY = 100
+                TIMEOUT_PENALITY = 100
+                not_supported_count = 0
+                timeout_counts = 0
+                for entity in package_list:
+                    #WAIT between two consecutive GET requests
 
-                            # if we get too much exceptions we assume this is not supported
-                            not_supported_count += 1
-                            if not_supported_count > NOT_SUPPORTED_PENALITY:
-                                return
+                    if entity not in processed_ids and entity not in processed_names:
 
-                        processed_names.add(entity)
-                        #we always use the ckan-id for the dataset if possible
-                        if props['data'] and 'id' in props['data']:
-                            entity = props['data']['id']
-                        d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
+                        time.sleep(random.uniform(0.5, 1))
+                        log.debug("GETMetaData", pid=Portal.id, did=entity)
+                        with Timer(key="fetchDS("+Portal.id+")") as t, Timer(key="fetchDS") as t1:
+                            #fetchDataset(entity, stats, dbm, sn)
+                            props={
+                                   'status':-1,
+                                   'data':None,
+                                   'exception':None,
+                                    'software':Portal.software
+                                   }
+                            try:
+                                resp, status = getPackage(apiurl=Portal.apiuri, id=entity)
+                                props['status']=status
+                                if resp:
+                                    data = resp
+                                    extras_to_dict(data)
+                                    props['data']=data
 
-                        p_count+=1
-                        if p_count%p_steps ==0:
-                            progressIndicator(p_count, tt, label=Portal.id+"_single")
-                            log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed_ids))
-                        
-                        now = time.time()
-                        if now-starttime>timeout:
-                            timeout_counts+=1
+                                    processed_names.add(entity)
+                                    # we always use the ckan-id for the dataset if possible
+                                    if props['data'] and 'id' in props['data']:
+                                        entity = props['data']['id']
 
-                            if timeout_counts>TIMEOUT_PENALITY:
-                                log.warning("TimeoutErrorLimitExceeded", pid=Portal.id)
-                                raise TimeoutError("Timeout of "+Portal.id+" and "+str(timeout)+" seconds", timeout)
-                        
-                        if d.id not in processed_ids:
-                            processed_ids.add(d.id)
-                            yield d
-                            
-            progressIndicator(p_count, tt, label=Portal.id+"_single",elapsed=time.time()-tstart)
-        except Exception as e:
-            if len(processed_ids)==0 or isinstance(e,TimeoutError):
-                raise e
+                                    d = Dataset(snapshot=sn, portalID=Portal.id, did=entity, **props)
+                                    if d.id not in processed_ids:
+                                        processed_ids.add(d.id)
+                                        yield d
+                            except Exception as e:
+                                ErrorHandler.handleError(log,'fetchDS', exception=e,pid=Portal.id, did=entity,
+                                   exc_info=True)
+                                #props['status']=getExceptionCode(e)
+                                #props['exception']=getExceptionString(e)
+
+                                # if we get too much exceptions we assume this is not supported
+                                not_supported_count += 1
+                                if not_supported_count > NOT_SUPPORTED_PENALITY:
+                                    return
+                    p_count += 1
+                    if p_count % p_steps == 0:
+                        progressIndicator(p_count, tt, label=Portal.id + "_single")
+                        log.info("ProgressDSFetchSingle", pid=Portal.id, processed=len(processed_ids))
+
+                    now = time.time()
+                    if now - starttime > timeout:
+                        raise TimeoutError(
+                            "Timeout of " + Portal.id + " and " + str(timeout) + " seconds", timeout)
+                progressIndicator(p_count, tt, label=Portal.id+"_single",elapsed=time.time()-tstart)
+            except Exception as e:
+                if len(processed_ids)==0 or isinstance(e,TimeoutError):
+                    raise e
+
+
 
 class Socrata(PortalProcessor):
     def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn, dcat=True):
@@ -264,7 +276,7 @@ class OpenDataSoft(PortalProcessor):
                     if datasetID not in processed:
                         data = datasetJSON
                         d = Dataset(snapshot=sn,portalID=Portal.id, did=datasetID, data=data,status=200)
-                        
+
                         processed.add(datasetID)
 
                         if len(processed) % 1000 == 0:
@@ -272,6 +284,42 @@ class OpenDataSoft(PortalProcessor):
                         yield d
             else:
                 break
+
+
+class XMLDCAT(PortalProcessor):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn, format='json-ld'):
+        processed=set([])
+
+        orig_g = rdflib.Graph()
+        orig_g.parse(Portal.apiuri, format="xml")
+
+        for dataset in orig_g.subjects(RDF.type, DCAT.Dataset):
+            g = rdflib.Graph()
+
+            for prefix, namespace in namespaces.iteritems():
+                g.bind(prefix, namespace)
+
+            self._add_triples(g, orig_g, dataset)
+
+            data = json.loads(g.serialize(format=format))
+            d = Dataset(snapshot=sn,portalID=Portal.id, did=None, data=data, status=200)
+            d.dcat = data
+            datasetID = dcat_access.getIdentifier(d)
+            if len(datasetID) > 0:
+                d.id = datasetID[0]
+            else:
+                d.id = hash(json.dumps(data))
+            processed.add(d.id)
+
+            if len(processed) % 1000 == 0:
+                log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+            yield d
+
+    def _add_triples(self, g, orig_g, s):
+        for s, p, o in orig_g.triples( (s, None, None) ):
+            g.add((s, p, o))
+            self._add_triples(g, orig_g, o)
+
 
 def getPackageList(apiurl):
     """ Try api 3 and api 2 to get the full package list"""
@@ -369,3 +417,16 @@ class Dataset(Model):
 
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+
+
+if __name__ == '__main__':
+    import pprint
+    from model import Portal
+    t = XMLDCAT()
+    datasets = []
+    for d in t.generateFetchDatasetIter(Portal(id='datos_gob_es', apiuri='http://datos.gob.es/sites/default/files/catalogo.rdf'), None, 1638):
+        print d.id
+        datasets.append(d)
+
+    print 'total:', len(datasets)
