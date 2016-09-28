@@ -244,6 +244,7 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
+                #~exists().where(ResourceInfo.uri == MetaResource.uri).where(ResourceInfo.snapshot == snapshot)
                     ~exists().where(
                         and_( ResourceInfo.uri==MetaResource.uri, ResourceInfo.snapshot==snapshot))
                 )

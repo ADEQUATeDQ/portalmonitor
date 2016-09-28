@@ -49,7 +49,8 @@ setup(
         'networkx',
         'Flask',
         'Flask-Cache',
-        'flask-restplus'
+        'flask-restplus',
+        'rdflib'
     ],
 
 )

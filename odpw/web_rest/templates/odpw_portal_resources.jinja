@@ -38,7 +38,7 @@
 <table class="ui celled table single line" id="resources" cellspacing="0" width="100%">
   <thead>
     <tr>
-      <th class="ten wide" style="width:400px;overflow:hidden;text-overflow:ellipsis;">URI</th>
+      <th class="ten wide" >URI</th>
       <th>Info</th>
       <th>status</th>
       <th>last checked</th>
@@ -132,7 +132,7 @@
             }else{
                 trHTML += '<tr>'
             }
-            trHTML += '<td><a href="' + data[i].uri + '">'+data[i].uri+'</td>'
+            trHTML += '<td><a href="' + data[i].uri + '" style="width:400px;overflow:hidden;text-overflow:ellipsis;">'+data[i].uri+'</td>'
 
             u='{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=ru)}}'
             u +=''+data[i].uri

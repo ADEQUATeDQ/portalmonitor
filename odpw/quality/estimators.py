@@ -85,7 +85,7 @@ class ChoGarciaFrequencyEstimator(ComparisonSampling):
         t = poisson.ppf(q, 1/l)
         return t
 
-    def cdf_poisson(self, t):
+    def cdf(self, t):
         mu = 1/self.estimate()
         p = poisson.cdf(t, mu)
         return p
@@ -164,7 +164,7 @@ class ChoGarciaLastModifiedEstimator(AgeSampling):
         t = poisson.ppf(q, 1/l)
         return t
 
-    def cdf_poisson(self, t):
+    def cdf(self, t):
         mu = 1/self.estimate()
         p = poisson.cdf(t, mu)
         return p
@@ -285,7 +285,7 @@ class MarkovChain(ComparisonSampling):
 
         return intervals
 
-    def cumm_percent(self, delta):
+    def cdf(self, delta):
         prob = self._estimate()
         # access key
         key = ''.join(str(k) for k in self.data[-(self.history - 1):])

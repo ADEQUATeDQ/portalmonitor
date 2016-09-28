@@ -134,9 +134,8 @@ class HeadLookups( CrawlSpider ):
 
 
     def start_requests(self):
-        log.info("Start_request", snapshot=self.snapshot, batch=self.batch)
+        log.info("Start_request")
         q=self.db.getUnfetchedResources(self.snapshot, batch=self.batch)
-        log.info("Query", q=str(q), snapshot=self.snapshot)
         uris= [ uri[0] for uri in q ]
         stats=defaultdict(int)
         c=0

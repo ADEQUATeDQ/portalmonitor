@@ -107,13 +107,13 @@ prepareODPWUI(){
   docker run -d -p 82:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
 }
 
-preparePython
+#preparePython
 prepareDataContainers
-prepareODPW
-prepareODPWMeta
-prepareODPWHead
-prepareODPWData
-prepareODPWUI
+#prepareODPW
+#prepareODPWMeta
+#prepareODPWHead
+#prepareODPWData
+#prepareODPWUI
 
 #PSQL into datastore
 #docker run -it --rm --link datastore:db postgres psql -h db -U adequatecli adequate

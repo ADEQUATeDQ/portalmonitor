@@ -15,7 +15,7 @@
 
                     ]
                 -%}
-                {% set active_sub_page = active_sub_page|default('ui.portal') -%}
+                {% set active_sub_page = active_sub_page|default('ui.portalslist') -%}
                 {% for href,  icon, caption in navigation_bar %}
                     <a class="item {% if href == active_sub_page %}active{% endif%}" href="{{ url_for(href)|e }}">
                         <i class="{{ icon|e }} icon"></i>
