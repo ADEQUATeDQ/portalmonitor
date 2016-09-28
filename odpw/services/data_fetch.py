@@ -102,7 +102,7 @@ class DataMonitorSpider( CrawlSpider ):
         c=0
         log.info("Querying for uris", start=dc, end=dn)
 
-        schedules=[s for s in self.api.getUnfetchedResources(self.snapshot)]
+        schedules=[s for s in self.api.getDataUnfetchedResources(self.snapshot)]
         log.info("Received seed uris", count=len(schedules))
         #schedules=[Schedule(uri='http://umbrich.org/', experiment='test')]
         for s in schedules:#],Schedule(uri='http://polleres.net/', experiment='test'),Schedule(uri='http://notavailable/', experiment='test')]:

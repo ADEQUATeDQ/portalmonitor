@@ -383,7 +383,9 @@ def resourceInfo(snapshot, portalid, uri):
             q = Session.query(ResourceInfo) \
                 .filter(ResourceInfo.uri == uri)
 
+            
             data['resourceInfo'] = [row2dict(r) for r in q.all()]
+
         return render("odpw_portal_resource.jinja", snapshot=snapshot, portalid=portalid, uri=uri, data=data)
 
 

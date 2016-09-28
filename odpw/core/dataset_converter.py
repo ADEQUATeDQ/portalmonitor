@@ -58,6 +58,9 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
     elif portal.software == 'OpenDataSoft':
         graph_from_opendatasoft(graph, dataset_dict, portal.apiuri)
         # TODO contact, publisher, organization
+    elif portal.software == 'XMLDCAT':
+        # dataset_dict is already json-ld
+        return dataset_dict
 
     return json.loads(graph.serialize(format=format))
 

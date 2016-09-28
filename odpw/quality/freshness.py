@@ -9,7 +9,7 @@ from estimators import AgeSamplingEmpiricalDistribution, ImprovedLastModified, N
     MarkovChain
 from odpw.core.api import DBClient
 from odpw.core.db import DBManager
-from odpw.core.model import Portal, ResourceHistory
+from odpw.core.model import Portal, ResourceHistory, ResourceFreshness
 
 from multiprocessing import Pool
 
@@ -30,17 +30,20 @@ def name():
 def setupCLI(pa):
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=4)
     pa.add_argument('--pid', dest='portalid', help="Specific portal id ")
-
+    pa.add_argument('-sn', '--snapshot', dest='snapshot', help="Specify the snapshot")
 
 def cli(args,dbm):
-    sn = getCurrentSnapshot()
+    if args.snapshot:
+        sn = args.snapshot
+    else:
+        sn = getCurrentSnapshot()
 
     dbConf= readDBConfFromFile(args.config)
     db= DBClient(dbm)
 
     tasks=[]
     if args.portalid:
-        P =db.Session.query(Portal).filter(Portal.id==args.portalid).one()
+        P = db.Session.query(Portal).filter(Portal.id==args.portalid).one()
         if P is None:
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
@@ -70,31 +73,46 @@ def change_history(obj):
             # metadata modification date
             meta_lm = res.modified
             if meta_lm:
-                reshist = ResourceHistory(uri=res.uri, snapshot=snapshot, modified=meta_lm, source='metadata')
-                db.add(reshist)
-            resInfo = db.getResourceInfoByURI(uri=res.uri, snapshot=snapshot).one()
-            header = resInfo.header
-            header_lm = None
-            if 'last-modified' in header:
-                header_lm = header['last-modified'][0]
-            elif 'Last-Modified' in header:
-                header_lm = header['Last-Modified'][0]
-            try:
-                header_lm = dateutil.parser.parse(header_lm)
-            except Exception as e:
+                reshist = ResourceHistory(uri=res.uri, md5=res.md5, snapshot=snapshot, modified=meta_lm, source='metadata')
+                #db.add(reshist)
+            if db.exist_resourceinfo(uri=res.uri, snapshot=snapshot):
+                resInfo = db.getResourceInfoByURI(uri=res.uri, snapshot=snapshot).one()
+                header = resInfo.header
                 header_lm = None
-            if header_lm:
-                reshist = ResourceHistory(uri=res.uri, snapshot=snapshot, modified=header_lm, source='header')
-                db.add(reshist)
+                if 'last-modified' in header:
+                    header_lm = header['last-modified'][0]
+                elif 'Last-Modified' in header:
+                    header_lm = header['Last-Modified'][0]
+                try:
+                    header_lm = dateutil.parser.parse(header_lm)
+                except Exception as e:
+                    header_lm = None
+                if header_lm:
+                    reshist = ResourceHistory(uri=res.uri, md5=res.md5, snapshot=snapshot, modified=header_lm, source='header')
+                    #db.add(reshist)
 
-            # TODO comparison based: ETag
+                # TODO comparison based: ETag
+                etag = None
+                if 'etag' in header:
+                    etag = header['etag'][0]
+                elif 'ETag' in header:
+                    etag = header['ETag'][0]
 
-            # compute freshness score
-            # TODO select source for change information
-            changes = list(db.getResourcesHistory(uri=res.uri, source='header'))
-            scores = freshness_score(changes, snapshot)
-            print scores
 
+
+            # compute freshness scores for header and metadata
+            fresh_scores = {}
+            changes = list(db.getResourcesHistory(uri=res.uri, md5=res.md5, source='header'))
+            h_scores = freshness_score(changes, snapshot)
+            if h_scores:
+                for s in h_scores:
+                    fresh_scores[s + '_header'] = h_scores[s]
+            changes = list(db.getResourcesHistory(uri=res.uri, md5=res.md5, source='metadata'))
+            m_scores = freshness_score(changes, snapshot)
+            if m_scores:
+                for s in m_scores:
+                    fresh_scores[s + '_metadata'] = m_scores[s]
+            db.add(ResourceFreshness(uri=res.uri, md5=res.md5, snapshot=snapshot, **fresh_scores))
 
         status = 200
         exc = None
@@ -160,15 +178,22 @@ def freshness_score(changes, obj_sn, MIN_HIST=10):
 
         # delta between thursday of objective snapshot and last observed modification
         current = delta_to_days(Week(y, w).thursday() - t)
+        res = {}
+        for l, e in {'a_cho_naive': a1, 'a_cho_impr': a2, 'a_emp_dist': emp}.items():
+            try:
+                res[l] = e.cdf(current)
+            except Exception as exc:
+                log.warn("EXCEPTION DURING ESTIMATOR", estimator=l, exception=str(exc))
+
         # compute the number of weeks to the objective snapshot, however at least 1 required
         delta = max(1, int(round(current / 7.)))
+        for l, e in {'mark1': mar1, 'mark2': mar2}.items():
+            try:
+                res[l] = e.cdf(delta)
+            except Exception as exc:
+                log.warn("EXCEPTION DURING ESTIMATOR", estimator=l, exception=str(exc))
 
-        return {'a_cho_naive': 1 - a1.cdf_poisson(current), 'a_cho_impr': 1 - a2.cdf_poisson(current),
-                'a_emp_dist': 1 - emp.cdf(current),
-                'mark_1': 1 - mar1.cumm_percent(delta), 'mark_2': 1- mar2.cumm_percent(delta),
-                'snapshots': len(changes)}
-
-            #hist_iter = db.getResourcesHistory(uri=uri, source='metadata')
+        return res
 
 
 
@@ -180,8 +205,8 @@ def generate_testdata(db, P, snapshot, num_of_snapshot=10):
             y = int('20' + str(sn)[:2])
             w = int(str(sn)[2:])
             new_d = Week(y, w).monday() - datetime.timedelta(days=random.randint(1, 5))
-            if random.randint(1, 3) % 2 == 1 or not d:
+            if random.randint(0, 10) % 3 == 0 or not d:
                 d = new_d
 
-            reshist = ResourceHistory(uri=res.uri, snapshot=sn, modified=d, source='header')
+            reshist = ResourceHistory(uri=res.uri, snapshot=sn, md5=res.md5, modified=d, source='header')
             db.add(reshist)

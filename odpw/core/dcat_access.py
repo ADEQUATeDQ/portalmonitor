@@ -4,7 +4,7 @@ Created on Aug 26, 2015
 @author: jumbrich
 '''
 # -*- coding: utf-8 -*-
-from rdflib.namespace import RDFS
+from rdflib.namespace import RDFS, RDF
 
 from odpw.core.licenses_mapping import LicensesOpennessMapping
 from odpw.core.dataset_converter import DCAT, DCT, VCARD, FOAF
@@ -171,7 +171,20 @@ def getDistributionMediaTypes(dataset):
     return accessDistribution(dataset, DCAT.mediaType)
 
 def getDistributionFormats(dataset):
-    return accessDistribution(dataset, DCT['format'])
+    formats = accessDistribution(dataset, DCT['format'])
+    res = []
+    for f in formats:
+        if f.startswith('_:'):
+            # blank node
+            v = accessById(dataset, f, RDFS.label)
+            if not v:
+                v = accessById(dataset, f, RDF.value)
+            if v:
+                res.append(v)
+        else:
+            res.append(f)
+    return res
+
 
 def getDistributionFormatWithURL(dataset, url):
     return accessDistributionWithURL(dataset, url, DCT['format'])

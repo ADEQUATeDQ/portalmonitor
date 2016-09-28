@@ -181,12 +181,12 @@ class PortalSnapshotQuality(Base):
 class Dataset(Base):
     __tablename__ = tab_datasets
 
-    id          = Column( String, primary_key=True)
-    snapshot    = Column( SmallInteger, primary_key=True, index=True)
-    portalid    = Column( String, primary_key=True, index=True)
-    organisation= Column(String, index=True)
-    title       = Column(String, index=True)
-    md5         = Column(String, ForeignKey(tab_datasetsdata+'.md5'), index=True)
+    id           = Column( String, primary_key=True)
+    snapshot     = Column( SmallInteger, primary_key=True, index=True)
+    portalid     = Column( String, primary_key=True, index=True)
+    organisation = Column(String, index=True)
+    title        = Column(String, index=True)
+    md5          = Column(String, ForeignKey(tab_datasetsdata+'.md5'), index=True)
 
 
     __table_args__ = (ForeignKeyConstraint([portalid, snapshot],
