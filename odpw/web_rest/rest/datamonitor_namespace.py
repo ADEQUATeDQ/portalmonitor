@@ -115,6 +115,19 @@ class GetData(Resource):
 
         return send_file(filename, as_attachment=True)
 
+@ns.route('/list')
+class List(Resource):
+
+    def get(self):
+        session = current_app.config['dbsession']
+        q=session.query(ResourceCrawlLog.uri).distinct(ResourceCrawlLog.uri)
+        urls=[]
+        for r in q:
+           urls.append(r[0]) 
+
+        resp = jsonify(urls)
+        return resp
+
 @ns.route('/timemap/json/<path:url>')
 @ns.doc(params={'url': 'URL (HTTP URL)', 'date': 'Date as \"YYYY<MM|DD|HH|MM|SS>\"'})
 class Timemap(Resource):
