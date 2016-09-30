@@ -244,6 +244,7 @@ class DBClient(object):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
+                #~exists().where(ResourceInfo.uri == MetaResource.uri).where(ResourceInfo.snapshot == snapshot)
                     ~exists().where(
                         and_( ResourceInfo.uri==MetaResource.uri, ResourceInfo.snapshot==snapshot))
                 )
@@ -253,7 +254,7 @@ class DBClient(object):
                 q=q.limit(batch)
             return q
 
-    def getDataUnfetchedResources(self,snapshot, portalid=None, batch=None):
+    def getDataUnfetchedResources(self,snapshot, portalid=None, batch=None, format=None):
         with self.session_scope() as session:
             q=session.query(MetaResource.uri)\
                 .join(Dataset, Dataset.md5==MetaResource.md5)\
@@ -266,6 +267,8 @@ class DBClient(object):
                 q=q.filter(Dataset.portalid==portalid)
             if batch:
                 q=q.limit(batch)
+            if format:
+                q=q.filter(MetaResource.format==format)
             return q
 
     def getResourceInfos(self, snapshot, portalid=None):
@@ -327,6 +330,9 @@ class DBClient(object):
                 q=q.filter(ResourceHistory.source==source)
             q=q.order_by(ResourceHistory.snapshot.asc())
             return q
+
+
+
 
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 ### PORTAL

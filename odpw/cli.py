@@ -64,8 +64,8 @@ def config_logging():
     )
 
 
-def start ():
-    
+def start (argv):
+    print argv
     start= time.time()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.', prog='odpw')
     
@@ -106,7 +106,7 @@ def start ():
     #for i in m:
     #    print i
 
-    args = pa.parse_args()
+    args = pa.parse_args(args=argv)
     
         
     db=readDBConfFromFile(args.config)
@@ -161,4 +161,5 @@ def start ():
 
 
 if __name__ == "__main__":
-    start()
+    #start()
+    start(sys.argv[1:])

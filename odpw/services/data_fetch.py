@@ -30,6 +30,8 @@ class DataMonitorSpider( CrawlSpider ):
         self.api=kwargs['api']
         self.datadir=kwargs['datadir']
         self.count=0
+        self.format=kwargs['format']
+        self.portalID=kwargs['portalID']
         self.mime=defaultdict(int)
         self.status=defaultdict(int)
         if not os.path.exists(os.path.dirname(self.datadir)):
@@ -100,9 +102,9 @@ class DataMonitorSpider( CrawlSpider ):
 
         self.d=defaultdict(int)
         c=0
-        log.info("Querying for uris", start=dc, end=dn)
-
-        schedules=[s for s in self.api.getUnfetchedResources(self.snapshot)]
+        q=self.api.getDataUnfetchedResources(self.snapshot, format=self.format, portalid=self.portalID)
+        log.info("Querying for uris", start=dc, end=dn, query=str(q))
+        schedules=[s for s in q]
         log.info("Received seed uris", count=len(schedules))
         #schedules=[Schedule(uri='http://umbrich.org/', experiment='test')]
         for s in schedules:#],Schedule(uri='http://polleres.net/', experiment='test'),Schedule(uri='http://notavailable/', experiment='test')]:
@@ -201,8 +203,8 @@ def name():
     return 'DataFetch'
 
 def setupCLI(pa):
-    pass
-
+    pa.add_argument("-f", "--filter", help='filter by file format', dest='format', default=None)
+    pa.add_argument("-p", "--portal", help='filter by portalid', dest='portal', default=None)
 def cli(args, dbm):
 
     datadir=None
@@ -222,7 +224,7 @@ def cli(args, dbm):
     #settings=get_project_settings()
     crawler = CrawlerProcess()
     #crawler.signals.connect(callback, signal=signals.spider_closed)
-    crawler.crawl(DataMonitorSpider, api=api, datadir=datadir,snapshot=sn)
+    crawler.crawl(DataMonitorSpider, api=api, datadir=datadir,snapshot=sn, format=args.format, portalID=args.portal)
 
     crawler.start()
 
