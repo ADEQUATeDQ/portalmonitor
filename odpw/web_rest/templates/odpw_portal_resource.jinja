@@ -63,7 +63,7 @@
                                         {% if 'status' in r and r.status=='200' %}
                                             <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
                                         {% elif 'status' in r %}
-                                           <div class="ui label red ribbon">HTTP {{error[r.status|int]}}</div>
+                                           <div class="ui label red ribbon">HTTP {{r.status|int}}</div>
                                         {% else %}
                                            <div class="ui label ribbon">No HTTP information</div>
                                         {% endif %}
@@ -76,7 +76,7 @@
                                         </div>
                                         {% if 'header' in r and r.header %}
                                             <div class="description">
-                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:100px">{{r.header}}</pre>
+                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:600px;width:800px">{{r.header}}</pre>
                                             </div>
                                         {% endif %}
 
@@ -114,7 +114,7 @@
 
 
 
-        {% for r in data['resources'] %}
+        {% for r in data['resourceInfo'] %}
            {% if 'header' in r %}
                 he= {{r.header|tojson}}
                 document.getElementById("{{r.uri}}").innerHTML = JSON.stringify(he, undefined, 2);
