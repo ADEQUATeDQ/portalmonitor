@@ -5,10 +5,19 @@ body{
 header#header{
     padding-left:20px;
     height:120px;
-
+    background-color:#F2F2F2;
 }
 header#header img{
     float: right;
+}
+
+.ui.secondary.pointing.menu .active.item {
+    color:#FFFFFF;
+}
+
+.ui.secondary.menu .item {
+    color:#FFFFFF;
+
 }
 
 nav#mainnav {
