@@ -384,6 +384,12 @@ def resourceInfo(snapshot, portalid, uri):
                 .filter(ResourceInfo.uri == uri)
 
             data['resourceInfo'] = [row2dict(r) for r in q.all()]
+
+            for r in data['resourceInfo']:
+                if 'header' in r:
+                    r['header'] = ast.literal_eval(r['header'])
+
+
         return render("odpw_portal_resource.jinja", snapshot=snapshot, portalid=portalid, uri=uri, data=data)
 
 

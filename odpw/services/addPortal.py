@@ -22,9 +22,9 @@ def setupCLI(pa):
         action='store', dest='api'
     )
     pa.add_argument(
-        '-s', '--spftware',
+        '-s', '--software',
         help="Portal software", required=True,
-        action='store', dest='software',choices=['CKAN', 'OpenDataSoft', 'Socrata']
+        action='store', dest='software',choices=['CKAN', 'OpenDataSoft', 'Socrata', 'XMLDCAT']
     )
     pa.add_argument(
         '-i', '--iso',

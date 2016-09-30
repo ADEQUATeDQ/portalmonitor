@@ -134,7 +134,7 @@
                                         {% if 'status' in r and r.status=='200' %}
                                             <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
                                         {% elif 'status' in r %}
-                                           <div class="ui label red ribbon">HTTP {{error[r.status|int]}}</div>
+                                           <div class="ui label red ribbon">HTTP {{r.status|int}}</div>
                                         {% else %}
                                            <div class="ui label ribbon">No HTTP information</div>
                                         {% endif %}
