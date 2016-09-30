@@ -78,6 +78,7 @@ def create_app(dbm,conf):
     api.init_app(blueprint)
     api.add_namespace(portal_namespace)
     api.add_namespace(portals_namespace)
+
     app.register_blueprint(blueprint)
 
     return app

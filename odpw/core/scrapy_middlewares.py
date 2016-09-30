@@ -158,14 +158,12 @@ class FileDownloader(object):
                         os.makedirs(os.path.dirname(filename))
 
                     request.meta['disk']=filename
-                    with gzip.open(filename,'wb') as fw:
+                    with open(filename,'wb') as fw:
                         try:
                             fw.write(content)
                         except Exception as e:
                             request.meta['error']=getExceptionString(e)
                             ErrorHandler.handleError("Writing file", exception=e)
-                        finally:
-                            fw.close()
                 except Exception as e:
                     ErrorHandler.handleError(log,'file_download',exception=e, uri=request.url)
                     request.meta['error']=getExceptionString(e)
@@ -183,7 +181,7 @@ class FileDownloader(object):
         urlencoded = urllib.quote_plus(uri)[:240]
         log.info("Encoded url "+urlencoded);
 
-        fileLocation = os.path.join(datefolders,domain,urlencoded+'.gz')
+        fileLocation = os.path.join(datefolders,domain,urlencoded)
         log.info("FileLocation", uri=uri, disk=fileLocation)
         return fileLocation
 

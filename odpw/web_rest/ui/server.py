@@ -2,6 +2,7 @@ import structlog
 
 from odpw.web_rest.rest.portal_namespace import ns as portal_namespace
 from odpw.web_rest.rest.portals_namespace import ns as portals_namespace
+from odpw.web_rest.rest.datamonitor_namespace import ns as datamonitor_namespace
 from odpw.web_rest.rest.odpw_restapi import api
 
 log =structlog.get_logger()
@@ -86,6 +87,8 @@ def create_app(dbm, conf):
     api.init_app(blueprint)
     api.add_namespace(portal_namespace)
     api.add_namespace(portals_namespace)
+    api.add_namespace(datamonitor_namespace)
+
     app.register_blueprint(blueprint)
 
     #cors = CORS(app, resources={r"/v1/*": {"origins": "*"}})
