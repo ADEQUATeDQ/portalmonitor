@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-
+from core.dataset_converter import dict_to_dcat
 from flask import make_response, request, current_app
 from flask_restplus import cors
 from sqlalchemy import and_
@@ -9,7 +9,8 @@ from sqlalchemy import and_
 from odpw.utils.timing import Timer
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.core.db import row2dict
-from odpw.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, ResourceInfo, MetaResource, Dataset
+from odpw.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, ResourceInfo, MetaResource, Dataset, \
+    DatasetData, DatasetQuality
 
 import logging
 
@@ -53,28 +54,118 @@ class PortalSnapshotQuality1(Resource):
 
         return data
 
-@ns.route('/<portalid>/<int:snapshot>/resources')
+@ns.route('/<portalid>/<int:snapshot>/datasets')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
 
-class PortalSnapshotResources(Resource):
+class PortalDatasets(Resource):
 
     #@cors.crossdomain(origin='*')
     def get(self, portalid,snapshot):
-        with Timer(key="PortalSnapshotResources.get",verbose=True):
+        with Timer(key="PortalDatasets.get",verbose=True):
             session=current_app.config['dbsession']
 
-            q=session.query(ResourceInfo)\
-                .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
-                .join(Dataset,Dataset.md5==MetaResource.md5)\
+            q=session.query(Dataset)\
                 .filter(Dataset.snapshot==snapshot)\
-                .filter(ResourceInfo.snapshot==snapshot)\
                 .filter(Dataset.portalid==portalid)
-            print str(q)
             data=[row2dict(r) for r in q.all()]
 
             return data
 
+@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
 
+class PortalDatasetData(Resource):
+
+    #@cors.crossdomain(origin='*')
+    def get(self, portalid,snapshot, datasetid):
+        with Timer(key="PortalDatasetData.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(DatasetData) \
+                .join(Dataset, DatasetData.md5 == Dataset.md5) \
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)\
+                .filter(Dataset.id == datasetid)
+            data=[row2dict(r) for r in q.all()]
+
+            return data
+
+@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/dcat')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
+
+class PortalDatasetData(Resource):
+
+    #@cors.crossdomain(origin='*')
+    def get(self, portalid,snapshot, datasetid):
+        with Timer(key="PortalDatasetData.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(DatasetData) \
+                .join(Dataset, DatasetData.md5 == Dataset.md5) \
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)\
+                .filter(Dataset.id == datasetid)
+            data=q.first()
+
+            P= session.query(Portal).filter(Portal.id==portalid).first()
+            print data
+            print data.raw
+            print P
+            return dict_to_dcat(data.raw, P)
+
+@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/quality')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
+
+class PortalDatasetDataQuality(Resource):
+
+    #@cors.crossdomain(origin='*')
+    def get(self, portalid,snapshot, datasetid):
+        with Timer(key="PortalDatasetDataQuality.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(DatasetQuality) \
+                .join(Dataset, DatasetQuality.md5 == Dataset.md5) \
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)\
+                .filter(Dataset.id == datasetid)
+            data=[row2dict(r) for r in q.all()]
+
+            return data
+
+@ns.route('/<portalid>/snapshots')
+@ns.doc(params={'portalid': 'A portal id'})
+
+class PortalSnapshots(Resource):
+
+    #@cors.crossdomain(origin='*')
+    def get(self, portalid):
+        with Timer(key="PortalSnapshots.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(PortalSnapshot.snapshot)\
+                .filter(PortalSnapshot.portalid==portalid)
+            data=[row2dict(r) for r in q.all()]
+
+            return data
+
+@ns.route('/<portalid>/<int:snapshot>/resources')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot': 'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+class PortalSnapshotResources(Resource):
+    # @cors.crossdomain(origin='*')
+    def get(self, portalid, snapshot):
+        with Timer(key="PortalSnapshotResources.get", verbose=True):
+            session = current_app.config['dbsession']
+
+            q = session.query(ResourceInfo) \
+                .join(MetaResource, ResourceInfo.uri == MetaResource.uri) \
+                .join(Dataset, Dataset.md5 == MetaResource.md5) \
+                .filter(Dataset.snapshot == snapshot) \
+                .filter(ResourceInfo.snapshot == snapshot) \
+                .filter(Dataset.portalid == portalid)
+            print str(q)
+            data = [row2dict(r) for r in q.all()]
+
+            return data
 
 
 #

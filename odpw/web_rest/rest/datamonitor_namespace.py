@@ -123,7 +123,7 @@ class List(Resource):
         q=session.query(ResourceCrawlLog.uri).distinct(ResourceCrawlLog.uri)
         urls=[]
         for r in q:
-           urls.append(r[0]) 
+           urls.append(r[0])
 
         resp = jsonify(urls)
         return resp
