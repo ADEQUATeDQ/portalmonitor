@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from core.dataset_converter import dict_to_dcat
+from odpw.core.dataset_converter import dict_to_dcat
 from flask import make_response, request, current_app
 from flask_restplus import cors
 from sqlalchemy import and_
