@@ -2,7 +2,7 @@
 import json
 import logging
 
-from flask import current_app, Response
+from flask import current_app, Response, jsonify
 
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.web_rest.rest.helpers import toJSON, toCSV
@@ -64,7 +64,7 @@ class Portals(Resource):
         #per_page = args.get('per_page', 10)
         session=current_app.config['dbsession']
         data= [row2dict(i) for i in session.query(Portal).all()]
-        return data
+        return jsonify(data)
 
 @ns.route('/list_with_stats')
 class PortalsStats(Resource):
@@ -83,7 +83,7 @@ class PortalsStats(Resource):
         session=current_app.config['dbsession']
         data=[row2dict(r) for r in session.query(Portal, Portal.snapshot_count, Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
 
-        return data
+        return jsonify(data)
 
 @ns.route('/quality/<int:snapshot>')
 class PortalsQuality(Resource):
@@ -102,7 +102,7 @@ class PortalsQuality(Resource):
         session=current_app.config['dbsession']
         data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
-        return data
+        return jsonify(data)
 
 @ns.route('/quality')
 class PortalsCurQuality(Resource):
@@ -122,7 +122,7 @@ class PortalsCurQuality(Resource):
         #snapshot=getPreviousWeek(getSnapshotfromTime(datetime.datetime.now()))
         data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
-        return data
+        return jsonify(data)
 
 
 
