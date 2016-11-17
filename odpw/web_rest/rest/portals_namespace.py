@@ -52,7 +52,7 @@ portalstats = ns.inherit('PortalStats',  portal, {
 class Portals(Resource):
 
     #@ns.expect(pagination_arguments)
-    @api.marshal_with(portal, as_list=True)
+    #@api.marshal_with(portal, as_list=True)
 
     @ns.doc('get all portal information for snapshot')
     def get(self):
@@ -64,13 +64,17 @@ class Portals(Resource):
         #per_page = args.get('per_page', 10)
         session=current_app.config['dbsession']
         data= [row2dict(i) for i in session.query(Portal).all()]
-        return jsonify(data)
+        #return json.dumps(data)
+        return Response(json.dumps(data),
+                        mimetype='application/json')
+
+
 
 @ns.route('/list_with_stats')
 class PortalsStats(Resource):
 
     #@ns.expect(pagination_arguments)
-    @api.marshal_with(portalstats, as_list=True)
+    #@api.marshal_with(portalstats, as_list=True)
 
     @ns.doc('get all portal information for snapshot')
     def get(self):
@@ -83,7 +87,8 @@ class PortalsStats(Resource):
         session=current_app.config['dbsession']
         data=[row2dict(r) for r in session.query(Portal, Portal.snapshot_count, Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
 
-        return jsonify(data)
+        return Response(json.dumps(data),
+                        mimetype='application/json')
 
 @ns.route('/quality/<int:snapshot>')
 class PortalsQuality(Resource):
@@ -102,7 +107,8 @@ class PortalsQuality(Resource):
         session=current_app.config['dbsession']
         data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
-        return jsonify(data)
+        return Response(json.dumps(data),
+                        mimetype='application/json')
 
 @ns.route('/quality')
 class PortalsCurQuality(Resource):
@@ -122,7 +128,8 @@ class PortalsCurQuality(Resource):
         #snapshot=getPreviousWeek(getSnapshotfromTime(datetime.datetime.now()))
         data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
-        return jsonify(data)
+        return Response(json.dumps(data),
+                        mimetype='application/json')
 
 
 

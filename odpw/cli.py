@@ -21,6 +21,7 @@ from odpw.utils.timing import Timer
 import odpw.web_rest.rest.rest as restAPI
 import odpw.web_rest.ui.server as ui
 import odpw.services.fetch_insert as fetch
+import odpw.services.updateStats as updateStats
 #import fetch_migrate as fetchM
 import odpw.services.resource_head as head
 import odpw.services.init_db as initdb
@@ -28,6 +29,7 @@ import odpw.services.resource_head_scrapy as head_scrapy
 import odpw.services.addPortal as addPortal
 import odpw.services.data_fetch as datafetch
 import odpw.quality.freshness as freshness
+import odpw.services.migrateDB as migration
 
 import sys  # import sys package, if not already imported
 reload(sys)
@@ -42,7 +44,9 @@ submodules=[
     fetch,#fetchM,
     head_scrapy,
     addPortal,
-    freshness
+    freshness,
+    updateStats,
+    migration
   ]
 
 def config_logging():
@@ -64,7 +68,8 @@ def config_logging():
     )
 
 
-def start ():
+def start (argv):
+    print argv
     start= time.time()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.', prog='odpw')
     
@@ -105,7 +110,7 @@ def start ():
     #for i in m:
     #    print i
 
-    args = pa.parse_args()
+    args = pa.parse_args(args=argv)
     
         
     db=readDBConfFromFile(args.config)
@@ -161,4 +166,4 @@ def start ():
 
 if __name__ == "__main__":
     #start()
-    start()
+    start(sys.argv[1:])
