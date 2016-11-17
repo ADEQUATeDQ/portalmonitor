@@ -21,7 +21,7 @@ from odpw.utils.timing import Timer
 import odpw.web_rest.rest.rest as restAPI
 import odpw.web_rest.ui.server as ui
 import odpw.services.fetch_insert as fetch
-import odpw.services.updateStats as updateStats
+#import odpw.services.updateStats as updateStats
 #import fetch_migrate as fetchM
 import odpw.services.resource_head as head
 import odpw.services.init_db as initdb
@@ -29,7 +29,7 @@ import odpw.services.resource_head_scrapy as head_scrapy
 import odpw.services.addPortal as addPortal
 import odpw.services.data_fetch as datafetch
 import odpw.quality.freshness as freshness
-import odpw.services.migrateDB as migration
+#import odpw.services.migrateDB as migration
 
 import sys  # import sys package, if not already imported
 reload(sys)
@@ -45,8 +45,8 @@ submodules=[
     head_scrapy,
     addPortal,
     freshness,
-    updateStats,
-    migration
+    #updateStats,
+    #migration
   ]
 
 def config_logging():
@@ -72,7 +72,7 @@ def start (argv):
     print argv
     start= time.time()
     pa = argparse.ArgumentParser(description='Open Portal Watch toolset.', prog='odpw')
-    
+
 
     logg=pa.add_argument_group("Logging")
     logg.add_argument(
@@ -87,10 +87,10 @@ def start (argv):
         action="store_const", dest="loglevel", const=logging.INFO,
         default=logging.WARNING
     )
-    
+
     config=pa.add_argument_group("Config")
     config.add_argument('-c','--config', help="config file", dest='config')
-    
+
     sp = pa.add_subparsers(title='Modules', description="Available sub modules")
     for sm in submodules:
         smpa = sp.add_parser(sm.name(), help=sm.help())
@@ -111,8 +111,8 @@ def start (argv):
     #    print i
 
     args = pa.parse_args(args=argv)
-    
-        
+
+
     db=readDBConfFromFile(args.config)
     if args.config:
         try:
@@ -143,10 +143,10 @@ def start (argv):
     #config the structlog
     config_logging()
     log = structlog.get_logger()
-    
+
     try:
         log.info("CMD ARGS", args=str(args))
-    
+
         dbm = DBManager(**db)
         args.func(args , dbm)
     except OperationalError as e:
@@ -160,7 +160,7 @@ def start (argv):
 
     Timer.printStats()
     ErrorHandler.printStats()
-    
+
 
 
 
