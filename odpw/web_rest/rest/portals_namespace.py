@@ -85,7 +85,7 @@ class PortalsStats(Resource):
         #page = args.get('page', 1)
         #per_page = args.get('per_page', 10)
         session=current_app.config['dbsession']
-        data=[row2dict(r) for r in session.query(Portal, Portal.snapshot_count, Portal.first_snapshot, Portal.last_snapshot, Portal.datasetCount, Portal.resourceCount)]
+        data=[row2dict(r) for r in session.query(Portal, Portal.snapshot_count, Portal.first_snapshot, Portal.last_snapshot, Portal.datasetcount, Portal.resourcecount)]
 
         return Response(json.dumps(data),
                         mimetype='application/json')
@@ -105,7 +105,7 @@ class PortalsQuality(Resource):
         #page = args.get('page', 1)
         #per_page = args.get('per_page', 10)
         session=current_app.config['dbsession']
-        data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
+        data=[row2dict(r) for r in session.query(Portal, Portal.datasetcount, Portal.resourcecount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
 
         return Response(json.dumps(data),
                         mimetype='application/json')
@@ -126,7 +126,7 @@ class PortalsCurQuality(Resource):
         #per_page = args.get('per_page', 10)
         session=current_app.config['dbsession']
         #snapshot=getPreviousWeek(getSnapshotfromTime(datetime.datetime.now()))
-        data=[row2dict(r) for r in session.query(Portal, Portal.datasetCount, Portal.resourceCount).join(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot==snapshot).add_entity(PortalSnapshotQuality)]
+        data=[row2dict(r) for r in session.query(Portal,  Portal.datasetcount, Portal.resourcecount).join(PortalSnapshotQuality).add_entity(PortalSnapshotQuality)]
 
         return Response(json.dumps(data),
                         mimetype='application/json')
