@@ -78,7 +78,11 @@ def _row2dict(r):
             at=att.encode('utf-8')
         else:
             at=att
-        data[c.name]=str(att)
+        data[c.name] = att
+        #if type(att) in [dict, list]:
+
+        #else:
+        #    data[c.name] = str(att)
 
     return data
 
@@ -88,6 +92,7 @@ def row2dict(r):
         d={}
         for field in r._fields:
             rf= r.__getattribute__(field)
+            print field, type(rf)
             if isinstance(rf, Base):
                 d.update(_row2dict(rf))
             else:

@@ -35,9 +35,8 @@ class PortalAll(Resource):
             .join(Portal)\
             .add_entity(PortalSnapshotQuality)\
             .add_entity(Portal)
-        return Response(json.dumps([row2dict(i) for i in q.all()]),
-                        mimetype='application/json')
-        #return jsonify()
+
+        return jsonify([row2dict(i) for i in q.all()])
 
 
 @ns.route('/<portalid>/<int:snapshot>/quality')
@@ -52,8 +51,7 @@ class PortalSnapshotQuality1(Resource):
         q=session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.portalid==portalid).filter(PortalSnapshotQuality.snapshot==snapshot)
         data=[row2dict(r) for r in q.all()]
 
-        return Response(json.dumps(data),
-                        mimetype='application/json')
+        return jsonify(data)
 
 @ns.route('/<portalid>/<int:snapshot>/datasets')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
@@ -70,8 +68,7 @@ class PortalDatasets(Resource):
                 .filter(Dataset.portalid==portalid)
             data=[row2dict(r) for r in q.all()]
 
-            return Response(json.dumps(data),
-                            mimetype='application/json')
+            return jsonify(data)
 
 @ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
@@ -88,10 +85,10 @@ class PortalDatasetData(Resource):
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(Dataset.portalid==portalid)\
                 .filter(Dataset.id == datasetid)
-            data=[row2dict(r) for r in q.all()]
-            return Response(json.dumps(data),
-                            mimetype='application/json')
-            #return jsonify(data)
+            data = [row2dict(r) for r in q.all()]
+
+            return jsonify(data)
+
 
 @ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/dcat')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
@@ -111,8 +108,7 @@ class PortalDatasetData(Resource):
             data=q.first()
 
             P= session.query(Portal).filter(Portal.id==portalid).first()
-            return Response(json.dumps(dict_to_dcat(data.raw, P)),
-                            mimetype='application/json')
+            return jsonify(dict_to_dcat(data.raw, P))
             #return jsonify(dict_to_dcat(data.raw, P))
 
 @ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/quality')
@@ -132,8 +128,7 @@ class PortalDatasetDataQuality(Resource):
                 .filter(Dataset.id == datasetid)
             data=[row2dict(r) for r in q.all()]
 
-            return Response(json.dumps(data),
-                            mimetype='application/json')
+            return jsonify(data)
 
 @ns.route('/<portalid>/snapshots')
 @ns.doc(params={'portalid': 'A portal id'})
@@ -149,8 +144,7 @@ class PortalSnapshots(Resource):
                 .filter(PortalSnapshot.portalid==portalid)
             data=[row2dict(r) for r in q.all()]
 
-            return Response(json.dumps(data),
-                            mimetype='application/json')
+            return jsonify(data)
 
 @ns.route('/<portalid>/<int:snapshot>/resources')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot': 'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
@@ -168,8 +162,7 @@ class PortalSnapshotResources(Resource):
                 .filter(Dataset.portalid == portalid)
             data = [row2dict(r) for r in q.all()]
 
-            return Response(json.dumps(data),
-                            mimetype='application/json')
+            return jsonify(data)
 
 
 #
