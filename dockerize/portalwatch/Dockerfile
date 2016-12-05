@@ -10,8 +10,8 @@ WORKDIR $INSTALL_PATH
  ENV ADEQUATE $INSTALL_PATH/portalmonitor
  WORKDIR $ADEQUATE
 
-ADD portalmonitor.conf   $ADEQUATE/portalmonitor.conf
-ENV CONF $ADEQUATE/portalmonitor.conf
+ADD portalmonitor.conf   $ADEQUATE/odpw.conf
+ENV CONF $ADEQUATE/odpw.conf
 RUN git pull; pip install -r requirements.txt; python setup.py install
 ONBUILD RUN git pull; pip install -r requirements.txt; python setup.py install
 
