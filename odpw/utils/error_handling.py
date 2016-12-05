@@ -66,6 +66,8 @@ errorStatus={
 
     ,902:'InvalidSchema'
     ,903:'MissingSchema'
+    ,904:'MissingDatasets'
+
     ,600:'Not Specified'
     ,666:'Robots.txt'
 }

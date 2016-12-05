@@ -12,7 +12,7 @@ jinja2
 tornado
 pyyaml
 psycopg2
-bokeh
+bokeh==0.12.2
 pybloom
 python-dateutil
 scrapy

@@ -499,17 +499,21 @@ def portalDataset(snapshot, portalid, dataset):
             with Timer(key="getPortalDatasets_datasetData",verbose=True):
                 r= Session.query(DatasetData).join(Dataset).filter(Dataset.id==dataset).join(DatasetQuality).add_entity(DatasetQuality).first()
                 data['datasetData']=row2dict(r)
-                data['json']=ast.literal_eval(data['datasetData']['raw'])
+                software = Session.query(Portal.software).filter(Portal.id==portalid).first()[0]
+                if software == 'Socrata':
+                    data['json']=data['datasetData']['raw']['view']
+                else:
+                    data['json']=data['datasetData']['raw']
 
             with Timer(key="getPortalDatasets_resources",verbose=True):
                 q= Session.query(MetaResource,ResourceInfo).filter(MetaResource.md5==r[0].md5).outerjoin(ResourceInfo, and_( ResourceInfo.uri==MetaResource.uri,ResourceInfo.snapshot==snapshot))
                 data['resources']=[row2dict(r) for r in q.all()]
                 for r in data['resources']:
-                    print r
-                    if 'header' in r:
-                        print r['header']
+                    #print r
+                    if 'header' in r and isinstance(r['header'], basestring):
+                        #print r['header']
                         r['header']=ast.literal_eval(r['header'])
-                        print r['header']
+                        #print r['header']
 
         with Timer(key="getPortalDatasets_versions",verbose=True):
             q=Session.query(Dataset.md5, func.min(Dataset.snapshot).label('min'), func.max(Dataset.snapshot).label('max')).filter(Dataset.id==dataset).group_by(Dataset.md5)
