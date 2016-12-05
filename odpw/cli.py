@@ -46,8 +46,8 @@ submodules=[
     head_scrapy,
     addPortal,
     freshness,
-    migration,
-    copydb,
+#    migration,
+#    copydb,
     updateStats
   ]
 
