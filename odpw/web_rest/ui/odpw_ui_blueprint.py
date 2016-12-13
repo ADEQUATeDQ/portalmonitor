@@ -67,7 +67,7 @@ def render(templateName, data=None,**kwargs):
 def getPortalCount():
 
     with Timer(key="getPortalCount", verbose=True):
-        return current_app.config['dbsession'].query(Portal.id).count()
+        return current_app.config['dbsession'].query(Portal.id).filter(Portal.active==True).count()
 
 
 
@@ -212,7 +212,7 @@ def getPortalsInfo():
 
     with Timer(key="getPortalsInfo", verbose=True):
         ps=[]
-        r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetcount, Portal.resourcecount)
+        r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetcount, Portal.resourcecount).filter(Portal.active==True)
         for P in r:
             #print 'P',P
             d={}
@@ -482,7 +482,7 @@ def getPortalDatasets(Session, portalid,snapshot):
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dataset', methods=['GET'], defaults={'dataset': None})
-@ui.route('/portal/<portalid>/<int:snapshot>/dataset/<dataset>', methods=['GET'])
+@ui.route('/portal/<portalid>/<int:snapshot>/dataset/<path:dataset>', methods=['GET'])
 def portalDataset(snapshot, portalid, dataset):
     with Timer(key="portalDataset",verbose=True):
         Session=current_app.config['dbsession']

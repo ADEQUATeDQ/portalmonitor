@@ -103,7 +103,7 @@ prepareODPWUI(){
   docker rm $PWSSERVICE_UI_TAG
   docker rmi $PWSSERVICE_UI_TAG
   cd $PWSSERVICE_UI; docker build --tag $PWSSERVICE_UI_TAG .
-  docker run -d -p 82:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
+  docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
 }
 
 #preparePython
