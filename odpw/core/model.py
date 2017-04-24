@@ -21,6 +21,7 @@ tab_portalsnapshot=tmp+'portalsnapshot'
 tab_portalsnapshotquality=tmp+'portalsnapshotquality'
 tab_portalsnapshotfetch=tmp+'portalsnapshotfetch'
 
+tab_formatdist= tmp+"formatdist"
 
 tab_datasets=tmp+'datasets'
 tab_datasetsquality=tmp+'datasetsquality'
@@ -338,3 +339,11 @@ class ResourceFreshness(Base):
     a_emp_dist_metadata = Column(Float)
     mark1_metadata = Column(Float)
     mark2_metadata = Column(Float)
+
+class FormatDist(Base):
+    __tablename__ = tab_formatdist
+
+    format = Column(String, primary_key=True)
+    snapshot = Column(SmallInteger, primary_key=True)
+    grouping = Column(String, primary_key=True)
+    count = Column(Integer)

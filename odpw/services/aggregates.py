@@ -9,7 +9,7 @@ from sqlalchemy import inspect
 from odpw.core.api import organisationDist, licenseDist, formatDist, distinctLicenses, distinctFormats, \
     distinctOrganisations
 from odpw.core.db import row2dict
-from odpw.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality
+from odpw.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality, Portal, FormatDist
 from odpw.utils.timing import Timer
 
 
@@ -123,3 +123,48 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
                 stats[key]={'distinct':cFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
 
     return stats
+
+def aggregateFormatDist(db,  snapshot):
+    with Timer(key="aggregateFormatDist", verbose=True):
+        iso=set([])
+        software=set([])
+        with Timer(key="aggregateFormatDistPortals", verbose=True):
+            for P in db.Session.query(Portal):
+                with Timer(key="aggregateFormatDist-"+P.id, verbose=True):
+                    iso.add(P.iso)
+                    software.add(P.software)
+                    for r in db.formatDist(snapshot, portalid=P.id):
+                        format = r[0]
+                        if format is None:
+                            format = "missing"
+                        db.add(FormatDist(format=format
+                                            ,snapshot=snapshot
+                                            ,grouping=P.id
+                                            ,count=r[1]
+                                          ))
+
+        with Timer(key="aggregateFormatDistIso", verbose=True):
+            for i in iso:
+                with Timer(key="aggregateFormatDistIso-"+i, verbose=True):
+                    for r in db.formatDist(snapshot, iso=i):
+                        format=r[0]
+                        if format is None:
+                            format="missing"
+                        db.add(FormatDist(  format=format
+                                            ,snapshot=snapshot
+                                            ,grouping=P.id
+                                            ,count=r[1]
+                                          ))
+
+        with Timer(key="aggregateFormatDistSoft", verbose=True):
+            for soft in software:
+                with Timer(key="aggregateFormatDistSoft-"+soft, verbose=True):
+                    for r in db.formatDist(snapshot, software=soft):
+                        format = r[0]
+                        if format is None:
+                            format = "missing"
+                        db.add(FormatDist(format=format
+                                        ,snapshot=snapshot
+                                        ,grouping=P.id
+                                        ,count=r[1]
+                                      ))

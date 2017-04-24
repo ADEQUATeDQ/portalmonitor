@@ -67,7 +67,7 @@ def render(templateName, data=None,**kwargs):
 def getPortalCount():
 
     with Timer(key="getPortalCount", verbose=True):
-        return current_app.config['dbsession'].query(Portal.id).count()
+        return current_app.config['dbsession'].query(Portal.id).filter(Portal.active==True).count()
 
 
 
@@ -212,7 +212,7 @@ def getPortalsInfo():
 
     with Timer(key="getPortalsInfo", verbose=True):
         ps=[]
-        r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetcount, Portal.resourcecount)
+        r=current_app.config['dbsession'].query(Portal, Portal.snapshot_count,Portal.first_snapshot, Portal.last_snapshot, Portal.datasetcount, Portal.resourcecount).filter(Portal.active==True)
         for P in r:
             #print 'P',P
             d={}
@@ -482,7 +482,7 @@ def getPortalDatasets(Session, portalid,snapshot):
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dataset', methods=['GET'], defaults={'dataset': None})
-@ui.route('/portal/<portalid>/<int:snapshot>/dataset/<dataset>', methods=['GET'])
+@ui.route('/portal/<portalid>/<int:snapshot>/dataset/<path:dataset>', methods=['GET'])
 def portalDataset(snapshot, portalid, dataset):
     with Timer(key="portalDataset",verbose=True):
         Session=current_app.config['dbsession']
@@ -499,17 +499,21 @@ def portalDataset(snapshot, portalid, dataset):
             with Timer(key="getPortalDatasets_datasetData",verbose=True):
                 r= Session.query(DatasetData).join(Dataset).filter(Dataset.id==dataset).join(DatasetQuality).add_entity(DatasetQuality).first()
                 data['datasetData']=row2dict(r)
-                data['json']=ast.literal_eval(data['datasetData']['raw'])
+                software = Session.query(Portal.software).filter(Portal.id==portalid).first()[0]
+                if software == 'Socrata':
+                    data['json']=data['datasetData']['raw']['view']
+                else:
+                    data['json']=data['datasetData']['raw']
 
             with Timer(key="getPortalDatasets_resources",verbose=True):
                 q= Session.query(MetaResource,ResourceInfo).filter(MetaResource.md5==r[0].md5).outerjoin(ResourceInfo, and_( ResourceInfo.uri==MetaResource.uri,ResourceInfo.snapshot==snapshot))
                 data['resources']=[row2dict(r) for r in q.all()]
                 for r in data['resources']:
-                    print r
-                    if 'header' in r:
-                        print r['header']
+                    #print r
+                    if 'header' in r and isinstance(r['header'], basestring):
+                        #print r['header']
                         r['header']=ast.literal_eval(r['header'])
-                        print r['header']
+                        #print r['header']
 
         with Timer(key="getPortalDatasets_versions",verbose=True):
             q=Session.query(Dataset.md5, func.min(Dataset.snapshot).label('min'), func.max(Dataset.snapshot).label('max')).filter(Dataset.id==dataset).group_by(Dataset.md5)

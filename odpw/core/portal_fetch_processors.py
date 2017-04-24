@@ -246,6 +246,9 @@ class Socrata(PortalProcessor):
                         log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
                     yield d
             page += 1
+        PortalSnapshot.datasetcount = len(processed)
+
+
     def _dcat(self, id, api):
         url = urlparse.urljoin(api, 'dcat.rdf/' + id)
         resp = requests.get(url, verify=False)
@@ -284,6 +287,7 @@ class OpenDataSoft(PortalProcessor):
                         yield d
             else:
                 break
+        PortalSnapshot.datasetcount = len(processed)
 
 
 class XMLDCAT(PortalProcessor):
@@ -314,6 +318,7 @@ class XMLDCAT(PortalProcessor):
             if len(processed) % 1000 == 0:
                 log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
             yield d
+        PortalSnapshot.datasetcount = len(processed)
 
     def _add_triples(self, g, orig_g, s):
         for s, p, o in orig_g.triples( (s, None, None) ):

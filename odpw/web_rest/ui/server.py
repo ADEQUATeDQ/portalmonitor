@@ -1,4 +1,5 @@
 import structlog
+from werkzeug.utils import redirect
 
 from odpw.web_rest.rest.portal_namespace import ns as portal_namespace
 from odpw.web_rest.rest.portals_namespace import ns as portals_namespace
@@ -112,6 +113,11 @@ def create_app(dbm, conf):
         resp.status_code = 500
         return resp
 
+    @app.route('/')
+    def url_prefix():
+        return redirect(conf['url_prefix_ui'])
+
+
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     return app
 
@@ -142,7 +148,7 @@ def cli(args,dbm):
             if 'rest' in config:
                 for key in conf:
                     if key in config['rest']:
-                        conf[key]=config['ui'][key]
+                        conf[key]=config['rest'][key]
 
     print conf
     app=create_app(dbm, conf)

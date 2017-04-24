@@ -53,6 +53,18 @@ def getOrganization(dataset):
                     return orga
     return None
 
+def getOrganizationURL(dataset):
+    for dcat_el in getattr(dataset,'dcat',[]):
+        #TODO there is also a FOAF.Ogranisation
+        if str(FOAF.Organization) in dcat_el.get('@type',[]):
+            orga=dcat_el['@id']
+            return orga
+    for dcat_el in getattr(dataset,'dcat',[]):
+        if str(VCARD.Organization) in dcat_el.get('@type',[]):
+            orga=dcat_el['@id']
+            return orga
+    return None
+
 def getModificationDate(dataset):
     return accessDataset(dataset, DCT.modified)
 
@@ -87,7 +99,10 @@ def getContactPoint(dataset):
 def getLandingPage(dataset):
     return accessDataset(dataset, DCAT.landingPage)
 
-
+def getDatasetURL(dataset):
+    for dcat_el in getattr(dataset, 'dcat', []):
+        if str(DCAT.Dataset) in dcat_el.get('@type', []):
+            return dcat_el['@id']
 
 
 #Distribution
@@ -201,6 +216,14 @@ def getDistributionCreationDateWithURL(dataset, url):
 def getDistributionModificationDateWithURL(dataset, url):
     return accessDistributionWithURL(dataset, url,DCT.modified)
 
+def getDistributionIDWithURL(dataset, url):
+    url_dict = {u'@id': url}
+    for dcat_el in getattr(dataset,'dcat',[]):
+        if str(DCAT.Distribution) in dcat_el.get('@type',[]):
+            access = dcat_el.get(str(DCAT.accessURL), [])
+            download = dcat_el.get(str(DCAT.downloadURL), [])
+            if url_dict in access or url_dict in download:
+                return dcat_el['@id']
 
 
 def accessDistributionWithURL(dataset, url, key):

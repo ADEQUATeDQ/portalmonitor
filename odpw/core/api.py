@@ -126,7 +126,7 @@ class DBClient(object):
 
     def portalSnapshot(self,snapshot, portalid):
         with self.session_scope() as session:
-            return session.query(PortalSnapshot).query\
+            return session.query(PortalSnapshot)\
                 .filter(PortalSnapshot.snapshot==snapshot)\
                 .filter(PortalSnapshot.portalid==portalid)
 
@@ -164,17 +164,25 @@ class DBClient(object):
 
 
 
-    def formatDist(self, snapshot, portalid=None):
+    def formatDist(self, snapshot, portalid=None, iso=None, software=None):
         with self.session_scope() as session:
             q= session.query(MetaResource.format, func.count().label('count'))\
                 .join(Dataset,Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
+            if iso:
+                q= q.join(Portal, Portal.id == Dataset.portalid)\
+                .filter(Portal.iso==iso)
+            if software:
+                q= q.join(Portal, Portal.id == Dataset.portalid)\
+                .filter(Portal.software==software)
+
 
             q=q.group_by(MetaResource.format)
             q=q.order_by(func.count().desc())
             return q
+
 
     def distinctFormats(self, snapshot, portalid=None):
         with self.session_scope() as session:

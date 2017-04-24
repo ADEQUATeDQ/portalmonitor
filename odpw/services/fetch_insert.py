@@ -54,9 +54,9 @@ def fetchHttp(obj):
             exc=getExceptionString(exc)
         try:
             #update the portalsnapshot object with dataset and resource count and end time
+            dsCount=PortalSnapshot.datasetcount
             dsfetched=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
             resCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
-            #dsCount=PortalSnapshot.datasetcount
 
         except Exception as exc:
             ErrorHandler.handleError(log, "PortalSnapshotUpdate", exception=exc, pid=P.id, snapshot=snapshot,
@@ -67,7 +67,7 @@ def fetchHttp(obj):
             PS = s.query(PortalSnapshot).filter(PortalSnapshot.portalid==P.id, PortalSnapshot.snapshot==snapshot).first()
             PS.datasetsfetched =dsfetched
             PS.resourcecount =resCount
-            #PS.datasetcount = dsCount
+            PS.datasetcount = dsCount
             PS.end = datetime.datetime.now()
             PS.exc=exc
             PS.status=status
