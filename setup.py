@@ -1,5 +1,6 @@
 #from distutils.core import setup
 from setuptools import setup,find_packages
+from pip.req import parse_requirements
 files = ["resources/*"]
 install_reqs = parse_requirements("requirements.txt", session=False)
 
