@@ -1,10 +1,28 @@
 #!/bin/bash
 
+
+docker-compose up 
+
 BASE=`pwd`
-PYTHON=$BASE/python
-PYTHON_TAG=odpw_python
 PW=$BASE/portalwatch
-PW_TAG=odpw
+PW_TAG=portalwatch
+
+
+
+
+cd $PW
+echo "cleanup portalmonitor"
+docker rmi $PW_TAG
+docker rm $PW_TAG
+#build odpwcli
+docker build --tag $PW_TAG .
+
+#INIT DB
+docker run --rm --link datastore:db  $PW_TAG InitDB
+#add use case partner portals
+docker run --rm --link datastore:db $PW_TAG AddPortal -u http://data.gv.at/ -a http://www.data.gv.at/katalog/ -s CKAN -i AT
+docker run --rm --link datastore:db $PW_TAG AddPortal -u https://www.opendataportal.at/ -a http://data.opendataportal.at/ -s CKAN -i AT
+
 
 PWSSERVICE=$BASE/portalwatch_services/
 PWSSERVICE_META=$PWSSERVICE/metafetch

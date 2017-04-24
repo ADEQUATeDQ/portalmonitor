@@ -1,8 +1,12 @@
 #from distutils.core import setup
 from setuptools import setup,find_packages
 files = ["resources/*"]
+install_reqs = parse_requirements("requirements.txt", session=False)
 
-print find_packages()
+# reqs is a list of requirement
+# e.g. ['django==1.5.1', 'mezzanine==1.4.6']
+reqs = [str(ir.req) for ir in install_reqs]
+
 setup(
     name='odpw',
     version='0.1',
@@ -18,39 +22,6 @@ setup(
     author_email='',
     description='',
     scripts = ["bin/odpw"],
-    install_requires=[
-        "requests",
-        'structlog',
-        'urlnorm',
-        'sqlalchemy',
-        'faststat',
-        'ckanapi',
-        'pandas',
-        'numpy',
-        'enum',
-        'rarfile',
-        'jinja2',
-        'tornado',
-        'pyyaml',
-        'psycopg2',
-        'bokeh',
-        'pybloom',
-        'python-dateutil',
-        'scrapy',
-        'py-lru-cache',
-        'queuelib',
-        'rdflib',
-        'rdflib-jsonld',
-        'tldextract',
-        'Twisted',
-        'geomet',
-        'reppy',
-        'dictdiffer',
-        'networkx',
-        'Flask',
-        'Flask-Cache',
-        'flask-restplus',
-        'rdflib'
-    ],
+    install_requires=reqs
 
 )
