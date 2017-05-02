@@ -90,7 +90,7 @@ prepareODPWMeta(){
 
   #build PW_metafetch service
   cd $PWSSERVICE_META; docker build --tag $PWSSERVICE_META_TAG .
-  docker run -d --name $PWSSERVICE_META_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_META_TAG
+  docker run -d --name $PWSSERVICE_META_TAG -v /data/logs:/logs --link datastore:db $PWSSERVICE_META_TAG
 }
 
 prepareODPWData(){
@@ -98,7 +98,7 @@ prepareODPWData(){
   docker rm $PWSSERVICE_DATA_TAG
   docker rmi $PWSSERVICE_DATA_TAG
   cd $PWSSERVICE_DATA; docker build --tag $PWSSERVICE_DATA_TAG .
-  docker run -d --name $PWSSERVICE_DATA_TAG --volumes-from logdata --volumes-from datadir --link datastore:db $PWSSERVICE_DATA_TAG
+  docker run -d --name $PWSSERVICE_DATA_TAG -v /data/logs:/logs --volumes-from datadir --link datastore:db $PWSSERVICE_DATA_TAG
 }
 
 prepareODPWUI(){
