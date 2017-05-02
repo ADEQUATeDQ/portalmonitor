@@ -1,4 +1,4 @@
-from odpw:latest
+from portalwatch:latest
 
 
 ENV SCRIPT metafetch.sh
@@ -14,4 +14,4 @@ RUN touch /var/log/cron.log
 RUN crontab -l
 ENTRYPOINT []
 
-CMD ["crond", "-f", "-d", "8"]
+CMD ["cron", "-f"]

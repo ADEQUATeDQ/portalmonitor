@@ -16,14 +16,31 @@ PWSSERVICE_DATA_TAG=odpw_data
 
 PWSSERVICE_UI=$PWSSERVICE/ui
 PWSSERVICE_UI_TAG=odpw_ui
+#!/bin/bash
 
-DATA=$1
+BASE=`pwd`
+PW=$BASE/portalwatch
+PW_TAG=portalwatch
+
+PWSSERVICE=$BASE/portalwatch_services/
+PWSSERVICE_META=$PWSSERVICE/metafetch
+PWSSERVICE_META_TAG=odpw_meta
+
+PWSSERVICE_HEAD=$PWSSERVICE/head
+PWSSERVICE_HEAD_TAG=odpw_head
+
+PWSSERVICE_DATA=$PWSSERVICE/datafetch
+PWSSERVICE_DATA_TAG=odpw_data
+
+PWSSERVICE_UI=$PWSSERVICE/ui
+PWSSERVICE_UI_TAG=odpw_ui
+
 DATASTORE=$BASE/datastore
 DATASTORE_TAG=datastore
 
-DATADIR=$DATA/data/datadir
-LOGS=$DATA/data/logs
-DBDATA=$DATA/data/dbdata
+DATADIR=/data/datadir
+LOGS=/data/logs
+DBDATA=/data/dbdata
 
 DBDATA_TAG=dbdata
 LOGS_TAG=logdata
@@ -43,7 +60,7 @@ prepareDatastore(){
   docker build --tag $DATASTORE_TAG .
 
   #creata the datastore container
-  docker run --name $DATASTORE_TAG -p 5433:5432 -d -v /data/dbdata -e POSTGRES_PASSWORD=4dequat3 $DATASTORE_TAG
+  docker run --name $DATASTORE_TAG -p 5433:5432 -d -e POSTGRES_PASSWORD=4dequat3 $DATASTORE_TAG
 
   #wait 120 seconds until the datastore is up and running
   sleep 120
@@ -76,14 +93,6 @@ prepareODPWMeta(){
   docker run -d --name $PWSSERVICE_META_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_META_TAG
 }
 
-prepareODPWHead(){
-  docker stop $PWSSERVICE_HEAD_TAG
-  docker rm $PWSSERVICE_HEAD_TAG
-  docker rmi $PWSSERVICE_HEAD_TAG
-  cd $PWSSERVICE_HEAD; docker build --tag $PWSSERVICE_HEAD_TAG .
-  docker run -d --name $PWSSERVICE_HEAD_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_HEAD_TAG
-}
-
 prepareODPWData(){
   docker stop $PWSSERVICE_DATA_TAG
   docker rm $PWSSERVICE_DATA_TAG
@@ -97,11 +106,11 @@ prepareODPWUI(){
   docker rm $PWSSERVICE_UI_TAG
   docker rmi $PWSSERVICE_UI_TAG
   cd $PWSSERVICE_UI; docker build --tag $PWSSERVICE_UI_TAG .
-  docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
+  docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG -v /data/logs:/logs --link datastore:db $PWSSERVICE_UI_TAG
 }
 
 #prepareDatastore
-preparePortalmonitor
+#preparePortalmonitor
 #initPortals
 #prepareODPWMeta
 #prepareODPWHead

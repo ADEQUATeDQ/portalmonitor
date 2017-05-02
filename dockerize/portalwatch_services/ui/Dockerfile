@@ -1,4 +1,4 @@
-from odpw:latest
+from portalwatch:latest
 
 ADD odpw_ui.sh $INSTALL_PATH/odpw_ui.sh
 RUN chmod +x $INSTALL_PATH/odpw_ui.sh

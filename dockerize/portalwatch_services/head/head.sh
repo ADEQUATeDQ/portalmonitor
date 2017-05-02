@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #initially kill running processes
-pkill  -f Fetch
+pkill  -f Head
 
 week=`date +"%y%V"`
 echo "Writting logs to $LOGS for week $week"
