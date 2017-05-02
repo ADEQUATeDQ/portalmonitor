@@ -1,28 +1,8 @@
 #!/bin/bash
 
-
-docker-compose up 
-
 BASE=`pwd`
 PW=$BASE/portalwatch
 PW_TAG=portalwatch
-
-
-
-
-cd $PW
-echo "cleanup portalmonitor"
-docker rmi $PW_TAG
-docker rm $PW_TAG
-#build odpwcli
-docker build --tag $PW_TAG .
-
-#INIT DB
-docker run --rm --link datastore:db  $PW_TAG InitDB
-#add use case partner portals
-docker run --rm --link datastore:db $PW_TAG AddPortal -u http://data.gv.at/ -a http://www.data.gv.at/katalog/ -s CKAN -i AT
-docker run --rm --link datastore:db $PW_TAG AddPortal -u https://www.opendataportal.at/ -a http://data.opendataportal.at/ -s CKAN -i AT
-
 
 PWSSERVICE=$BASE/portalwatch_services/
 PWSSERVICE_META=$PWSSERVICE/metafetch
@@ -49,23 +29,12 @@ DBDATA_TAG=dbdata
 LOGS_TAG=logdata
 DATADIR_TAG=datadir
 
-preparePython(){
-  docker rmi $PYTHON_TAG
-  cd $PYTHON
-  docker build --tag $PYTHON_TAG .
-}
 
-prepareDataContainers(){
-  echo "prepareDataContainers"
-  #build dbdata, logdata and datadir
-  # data-only containers
+prepareDatastore(){
   echo "cleanup"
-  docker rm $DBDATA_TAG $LOGS_TAG $DATADIR_TAG $DATASTORE_TAG
+  docker rm $DATASTORE_TAG
   docker rmi $DATASTORE_TAG
-  rm -rf $DBDATA/* $LOGS/* $DATADIR/*
-  docker run --name $DBDATA_TAG -v $DBDATA:/var/lib/postgresql/data alpine /bin/echo Data-only
-  docker run --name $LOGS_TAG -v $LOGS:/logs alpine /bin/echo Data-only
-  docker run --name $DATADIR_TAG -v $DATADIR:/data alpine /bin/echo Data-only
+  #rm -rf $DBDATA/* $LOGS/* $DATADIR/*
 
   echo "build $DATASTORE_TAG"
   #build datastore
@@ -74,21 +43,28 @@ prepareDataContainers(){
   docker build --tag $DATASTORE_TAG .
 
   #creata the datastore container
-  docker run --name $DATASTORE_TAG -p 5433:5432 -d  --volumes-from dbdata -e POSTGRES_PASSWORD=4dequat3 $DATASTORE_TAG
+  docker run --name $DATASTORE_TAG -p 5433:5432 -d -v /data/dbdata -e POSTGRES_PASSWORD=4dequat3 $DATASTORE_TAG
 
   #wait 120 seconds until the datastore is up and running
   sleep 120
 }
 
-prepareODPW(){
-  echo "prepareODPW"
-
-  echo "cleanup"
+preparePortalmonitor(){
+  echo "cleanup Portalmonitor"
   docker rmi $PW_TAG
   docker rm $PW_TAG
-  cd $PW; docker build --tag $PW_TAG .
+  cd $PW
+  docker build --tag $PW_TAG .
 }
 
+initPortals(){
+  #INIT DB
+  docker run --rm --link datastore:db $PW_TAG InitDB
+
+  #add use case partner portals
+  docker run --rm --link datastore:db $PW_TAG AddPortal -u http://data.gv.at/ -a http://www.data.gv.at/katalog/ -s CKAN -i AT
+  docker run --rm --link datastore:db $PW_TAG AddPortal -u https://www.opendataportal.at/ -a http://data.opendataportal.at/ -s CKAN -i AT
+}
 
 prepareODPWMeta(){
   docker stop $PWSSERVICE_META_TAG
@@ -124,12 +100,11 @@ prepareODPWUI(){
   docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG --volumes-from logdata --link datastore:db $PWSSERVICE_UI_TAG
 }
 
-#preparePython
-#prepareDataContainers
-prepareODPW
+#prepareDatastore
+preparePortalmonitor
+#initPortals
 #prepareODPWMeta
 #prepareODPWHead
 #prepareODPWData
 prepareODPWUI
-
 

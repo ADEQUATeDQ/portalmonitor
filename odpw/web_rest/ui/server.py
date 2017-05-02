@@ -113,11 +113,6 @@ def create_app(dbm, conf):
         resp.status_code = 500
         return resp
 
-    @app.route('/')
-    def url_prefix():
-        return redirect(conf['url_prefix_ui'])
-
-
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     return app
 
