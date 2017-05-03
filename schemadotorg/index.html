@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Schema.org export of Portalwatch metadata</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body>
+ <h2>Schema.org export of Portalwatch metadata</h2>
+ <ul id="linklist"></ul>
+
+<script>
+$.ajax({
+    type: "GET",
+    url: "sitemap.xml",
+    dataType: "xml",
+    success: function (xml) {
+      var xmlDoc = $.parseXML(xml),
+      $xml = $(xmlDoc);
+
+      $(xml).find("sitemap").each(function()
+      {
+          $("#linklist").append("<li><a href='" + $(this).find("loc").text() + ".html'>" + $(this).find("pid").text() + "</a></li>");
+      });
+   }
+});
+
+</script>
+
+</body>
+</html>
