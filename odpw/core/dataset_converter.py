@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import hashlib
 import json
 import datetime
 import re
@@ -13,6 +14,7 @@ from rdflib import URIRef, BNode, Literal
 from rdflib.namespace import Namespace, RDF, XSD, SKOS, RDFS
 
 from geomet import wkt, InvalidGeoJSONException
+from rfc3987 import get_compiled_pattern
 
 DCT = Namespace("http://purl.org/dc/terms/")
 DCAT = Namespace("http://www.w3.org/ns/dcat#")
@@ -42,32 +44,67 @@ namespaces = {
 }
 
 
-
-def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld'):
-    if not graph:
-        graph = rdflib.Graph()
+def add_dcat_to_graph(dataset_dict, portal, graph, portal_uri):
+    dataset_ref = None
 
     if portal.software == 'CKAN':
         converter = CKANConverter(graph, portal.apiuri)
-        converter.graph_from_ckan(dataset_dict)
+        dataset_ref = converter.graph_from_ckan(dataset_dict)
     elif portal.software == 'Socrata':
         if 'dcat' in dataset_dict and dataset_dict['dcat']:
             graph.parse(data=dataset_dict['dcat'], format='xml')
-            fix_socrata_graph(graph, dataset_dict, portal.apiuri)
+            dataset_ref = fix_socrata_graph(graph, dataset_dict, portal.apiuri)
             # TODO redesign distribution, format, contact (publisher, organization)
     elif portal.software == 'OpenDataSoft':
-        graph_from_opendatasoft(graph, dataset_dict, portal.apiuri)
+        dataset_ref = graph_from_opendatasoft(graph, dataset_dict, portal.apiuri)
         # TODO contact, publisher, organization
     elif portal.software == 'XMLDCAT':
         # dataset_dict is already json-ld
-        return dataset_dict
+        str_ds = json.dumps(dataset_dict)
+        graph.parse(data=str_ds, format='json-ld')
+        dataset_ref = graph.value(predicate=RDF.type, object=DCAT.Dataset)
 
-    return json.loads(graph.serialize(format=format))
+    # add portal ref to graph
+    if portal_uri and dataset_ref:
+        graph.add((portal_uri, DCAT.dataset, dataset_ref))
+    return dataset_ref
+
+
+def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld', portal_uri=None):
+    if graph == None:
+        graph = rdflib.Graph()
+    dataset_ref = None
+
+    if portal.software == 'CKAN':
+        converter = CKANConverter(graph, portal.apiuri)
+        dataset_ref = converter.graph_from_ckan(dataset_dict)
+    elif portal.software == 'Socrata':
+        if 'dcat' in dataset_dict and dataset_dict['dcat']:
+            graph.parse(data=dataset_dict['dcat'], format='xml')
+            dataset_ref = fix_socrata_graph(graph, dataset_dict, portal.apiuri)
+            # TODO redesign distribution, format, contact (publisher, organization)
+    elif portal.software == 'OpenDataSoft':
+        dataset_ref = graph_from_opendatasoft(graph, dataset_dict, portal.apiuri)
+        # TODO contact, publisher, organization
+    elif portal.software == 'XMLDCAT':
+        # dataset_dict is already json-ld
+        str_ds = json.dumps(dataset_dict)
+        graph.parse(data=str_ds, format='json-ld')
+        dataset_ref = graph.value(predicate=RDF.type, object=DCAT.Dataset)
+
+    # add portal ref to graph
+    if portal_uri and dataset_ref:
+        graph.add((portal_uri, DCAT.dataset, dataset_ref))
+
+    if portal.software == 'XMLDCAT':
+        return dataset_dict
+    else:
+        return json.loads(graph.serialize(format=format))
 
 
 def fix_socrata_graph(g, dataset_dict, portal_url):
+    dataset_ref = None
     # add additional info
-    d=json.loads(g.serialize(format='json-ld'))
     if 'view' in dataset_dict and isinstance(dataset_dict['view'], dict):
         data = dataset_dict['view']
         try:
@@ -75,24 +112,32 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
             uri = '{0}/dataset/{1}'.format(portal_url.rstrip('/'), identifier)
             dataset_ref = URIRef(uri)
             # replace blank node by dataset reference
-            dataset_node = g.value(predicate=RDF.type, object=DCAT.Dataset, any=False)
-            for s, p, o in g.triples( (dataset_node, None, None) ):
-                g.remove((s, p, o))
-                g.add((dataset_ref, p, o))
-            g.add((dataset_ref, RDF.type, DCAT.Dataset))
+            dataset_node = g.value(predicate=DCT.identifier, object=Literal(identifier))
+            if dataset_node:
+                for s, p, o in g.triples( (dataset_node, None, None) ):
+                    g.remove((s, p, o))
+                    g.add((dataset_ref, p, o))
+            if (dataset_ref, RDF.type, DCAT.Dataset) not in g:
+                g.add((dataset_ref, RDF.type, DCAT.Dataset))
 
             # owner
             if 'owner' in data and isinstance(data['owner'], dict) and 'displayName' in data['owner']:
                 owner = data['owner']['displayName']
                 # add owner as publisher
-                publisher_details = BNode()
+                # BNode: dataset_ref + DCT.publisher + owner
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.publisher.n3() + owner)
+                publisher_details = BNode(bnode_hash.hexdigest())
+
                 g.add((publisher_details, RDF.type, FOAF.Organization))
                 g.add((dataset_ref, DCT.publisher, publisher_details))
                 g.add((publisher_details, FOAF.name, Literal(owner)))
             # author
             if 'tableAuthor' in data and isinstance(data['tableAuthor'], dict) and 'displayName' in data['tableAuthor']:
                 author = data['tableAuthor']['displayName']
-                contact_details = BNode()
+                # BNode: dataset_ref + VCARD.fn + author
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + VCARD.fn.n3() + author)
+                contact_details = BNode(bnode_hash.hexdigest())
+
                 g.add((contact_details, RDF.type, VCARD.Organization))
                 g.add((dataset_ref, DCAT.contactPoint, contact_details))
                 g.add((contact_details, VCARD.fn, Literal(author)))
@@ -109,14 +154,19 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
             for ds, has_distr, dcat_download in g.triples((None, DCAT.distribution, None)):
 
                 # create new distr
-                distribution = BNode()
+                # BNode: dataset_ref + dcat_download
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + dcat_download)
+                distribution = BNode(bnode_hash.hexdigest())
 
                 # rewrite format
                 for s, p, format_bnode in g.triples((dcat_download, DCT['format'], None)):
                     format = g.value(format_bnode, RDFS.label)
                     mime_type = g.value(format_bnode, RDF.value)
-                    g.remove((format_bnode, None, None))
-                    g.add((distribution, DCT['format'], format))
+                    # keep the blank node and add type MediaTypeOrExtent
+                    #g.remove((format_bnode, None, None))
+                    #g.add((distribution, DCT['format'], format))
+                    g.add((format, RDF.type, DCT.MediaTypeOrExtent))
+                    # additionally add media type to distribution
                     g.add((distribution, DCAT.mediaType, mime_type))
                     g.remove((s, p, format_bnode))
 
@@ -147,6 +197,9 @@ def fix_socrata_graph(g, dataset_dict, portal_url):
 
         except Exception as e:
             pass
+    if not dataset_ref:
+        dataset_ref = g.value(predicate=RDF.type, object=DCAT.Dataset)
+    return dataset_ref
 
 # TODO disallows whitespaces
 VALID_URL = re.compile(
@@ -157,12 +210,19 @@ VALID_URL = re.compile(
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
+URI = get_compiled_pattern('^%(URI)s$')
+
+
 def is_valid_url(references):
     try:
         res = urlparse.urlparse(references)
         return bool(res.scheme and res.netloc)
     except Exception as e:
         return False
+
+
+def is_valid_uri(references):
+    return bool(URI.match(references))
 
 
 def graph_from_opendatasoft(g, dataset_dict, portal_url):
@@ -200,7 +260,10 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     # publisher
     publisher_name = data.get('publisher')
     if publisher_name:
-        publisher_details = BNode()
+        # BNode: dataset_ref + DCT.publisher + publisher_name
+        bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.publisher.n3() + publisher_name)
+        publisher_details = BNode(bnode_hash.hexdigest())
+
         g.add((publisher_details, RDF.type, FOAF.Organization))
         g.add((dataset_ref, DCT.publisher, publisher_details))
         g.add((publisher_details, FOAF.name, Literal(publisher_name)))
@@ -217,7 +280,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     references = data.get('references')
     if references and isinstance(references, basestring) and bool(urlparse.urlparse(references).netloc):
         references = references.strip()
-        if is_valid_url(references):
+        if is_valid_uri(references):
             g.add((dataset_ref, RDFS.seeAlso, URIRef(references)))
         else:
             g.add((dataset_ref, RDFS.seeAlso, Literal(references)))
@@ -234,25 +297,42 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             # TODO shape files?
             # exports.append(('shp', 'application/octet-stream'))
         for format, mimetype in exports:
-            distribution = BNode()
+            # URL
+            url = portal_url.rstrip('/') + '/api/records/1.0/download?dataset=' + identifier + '&format=' + format
+
+            # BNode: dataset_ref + url
+            bnode_hash = hashlib.sha1(dataset_ref.n3() + url)
+            distribution = BNode(bnode_hash.hexdigest())
+
             g.add((dataset_ref, DCAT.distribution, distribution))
             g.add((distribution, RDF.type, DCAT.Distribution))
+
+            if is_valid_uri(url):
+                g.add((distribution, DCAT.accessURL, URIRef(url)))
+            else:
+                g.add((distribution, DCAT.accessURL, Literal(url)))
+
+            # License
             if license:
-                l = BNode()
+                # BNode: distribution + url
+                bnode_hash = hashlib.sha1(distribution.n3() + license)
+                l = BNode(bnode_hash.hexdigest())
+
                 g.add((distribution, DCT.license, l))
                 g.add((l, RDF.type, DCT.LicenseDocument))
                 g.add((l, RDFS.label, Literal(license)))
 
             # Format
-            g.add((distribution, DCT['format'], Literal(format)))
+            # BNode: distribution + format + mimetype
+            bnode_hash = hashlib.sha1(distribution.n3() + format + mimetype)
+            f = BNode(bnode_hash.hexdigest())
+
+            g.add((distribution, DCT['format'], f))
+            g.add((f, RDF.type, DCT.MediaTypeOrExtent))
+            g.add((f, RDFS.label, Literal(format)))
+            g.add((f, RDF.value, Literal(mimetype)))
             g.add((distribution, DCAT.mediaType, Literal(mimetype)))
 
-            # URL
-            url = portal_url.rstrip('/') + '/api/records/1.0/download?dataset=' + identifier + '&format=' + format
-            if is_valid_url(url):
-                g.add((distribution, DCAT.accessURL, URIRef(url)))
-            else:
-                g.add((distribution, DCAT.accessURL, Literal(url)))
 
             # Dates
             items = [
@@ -263,11 +343,17 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
     # attachments
     for attachment in dataset_dict.get('attachments', []):
-        distribution = BNode()
+        # BNode: dataset_ref + url
+        bnode_hash = hashlib.sha1(dataset_ref.n3() + attachment)
+        distribution = BNode(bnode_hash.hexdigest())
+
         g.add((dataset_ref, DCAT.distribution, distribution))
         g.add((distribution, RDF.type, DCAT.Distribution))
         if license:
-            l = BNode()
+            # BNode: distribution + url
+            bnode_hash = hashlib.sha1(distribution.n3() + license)
+            l = BNode(bnode_hash.hexdigest())
+
             g.add((distribution, DCT.license, l))
             g.add((l, RDF.type, DCT.LicenseDocument))
             g.add((l, RDFS.label, Literal(license)))
@@ -284,6 +370,7 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
         if attachment.get('id'):
             url = portal_url.rstrip('/') + '/api/datasets/1.0/' + identifier + '/attachments/' + attachment.get('id')
             g.add((distribution, DCT.accessURL, Literal(url)))
+    return dataset_ref
 
 class CKANConverter:
     def __init__(self, graph, portal_base_url):
@@ -308,8 +395,7 @@ class CKANConverter:
             ('version', OWL.versionInfo, ['dcat_version']),
             ('alternate_identifier', ADMS.identifier, None),
             ('version_notes', ADMS.versionNotes, None),
-            ('frequency', DCT.accrualPeriodicity, None),
-
+            ('frequency', DCT.accrualPeriodicity, ['frequency-of-update']),
         ]
         _add_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 
@@ -350,15 +436,18 @@ class CKANConverter:
             if contact_uri:
                 contact_details = URIRef(contact_uri)
             else:
-                contact_details = BNode()
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCAT.contactPoint.n3())
+                contact_details = BNode(bnode_hash.hexdigest())
 
             g.add((contact_details, RDF.type, VCARD.Organization))
             g.add((dataset_ref, DCAT.contactPoint, contact_details))
 
+            # contact-email was added as "most frequent extra key"
             items = [
                 ('contact_name', VCARD.fn, ['maintainer', 'author']),
                 ('contact_email', VCARD.hasEmail, ['maintainer_email',
-                                                   'author_email']),
+                                                   'author_email',
+                                                   'contact-email']),
             ]
 
             _add_triples_from_dict(self.g, dataset_dict, contact_details, items)
@@ -369,20 +458,20 @@ class CKANConverter:
             self._get_dataset_value(dataset_dict, 'publisher_name'),
             dataset_dict.get('organization'),
         ]):
+            publisher_name = self._get_dataset_value(dataset_dict, 'publisher_name')
+            if not publisher_name and dataset_dict.get('organization'):
+                publisher_name = dataset_dict['organization']['title']
 
             publisher_uri = self.publisher_uri_from_dataset_dict(dataset_dict)
             if publisher_uri:
                 publisher_details = URIRef(publisher_uri)
             else:
                 # No organization nor publisher_uri
-                publisher_details = BNode()
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.publisher.n3() + publisher_name)
+                publisher_details = BNode(bnode_hash.hexdigest())
 
             g.add((publisher_details, RDF.type, FOAF.Organization))
             g.add((dataset_ref, DCT.publisher, publisher_details))
-
-            publisher_name = self._get_dataset_value(dataset_dict, 'publisher_name')
-            if not publisher_name and dataset_dict.get('organization'):
-                publisher_name = dataset_dict['organization']['title']
 
             g.add((publisher_details, FOAF.name, Literal(publisher_name)))
             # TODO: It would make sense to fallback these to organization
@@ -401,7 +490,8 @@ class CKANConverter:
         start = self._get_dataset_value(dataset_dict, 'temporal_start')
         end = self._get_dataset_value(dataset_dict, 'temporal_end')
         if start or end:
-            temporal_extent = BNode()
+            bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.temporal.n3() + str(start) + str(end))
+            temporal_extent = BNode(bnode_hash.hexdigest())
 
             g.add((temporal_extent, RDF.type, DCT.PeriodOfTime))
             if start:
@@ -419,7 +509,8 @@ class CKANConverter:
             if spatial_uri:
                 spatial_ref = URIRef(spatial_uri)
             else:
-                spatial_ref = BNode()
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.spatial.n3() + str(spatial_uri) + str(spatial_text) + str(spatial_geom))
+                spatial_ref = BNode(bnode_hash.hexdigest())
 
             g.add((spatial_ref, RDF.type, DCT.Location))
             g.add((dataset_ref, DCT.spatial, spatial_ref))
@@ -451,10 +542,13 @@ class CKANConverter:
             if license_url and bool(urlparse.urlparse(license_url).netloc):
                 license = URIRef(license_url)
             else:
-                license = BNode()
+                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.license.n3() + str(license_id) + str(license_url) + str(license_title))
+                license = BNode(bnode_hash.hexdigest())
                 # maybe a non-valid url
                 if license_url:
                     g.add((license, RDFS.comment, Literal(license_url)))
+            # l is a license document
+            g.add((license, RDF.type, DCT.LicenseDocument))
 
             if license_title:
                 g.add((license, RDFS.label, Literal(license_title)))
@@ -490,8 +584,14 @@ class CKANConverter:
                        Literal(resource_dict['format'])))
             else:
                 if resource_dict.get('format'):
-                    g.add((distribution, DCT['format'],
-                           Literal(resource_dict['format'])))
+                    bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT['format'].n3() + resource_dict['format'])
+                    f = BNode(bnode_hash.hexdigest())
+
+                    g.add((f, RDF.type, DCT.MediaTypeOrExtent))
+                    g.add((f, RDFS.label, Literal(resource_dict['format'])))
+                    g.add((distribution, DCT['format'], f))
+                    if resource_dict.get('mimetype'):
+                        g.add((f, RDF.value, Literal(resource_dict['mimetype'])))
 
                 if resource_dict.get('mimetype'):
                     g.add((distribution, DCAT.mediaType,
@@ -502,19 +602,21 @@ class CKANConverter:
             download_url = resource_dict.get('download_url')
             if download_url:
                 download_url = download_url.strip()
-                if is_valid_url(download_url):
+                if is_valid_uri(download_url):
                     g.add((distribution, DCAT.downloadURL, URIRef(download_url)))
                 else:
                     g.add((distribution, DCAT.downloadURL, Literal(download_url)))
             if (url and not download_url) or (url and url != download_url):
                 url = url.strip()
-                if is_valid_url(url):
+                if is_valid_uri(url):
                     g.add((distribution, DCAT.accessURL, URIRef(url)))
                 else:
                     g.add((distribution, DCAT.accessURL, Literal(url)))
             # Dates
+            # metadata-date was added as "most frequent extra key"
             items = [
-                ('issued', DCT.issued, ['created']),
+                ('issued', DCT.issued, ['created',
+                                        'metadata-date']),
                 ('modified', DCT.modified, ['last_modified']),
             ]
 
@@ -529,6 +631,7 @@ class CKANConverter:
                 except (ValueError, TypeError):
                     g.add((distribution, DCAT.byteSize,
                            Literal(resource_dict['size'])))
+        return dataset_ref
 
     def _get_dataset_value(self, dataset_dict, key, default=None):
         '''
