@@ -33,3 +33,4 @@ flexx
 isoweek
 statsmodels
 matplotlib
+rfc3987
