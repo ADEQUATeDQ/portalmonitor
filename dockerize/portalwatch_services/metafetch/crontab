@@ -1,1 +1,1 @@
-0 4 * * 1 . $INSTALL_PATH/$SCRIPT
+0 4 * * 1 . /adequate-portalharvester/metafetch.sh

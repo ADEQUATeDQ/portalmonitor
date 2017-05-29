@@ -1,6 +1,6 @@
 from portalwatch:latest
 
-RUN git pull; pip install -r requirements.txt; python setup.py install
+
 ENV SCRIPT datafetch.sh
 #CRON JOB
 ADD crontab  $INSTALL_PATH/crontab
@@ -14,4 +14,4 @@ RUN touch /var/log/cron.log
 RUN crontab -l
 ENTRYPOINT []
 
-CMD ["crond", "-f", "-d", "8"]
+CMD ["cron", "-f"]
