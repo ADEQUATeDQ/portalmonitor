@@ -8,7 +8,7 @@ echo "Writting logs to $LOGS for week $week"
 
 LOGF=data-fetch_$week
 
-SCRIPT="odpw -c $ADEQUATE/odpw.conf DataFetch "
+SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf DataFetch "
 cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
 echo $cmd
 eval $cmd
