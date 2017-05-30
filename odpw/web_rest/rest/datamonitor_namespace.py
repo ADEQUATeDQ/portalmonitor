@@ -17,6 +17,7 @@ from flask import url_for
 from flask_restplus import Resource
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.utils.datamonitor_utils import parseDate
+from flask_restplus import reqparse
 
 log = logging.getLogger(__name__)
 
@@ -115,18 +116,35 @@ class GetData(Resource):
 
         return send_file(filename, as_attachment=True)
 
+
+parser = reqparse.RequestParser()
+parser.add_argument('mime', required=False, help='filter file format of resources')
+parser.add_argument('status', required=False, help='filter HTTP status code of resources')
+
+
 @ns.route('/list')
 class List(Resource):
 
+    @ns.expect(parser)
     def get(self):
         session = current_app.config['dbsession']
+
+        args = parser.parse_args()
+        mime = args.get('mime', None)
+        status = args.get('status', None)
+
         q=session.query(ResourceCrawlLog.uri).distinct(ResourceCrawlLog.uri)
+        if mime:
+            q=q.filter(ResourceCrawlLog.mime==mime)
+        if status:
+            q=q.filter(ResourceCrawlLog.status==status)
         urls=[]
         for r in q:
            urls.append(r[0])
 
         resp = jsonify(urls)
         return resp
+
 
 @ns.route('/timemap/json/<path:url>')
 @ns.doc(params={'url': 'URL (HTTP URL)', 'date': 'Date as \"YYYY<MM|DD|HH|MM|SS>\"'})
