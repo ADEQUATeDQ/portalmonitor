@@ -14,9 +14,9 @@ from odpw.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, 
 
 class DBClient(object):
 
-
     def __init__(self, dbm=None, Session=None):
         if dbm is not None:
+            self.dbm=dbm
             self.Session = scoped_session(dbm.session_factory)
         elif Session:
             self.Session
@@ -46,6 +46,9 @@ class DBClient(object):
     ### ADD & COMMIT
     #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 
+    def delete(self, obj):
+        with self.session_scope() as session:
+            session.delete(obj)
 
     def add(self, obj):
         with self.session_scope() as session:
@@ -56,7 +59,7 @@ class DBClient(object):
             session.bulk_save_objects(obj)
 
     def commit(self):
-        self.Session.commit
+        self.Session.commit()
 
     #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
     ### EXISTS FUNCTIONS
@@ -244,11 +247,11 @@ class DBClient(object):
             return q
 
 
-
-    def getUnfetchedResources(self,snapshot, portalid=None, batch=None):
+    def getUnfetchedResources(self,snapshot, portalid=None, batch=None, iso=None, exclude_iso=None):
         with self.session_scope() as session:
             q=session.query(MetaResource.uri)\
                 .join(Dataset, Dataset.md5==MetaResource.md5)\
+                .join(Portal, Portal.id==Dataset.portalid)\
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
                 .filter(
@@ -258,6 +261,10 @@ class DBClient(object):
                 )
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
+            if iso:
+                q=q.filter(Portal.iso==iso)
+            if exclude_iso:
+                q=q.filter(Portal.iso!=iso)
             if batch:
                 q=q.limit(batch)
             return q
@@ -290,13 +297,15 @@ class DBClient(object):
             return q
 
 
-    def getMetaResource(self, snapshot, portalid=None):
+    def getMetaResource(self, snapshot, portalid=None, size=None):
         with self.session_scope() as session:
             q= session.query(MetaResource)\
                 .join(Dataset, Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)
             if portalid:
                 q=q.filter(Dataset.portalid==portalid)
+            if size:
+                q=q.filter((MetaResource.size<=size) | (MetaResource.size == None))
             return q
 
     def getResourceInfoByURI(self, uri, snapshot):
@@ -320,7 +329,7 @@ class DBClient(object):
             for k , v in inD['metrics'].items():
                 k=k.lower()
                 # TODO what to do if metric has no value?
-                if data[k] != 'None':
+                if data[k] != None and data[k] != 'None':
                     value=float(data[k])
                     perc=int(data[k+'N'])/(datasets*1.0) if datasets>0 else 0
                     c= { 'Metric':k, 'Dimension':inD['dimension'],
@@ -339,12 +348,36 @@ class DBClient(object):
             q=q.order_by(ResourceHistory.snapshot.asc())
             return q
 
+def getMetaResource(session, snapshot, portalid=None):
+    q = session.query(MetaResource) \
+        .join(Dataset, Dataset.md5 == MetaResource.md5) \
+        .filter(Dataset.snapshot == snapshot)
+    if portalid:
+        q = q.filter(Dataset.portalid == portalid)
+    return q
 
-
+def getResourceInfos(session, snapshot, portalid=None):
+    q= session.query(ResourceInfo) \
+        .filter(ResourceInfo.snapshot == snapshot) \
+        .join(MetaResource, ResourceInfo.uri == MetaResource.uri) \
+        .join(Dataset, Dataset.md5 == MetaResource.md5) \
+        .filter(Dataset.snapshot == snapshot)
+    if portalid:
+        q=q.filter(Dataset.portalid==portalid)
+    return q
 
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 ### PORTAL
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
+
+def getResourcesForOrganisation(session,snapshot, portalid, organisation):
+    q = session.query(MetaResource) \
+        .join(Dataset, Dataset.md5 == MetaResource.md5) \
+        .filter(Dataset.snapshot == snapshot)\
+        .filter(Dataset.organisation == organisation)\
+        .filter(Dataset.portalid == portalid)
+    return q
+
 
 def portal(session, portalid):
     return session.query(Portal).filter(Portal.id==portalid)
@@ -373,7 +406,7 @@ def statusCodeDist(session, snapshot,portalid=None):
     q=q.group_by(ResourceInfo.status)
     q=q.order_by(func.count().desc())
 
-    print str(q)
+
 
     return q
 
@@ -394,7 +427,6 @@ def formatDist(session, snapshot, portalid=None):
         .filter(Dataset.snapshot==snapshot)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
-
     q=q.group_by(MetaResource.format)
     q=q.order_by(func.count().desc())
     return q
@@ -418,7 +450,7 @@ def distinctOrganisations(session, snapshot, portalid=None):
 
 def licenseDist(session, snapshot, portalid=None):
 
-    q= session.query(DatasetData.license,func.count().label('count')).join(Dataset)\
+    q= session.query(DatasetData.license.label('license'),func.count().label('count')).join(Dataset)\
         .filter(Dataset.snapshot==snapshot)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
@@ -446,3 +478,27 @@ def validURLDist(session, snapshot,portalid=None):
     q=q.order_by(func.count(MetaResource.valid).desc())
 
     return q
+
+def portalSnapshotQualityDF(session, portalid, snapshot):
+    q= session.query(PortalSnapshotQuality) \
+        .filter(PortalSnapshotQuality.portalid == portalid) \
+        .filter(PortalSnapshotQuality.snapshot == snapshot)
+    data=None
+    for r in q:
+        data=row2dict(r)
+        break
+    d=[]
+
+    datasets= int(data['datasets'])
+    for inD in qa:
+        for k , v in inD['metrics'].items():
+            k=k.lower()
+            # TODO what to do if metric has no value?
+            if data[k] != None and data[k] != 'None':
+                value=float(data[k])
+                perc=int(data[k+'N'])/(datasets*1.0) if datasets>0 else 0
+                c= { 'Metric':k, 'Dimension':inD['dimension'],
+                     'dim_color':inD['color'], 'value':value, 'perc':perc}
+                c.update(v)
+                d.append(c)
+    return pd.DataFrame(d),data

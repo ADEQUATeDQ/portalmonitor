@@ -1,0 +1,23 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% block portalcontent %}
+<div class="ui container">
+    <h2>Organisation reports:</h2>
+
+    <div class="ui list">
+    {% for orga in data.organisations %}
+        <div class="item">
+            <i class="ui user circle outline icon"></i>
+            <div class="content">
+                <a href="{{url_for('ui.portalOrgareport',portalid=portalid, snapshot=snapshot, orga=orga.organisation)}}">{{orga.organisation}}</a>
+            </div>
+        </div>
+
+    {% endfor %}
+    </div>
+</div>
+
+
+
+
+{% endblock %}

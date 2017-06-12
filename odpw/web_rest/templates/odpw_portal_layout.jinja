@@ -7,15 +7,15 @@
     <div class="ui grid two equal width column">
         <div class="two wide column background" >
             <div class="ui secondary vertical inverted fluid labeled icon menu">
-
                 {% set navigation_bar = [
                     ('ui.portal', 'info', 'Info'),
                     ('ui.portalQuality', 'info', 'Quality'),
                     ('ui.portalEvolution', 'info', 'Evolution'),
                     ('ui.portalFormats', 'info', 'Stats'),
-                    ('ui.portalRes', 'grid layout', 'Availability'),
                     ('ui.portalRes', 'grid layout', 'Resources'),
-                    ('ui.portalDataset', 'grid layout', 'Datasets')
+                    ('ui.portalDataset', 'grid layout', 'Datasets'),
+                    ('ui.portalCSVW', 'external', 'CSVW'),
+                    ('ui.portalDynamicy', 'external', 'Dynamicity')
                     ]
                 -%}
                 {% set active_sub_page = active_sub_page|default('ui.portal') -%}
@@ -30,18 +30,6 @@
         <div class="column ui grid" id="container">
             <div class="sixteen wide column background">
                 <h3 class="ui header" style="color:white"> Portal: {{portalid}}
-                    <!--<div class=" labeled icon ui selection search dropdown" id="portalSelect">
-                        <input name="gender" type="hidden" value="default">
-                        <i class="dropdown icon"></i>
-                        <div class="text">{{portalid}}</div>
-                        <div class="menu">
-
-                            <div class="item" data-value="0">Value</div>
-                            <div class="item" data-value="1">Another Value</div>
-                            <div class="item" data-value="default">{{portalid}}</div>
-                        </div>
-                     </div>
-                     -->
                     <div class="ui left pointing scrolling dropdown icon">
                         <i class="dropdown icon"></i>
                         <div class="menu">
@@ -61,10 +49,8 @@
                                 </a>
                             </div>
                             {% endfor %}
-
                         </div>
                     </div>
-
                 </h3>
             </div>
             <div class="row">
@@ -107,10 +93,6 @@
 
                                     {{sn|getWeekString}}
                                     </a>
-
-
-
-
                                 </div>
                             {% endfor %}
                         </div>
@@ -134,10 +116,13 @@
             {% endblock %}
         </div>
    </div>
+
 {% endblock %}
 
 
 {% block script %}
+{{ super() }}
+
 $('.dropdown')
   .dropdown({
     // you can use any ui transition

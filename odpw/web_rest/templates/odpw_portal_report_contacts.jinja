@@ -1,0 +1,22 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% block portalcontent %}
+<div class="ui container">
+    <h2>The following contacts are specified in the datasets for {{organisation}}</h2>
+    <div class="ui list">
+    {% for contact in data.contacts %}
+        <div class="item">
+            <i class="user circle outline icon"></i>
+            <div class="content">
+                <a href="{{url_for('ui.portalOrgareportContact',portalid=portalid, snapshot=snapshot,  contact=contact, orga=organisation)}}">{{contact}}</a>
+            </div>
+        </div>
+
+    {% endfor %}
+    </div>
+</div>
+
+
+
+
+{% endblock %}

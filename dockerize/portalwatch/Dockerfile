@@ -22,13 +22,6 @@ ENV LOGS /logs
 ENV DATADIR /datadir
 RUN mkdir -p $INSTALL_PATH $LOGS $DATADIR
 
-#SSH GIT CLONE
-ADD repo-key $INSTALL_PATH/
-ADD ssh_config /etc/ssh/ssh_config
-RUN chmod 600 $INSTALL_PATH/repo-key
-RUN ls -lah $INSTALL_PATH/repo-key
-RUN cat /etc/ssh/ssh_config
-
 WORKDIR $INSTALL_PATH
  RUN git clone https://github.com/ADEQUATeDQ/portalmonitor.git portalmonitor
  ENV ADEQUATE $INSTALL_PATH/portalmonitor

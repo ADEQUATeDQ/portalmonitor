@@ -12,16 +12,42 @@
 {% endblock %}
 
 
-
 {% block portalcontent %}
-<div class="thirteen wide column ui padded divided grid">
-    <h2>Quality Assessment over the DCAT representation</h2>
-    <div class="ui row">
-        <div class="ui centered column" >
-
+<h2>Quality Assessment over the DCAT representation</h2>
+<div class="row">
+    <div class="eight wide column" >
+        {% for k in qa %}
+            <!--<div class="ui horizontal divider">{{k.dimension}} Metrics</div>-->
+            <div class="ui attached message">
+                  <div class="header">
+                    {{k.dimension}} Metrics
+                  </div>
+                  <p>....</p>
+            </div>
+            <div class="ui attached fluid segment">
+                <div class="ui statistics">
+                {% for kk,d in k.metrics.iteritems() %}
+                    {% set m = kk| lower -%}
+                    <div class="small statistic">
+                        <div class="label">
+                            {{d.label}}
+                            <span data-tooltip="{{d.description}}" data-position="top center" data-variation="basic">
+                                <i class="info circle icon "></i>
+                            </span>
+                        </div>
+                        <div class="value">{{ data.quality[m]}}</div>
+                        <div class="label">
+                            {{ data.quality[m+'N']}} datasets analysed
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="eight wide column" >
         {{ plot_div }}
         {{ plot_script }}
-        </div>
     </div>
 </div>
 {% endblock %}

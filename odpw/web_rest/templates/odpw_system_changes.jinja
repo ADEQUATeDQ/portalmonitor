@@ -12,7 +12,7 @@
 {% endblock %}
 
 
-{% macro table(tabledata, label,extra, to, from) -%}
+{% macro table(tabledata, label,extra, to, from, unit) -%}
 <h3 class="ui center aligned icon header">
             {{tabledata|length}} {{label}}
         </h3>
@@ -37,9 +37,9 @@
                 {% if extra %}
                     <td>
                     {% if d.from >= d.to %}
-                        <i class="arrow  down icon"></i> {{d.from - d.to}} datasets
+                        <i class="arrow  down icon"></i> {{d.from - d.to}} {{unit}}
                     {% else %}
-                        <i class="arrow line up icon"></i> {{d.to - d.from}} datasets
+                        <i class="arrow line up icon"></i> {{d.to - d.from}} {{unit}}
                     {% endif %}
                     </td>
                 {% endif %}
@@ -58,20 +58,20 @@
     </div>
     {% if data.status_change| length >0 %}
         <div class="ui  centered container">
-            {{ table(data.status_change, 'Status changes', false, data.to, data.from)}}
+            {{ table(data.status_change, 'Status changes', false, data.to, data.from, None)}}
         </div>
     {% endif %}
     <br>
     {% if data.ds_change| length >0 %}
         <div class="ui   container">
-            {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from)}}
+            {{ table(data.ds_change, 'Dataset changes', true, data.to, data.from,"datasets")}}
             </div>
         </div>
     {% endif %}
     <br>
     {% if data.res_change| length >0 %}
         <div class="ui   container">
-            {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from)}}
+            {{ table(data.res_change, 'Resources changes (same number of datasets)', true, data.to, data.from, "resources")}}
         </div>
     {% endif %}
 

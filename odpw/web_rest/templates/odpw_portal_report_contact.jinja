@@ -1,0 +1,95 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% block portalcontent %}
+<div class="ui container">
+    <h2>Report for organisation {{organisation}} and contact information {{contact}}</h2>
+    We found {{data['contact_report'][contact][organisation]|length}} datasets describing {{data.contact_report.summary.totaluris}} resources.
+    <h3>{{data.contact_report.summary.totaluris}} Resources </h3>
+    <div>
+        We performed for {{data.contact_report.summary.status.total}} resources availability checks.
+        <table class="ui very basic compact table">
+            <thead>
+                <tr>
+                    <th>total</th>
+                    <th>Available</th>
+                    <th>Offline</th>
+                    <th>other errors</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td >{{data.contact_report.summary.status.total}}
+                        ({{"{:.0f}%".format( (data.contact_report.summary.status.total/data.contact_report.summary.totaluris)*100|float)}})
+                    </td>
+                    <td class="positive"> <i class="icon checkmark"></i> {{data.contact_report.summary.status[200]}}
+                        {% if data.contact_report.summary.status.total != 0 %}
+                            ({{"{:.0f}%".format( (data.contact_report.summary.status[200]/data.contact_report.summary.status.total)*100|float)}})
+                        {% else %}
+                            ({{"{:.0f}%".format(0)}})
+                        {% endif %}
+                    </td>
+                    {% if data.contact_report.summary.status[404]>0 %}
+                        <td  class="error"><i class="attention icon"></i>{{data.contact_report.summary.status[404]}}</td>
+                    {% else %}
+                        <td >{{data.contact_report.summary.status[404]}}</td>
+                    {% endif %}
+                    <td>{{data.contact_report.summary.status.total-data.contact_report.summary.status[200]-data.contact_report.summary.status[404]}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <h3>{{data['contact_report'][contact][organisation]|length}} datasets </h3>
+    <div class="ui relaxed divided list">
+    {% for ds in data['contact_report'][contact][organisation] %}
+        <div class="item">
+            <i class="large github middle aligned icon"></i>
+            <div class="content">
+                <div class="header"><a href="{{url_for('ui.portalDataset', portalid=portalid, snapshot=snapshot, dataset=ds.dataset.id)}}">{{ds.dataset.title}}</a>
+                <a class="header" href="{{ds.dataset.external_uri}}">external</a>
+                </div>
+                <div class="description">
+                    <div class="ui list">
+                        <div class="item">
+                            <i class="users icon"></i>
+                            <div class="content">
+                                {% if ds.report| length > 0 %}
+                                    {{ds.report.keys()}}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="item">
+
+                            <div class="content">
+                                <span class="ui right pointing small label">
+                                     {% if ds.resources|length==ds.resourcesStatus[200] %}
+                                <i class="smile green icon"></i>
+                            {% elif ds.resourcesStatus.total==ds.resourcesStatus[200] %}
+                                <i class="star half empty green icon"></i>
+                            {% else %}
+                                <i class="star half orange icon"></i>
+                            {% endif %}
+                                    {{ds.resources|length}} resources
+                                </span>
+                                <span class="ui basic label">
+                                {% if ds.resourcesStatus.total>0 %}
+                                    for which {{ds.resourcesStatus.total}} lookups were performed with {{ds.resourcesStatus[200]}} available resources.
+                                    {% if 404 in ds.resourcesStatus %}
+                                     {{ds.resourcesStatus[404]}} resources are offline
+                                    {% endif %}
+                                {% else %}
+                                    no availability information collected
+                                {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

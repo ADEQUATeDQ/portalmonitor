@@ -110,9 +110,9 @@ prepareODPWUI(){
 }
 
 #prepareDatastore
-#preparePortalmonitor
+preparePortalmonitor
 #initPortals
-#prepareODPWMeta
+prepareODPWMeta
 #prepareODPWHead
 #prepareODPWData
 prepareODPWUI

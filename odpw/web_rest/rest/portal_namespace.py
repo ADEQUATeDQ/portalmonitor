@@ -7,6 +7,8 @@ from flask import make_response, request, current_app, jsonify
 from flask_restplus import cors
 from sqlalchemy import and_
 
+from odpw.quality import dqv_export
+from odpw.utils.datamonitor_utils import parseDate
 from odpw.utils.timing import Timer
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.core.db import row2dict
@@ -18,14 +20,15 @@ import logging
 from flask import request
 from flask_restplus import Resource
 
+from schemadotorg import dcat_to_schemadotorg
+
 log = logging.getLogger(__name__)
 
-ns = api.namespace('portal', description='Operations related to portal information')
+ns = api.namespace('portal', description='Operations related to a specific portal')
 
 @ns.route('/<portalid>/<int:snapshot>/all')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)'}, description="This API returns the portal specific information and the aggregated quality measures for a given portal and snapshot")
 class PortalAll(Resource):
-
     def get(self, portalid,snapshot):
         q=PortalSnapshot.query
         if snapshot is not None:
@@ -40,11 +43,11 @@ class PortalAll(Resource):
 
 
 @ns.route('/<portalid>/<int:snapshot>/quality')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)'}, description="This API returns the aggregated quality measures for a given portal and snapshot")
 class PortalSnapshotQuality1(Resource):
 
     def get(self, portalid,snapshot):
-        print portalid, snapshot
+        #print portalid, snapshot
         #with Timer(key="portalQuality",verbose=True):
         session=current_app.config['dbsession']
 
@@ -53,9 +56,9 @@ class PortalSnapshotQuality1(Resource):
 
         return jsonify(data)
 
-@ns.route('/<portalid>/<int:snapshot>/datasets')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
 
+@ns.route('/<portalid>/<int:snapshot>/datasets')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)'}, description="This API returns the full list of all datasets for a given portal and snapshot")
 class PortalDatasets(Resource):
 
     #@cors.crossdomain(origin='*')
@@ -70,9 +73,9 @@ class PortalDatasets(Resource):
 
             return jsonify(data)
 
+
 @ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>')
 @ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
-
 class PortalDatasetData(Resource):
 
     #@cors.crossdomain(origin='*')
@@ -91,8 +94,7 @@ class PortalDatasetData(Resource):
 
 
 @ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/dcat')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
-
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)','datasetid':'ID of dataset'})
 class PortalDatasetData(Resource):
 
     #@cors.crossdomain(origin='*')
@@ -111,9 +113,30 @@ class PortalDatasetData(Resource):
             return jsonify(dict_to_dcat(data.raw, P))
             #return jsonify(dict_to_dcat(data.raw, P))
 
-@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/quality')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)','datasetid':'ID of dataset'})
 
+@ns.route('/<portalid>/<int:snapshot>/dataset/<path:datasetid>/schemadotorg')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)','datasetid':'ID of dataset'})
+class PortalDatasetData(Resource):
+    def get(self, portalid, snapshot, datasetid):
+        with Timer(key="PortalDatasetData.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            q=session.query(DatasetData) \
+                .join(Dataset, DatasetData.md5 == Dataset.md5) \
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)\
+                .filter(Dataset.id == datasetid)
+            data=q.first()
+            p = session.query(Portal).filter(Portal.id==portalid).first()
+            doc = dcat_to_schemadotorg.convert(p, data.raw)
+            return jsonify(doc)
+            #return jsonify(dict_to_dcat(data.raw, P))
+
+
+
+
+@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/quality')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)','datasetid':'ID of dataset'})
 class PortalDatasetDataQuality(Resource):
 
     #@cors.crossdomain(origin='*')
@@ -130,9 +153,38 @@ class PortalDatasetDataQuality(Resource):
 
             return jsonify(data)
 
+
+@ns.route('/<portalid>/<int:snapshot>/dataset/<datasetid>/dqv')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot':'Snapshot in yyww format (e.g. 1639 -> 2016 week 39)','datasetid':'ID of dataset'})
+class PortalDatasetDataQuality(Resource):
+
+    #@cors.crossdomain(origin='*')
+    def get(self, portalid, snapshot, datasetid):
+        with Timer(key="PortalDatasetDataQuality.get",verbose=True):
+            session=current_app.config['dbsession']
+
+            p = session.query(Portal).filter(Portal.id == portalid).first()
+
+            q = session.query(DatasetQuality) \
+                .join(Dataset, DatasetQuality.md5 == Dataset.md5) \
+                .filter(Dataset.snapshot == snapshot) \
+                .filter(Dataset.portalid == portalid) \
+                .filter(Dataset.id == datasetid)
+            dataset_qual = q.first()
+
+            q=session.query(Dataset)\
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(Dataset.portalid==portalid)\
+                .filter(Dataset.id == datasetid)
+            dataset = q.first()
+            # get rdf graph and add measures and dimensions
+            g = dqv_export.get_measures_for_dataset(p, dataset, dataset_qual)
+            dqv_export.add_dimensions_and_metrics(g)
+            return jsonify(json.loads(g.serialize(format="json-ld")))
+
+
 @ns.route('/<portalid>/snapshots')
 @ns.doc(params={'portalid': 'A portal id'})
-
 class PortalSnapshots(Resource):
 
     #@cors.crossdomain(origin='*')
@@ -147,23 +199,29 @@ class PortalSnapshots(Resource):
             return jsonify(data)
 
 @ns.route('/<portalid>/<int:snapshot>/resources')
-@ns.doc(params={'portalid': 'A portal id', 'snapshot': 'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+@ns.doc(params={'portalid': 'A portal id', 'snapshot': 'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)', 'format': 'filter file format', 'size':'max file size, or None'})
 class PortalSnapshotResources(Resource):
     # @cors.crossdomain(origin='*')
     def get(self, portalid, snapshot):
         with Timer(key="PortalSnapshotResources.get", verbose=True):
             session = current_app.config['dbsession']
 
-            q = session.query(ResourceInfo) \
-                .join(MetaResource, ResourceInfo.uri == MetaResource.uri) \
+            q = session.query(MetaResource.uri) \
                 .join(Dataset, Dataset.md5 == MetaResource.md5) \
                 .filter(Dataset.snapshot == snapshot) \
-                .filter(ResourceInfo.snapshot == snapshot) \
                 .filter(Dataset.portalid == portalid)
-            data = [row2dict(r) for r in q.all()]
+
+            format = request.args.get("format")
+            if format:
+                q = q.filter(MetaResource.format == format)
+
+            size = request.args.get("size")
+            if size:
+                q = q.filter((MetaResource.size <= size) | (MetaResource.size == None))
+
+            data = [row2dict(r)['uri'] for r in q.all()]
 
             return jsonify(data)
-
 
 #
 #

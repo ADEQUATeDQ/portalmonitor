@@ -11,7 +11,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
 {% endblock %}
 {% block headscripts %}
-    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript" charset="utf8" src="http://semantic-ui.com/javascript/library/tablesort.js"></script>
 {% endblock %}
 
 
@@ -24,8 +25,8 @@
         </a>
     </td>
     <td><i class="{{portal.iso| lower}} flag "></i><span>{{portal.iso| lower}}</span></td>
-    <td>{{portal.datasetCount}}</td>
-    <td>{{ portal.resourceCount }}</td>
+    <td>{{portal.datasetcount}}</td>
+    <td>{{ portal.resourcecount }}</td>
     {% for k in keys %}
         <td>{{ portal[k] | float|round(2)  }}</td>
     {% endfor %}
@@ -34,16 +35,16 @@
 {%- endmacro %}
 
 {% macro portalTable(portals,heys, snapshot) -%}
-<table class="ui single line fixed table" id="portalsTable">
+<table class="ui single line table" id="portalsTable">
     <thead>
         <tr>
             <th class="six wide">Domain</th>
 
             <th class="one wide">ISO</th>
-            <th class="one wide">Datasets</th>
-            <th class="one wide">Resourcs</th>
+            <th class="number one wide">Datasets</th>
+            <th class="number one wide">Resourcs</th>
             {% for k in keys %}
-                <td>{{ k }}</td>
+                <th class="number">{{ k }}</th>
             {% endfor %}
 
         </tr>
@@ -55,13 +56,13 @@
     </tbody>
     <tfoot>
         <tr>
-            <td class="ten wide">Domain</td>
+            <th class="ten wide">Domain</th>
 
-            <td class="one wide">ISO</td>
-            <td class="one wide">Datasets</td>
-            <td class="one wide">Resourcs</td>
+            <th class="one wide">ISO</th>
+            <th class="one wide">Datasets</th>
+            <th class="one wide">Resourcs</th>
             {% for k in keys %}
-                <td>{{ k}}</td>
+                <th>{{ k}}</th>
             {% endfor %}
 
         </tr>
@@ -74,9 +75,9 @@
     <thead>
         <tr>
             <th class="one wide">Country</th>
-            <th class="one wide">Count</th>
+            <th class="number one wide">Count</th>
             {% for k in keys %}
-                <th>{{ k }}</th>
+                <th class="number">{{ k }}</th>
             {% endfor %}
         </tr>
     </thead>
@@ -114,9 +115,9 @@
     <thead>
         <tr>
             <th class="one wide">Software</th>
-            <th class="one wide">Count</th>
+            <th class="number one wide">Count</th>
             {% for k in keys %}
-                <th>{{ k }}</th>
+                <th class="number">{{ k }}</th>
             {% endfor %}
         </tr>
     </thead>
@@ -130,7 +131,7 @@
             <th class="one wide">Software</th>
             <th class="one wide">Count</th>
             {% for k in keys %}
-                <td>{{ k }}</td>
+                <td >{{ k }}</td>
             {% endfor %}
         </tr>
     </tfoot>
@@ -167,7 +168,7 @@
         <a class="item" data-tab="iso">Per Country</a>
         <a class="item" data-tab="soft">Per software</a>
     </div>
-    <div class="ui bottom attached active tab segment" data-tab="portals">
+    <div class="ui bottom attached active tab segment" data-tab="portals" style="overflow-y:auto;white-space:nowrap;">
         {{portalTable(data.portals)}}
     </div>
     <div class="ui bottom attached tab segment" data-tab="iso">
@@ -185,32 +186,27 @@
 {% block script %}
 
     {{ super() }}
-    $(document).ready(function() {
+
+
+$.tablesort.defaults = {
+    debug: $.tablesort.DEBUG,       // Outputs some basic debug info when true.
+    asc: 'sorted ascending',        // CSS classes added to `<th>` elements on sort.
+    desc: 'sorted descending',
+    compare: function(a, b) {       // Function used to compare values when sorting.
+        if (a > b) {
+            return 1;
+        } else if (a < b) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+};
 
         $('#tabs .item')
          .tab()
         ;
-        $('#portalsTable').DataTable(
-        {
-            dom: 'lfrBtip',
-            lengthChange: false,
-            scrollX: true
-        });
-        $('#isoTable').DataTable(
-        {
-            dom: 'lfrBtip',
-            lengthChange: false,
-            scrollX: true
-        });
 
-        $('#softTable').DataTable(
-        {
-            dom: 'lfrBtip',
-            lengthChange: false,
-            scrollX: true
-        });
-
-
-    })
+        $('#portalsTable').tablesort().data('tablesort');
 
  {% endblock %}

@@ -36,6 +36,13 @@ class HeadLookups( CrawlSpider ):
         self.snapshot=kwargs['snapshot']
         self.db=kwargs['db']
         self.batch=kwargs['batch']
+        self.include_iso = None
+        if 'iso' in kwargs:
+            self.iso = kwargs['iso']
+        self.exclude_iso = None
+        if 'exclude_iso' in kwargs:
+            self.exclude_iso = kwargs['exclude_iso']
+
         dispatcher.connect(self.spider_idle, signals.spider_idle)
         self.count=0
         self.seen=kwargs['seen']
@@ -91,7 +98,7 @@ class HeadLookups( CrawlSpider ):
 
     def scheduleURLs(self):
         log.info("Scheduling")
-        q=self.db.getUnfetchedResources(self.snapshot, batch=self.batch)
+        q=self.db.getUnfetchedResources(self.snapshot, batch=self.batch, iso=self.iso, exclude_iso=self.exclude_iso)
         uris= [ uri[0] for uri in q ]
 
         stats=defaultdict(int)
@@ -163,6 +170,7 @@ class HeadLookups( CrawlSpider ):
                 log.info("Already scheduled or crawled", uri=u)
 
         log.info("InitScheduled", uris=len(uris), seen=d, added=c)
+
     def parse(self,response):
         if response.status==400:
             #400 Method not supported -> HTTP HEAD
@@ -225,6 +233,8 @@ def setupCLI(pa):
     pa.add_argument("-t","--threads",  help='Number of threads',  dest='threads', default=4,type=int)
     pa.add_argument("-b","--batch",  help='Batch size',  dest='batch', default=100000,type=int)
     pa.add_argument("-d","--delay",  help='Default domain delay (in sec)',  dest='delay', default=5,type=int)
+    pa.add_argument('--iso', help="Filter specific ISO code")
+    pa.add_argument('--exclude-iso', help="Exclude specific ISO code")
 
 def cli(args, dbm):
     sn = getCurrentSnapshot()
@@ -235,6 +245,6 @@ def cli(args, dbm):
     crawler = CrawlerProcess(settings)
 
     seen=set([])
-    crawler.crawl(HeadLookups,snapshot=sn, db=db, batch=args.batch, seen=seen)
+    crawler.crawl(HeadLookups,snapshot=sn, db=db, batch=args.batch, seen=seen, iso=args.iso, exclude_iso=args.exclude_iso)
 
     crawler.start()

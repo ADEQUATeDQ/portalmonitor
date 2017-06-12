@@ -60,31 +60,28 @@
                             {% for r in data['resourceInfo'] %}
                                 <div class="item">
                                     <div class="content">
-                                        {% if 'status' in r and r.status=='200' %}
+                                        {% if 'status' in r and r.status==200 %}
                                             <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
                                         {% elif 'status' in r %}
                                            <div class="ui label red ribbon">HTTP {{r.status|int}}</div>
                                         {% else %}
                                            <div class="ui label ribbon">No HTTP information</div>
                                         {% endif %}
-                                        <div class="header">
-                                            inspected at: {{r.timestamp}}
-                                        </div>
+                                        <div class="header">inspected at: {{r.timestamp}}</div>
                                         {% if r.exc %}
-                                        <div class="meta">
-                                            {{r.exc}}
-                                        </div>
-                                        {% if 'header' in r and r.header %}
-                                            <div class="description">
-                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:600px;width:800px">{{r.header}}</pre>
-                                            </div>
+                                            <div class="meta">{{r.exc}}</div>
                                         {% endif %}
+                                        {% if 'header' in r %}
+                                            <div class="description">
+                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="max-height:200px;min-height:50px;width:800px">{{r.header}}</pre>
+                                            </div>
 
-                                        <div class="extra">
-                                            <div class="ui label">{{r.size}}</div>
-                                            <div class="ui label">{{r.mime}}</div>
 
-                                        </div>
+                                            <div class="extra">
+                                                <div class="ui label">{{r.size}} bytes</div>
+                                                <div class="ui label">{{r.mime}}</div>
+
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>

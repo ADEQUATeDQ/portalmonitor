@@ -9,10 +9,7 @@
 {% endblock %}
 {% block headscripts %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
-
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.12/js/dataTables.semanticui.min.js"></script>
-
-
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.semanticui.min.js"></script>
 
@@ -31,131 +28,65 @@
 
 {% endblock %}
 
-{% macro resourceTable(data) -%}
-<div id="test">
-<h3 class="ui header">HTTP HEADER REPORT</h3>
-</div>
-<table class="ui celled table single line" id="resources" cellspacing="0" width="100%">
-  <thead>
-    <tr>
-      <th class="ten" >URI</th>
-      <th>Info</th>
-      <th>status</th>
-      <th>last checked</th>
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-  <tfoot>
-    <tr>
-      <th>URI</th>
-      <th>Info</th>
-      <th>status</th>
-      <th>last checked</th>
-    </tr>
-  </tfoot>
-</table>
-{%- endmacro %}
-
-
 {% block portalcontent %}
-
-<!-- How many resources -->
-    <div class="ui container centered ">
-        <div class="ui statistics">
-            <div class="statistic">
-                <div class="value">
-                  {{ data.resources }}
-                </div>
-                <div class="label">
-                  unique Resources
-                </div>
+    <div class="ui container centered" id="body">
+        <div class="ui segment" id="loader" style="height:400px;">
+            <div class="ui active dimmer">
+                <div class="ui indeterminate large text loader">We are getting the HTTP header information. Stay with us!</div>
             </div>
-            <div class="statistic">
-                <div class="value">
-                  {% if  data.resourcesInfo.valid[true] %}
-                    {{ data.resourcesInfo.valid[true] }}
-                   {% else %}
-                    0
-                    {% endif %}
-                </div>
-                <div class="label">
-                  valid URLs
-                </div>
-            </div>
-            <div class="statistic">
-                <div class="value">
-                    {% if  data.resourcesInfo.status.200 %}
-                        {{ data.resourcesInfo.status.200 }}
-                    {% else %}
-                        0
-                    {% endif %}
-                    /{{ data.resourcesInfo.status.items()|sum(attribute="1")}}
-                </div>
-                <div class="label">
-                  HTTP 200 OK
-                </div>
-            </div>
+             <p></p>
         </div>
     </div>
-
-    <div class="ui container">
-        {{ resourceTable()}}
-    </div>
-
 {% endblock %}
 
 {% block script %}
     {{ super() }}
-    snapshot={{ snapshot|safe }}
-    portalid="{{ portalid|safe }}"
-    url="/api/portal/"+portalid+"/"+snapshot+"/resources"
-    console.log(url)
-
-
     $(document).ready(function() {
-        var data = [];
-
+        bodyURL="{{url_for('ui.portalResBody', snapshot=snapshot, portalid=portalid)}}"
         $.ajax({
-            type: 'GET',
-            url: url,
-            dataType: 'json',
-            success: function(j) { data = j;},
-            async: false
-        });
-        console.log(data)
-        var trHTML = '';
-
-        $.each(data, function (i, item) {
-            if( data[i].status > 600){
-                trHTML += '<tr class="error">'
-            }else{
-                trHTML += '<tr>'
+            url: bodyURL,
+            success: function(data) {
+                $('#loader').remove();
+                html=$($.parseHTML(data))
+                $('#body').html(html);
+                $('#show200').on('click', function(){filter(200)})
+                $('#show404').on('click', function(){filter(404)})
+                $('#showAll').on('click', function(){filter(null)})
+                $('#showErrors').on('click', function(){filterGreater(404)})
+            },
+            type: 'GET'
             }
-            trHTML += '<td style="width:600px;overflow:hidden;text-overflow:ellipsis;display:block;"><a href="' + data[i].uri + '">'+data[i].uri+'</td>'
+        )
 
-            u='{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=ru)}}'
-            u +=''+data[i].uri
-            trHTML += '<td>' +'<a href="'+u+'" class="ui button"><i class="line chart icon"></i></a></td>'
+        function filter(filterStatus) {
+            var filterStatus = filterStatus;
+            $('#uris>div.item').each(function (index, element) {
+                $(element).find(".status").each(function(index, status){
 
-            if( data[i].status > 600){
-                trHTML += '<td>' +data[i].status+' exc:'+ data[i].exc + '</td>';
-            }else{
-                trHTML += '<td>' + data[i].status + '</td>';
-            }
-            trHTML += '<td>' + data[i].timestamp + '</td></tr>';
-        });
-        console.log(trHTML)
+                    if( (filterStatus == null) || ($(status).text().indexOf(filterStatus) >= 0)){
+                        $(element).show();
+                    }else{
+                        $(element).hide();
+                    }
+                });
+            });
+        };
+        function filterGreater(filterStatus) {
+            var filterStatus = filterStatus;
+            $('#uris>div.item').each(function (index, element) {
+                $(element).find(".status").each(function(index, status){
 
-        $('#resources tbody').append(trHTML);
-        var table = $('#resources').DataTable(
-        {
-            dom: 'lfrBtip',
-            lengthChange: false,
-            buttons: [ 'csv', 'excel', 'pdf' ]
-        });
-        table.buttons().container()
-            .appendTo( $('#test', table.table().container()) );
+                    if( (filterStatus == null) || (parseInt($(status).text())>filterStatus)){
+                        $(element).show();
+                    }else{
+                        $(element).hide();
+                    }
+                });
+            });
+        };
+
+
     })
+
 
  {% endblock %}

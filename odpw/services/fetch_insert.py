@@ -3,6 +3,7 @@ from multiprocessing import Pool
 
 import structlog
 from scrapy.utils.url import escape_ajax
+from sqlalchemy import not_
 from w3lib.url import safe_url_string
 
 log =structlog.get_logger()
@@ -19,7 +20,7 @@ from odpw.utils.error_handling import ErrorHandler, getExceptionCode, getExcepti
 from odpw.utils.timing import Timer
 
 from odpw.core.model import Dataset, DatasetData, PortalSnapshot, MetaResource, \
-    DatasetQuality, Portal
+    DatasetQuality, Portal, PortalSnapshotQuality
 from odpw.core.dataset_converter import dict_to_dcat
 from odpw.core.dcat_access import getDistributionAccessURLs, getDistributionDownloadURLs, getDistributionFormatWithURL, \
     getDistributionMediaTypeWithURL, getDistributionSizeWithURL, getDistributionCreationDateWithURL, \
@@ -28,6 +29,10 @@ from odpw.core.parsing import toDatetime, normaliseFormat
 from odpw.core.portal_fetch_processors import getPortalProcessor
 from odpw.core.db import  DBManager
 from odpw.core.api import DBClient
+
+from random import randint
+from time import sleep
+
 
 def fetchHttp(obj):
     P, dbConf, snapshot = obj[0],obj[1],obj[2]
@@ -38,7 +43,8 @@ def fetchHttp(obj):
 
     with Timer(key='InsertPortal', verbose=True):
         PS= PortalSnapshot(portalid=P.id, snapshot=snapshot)
-
+        PS.start=datetime.datetime.now()
+        sleep(randint(1, 10))
         db.add(PS)
         try:
 
@@ -54,7 +60,7 @@ def fetchHttp(obj):
             exc=getExceptionString(exc)
         try:
             #update the portalsnapshot object with dataset and resource count and end time
-            dsCount=PortalSnapshot.datasetcount
+            dsCount=PS.datasetcount
             dsfetched=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).count()
             resCount=db.Session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==P.id).join(MetaResource,MetaResource.md5==Dataset.md5).count()
 
@@ -250,6 +256,7 @@ def name():
 def setupCLI(pa):
     pa.add_argument("-c","--cores", type=int, help='Number of processors to use', dest='processors', default=4)
     pa.add_argument('--pid', dest='portalid' , help="Specific portal id ")
+    pa.add_argument('--repair', help="Re-fetch portals with status != 200", action='store_true')
 
 def cli(args,dbm):
     sn = getCurrentSnapshot()
@@ -266,8 +273,20 @@ def cli(args,dbm):
         else:
             tasks.append((P, dbConf,sn))
     else:
-        for P in db.Session.query(Portal):
-            tasks.append((P, dbConf,sn))
+        if args.repair:
+            valid = db.Session.query(PortalSnapshot.portalid).filter(PortalSnapshot.snapshot==sn).filter(PortalSnapshot.status==200).subquery()
+
+            for P in db.Session.query(Portal).filter(Portal.id.notin_(valid)):
+                PS=db.Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==sn).filter(PortalSnapshot.portalid==P.id)
+                db.delete(PS)
+                PSQ = db.Session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot == sn).filter(
+                    PortalSnapshotQuality.portalid == P.id)
+                db.delete(PSQ)
+
+                tasks.append((P, dbConf,sn))
+        else:
+            for P in db.Session.query(Portal):
+                tasks.append((P, dbConf,sn))
 
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 

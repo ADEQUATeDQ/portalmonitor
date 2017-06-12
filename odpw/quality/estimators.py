@@ -1,7 +1,11 @@
 from collections import defaultdict
 import math
 from statsmodels.distributions.empirical_distribution import ECDF
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
+
 from scipy.stats import poisson
 import numpy as np
 

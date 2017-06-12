@@ -1,0 +1,184 @@
+{% extends "odpw_portals_layout.jinja" %}
+{% set title = "Portals List" -%}
+
+{% set active_sub_page="ui.portalsdynamicy" %}
+
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML"></script>
+{% endblock %}
+
+
+
+{% macro portalRow(portal) -%}
+<tr>
+    <td>{{portal.uri|get_domain}}
+        <a href="{{url_for("ui.portal", portalid=portal.id, snapshot=snapshot)}}" class="ui right floated button icon">
+            <i class="line chart icon"></i>
+        </a>
+    </td>
+    <td><i class="{{portal.iso| lower}} flag "></i><span>{{portal.iso| lower}}</span></td>
+    {% for k in keys %}
+        <td>{{ portal[k] | float|round(2)  }}</td>
+    {% endfor %}
+
+</tr>
+{%- endmacro %}
+
+{% macro portalTable(portals,heys, snapshot) -%}
+<table class="ui single line fixed table" id="portalsTable">
+    <thead>
+        <tr>
+            <th class="two wide">Domain</th>
+
+            <th class="one wide">ISO</th>
+            {% for k in keys %}
+                <th>{{ k }}</th>
+            {% endfor %}
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in portals %}
+            {{portalRow(p)}}
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th class="two wide">Domain</th>
+
+            <th class="one wide">ISO</th>
+            {% for k in keys %}
+                <th>{{ k}}</th>
+            {% endfor %}
+
+        </tr>
+    </tfoot>
+</table>
+{%- endmacro %}
+
+
+{% block title %}
+
+<div class="ui sixteen wide column">
+    <div class="ui form row">
+        <div class="fields">
+            <h3 class="six wide field">
+                <span id="pCount" class="floated right white">Dynamicity values week {{snapshot| getWeekString}}</span>
+            </h3>
+        </div>
+        <div class="fields">
+            <p>
+            <button class="ui button" id="helpBtn">Explain</button>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block portalscontent %}
+
+    <div class="ui bottom attached active  segment" data-tab="portals">
+        {{portalTable(data.portals)}}
+    </div>
+    <div class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">Dynamicity formulas</div>
+        <div class="image content">
+            <div class="description">
+                <div class="ui one column grid">
+                    <div class="ui  column">
+                        <div class="ui segment">
+                            <h3 class="ui header"></h3>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[dindex]</span>
+                            <span class="ui header">Dynamicity Index</span>
+                            <div>
+                                <ul>
+                                <li>$\mathcal{T}$ : The set of available snapshots, with $t \in \mathcal{T}$ a single snapshot</li>
+                                <li>$\mathcal{D}_t$ : The set of datasets for snapshot $t$</li>
+                                <li>$\triangle^+_{j,i}$ : The datasets added between snapshot $j$ and snapshot $i$ ($i,j \in \mathcal{T}$)</li>
+                                <li>$\triangle^-_{j,i}$ : The datasets deleted between snapshot $j$ and snapshot $i$</li>
+                                <li>$\triangle^{\odot}_{j,i}$ : The datasets updated between snapshot $j$ and snapshot $i$</li>
+                                <li>$\triangle^{o}_{j,i}$ : The datasets not changed between snapshot $j$ and snapshot $i$</li>
+                                </ul>
+                            </div>
+
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[dindex]</span>
+                            <span class="ui header">Dynamicity Index</span>
+                            <p>This index is similar to the h-index.</p>
+                            <p> An index of $k$ states, that in more than $k$% of the snapshots more than $k$% of the datasets changed.
+                            </p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[dyratio]</span>
+                            <span class="ui header">Dynamicity ratio</span>
+                            <p>Percentage of datasets that were added,updated or deleted</p>
+                            <p> $$ \frac{ |\triangle^{+}_{j,i}|+|\triangle^{-}_{j,i}|+|\triangle^{\odot}_{j,i}| }{| \mathcal{D}_{t-1} \cup \mathcal{D}_{t}| }$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[adddelratio]</span>
+                            <span class="ui header">Ratio between added and deleted Dataset Ratio</span>
+                            <p>Ratio between added and deleted datasets. Range between $[-1 : 1]$. Value closer to 1 indicates mainly adds.</p>
+                            <p> $$ \frac{ |\triangle^{+}_{j,i}|-|\triangle^{-}_{j,i}| }{|\triangle^{+}_{j,i}|+|\triangle^{-}_{j,i}| }$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[changefrequ]</span>
+                            <span class="ui header">Change frequency</span>
+                            <p>Percent of snapshots in which datasets changed</p>
+                            <p> $$\frac{|\mathcal{T}|}{snapshots with changes}$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[staticRatio]</span>
+                            <span class="ui header">Static Dataset Ratio</span>
+                            <p>Percentage of datasets which did not change</p>
+                            <p> $$ \frac{ |\triangle^{o}_{j,i}| }{| \mathcal{D}_{t-1} \cup \mathcal{D}_{t}|}$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[addRatio]</span>
+                            <span class="ui header">Added Dataset Ratio</span>
+
+                            <p> $$ \frac{ |\triangle^{+}_{j,i}| }{| \mathcal{D}_{t-1} \cup \mathcal{D}_{t}|}$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[delRatio]</span>
+                            <span class="ui header">Deleted Dataset Ratio</span>
+                            <p> $$ \frac{ |\triangle^{-}_{j,i}| }{| \mathcal{D}_{t-1} \cup \mathcal{D}_{t}|}$$</p>
+
+                            <span class="ui ribbon label" style="background:gray; color:white;">[updateRatio]</span>
+                            <span class="ui header">Updated Dataset Ratio</span>
+                            <p> $$ \frac{ |\triangle^{\odot}_{j,i}| }{| \mathcal{D}_{t-1} \cup \mathcal{D}_{t}|}$$</p>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+
+    {{ super() }}
+    $(document).ready(function() {
+
+        $('#tabs .item')
+         .tab()
+        ;
+        $('#portalsTable').DataTable(
+        {
+            dom: 'lfrBtip',
+            lengthChange: false,
+            scrollX: true
+        });
+         $("#helpBtn").click(function(){
+            $('.ui.modal').modal('show');
+         });
+
+    })
+
+ {% endblock %}

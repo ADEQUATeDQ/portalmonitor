@@ -134,7 +134,7 @@ if __name__ == "__main__":
         (r"/tornado", MainHandler),
         (r".*", FallbackHandler, dict(fallback=tr)),
     ])
-    print "here"
+    #print "here"
     application.listen(5122)
     print "Listinging on http://localhost:5122/api"
     IOLoop.instance().start()

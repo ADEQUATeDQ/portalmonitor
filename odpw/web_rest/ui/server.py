@@ -1,10 +1,14 @@
 import structlog
+#from flask_compress import Compress
 from werkzeug.utils import redirect
 
 from odpw.web_rest.rest.portal_namespace import ns as portal_namespace
 from odpw.web_rest.rest.portals_namespace import ns as portals_namespace
-from odpw.web_rest.rest.datamonitor_namespace import ns as datamonitor_namespace
+# TODO temporarily disabled datamonitor APIs
+#from odpw.web_rest.rest.datamonitor_namespace import ns as datamonitor_namespace
+from odpw.web_rest.rest.memento_namespace import ns as memento_namespace
 from odpw.web_rest.rest.odpw_restapi import api
+from odpw.web_rest.ui.flask_sqlalchemy_session import flask_scoped_session
 
 log =structlog.get_logger()
 
@@ -20,6 +24,7 @@ from odpw.web_rest.ui.odpw_ui_blueprint import ui
 from odpw.core.api import DBClient
 from flask import Flask, jsonify, request, Blueprint
 
+#compress = Compress()
 
 class ReverseProxied(object):
     '''Wrap the application in this middleware and configure the
@@ -66,29 +71,32 @@ def create_app(dbm, conf):
     :param name_handler: name of the application.
     :param config_object: the configuration object.
     """
-
-
-
+    log.info("Setting up Flask")
     app = Flask(__name__)
 
-
-    #app.config.from_object(config_object)
     app.engine = dbm.engine
     cache.init_app(app)
 
+    DbSession = flask_scoped_session(
+                    sessionmaker(
+                        bind=dbm.engine
+                    ),
+                    app
+                )
 
-    DbSession = scoped_session(sessionmaker(
-                                         bind=dbm.engine
-                                        ))
+#    DbSession = scoped_session(sessionmaker(
+#                                         bind=dbm.engine
+#                                        ))
     app.config['dbsession']=DbSession
     app.config['dbc']= DBClient(dbm)
 
     app.register_blueprint(ui, url_prefix=conf['url_prefix_ui'])
     blueprint = Blueprint('api', __name__, url_prefix=conf['url_prefix_rest'])
     api.init_app(blueprint)
-    api.add_namespace(portal_namespace)
-    api.add_namespace(portals_namespace)
-    api.add_namespace(datamonitor_namespace)
+
+    bps = [portal_namespace, portals_namespace, memento_namespace]
+    for bp in bps:
+        api.add_namespace(bp)
 
     app.register_blueprint(blueprint)
 
@@ -100,6 +108,17 @@ def create_app(dbm, conf):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
         return response
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        app.logger.error('Page not found: %s', (request.path))
+        message = {
+            'status': 404,
+            'path': request.path
+        }
+        resp = jsonify(message)
+        resp.status_code = 404
+        return resp
 
     @app.errorhandler(500)
     def internal_error(e):
@@ -113,7 +132,27 @@ def create_app(dbm, conf):
         resp.status_code = 500
         return resp
 
+    @app.errorhandler(Exception)
+    def unhandled_exception(e):
+        import traceback
+        traceback.print_exc()
+        app.logger.error('Unhandled Exception: %s', (e))
+        message = {
+            'status': 500,
+            'exception': e.message,
+            'request_url': request.url
+        }
+        resp = jsonify(message)
+        resp.status_code = 500
+        return resp
+
+    @app.route('/')
+    def url_prefix():
+        return redirect(conf['url_prefix_ui'])
+
+
     app.wsgi_app = ReverseProxied(app.wsgi_app)
+#    compress.init_app(app)
     return app
 
 
@@ -133,6 +172,7 @@ def cli(args,dbm):
          'url_prefix_ui':'/ui'
         ,'port':80
     }
+    log.info("parsing configs for server")
     if args.config:
         with open(args.config) as f_conf:
             config = yaml.load(f_conf)

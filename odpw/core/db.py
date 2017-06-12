@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import os
 import structlog
+import time
 from sqlalchemy import create_engine, inspect
 from sqlalchemy import event
 from sqlalchemy import exc
@@ -14,13 +15,12 @@ from sqlalchemy.schema import (
     DropTable,
     ForeignKeyConstraint,
     DDL
-    )
+)
 from sqlalchemy.sql.ddl import DropConstraint
 
-from odpw.core.model import  Dataset, Base, tab_datasets, tab_resourcesinfo, ResourceInfo, tab_resourcescrawllog
+from odpw.core.model import Dataset, Base, tab_datasets, tab_resourcesinfo, ResourceInfo, tab_resourcescrawllog
 
-log =structlog.get_logger()
-
+log = structlog.get_logger()
 
 
 def process_keyed_tuple(kt):
@@ -37,18 +37,20 @@ def dictate(r):
     # KeyedTuples are recognized by the real function dictate(), iterated over
     # and each item gets inspected
     if isinstance(r, tuple):
-            return process_keyed_tuple(r)
+        return process_keyed_tuple(r)
     else:
         # This type is unknown, then treated as an object and inspected(),
         # which fails.
         process_object(r)
 
+
 def to_dict(model_instance, query_instance=None):
-	if hasattr(model_instance, '__table__'):
-		return {c.name: str(getattr(model_instance, c.name)) for c in model_instance.__table__.columns}
-	else:
-		cols = query_instance.column_descriptions
-		return { cols[i]['name'] : model_instance[i]  for i in range(len(cols)) }
+    if hasattr(model_instance, '__table__'):
+        return {c.name: str(getattr(model_instance, c.name)) for c in model_instance.__table__.columns}
+    else:
+        cols = query_instance.column_descriptions
+    return {cols[i]['name']: model_instance[i] for i in range(len(cols))}
+
 
 def query_to_dict(rset):
     result = defaultdict(list)
@@ -68,35 +70,35 @@ def query_to_dict(rset):
             result[key].append(x.value)
     return result
 
-#_row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
+
+# _row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
 
 def _row2dict(r):
-    data={}
+    data = {}
     for c in r.__table__.columns:
-        att= getattr(r, c.name)
-        if hasattr(att,'encode'):
-            at=att.encode('utf-8')
+        att = getattr(r, c.name)
+        if hasattr(att, 'encode'):
+            at = att.encode('utf-8')
         else:
-            at=att
+            at = att
         data[c.name] = att
-        #if type(att) in [dict, list]:
+        # if type(att) in [dict, list]:
 
-        #else:
+        # else:
         #    data[c.name] = str(att)
 
     return data
 
-def row2dict(r):
 
+def row2dict(r):
     if hasattr(r, '_fields'):
-        d={}
+        d = {}
         for field in r._fields:
-            rf= r.__getattribute__(field)
-            print field, type(rf)
+            rf = r.__getattribute__(field)
             if isinstance(rf, Base):
                 d.update(_row2dict(rf))
             else:
-                d[field]=rf
+                d[field] = rf
         return d
     if isinstance(r, Base):
         return _row2dict(r)
@@ -131,50 +133,64 @@ def add_engine_pidguard(engine):
                 (connection_record.info['pid'], pid)
             )
 
+def add_query_time_logging(engine):
+    @event.listens_for(engine, "before_cursor_execute")
+    def before_cursor_execute(conn, cursor, statement,
+                              parameters, context, executemany):
+        conn.info.setdefault('query_start_time', []).append(time.time())
+        log.debug("Start Query: {}".format(statement))
+
+    @event.listens_for(engine, "after_cursor_execute")
+    def after_cursor_execute(conn, cursor, statement,
+                             parameters, context, executemany):
+        total = time.time() - conn.info['query_start_time'].pop(-1)
+        log.debug("Query Complete {}: {}".format(total, statement))
+
 
 class DBManager(object):
-
     def __init__(self, db='portalwatch', host="localhost", port=5432, password=None, user='opwu', debug=False):
 
-            #Define our connection string
-            self.log = log.new()
+        # Define our connection string
+        self.log = log.new()
 
-            conn_string = "postgresql://"
-            if user:
-                conn_string += user
-            if password:
-                conn_string += ":"+password
-            if host:
-                conn_string += "@"+host
-            if port:
-                conn_string += ":"+str(port)
-            conn_string += "/"+db
-            log.info("Connecting DB")
+        conn_string = "postgresql://"
+        if user:
+            conn_string += user
+        if password:
+            conn_string += ":" + password
+        if host:
+            conn_string += "@" + host
+        if port:
+            conn_string += ":" + str(port)
+        conn_string += "/" + db
+        log.info("Connecting DB")
 
-            self.engine = create_engine(conn_string, pool_size=20, client_encoding='utf8', echo=debug)
-            add_engine_pidguard(self.engine)
-            #register_after_fork(self.engine, self.engine.dispose)
-            log.info("Connected DB")
-            #self.engine.connect()
-
-            self.session_factory = sessionmaker(bind=self.engine)#, expire_on_commit=False
-
-            #self.session = self.Session()
+        self.engine = create_engine(conn_string, pool_size=20, client_encoding='utf8', echo=debug)
+        add_engine_pidguard(self.engine)
+        #add_query_time_logging(self.engine)
+        # register_after_fork(self.engine, self.engine.dispose)
+        log.info("Connected DB")
+        # self.engine.connect()
 
 
+        self.session_factory = sessionmaker(bind=self.engine)  # , expire_on_commit=False
 
-            self.dataset_insert_function = DDL(
-                """
-                CREATE OR REPLACE FUNCTION dataset_insert_function()
-                RETURNS TRIGGER AS $$
+        # self.session = self.Session()
 
-                DECLARE
-                    _snapshot smallint;
-                    _table_name text;
 
-                BEGIN
-                    _snapshot := NEW.snapshot;
-                    _table_name := '"""+tab_datasets+"""_' || _snapshot;
+
+        self.dataset_insert_function = DDL(
+            """
+            CREATE OR REPLACE FUNCTION dataset_insert_function()
+            RETURNS TRIGGER AS $$
+
+            DECLARE
+                _snapshot smallint;
+                _table_name text;
+
+            BEGIN
+                _snapshot := NEW.snapshot;
+                _table_name := '""" + tab_datasets + """_' || _snapshot;
 
                     PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
 
@@ -184,7 +200,7 @@ class DBManager(object):
                           || quote_ident(_table_name)
                           || ' (CHECK ("snapshot" = '
                           || _snapshot::smallint
-                          || ')) INHERITS ("""+tab_datasets+""")';
+                          || ')) INHERITS (""" + tab_datasets + """)';
 
                         -- Indexes are defined per child, so we assign a default index that uses the partition columns
                         EXECUTE 'CREATE INDEX ' || quote_ident(_table_name||'_org') || ' ON '||quote_ident(_table_name) || ' (organisation)';
@@ -208,25 +224,25 @@ class DBManager(object):
 
                 $$ LANGUAGE plpgsql;
                 """)
-            self.dataset_insert_trigger = DDL(
-                """
-                CREATE TRIGGER dataset_insert_trigger
-                BEFORE INSERT ON """+tab_datasets+"""
+        self.dataset_insert_trigger = DDL(
+            """
+            CREATE TRIGGER dataset_insert_trigger
+            BEFORE INSERT ON """ + tab_datasets + """
                 FOR EACH ROW EXECUTE PROCEDURE dataset_insert_function();
                 """
-            )
-            self.resourcesinfo_insert_function = DDL(
-                """
-                CREATE OR REPLACE FUNCTION resourcesinfo_insert_function()
-                RETURNS TRIGGER AS $$
+        )
+        self.resourcesinfo_insert_function = DDL(
+            """
+            CREATE OR REPLACE FUNCTION resourcesinfo_insert_function()
+            RETURNS TRIGGER AS $$
 
-                DECLARE
-                    _snapshot smallint;
-                    _table_name text;
+            DECLARE
+                _snapshot smallint;
+                _table_name text;
 
-                BEGIN
-                    _snapshot := NEW.snapshot;
-                    _table_name := '"""+tab_resourcesinfo+"""_' || _snapshot;
+            BEGIN
+                _snapshot := NEW.snapshot;
+                _table_name := '""" + tab_resourcesinfo + """_' || _snapshot;
 
                     PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
 
@@ -236,7 +252,7 @@ class DBManager(object):
                           || quote_ident(_table_name)
                           || ' (CHECK ("snapshot" = '
                           || _snapshot::smallint
-                          || ')) INHERITS ("""+tab_resourcesinfo+""")';
+                          || ')) INHERITS (""" + tab_resourcesinfo + """)';
 
                         -- Indexes are defined per child, so we assign a default index that uses the partition columns
                         EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_pkey') || ' PRIMARY KEY (uri, snapshot)';
@@ -257,27 +273,26 @@ class DBManager(object):
 
                 $$ LANGUAGE plpgsql;
                 """)
-            self.resourcesinfo_insert_trigger = DDL(
-                """
-                CREATE TRIGGER resourcesinfo_insert_trigger
-                BEFORE INSERT ON """+tab_resourcesinfo+"""
+        self.resourcesinfo_insert_trigger = DDL(
+            """
+            CREATE TRIGGER resourcesinfo_insert_trigger
+            BEFORE INSERT ON """ + tab_resourcesinfo + """
                 FOR EACH ROW EXECUTE PROCEDURE resourcesinfo_insert_function();
                 """
-            )
+        )
 
+        self.resourcescrawllog_insert_function = DDL(
+            """
+            CREATE OR REPLACE FUNCTION resourcescrawllog_insert_function()
+            RETURNS TRIGGER AS $$
 
-            self.resourcescrawllog_insert_function = DDL(
-                """
-                CREATE OR REPLACE FUNCTION resourcescrawllog_insert_function()
-                RETURNS TRIGGER AS $$
+            DECLARE
+                _snapshot smallint;
+                _table_name text;
 
-                DECLARE
-                    _snapshot smallint;
-                    _table_name text;
-
-                BEGIN
-                    _snapshot := NEW.snapshot;
-                    _table_name := '"""+tab_resourcescrawllog+"""_' || _snapshot;
+            BEGIN
+                _snapshot := NEW.snapshot;
+                _table_name := '""" + tab_resourcescrawllog + """_' || _snapshot;
 
                     PERFORM 1 FROM pg_tables WHERE tablename = _table_name;
 
@@ -287,7 +302,7 @@ class DBManager(object):
                           || quote_ident(_table_name)
                           || ' (CHECK ("snapshot" = '
                           || _snapshot::smallint
-                          || ')) INHERITS ("""+tab_resourcescrawllog+""")';
+                          || ')) INHERITS (""" + tab_resourcescrawllog + """)';
 
                         -- Indexes are defined per child, so we assign a default index that uses the partition columns
                         EXECUTE 'ALTER TABLE '  || quote_ident(_table_name)|| ' ADD CONSTRAINT ' || quote_ident(_table_name||'_pkey') || ' PRIMARY KEY (uri, snapshot, timestamp)';
@@ -309,16 +324,13 @@ class DBManager(object):
 
                 $$ LANGUAGE plpgsql;
                 """)
-            self.resourcescrawllog_insert_trigger = DDL(
-                """
-                CREATE TRIGGER resourcescrawllog_insert_trigger
-                BEFORE INSERT ON """+tab_resourcescrawllog+"""
+        self.resourcescrawllog_insert_trigger = DDL(
+            """
+            CREATE TRIGGER resourcescrawllog_insert_trigger
+            BEFORE INSERT ON """ + tab_resourcescrawllog + """
                 FOR EACH ROW EXECUTE PROCEDURE resourcescrawllog_insert_function();
                 """
-            )
-
-
-
+        )
 
     def db_DropEverything(self):
         print "Sroping everything"
@@ -345,23 +357,28 @@ class DBManager(object):
                 if not fk['name']:
                     continue
                 fks.append(
-                    ForeignKeyConstraint((),(),name=fk['name'])
-                    )
-            t = Table(table_name,metadata,*fks)
+                    ForeignKeyConstraint((), (), name=fk['name'])
+                )
+            t = Table(table_name, metadata, *fks)
             tbs.append(t)
             all_fks.extend(fks)
 
         for fkc in all_fks:
-            conn.execute(DropConstraint(fkc,cascade=True))
+            conn.execute(DropConstraint(fkc, cascade=True))
 
         for table in tbs:
-            if table.name!=tab_datasets and table.name!=tab_resourcesinfo:
+            if table.name != tab_datasets and table.name != tab_resourcesinfo:
                 conn.execute(DropTable(table))
 
         trans.commit()
 
-    def init(self, Base):
+    def tableExists(self,Variable_tableName):
+        return self.engine.has_table(self.engine, Variable_tableName)
+    def viewExists(self,Variable_tableName):
+        print 'check if table {} exists'.format(Variable_tableName)
+        return self.engine.connect().execute()
 
+    def init(self, Base):
 
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_function)
         event.listen(Dataset.__table__, 'after_create', self.dataset_insert_trigger)
@@ -369,7 +386,3 @@ class DBManager(object):
         event.listen(ResourceInfo.__table__, 'after_create', self.resourcesinfo_insert_trigger)
 
         Base.metadata.create_all(self.engine)
-
-
-
-

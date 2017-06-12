@@ -15,7 +15,7 @@ from flask_restplus import Resource
 
 log = logging.getLogger(__name__)
 
-ns = api.namespace('portals', description='Operations related to the set of portals in the system')
+ns = api.namespace('portals', description='Operations related to the set of all portals in the system')
 from flask import request
 from flask_restplus import Resource
 
@@ -54,7 +54,7 @@ class Portals(Resource):
     #@ns.expect(pagination_arguments)
     #@api.marshal_with(portal, as_list=True)
 
-    @ns.doc('get all portal information for snapshot')
+    @ns.doc(description='Get a list of all portals (including the internal portal ID)')
     def get(self):
         """
         Returns list of portals.
@@ -76,7 +76,7 @@ class PortalsStats(Resource):
     #@ns.expect(pagination_arguments)
     #@api.marshal_with(portalstats, as_list=True)
 
-    @ns.doc('get all portal information for snapshot')
+    @ns.doc(description='Get all portals and additional information such as last snapshot and number of datasets')
     def get(self):
         """
         Returns list of portals with additon stats.

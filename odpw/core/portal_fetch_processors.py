@@ -322,8 +322,9 @@ class XMLDCAT(PortalProcessor):
 
     def _add_triples(self, g, orig_g, s):
         for s, p, o in orig_g.triples( (s, None, None) ):
-            g.add((s, p, o))
-            self._add_triples(g, orig_g, o)
+            if (s, p, o) not in g:
+                g.add((s, p, o))
+                self._add_triples(g, orig_g, o)
 
 
 def getPackageList(apiurl):

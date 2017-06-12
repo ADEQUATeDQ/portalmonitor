@@ -3,19 +3,19 @@ disable_existing_loggers: true
 # Configuring the default (root) logger is highly recommended
 root:
     level: INFO
-    handlers: [console,logfile]
+    handlers: [console]
 loggers:
     tornado.access:
       level: !!python/name:logging.INFO
       handlers: [access]
       qualname: tornado.access
       propagate: false
+    werkzeug:
+      level: !!python/name:logging.INFO
+      handlers: [access]
+      qualname: werkzeug
+      propagate: false
 handlers:
-    logfile:
-      class: logging.FileHandler
-      filename: sample.log
-      formatter: simpleFormatter
-      level: !!python/name:logging.NOTSET
     access:
       class: logging.FileHandler
       filename: access.log

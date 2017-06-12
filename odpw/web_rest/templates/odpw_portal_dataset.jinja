@@ -13,40 +13,12 @@
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 {% endblock %}
 
-{% macro distTable(data, key, label) -%}
-<table class="ui celled table" id="table{{label}}" cellspacing="0" width="100%">
-    <thead>
-        <tr>
-            <th>{{label}}</th>
-            <th>count</th>
-            <th>percentage</th>
-        </tr>
-    </thead>
-    <tfoot>
-        <tr>
-            <th>{{label}}</th>
-            <th>count</th>
-            <th>percentage</th>
-        </tr>
-    </tfoot>
-    <tbody>
-        {% for l in data[key].top3Dist %}
-        <tr>
-            <td class="hideextra">{{l[key]}}</td>
-            <td>{{l.count}}</td>
-             <td>({{ (l.perc*100)| round(2)}}%)</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{%- endmacro %}
-
-
 {% block portalcontent %}
     <div class="ui padded centered fifteen wide column ">
         <div class="ui fluid card">
             <div class="content">
-                <div class="header">Dataset:
+                <div class="header">
+                    Dataset:
                     {% if dataset %}
                         {{dataset.title}}
                     {% else %}
@@ -65,109 +37,148 @@
                                 Dataset
                             </div>
                             {% for dataset in data.datasets%}
-                            <div  class="item">
-                                <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=snapshot, dataset=dataset.id)}}">
-                                    {{dataset.title}}
-                                </a>
-                            </div>
+                                <div  class="item">
+                                    <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=snapshot, dataset=dataset.id)}}">
+                                        {{dataset.title}}
+                                    </a>
+                                </div>
                             {% endfor %}
-
                         </div>
                     </div>
                 </div>
-
 
             </div>
             {% if data.json %}
-            <div class="content">
-                <div class="header">{{data.versions|length}} Version(s)</div>
-                <div class="meta">
-                    {% for v in data.versions %}
-                        <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.min, dataset=dataset.id)}}">{{v.min|getWeekString}} - {{v.max|getWeekString}}</a>
-                    {% endfor %}
+                <div class="ui top attached tabular menu">
+                    <a class="active item" data-tab="quality">Quality</a>
+                    <a class="item" data-tab="data">Data</a>
+                    <a class="item" data-tab="resources">Resources</a>
+                    <a class="item" data-tab="versions">{{data.versions1|length}} Version(s)</a>
                 </div>
-            </div>
-            <div class="content">
-                <div class="description">
-                    <div class="ui vertical segment">
-                        <div class="ui two column doubling padded very relaxed grid">
-                            <div class="column">
-                                <h3 class="ui header"> Raw JSON metadata</h3>
-                                <pre  class="prettyprint" id="json" style="height: 400px"></pre>
-                            </div>
-                            <div class="ui vertical divider">
-
-                            </div>
-                            <div class="column">
-                                <h2 class="ui header"> Quality assessment</h2>
-
-                                {% for k in qa %}
-                                    <div class="ui horizontal divider">{{k.dimension}} Metrics</div>
-                                    <div class="ui three column padded grid">
-
-                                    {% for kk,d in k.metrics.iteritems() %}
-
-                                        {% set m = kk| lower -%}
-                                        <div class="  column">
-                                            <div class="ui label" style="color:{{d.color}}"">{{d.label}}
-                                                <div class="detail">{{ data.datasetData[m]}}</div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-
+                <div class="ui active bottom attached tab segment" data-tab="quality">
+                    <h2 class="ui header"> Quality assessment</h2>
+                    {% for k in qa %}
+                        <!--<div class="ui horizontal divider">{{k.dimension}} Metrics</div>-->
+                        <div class="ui attached message">
+                              <div class="header">
+                                {{k.dimension}} Metrics
+                              </div>
+                              <p>....</p>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="content">
-                <div class="description">
-                    <h3 class="ui header"> {{data['resources']| length}} Resource(s)</h3>
-
-                    <div class="ui container">
-                        <div class="ui divided items">
-                            {% for r in data['resources'] %}
+                        <div class="ui attached fluid segment">
+                            <div class="ui  divided items ">
+                            {% for kk,d in k.metrics.iteritems() %}
+                                {% set m = kk| lower -%}
                                 <div class="item">
                                     <div class="content">
-                                        {% if 'status' in r and r.status=='200' %}
-                                            <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
-                                        {% elif 'status' in r %}
-                                           <div class="ui label red ribbon">HTTP {{r.status|int}}</div>
-                                        {% else %}
-                                           <div class="ui label ribbon">No HTTP information</div>
-                                        {% endif %}
-                                        <div class="header">
-                                            <a {% if 'status' in r and r.status=='200' %}href="{{r.uri}}" {% endif %}class="header">{{r.uri}}</a>
+                                        <div class="header">{{d.label}}
+                                            <span data-tooltip="{{d.description}}" data-position="top center" data-variation="basic">
+                                                <i class="info circle icon "></i>
+                                            </span>
+                                            <span class="ui right aligned small label">Score:</span>
+                                            <span class="ui right aligned  small {% if kk in data.report %}red{% else %}green{% endif %} label">{{ data.datasetData[m]}}</span>
                                         </div>
-                                        {% if 'status' in r %}
-                                        <div class="meta">
-                                            inspected at: {{r.timestamp}}
-
+                                        <div class="description">
+                                            {% if kk in data.report %}
+                                                <div class="description">
+                                                    <i class="help circle outline middle aligned icon"></i>
+                                                    {{data.report[kk]['explanation']}}
+                                                </div>
+                                                <div class="description">
+                                                            <i class="info middle aligned icon"></i>
+                                                                {{data.report[kk]['improvement']}}
+                                                </div>
+                                            {% else %}
+                                                <div class="description">"Nothing to improve"</div>
+                                            {% endif %}
                                         </div>
-                                        {% if 'header' in r and r.header %}
-                                            <div class="description">
-                                                HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:100px">{{r.header}}</pre>
-                                            </div>
-                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                        <br/>
+                    {% endfor %}
+                </div>
 
-                                        <div class="extra">
-                                            <div class="ui label">{{r.format}}</div>
-                                            <div class="ui label">{{r.mime}}</div>
-                                            <div class="ui label"><i class="calendar icon"></i> metadata created:<div class="detail">{{r.created}}</div></div>
+                <div class="ui bottom attached tab segment" data-tab="data">
+                    <h3 class="ui header">Raw JSON metadata</h3>
+                    <pre  class="prettyprint" id="json" style="height: 400px"></pre>
+                </div>
 
-                                            {% if r.modified != 'None' %}
-                                                <div class="ui label">metadata modified <div class="detail">{{r.modified}}</div></div> {% endif %}
+                <div class="ui bottom attached tab segment" data-tab="versions">
+                    <div class="header">{{data.versions1|length}} Version(s)</div>
+                    <div class="meta">
+                        <div class="ui relaxed divided list">
+                            {% for ver in data.versions1 %}
+                                <div class="item">
+                                    <i class="large github middle aligned icon"></i>
+                                    <div class="content">
+                                        <span class="header"><p>{{loop.counter}}</span>
+                                        <div class="description">
+                                            {% for v in data.versions1[ver] %}
+                                                {% if v.min == v.max %}
+                                                    <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.min, dataset=dataset.id)}}">{{v.min|getWeekString}}</a>
+                                                {% else %}
+                                                    [<a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.min, dataset=dataset.id)}}">{{v.min|getWeekString}}</a> , <a href="{{url_for(active_sub_page, portalid=portalid, snapshot=v.max, dataset=dataset.id)}}">{{v.max|getWeekString}}</a>
+                                                {% endif %}
+                                            {% endfor %}
                                         </div>
-                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-            </div>
+
+
+
+                <div class="ui bottom attached tab segment" data-tab="resources">
+                    <div class="description">
+                        <h3 class="ui header"> {{data['resources']| length}} Resource(s)</h3>
+
+                        <div class="ui container">
+                            <div class="ui divided items">
+                                {% for r in data['resources'] %}
+                                    <div class="item">
+                                        <div class="content">
+                                            {% if 'status' in r and r.status=='200' %}
+                                                <div class="ui label green ribbon"><i class="heartbeat icon"></i>HTTP {{r.status}}</div>
+                                            {% elif 'status' in r %}
+                                               <div class="ui label red ribbon">HTTP {{r.status|int}}</div>
+                                            {% else %}
+                                               <div class="ui label ribbon">No HTTP information</div>
+                                            {% endif %}
+                                            <div class="header">
+                                                <a {% if 'status' in r and r.status=='200' %}href="{{r.uri}}" {% endif %}class="header">{{r.uri}}</a>
+                                            </div>
+                                            {% if 'status' in r %}
+                                            <div class="meta">
+                                                inspected at: {{r.timestamp}}
+
+                                            </div>
+                                            {% if 'header' in r and r.header %}
+                                                <div class="description">
+                                                    HTTP Response Header: <pre class="prettyprint" id="{{r.uri}}" style="height:100px">{{r.header}}</pre>
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="extra">
+                                                <div class="ui label">{{r.format}}</div>
+                                                <div class="ui label">{{r.mime}}</div>
+                                                <div class="ui label"><i class="calendar icon"></i> metadata created:<div class="detail">{{r.created}}</div></div>
+
+                                                {% if r.modified != 'None' %}
+                                                    <div class="ui label">metadata modified <div class="detail">{{r.modified}}</div></div> {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -175,7 +186,9 @@
 
 {% block script %}
     {{ super() }}
-
+    $('.menu .item')
+  .tab()
+;
     {% if data.json %}
         data={{ data.json|tojson }}
         document.getElementById("json").innerHTML = JSON.stringify(data, undefined, 2);
@@ -201,6 +214,5 @@
         $('.json').each(function(){
             $(this).text(JSON.stringify($(this).text(), undefined, 2));
         })
-
     })
- {% endblock %}
+{% endblock %}

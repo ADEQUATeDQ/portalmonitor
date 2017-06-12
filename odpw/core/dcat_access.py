@@ -93,6 +93,9 @@ def getTheme(dataset):
 def getKeywords(dataset):
     return accessDataset(dataset, DCAT.keyword)
 
+def getContactEmail(dataset):
+    return accessDataset(dataset, VCARD.hasEmail)
+
 def getContactPoint(dataset):
     return accessDataset(dataset, DCAT.contactPoint)
 
@@ -202,7 +205,18 @@ def getDistributionFormats(dataset):
 
 
 def getDistributionFormatWithURL(dataset, url):
-    return accessDistributionWithURL(dataset, url, DCT['format'])
+    f = accessDistributionWithURL(dataset, url, DCT['format'])
+    if f.startswith('_:'):
+        # blank node
+        v = accessById(dataset, f, RDFS.label)
+        if not v:
+            v = accessById(dataset, f, RDF.value)
+        if v:
+            f = v
+    if f.startswith('_:'):
+        f = None
+    return f
+
 
 def getDistributionMediaTypeWithURL(dataset, url):
     return accessDistributionWithURL(dataset, url, DCAT.mediaType)

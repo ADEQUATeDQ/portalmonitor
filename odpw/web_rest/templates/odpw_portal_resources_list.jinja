@@ -1,0 +1,122 @@
+
+{% macro resourceTable() -%}
+<div id="test">
+<h3 class="ui header">HTTP HEADER REPORT</h3>
+</div>
+
+<div>
+    <div class="ui compact button " id="showAll" tabindex="0">
+        <i class="info icon"></i>
+        show all {{ data.resourcesInfo.status.items()|sum(attribute="1")}} resources
+    </div>
+    {% if  data.resourcesInfo.status.200 and (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200)>0 %}
+        <div class="ui compact button"  id="show200" tabindex="0">
+            show {{ data.resourcesInfo.status.200 }}  available resources
+        </div>
+    {% endif %}
+    {% if  data.resourcesInfo.status.404 %}
+        <div class="ui compact button" id="show404" tabindex="0">
+            show {{ data.resourcesInfo.status.404 }} non available resources
+        </div>
+    {% endif %}
+
+    {% if data.resourcesInfo.status.200 and data.resourcesInfo.status.404 and (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200)>0 %}
+        <div class="ui compact button" id="showErrors" tabindex="0">
+            show {{ (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200-data.resourcesInfo.status.404) }} resources with other errors
+        </div>
+    {% endif %}
+</div>
+
+
+<div class="ui relaxed divided list" id="uris">
+    {% for uri in data.uris %}
+    <div class="item">
+
+          {% if uri.status > 400  and uri.status < 600  %}
+                <i class="large minus square middle aligned red icon"></i>
+            {% elif uri.status==200 %}
+                <i class="large check square middle aligned green icon"></i>
+            {% else %}
+                <i class="large minus square middle aligned orange icon"></i>
+            {% endif %}
+
+        <div class="content">
+            <div class="header">
+                <a href="{{uri.uri}}">{{uri.uri}}</a>
+            </div>
+            <div class="meta">
+                <div class="ui small
+                     {% if uri.status > 400 and uri.status < 600 %}
+                        red
+                    {% elif uri.status==200 %}
+                        green
+                    {% else %}
+                        orange
+                    {% endif %}
+                     basic label">
+                    status
+                    <div class="detail status">{{uri.status}}</div>
+                </div>
+                <div class="ui basic label">checked at {{uri.timestamp.strftime('%Y-%m-%d %H:%M')}}</div>
+                {% if uri.status!=200 %}
+                    <div class="ui basic label">exception:{{uri.exc}}</div>
+                {% endif %}
+
+                <a href="{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=uri.uri)}}" class="ui smaller label">
+                    <i class="line chart icon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+  {% endfor %}
+</div>
+
+{%- endmacro %}
+
+
+
+
+<!-- How many resources -->
+    <div class="ui container centered ">
+        <div class="ui statistics">
+            <div class="statistic">
+                <div class="value">
+                  {{ data.resources }}
+                </div>
+                <div class="label">
+                  unique Resources
+                </div>
+            </div>
+            <div class="statistic">
+                <div class="value">
+                  {% if data.resourcesInfo.valid[true] %}
+                    {{ data.resourcesInfo.valid[true] }}
+                   {% else %}
+                    0
+                    {% endif %}
+                </div>
+                <div class="label">
+                  valid URLs
+                </div>
+            </div>
+            <div class="statistic">
+                <div class="value">
+                    {% if  data.resourcesInfo.status.200 %}
+                        {{ data.resourcesInfo.status.200 }}
+                    {% else %}
+                        0
+                    {% endif %}
+                    /{{ data.resourcesInfo.status.items()|sum(attribute="1")}}
+                </div>
+                <div class="label">
+                  HTTP 200 OK
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui container">
+        {{ resourceTable()}}
+    </div>
+
+

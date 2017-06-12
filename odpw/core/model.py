@@ -2,9 +2,8 @@ from sqlalchemy import Column, String, Integer, ForeignKey, SmallInteger, TIMEST
     Boolean, func, select, Float, distinct
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, backref, column_property, synonym
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import  backref
+from sqlalchemy.orm import  relationship
 
 
 import structlog
@@ -19,9 +18,12 @@ tab_portals   =   tmp+'portals'
 tab_portalevolution=tmp+'portalevolution'
 tab_portalsnapshot=tmp+'portalsnapshot'
 tab_portalsnapshotquality=tmp+'portalsnapshotquality'
+tab_portalsnapshotdynamicity=tmp+'portalsnapshotdyn'
 tab_portalsnapshotfetch=tmp+'portalsnapshotfetch'
 
 tab_formatdist= tmp+"formatdist"
+tab_licensedist= tmp+"licensedist"
+tab_isodist= tmp+"licensedist"
 
 tab_datasets=tmp+'datasets'
 tab_datasetsquality=tmp+'datasetsquality'
@@ -112,7 +114,7 @@ class PortalSnapshot(Base):
     snapshot= Column( SmallInteger, primary_key=True)
     portal  = relationship("Portal", back_populates="snapshots")
 
-    start       = Column(TIMESTAMP, server_default=func.now())
+    start       = Column(TIMESTAMP)
     end         = Column(TIMESTAMP)
     status      = Column(SmallInteger)
     exc         = Column(String)
@@ -130,6 +132,63 @@ class PortalSnapshot(Base):
         return "<PortalSnapshot(id=%s, snapshot=%s, start=%s, end=%s, status=%s,ds=%s,res=%s)>" % (
             self.portalid, self.snapshot, self.start, self.end, self.status,self.datasetcount,self.resourcecount)
 
+
+class Serializable(object):
+    __public__ = []
+
+    def to_dict(self):
+        d = {}
+        for field in self.__public__:
+            value = getattr(self, field)
+            if value:
+                d[field] = value
+        return d
+
+class PortalSnapshotDynamicity(Base,Serializable):
+    __tablename__ = tab_portalsnapshotdynamicity
+
+    portalid      = Column(String, ForeignKey(tab_portals+'.id'), primary_key=True, index=True,nullable=False)
+    snapshot= Column( SmallInteger, primary_key=True)
+
+
+    updated = Column(Integer)
+    added = Column(Integer)
+    deleted = Column(Integer)
+    static =  Column(Integer)
+    intersected =  Column(Integer)
+    dindex = Column(Integer)
+    changefrequ = Column(Float)
+    size = Column(Integer)
+
+    @hybrid_property
+    def dyratio(self):
+        return (self.added+self.deleted+self.updated)\
+               /(1.0* self.intersected) if self.intersected >0 else 0
+
+    @hybrid_property
+    def adddelratio(self):
+        return (self.added-self.deleted)\
+               /(1.0* (self.added+self.deleted))if ((self.added+self.deleted)) >0 else 0
+
+    @hybrid_property
+    def addRatio(self):
+        return (self.added) \
+               / (1.0 * self.intersected)if self.intersected >0 else 0
+
+    @hybrid_property
+    def delRatio(self):
+        return (self.deleted) \
+               / (1.0 * self.intersected)if self.intersected >0 else 0
+
+    @hybrid_property
+    def updatedRatio(self):
+        return ( self.updated) \
+               / (1.0 * self.intersected)if self.intersected >0 else 0
+
+    @hybrid_property
+    def staticRatio(self):
+        return (self.static) \
+               / (1.0 * self.intersected)if self.intersected >0 else 0
 
 class PortalSnapshotQuality(Base):
     __tablename__ = tab_portalsnapshotquality

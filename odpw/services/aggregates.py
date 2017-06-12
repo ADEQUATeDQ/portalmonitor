@@ -1,6 +1,10 @@
 from collections import defaultdict
 
 import structlog
+import time
+
+from odpw.core.mat_views import createView, withView
+
 log =structlog.get_logger()
 
 import pandas as pd
@@ -9,7 +13,8 @@ from sqlalchemy import inspect
 from odpw.core.api import organisationDist, licenseDist, formatDist, distinctLicenses, distinctFormats, \
     distinctOrganisations
 from odpw.core.db import row2dict
-from odpw.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality, Portal, FormatDist
+from odpw.core.model import Dataset, DatasetData, DatasetQuality, PortalSnapshotQuality, Portal, FormatDist, \
+    PortalSnapshot
 from odpw.utils.timing import Timer
 
 
@@ -89,11 +94,12 @@ def aggregate(db, snapshot):
         aggregatePortalQuality(db,portalid,snapshot)
 
 
-def aggregatePortalInfo(session, portalid, snapshot, limit=3):
+def aggregatePortalInfo(session, portalid, snapshot, dbc, limit=3):
     stats={}
     with Timer(key=portalid+'-agg', verbose=True):
         ds= session.query(Dataset).filter(Dataset.snapshot==snapshot).filter(Dataset.portalid==portalid).count()
-
+        rs = session.query(PortalSnapshot.resourcecount).filter(PortalSnapshot.portalid==portalid).filter(PortalSnapshot.snapshot==snapshot).first()
+        print
         #print 'dsCount', ds
         #TODO fix resource count
         for key, cFunc, dFunc in [
@@ -101,12 +107,18 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
                         ,('license',licenseDist,distinctLicenses)
                         ,('format', formatDist, distinctFormats)
                          ]:
-
-            with Timer(key=portalid+'-'+key, verbose=True):
+            if key=='format':
+                total=row2dict(rs)['resourcecount']
+            else:
+                total=ds
+            with Timer(key='query_{}-{}'.format(portalid,key), verbose=True):
 
                 s=[]
-                q=cFunc(session,snapshot,portalid=portalid)
-                #print portalid+'-'+key,'query',str(q)
+
+                viewName = "view_{}_{}_{}".format(key, portalid,snapshot)
+                qorg=cFunc(session,snapshot,portalid=portalid)
+                q = withView(qorg, viewName, session, dbc)
+                start=time.time()
                 if limit:
                     q=q.limit(limit)
                 else:
@@ -114,13 +126,18 @@ def aggregatePortalInfo(session, portalid, snapshot, limit=3):
                 for i in q:
                     d=row2dict(i)
                     #print d
-                    d['perc']=d['count']/(1.0*ds)
+                    d['perc']=d['count']/(1.0*total) if total>0 else 0
                     s.append(d)
                 t=sum(item['count'] for item in s)
                 #print key, 'total',t
                 if ds-t != 0:
-                    s.append({key:'Others', 'count':ds-t,'perc':(ds-t)/(1.0*ds)})
-                stats[key]={'distinct':cFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
+                    s.append({key:'Others', 'count':total-t,'perc':(total-t)/(1.0*total)})
+                end=time.time()
+                if (end-start)>5:
+                    log.info("Create View {}".format(viewName))
+                    createView(qorg, viewName,session)
+                #q = withView(qorg, viewName, session, dbc)
+                stats[key]={'distinct':dFunc(session,snapshot,portalid=portalid).count(),'top3Dist':s}
 
     return stats
 
@@ -152,7 +169,7 @@ def aggregateFormatDist(db,  snapshot):
                             format="missing"
                         db.add(FormatDist(  format=format
                                             ,snapshot=snapshot
-                                            ,grouping=P.id
+                                            ,grouping=i
                                             ,count=r[1]
                                           ))
 
@@ -165,6 +182,6 @@ def aggregateFormatDist(db,  snapshot):
                             format = "missing"
                         db.add(FormatDist(format=format
                                         ,snapshot=snapshot
-                                        ,grouping=P.id
+                                        ,grouping=software
                                         ,count=r[1]
                                       ))

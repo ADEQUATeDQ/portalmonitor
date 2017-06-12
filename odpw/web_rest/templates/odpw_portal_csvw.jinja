@@ -1,0 +1,72 @@
+{% extends "odpw_portal_layout.jinja" %}
+
+{% set active_sub_page = "ui.portalCSVW" -%}
+
+{% block headcss %}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.semanticui.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.2.1/css/buttons.semanticui.min.css">
+{% endblock %}
+{% block headscripts %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+{% endblock %}
+
+
+{% block portalcontent %}
+    <div class="ui padded centered fifteen wide column ">
+        <div class="ui fluid card">
+
+            <div class="content">
+                <div class="description">
+                    <h3 class="ui header"> {{data['resources']| length}} CSV Resource(s)</h3>
+
+                    <div class="ui container">
+                        <div class="ui divided items">
+                            {% for r in data['resources'] %}
+                                <div class="item">
+                                    <div class="content">
+                                           <div class="ui label ribbon">{{r.title}}</div>
+                                        <div class="header">
+                                            <a href="{{r.uri}}" class="header">{{r.uri}}</a>
+                                        </div>
+
+                                        <div class="extra">
+                                            <div class="ui label green ribbon"><a target="_blank" href="http://data.wu.ac.at/csvengine/csvm/service?url={{r.uri}}" class="header">CSVW Metadata</a></div>
+                                            <div class="ui label">{{r.media}}</div>
+                                            <div class="ui label"><i class="calendar icon"></i> metadata created:<div class="detail">{{r.created}}</div></div>
+
+                                            {% if r.modified != 'None' %}
+                                                <div class="ui label">metadata modified <div class="detail">{{r.modified}}</div></div> {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+
+     $(document).ready(function() {
+        {% for r in data['resources'] %}
+           {% if 'header' in r %}
+                he= {{r.header|tojson}}
+                document.getElementById("{{r.uri}}").innerHTML = JSON.stringify(he, undefined, 2);
+
+           {% endif %}
+        {% endfor %}
+
+        $('.json').each(function(){
+            $(this).text(JSON.stringify($(this).text(), undefined, 2));
+        })
+
+    })
+ {% endblock %}

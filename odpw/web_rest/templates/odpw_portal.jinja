@@ -1,105 +1,193 @@
 {% extends "odpw_portal_layout.jinja" %}
 
-
-
-
 {% macro statsCard(data, label, key, href) -%}
-
-<a href="{{url_for(href,snapshot=snapshot, portalid=portalid)}}" class="ui card fluid statsCard">
-    <div class="content">
-        <div class="ui statistic">
-                <div class="value">
-                    {{data[key].distinct}}
+    <a href="{{url_for(href,snapshot=snapshot, portalid=portalid)}}" class="ui card fluid statsCard">
+        <div class="content">
+            <div class="ui statistic">
+                    <div class="value">
+                        {{data[key].distinct}}
+                    </div>
+                    <div class="label">
+                        {{label}}
+                    </div>
                 </div>
-                <div class="label">
-                    {{label}}
-                </div>
-            </div>
-    </div>
-    <div class="content" >
-        <table class="ui basic  single line table" style="table-layout: fixed;" >
-            <thead>
-                <tr>
-                    <th class="two wide">No</th>
-                    <th>{{label}}</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for l in data[key].top3Dist %}
-                <tr>
-                    <td  class="two wide">
-                    {% if loop.index!=4 %}
-                        {{loop.index}}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td class="hideextra">{{l[key]}}</td>
-                    <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</a>
-
+        </div>
+        <div class="content" >
+            <table class="ui basic  single line table" style="table-layout: fixed;" >
+                <thead>
+                    <tr>
+                        <th class="two wide">No</th>
+                        <th>{{label}}</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in data[key].top3Dist %}
+                    <tr>
+                        <td  class="two wide">
+                        {% if loop.index!=4 %}
+                            {{loop.index}}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="hideextra">{{l[key]}}</td>
+                        <td>{{l.count}} ({{ (l.perc*100)| round(2)}}%)</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </a>
 {%- endmacro %}
 
-
-
-
-
 {% block portalcontent %}
-
-
-<!--<div class="thirteen wide column ui padded divided grid">-->
-<div class="ui equal width center aligned padded  grid container">
+<div class="ui container">
     <h2>General Portal Information</h2>
 
-    <div class="row">
+    <div class="ui two column grid">
+        <div class="row">
+            <div class="column">
+                <div class="ui fluid card">
+                    <div class="content">
+                        <div class="header">
+                            Fetch Information
+                        </div>
+                        <div class="description">
+                            <table class="ui very basic red compact table">
+                                <tbody>
+                                    <tr>
+                                        <td class="right aligned">Started</td>
+                                        <td>{{data.fetchInfo.start.strftime('%H:%M at %d, %b %Y')}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">End</td>
+                                        <td>{{data.fetchInfo.end.strftime('%H:%M at %d, %b %Y')}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Duration</td>
+                                        <td>{{data.fetchInfo.duration}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Status</td>
+                                        <td>{{data.fetchInfo.status}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Datasets</td>
+                                        <td>{{data.fetchInfo.datasetsfetched}}/{{data.fetchInfo.datasetcount}} fetched</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Resources</td>
+                                        <td>{{data.fetchInfo.resourcecount}}</td>
+                                    </tr>
+                                    {% if data.fetchInfo.exc %}
+                                        <tr>
+                                            <td class="right aligned">Error</td>
+                                            <td>{{data.fetchInfo.exc}}</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="ui fluid card">
+                    <div class="content">
+                        <div class="header">
+                            Portal Information
+                        </div>
+                        <div class="description">
+                            <table class="ui very basic compact table">
+                                <tbody>
+                                    <tr>
+                                        <td class="right aligned">Homepage</td>
+                                        <td>
+                                            <a href="{{data.portal.uri}}">{{ data.portal.uri.rpartition("//")[-1]}}</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">APIURL</td>
+                                        <td>
+                                            <a href="{{data.portal.apiuri}}">{{data.portal.apiuri.rpartition("//")[-1]}}</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Country</td>
+                                        <td>{{data.portal.iso}} <i class="{{data.portal.iso| lower}} flag "></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Software</td>
+                                        <td>{{data.portal.software}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right aligned">Snapshots</td>
+                                        <td>{{data.snapshots.list|length}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <div class="ui fluid card">
+                    <div class="content">
+                        <div class="header">
+                            Dynamicity
+                        </div>
+                        <div class="description">
+                            <table class="ui very basic compact table">
+                                <theader>
+                                    <tr>
+                                        <th>Datasets</th>
+                                        <th>static</th>
+                                        <th>added</th>
+                                        <th>deleted</th>
+                                        <th>updated</th>
+                                    </tr>
+                                </theader>
+                                <tbody>
+                                    <tr>
+                                        <td>{{data.fetchInfo.datasetcount}}</td>
+                                        <td>{{ data.dynamicity.static}}</td>
+                                        <td><i class="plus icon"></i>{{data.dynamicity.added}}</td>
+                                        <td><i class="minus icon"></i>{{data.dynamicity.deleted}} </td>
+                                        <td><i class="refresh icon"></i>{{data.dynamicity.updated}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-        <div class="ui statistics column">
-            <a href="{{url_for('ui.portalDataset',snapshot=snapshot, portalid=portalid)}}" class="statistic">
-                <div class="value">
-                    {{data.datasets}}
+                            <table class="ui very basic compact table">
+                                <tbody>
+                                    <tr>
+                                        <td class="right aligned">Dynamicity index
+                                            <span data-tooltip="D-index k indicates that k% datasets changed in k% snapshots" data-position="top center" data-variation="basic">
+                                            <i class="info circle icon "></i>
+                                            </span>
+                                        </td>
+                                        <td class="left aligned">{{data.dynamicity.dindex}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td  class="right aligned">Change frequency
+                                            <span data-tooltip="Datasets changes every k snapshots" data-position="top center" data-variation="basic">
+                                            <i class="info circle icon "></i>
+                                            </span>
+                                        </td>
+                                        <td class="left aligned">{{data.dynamicity.changefrequ}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="label">
-                    Datasets
-                </div>
-            </a>
-            <a href="{{url_for('ui.portalEvolution',snapshot=snapshot, portalid=portalid)}}" class="statistic">
-                <div class="value">
-                    {{data.snapshots.list|length}}
-                </div>
-                <div class="label">
-                    Snapshots
-                </div>
-            </a>
-            <a href="{{url_for('ui.portalRes',snapshot=snapshot, portalid=portalid)}}" class="statistic">
-                <div class="value">
-
-                    {{data.resources}}
-                </div>
-                <div class="label">
-                    Resources
-                </div>
-            </a>
+            </div>
         </div>
     </div>
-    <div class="row doubling stackable three column cards">
-
-        <div class="column">
-            {{statsCard(data, 'Licenses', 'license', 'ui.portalLicenses')}}
-        </div>
-        <div class="column">
-            {{statsCard(data, 'Formats', 'format', 'ui.portalFormats')}}
-        </div>
-        <div class="column">
-            {{statsCard(data, 'Organisations', 'organisation', 'ui.portalOrganisations')}}
-        </div>
-    </div>
-
+    <!--<p>{{data}}</p>-->
 </div>
 
 

@@ -1,10 +1,11 @@
-import structlog
+
 
 from odpw.core.api import DBClient
 from odpw.services.aggregates import aggregateFormatDist
 from odpw.utils.helper_functions import readDBConfFromFile
 from odpw.utils.utils_snapshot import getCurrentSnapshot
 
+import structlog
 log =structlog.get_logger()
 
 
