@@ -98,7 +98,7 @@ prepareODPWData(){
   docker rm $PWSSERVICE_DATA_TAG
   docker rmi $PWSSERVICE_DATA_TAG
   cd $PWSSERVICE_DATA; docker build --tag $PWSSERVICE_DATA_TAG .
-  docker run -d --name $PWSSERVICE_DATA_TAG -v /data/logs:/logs --volumes-from datadir --link datastore:db $PWSSERVICE_DATA_TAG
+  docker run -d --name $PWSSERVICE_DATA_TAG -v /data/logs:/logs -v /data/datadir:/datadir --link datastore:db $PWSSERVICE_DATA_TAG
 }
 
 prepareODPWUI(){
@@ -106,7 +106,7 @@ prepareODPWUI(){
   docker rm $PWSSERVICE_UI_TAG
   docker rmi $PWSSERVICE_UI_TAG
   cd $PWSSERVICE_UI; docker build --tag $PWSSERVICE_UI_TAG .
-  docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG -v /data/logs:/logs --link datastore:db $PWSSERVICE_UI_TAG
+  docker run -d -p 5001:80 --name $PWSSERVICE_UI_TAG -v /data/logs:/logs -v /data/datadir:/datadir --link datastore:db $PWSSERVICE_UI_TAG
 }
 
 #prepareDatastore
