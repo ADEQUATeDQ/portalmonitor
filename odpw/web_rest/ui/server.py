@@ -1,5 +1,5 @@
 import structlog
-#from flask_compress import Compress
+from flask_compress import Compress
 from werkzeug.utils import redirect
 
 from odpw.web_rest.rest.portal_namespace import ns as portal_namespace
@@ -24,7 +24,7 @@ from odpw.web_rest.ui.odpw_ui_blueprint import ui
 from odpw.core.api import DBClient
 from flask import Flask, jsonify, request, Blueprint
 
-#compress = Compress()
+compress = Compress()
 
 class ReverseProxied(object):
     '''Wrap the application in this middleware and configure the
@@ -152,7 +152,7 @@ def create_app(dbm, conf):
 
 
     app.wsgi_app = ReverseProxied(app.wsgi_app)
-#    compress.init_app(app)
+    compress.init_app(app)
     return app
 
 

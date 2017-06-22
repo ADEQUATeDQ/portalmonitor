@@ -1,10 +1,15 @@
 import datetime
+import json
+import os
 from multiprocessing import Pool
 
 import structlog
+import yaml
 from scrapy.utils.url import escape_ajax
 from sqlalchemy import not_
 from w3lib.url import safe_url_string
+
+from odpw.utils import dynamicity
 
 log =structlog.get_logger()
 
@@ -35,7 +40,7 @@ from time import sleep
 
 
 def fetchHttp(obj):
-    P, dbConf, snapshot = obj[0],obj[1],obj[2]
+    P, dbConf, snapshot, store_local = obj[0],obj[1],obj[2],obj[3]
     log.info("HTTPInsert", portalid=P.id, snapshot=snapshot)
 
     dbm = DBManager(**dbConf)
@@ -50,7 +55,7 @@ def fetchHttp(obj):
 
             processor=getPortalProcessor(P)
             iter=processor.generateFetchDatasetIter(P, PS, snapshot)
-            insertDatasets(P,db,iter,snapshot)
+            insertDatasets(P,db,iter,snapshot, store_local=store_local)
             status=200
             exc=None
             db.commit()
@@ -86,6 +91,16 @@ def fetchHttp(obj):
             aggregatePortalQuality(db,P.id, snapshot)
         except Exception as exc:
             ErrorHandler.handleError(log, "PortalFetchAggregate", exception=exc, pid=P.id, snapshot=snapshot, exc_info=True)
+
+        # compute dynamicity stats
+        try:
+            sn = [ps.snapshot for ps in db.Session.query(PortalSnapshot).filter(PortalSnapshot.portalid == P.id)]
+            sn=sorted(sn)
+            sn_i = sn.index(snapshot)
+            dynamicity.dynPortal(db, P, snapshot, sn[sn_i-1])
+        except Exception as exc:
+            ErrorHandler.handleError(log, "PortalDynamicity", exception=exc, pid=P.id, snapshot=snapshot,
+                                     exc_info=True)
 
     return (P, snapshot)
 
@@ -170,7 +185,7 @@ def bulkInsert(bulk_obj, db ):
             bulk_obj[k]=[]
 
 
-def insertDatasets(P, db, iter, snapshot, batch=100):
+def insertDatasets(P, db, iter, snapshot, batch=100, store_local=False):
 
     log.info("insertDatasets", portalid=P.id ,snapshot=snapshot)
 
@@ -187,6 +202,18 @@ def insertDatasets(P, db, iter, snapshot, batch=100):
 
             with Timer(key='md5'):
                 md5v=None if d.data is None else md5(d.data)
+
+            # store metadata in local git directory
+            if store_local != None:
+                if 'name' in d.data:
+                    dir_name = d.data['name']
+                else:
+                    dir_name = d.id
+                filename = os.path.join(store_local, P.id, dir_name)
+                if not os.path.exists(filename):
+                    os.makedirs(filename)
+                with open(os.path.join(filename, 'metadata.json'), 'w') as f:
+                    json.dump(d.data, f, indent=4)
 
             if md5v:
                 with Timer(key='dict_to_dcat'):
@@ -264,6 +291,13 @@ def cli(args,dbm):
     dbConf= readDBConfFromFile(args.config)
     db= DBClient(dbm)
 
+    store_local = None
+    if args.config:
+        with open(args.config) as f:
+            config = yaml.load(f)
+            if 'git' in config and 'datadir' in config['git']:
+                store_local = config['git']['datadir']
+
     tasks=[]
     if args.portalid:
         P =db.Session.query(Portal).filter(Portal.id==args.portalid).one()
@@ -271,7 +305,7 @@ def cli(args,dbm):
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            tasks.append((P, dbConf,sn))
+            tasks.append((P, dbConf, sn, store_local))
     else:
         if args.repair:
             valid = db.Session.query(PortalSnapshot.portalid).filter(PortalSnapshot.snapshot==sn).filter(PortalSnapshot.status==200).subquery()
@@ -283,10 +317,10 @@ def cli(args,dbm):
                     PortalSnapshotQuality.portalid == P.id)
                 db.delete(PSQ)
 
-                tasks.append((P, dbConf,sn))
+                tasks.append((P, dbConf, sn, store_local))
         else:
             for P in db.Session.query(Portal):
-                tasks.append((P, dbConf,sn))
+                tasks.append((P, dbConf, sn, store_local))
 
     log.info("START FETCH", processors=args.processors, dbConf=dbConf, portals=len(tasks))
 

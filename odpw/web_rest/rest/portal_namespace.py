@@ -10,6 +10,7 @@ from sqlalchemy import and_
 from odpw.quality import dqv_export
 from odpw.utils.datamonitor_utils import parseDate
 from odpw.utils.timing import Timer
+from odpw.utils.utils_snapshot import getPreviousWeek
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.core.db import row2dict
 from odpw.core.model import Portal, PortalSnapshotQuality, PortalSnapshot, ResourceInfo, MetaResource, Dataset, \
@@ -223,8 +224,34 @@ class PortalSnapshotResources(Resource):
 
             return jsonify(data)
 
-#
-#
+
+@ns.route('/<portalid>/<int:snapshot>/dschanges')
+@ns.doc(params={'portalid': 'A portal id', 'snapshot': 'Snapshot in yyww format (e.g. 1639 -> 2016 week 30)'})
+class PortalDatasetChanges(Resource):
+    def get(self, portalid, snapshot):
+        session = current_app.config['dbsession']
+        prevWeek = getPreviousWeek(snapshot)
+
+        ds_cur = {r.id: r.md5 for r in
+                  session.query(Dataset).filter(Dataset.portalid == portalid).filter(Dataset.snapshot == snapshot)}
+        ds_prev = {r.id: r.md5 for r in
+                   session.query(Dataset).filter(Dataset.portalid == portalid).filter(Dataset.snapshot == prevWeek)}
+
+        data={'adds':[],'dels':[],'updates':[]}
+        for id, md5 in ds_cur.items():
+            if id not in ds_prev:
+                data['adds'].append(id)
+            else:
+                if md5 != ds_prev[id]:
+                    data['updates'].append(id)
+                # del key from prev snapshot
+                del ds_prev[id]
+
+        for id, md5 in ds_prev.items():
+            if id not in ds_cur:
+                data['dels'].append(id)
+
+        return jsonify(data)
 #
 #
 #

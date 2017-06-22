@@ -54,7 +54,7 @@ def view(name, metadata, selectable):
     return t
 
 
-def withView(query, viewName, session, dbc,metadata=Base.metadata):
+def withView(query, viewName, session, dbc, metadata=Base.metadata):
     ## check first if the view exist
     viewTable=None
     try:

@@ -8,7 +8,7 @@ from odpw.core.model import PortalSnapshotQuality, ResourceCrawlLog, ResourceHis
 from odpw.utils.plots import qa
 
 from odpw.core.model import DatasetData, DatasetQuality, Dataset, Base, Portal, PortalSnapshotQuality, PortalSnapshot, \
-    tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource
+    tab_datasets, tab_resourcesinfo, ResourceInfo, MetaResource, PortalSnapshotDynamicity
 
 
 
@@ -271,7 +271,7 @@ class DBClient(object):
 
     def getDataUnfetchedResources(self,snapshot, portalid=None, batch=None, format=None):
         with self.session_scope() as session:
-            q=session.query(MetaResource.uri)\
+            q=session.query(MetaResource.uri, Dataset.id, Dataset.md5)\
                 .join(Dataset, Dataset.md5==MetaResource.md5)\
                 .filter(Dataset.snapshot==snapshot)\
                 .filter(MetaResource.valid==True)\
@@ -347,6 +347,14 @@ class DBClient(object):
                 q=q.filter(ResourceHistory.source==source)
             q=q.order_by(ResourceHistory.snapshot.asc())
             return q
+
+    def getPortalSnapshotDynamics(self, snapshot, portalid):
+        with self.session_scope() as session:
+            q = session.query(PortalSnapshotDynamicity)\
+                .filter(PortalSnapshotDynamicity.snapshot==snapshot)\
+                .filter(PortalSnapshotDynamicity.portalid==portalid)
+            return q
+
 
 def getMetaResource(session, snapshot, portalid=None):
     q = session.query(MetaResource) \

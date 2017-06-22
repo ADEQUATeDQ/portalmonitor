@@ -2,6 +2,7 @@ import datetime
 
 import os
 from collections import defaultdict
+from odpw import utils
 
 import scrapy
 import yaml
@@ -32,6 +33,8 @@ class DataMonitorSpider( CrawlSpider ):
         self.count=0
         self.format=kwargs['format']
         self.portalID=kwargs['portalID']
+        self.snapshot=kwargs['snapshot']
+        self.git_location=kwargs['git_location']
         self.mime=defaultdict(int)
         self.status=defaultdict(int)
         if not os.path.exists(os.path.dirname(self.datadir)):
@@ -116,7 +119,21 @@ class DataMonitorSpider( CrawlSpider ):
                 domain='error'
             self.d[domain]+=1
 
+            # set hard link to git location
+            filename = None
+            if self.git_location:
+                d = self.api.getDatasetData(md5=s.md5)
+                # try to get name
+                if 'name' in d.raw:
+                    dir_name = d.raw['name']
+                else:
+                    dir_name = s.id
 
+                filename = s.uri.split('/')[-1]
+                if len(filename) < 2:
+                    filename = s.uri[:-150]
+                filename = utils.helper_functions.format_filename(filename)
+                filename = os.path.join(self.git_location, self.portalID, dir_name, filename)
 
             yield Request(s.uri,
                           dont_filter=True,
@@ -125,8 +142,10 @@ class DataMonitorSpider( CrawlSpider ):
                               ,'domain':domain
                               ,'referrer'  : None
                               ,'snapshot':self.snapshot
+                              ,'git': filename
                           })
             self.crawler.stats.inc_value('seeds')
+
             c=+1
 
         self.crawler.stats.set_value('seedPLDs',len(self.d))
@@ -161,6 +180,19 @@ class DataMonitorSpider( CrawlSpider ):
 
             ,'domain':response.meta['domain']
         }
+
+        # set hard link to git location
+        disk = response.meta.get('disk', None)
+        git = response.meta.get('git', None)
+        if disk and git:
+            try:
+                # remove git link if already exists
+                if os.path.exists(git):
+                    os.remove(git)
+                os.link(disk, git)
+            except Exception as e:
+                ErrorHandler.handleError(log, 'hardlink', exception=e)
+
         try:
             header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
             if 'content-type' in header_dict and len(header_dict['content-type'])>0:
@@ -208,11 +240,14 @@ def setupCLI(pa):
 def cli(args, dbm):
 
     datadir=None
+    git_location = None
     if args.config:
         with open(args.config) as f_conf:
             config = yaml.load(f_conf)
             if 'data' in config:
                 datadir=config['data']['datadir']
+            if 'git' in config and 'datadir' in config['git']:
+                git_location = config['git']['datadir']
 
     if datadir is None:
         log.error("No data dir specified in config", config=args.config)
@@ -224,7 +259,7 @@ def cli(args, dbm):
     #settings=get_project_settings()
     crawler = CrawlerProcess()
     #crawler.signals.connect(callback, signal=signals.spider_closed)
-    crawler.crawl(DataMonitorSpider, api=api, datadir=datadir,snapshot=sn, format=args.format, portalID=args.portal)
+    crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=args.portal, git_location=git_location)
 
     crawler.start()
 
