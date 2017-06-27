@@ -29,6 +29,7 @@ import odpw.services.resource_head_scrapy as head_scrapy
 import odpw.services.addPortal as addPortal
 import odpw.services.data_fetch as datafetch
 import odpw.quality.freshness as freshness
+import odpw.services.git_data_store as git_data_store
 #import odpw.services.migrateDB as migration
 #import odpw.services.copyDB as copydb
 
@@ -48,7 +49,8 @@ submodules=[
     freshness,
 #    migration,
 #    copydb,
-    updateStats
+    updateStats,
+    git_data_store
   ]
 
 def config_logging():

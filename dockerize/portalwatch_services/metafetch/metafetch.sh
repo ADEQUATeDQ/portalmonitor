@@ -18,3 +18,10 @@ SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf Head"
 cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
 echo $cmd
 eval $cmd
+
+SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf GitDataStore"
+cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
+echo $cmd
+eval $cmd
+
+gzip $LOGS/$LOGF.*
