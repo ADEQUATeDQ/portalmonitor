@@ -3,6 +3,7 @@ import json
 import os
 from multiprocessing import Pool
 
+import rdflib
 import structlog
 import yaml
 from scrapy.utils.url import escape_ajax
@@ -203,22 +204,28 @@ def insertDatasets(P, db, iter, snapshot, batch=100, store_local=False):
             with Timer(key='md5'):
                 md5v=None if d.data is None else md5(d.data)
 
-            # store metadata in local git directory
-            if store_local != None:
-                if 'name' in d.data:
-                    dir_name = d.data['name']
-                else:
-                    dir_name = d.id
-                filename = os.path.join(store_local, P.id, dir_name)
-                if not os.path.exists(filename):
-                    os.makedirs(filename)
-                with open(os.path.join(filename, 'metadata.json'), 'w') as f:
-                    json.dump(d.data, f, indent=4)
 
             if md5v:
                 with Timer(key='dict_to_dcat'):
                     #analys quality
                     d.dcat=dict_to_dcat(d.data, P)
+
+                # store metadata in local git directory
+                if store_local != None:
+                    with Timer(key='store_to_local_git'):
+                        if 'name' in d.data:
+                            dir_name = d.data['name']
+                        else:
+                            dir_name = d.id
+                        filename = os.path.join(store_local, P.id, dir_name)
+                        if not os.path.exists(filename):
+                            os.makedirs(filename)
+                        with open(os.path.join(filename, 'metadata.json'), 'w') as f:
+                            json.dump(d.data, f, indent=4)
+                        with open(os.path.join(filename, 'dcat_metadata.ttl'), 'w') as f:
+                            g = rdflib.Graph()
+                            g.parse(data=json.dumps(d.dcat), format='json-ld')
+                            g.serialize(f, format='ttl')
 
                 DD=None
                 with Timer(key='db.datasetdataExists(md5v)'):

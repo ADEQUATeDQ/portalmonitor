@@ -23,23 +23,23 @@ def git_update(portal, snapshot, git_config):
         log.warn("NO DATA FOR PORTAL", portalid=portal.id, portaldata=p_dir)
         return
 
+    # get groups and share with group
+    groups_url = git_config['url'] + '/api/v4/groups'
+    resp = requests.get(groups_url, headers={'PRIVATE-TOKEN': git_config['token']})
+    groups = resp.json()
+
+    group_id = None
+    for g in groups:
+        if g['name'] == portal.id:
+            group_id = g['id']
+            break
+
     for d_dir in os.listdir(p_dir):
         datasetdir = os.path.join(p_dir, d_dir)
         if os.path.isdir(datasetdir):
             # get git commands
             git = sh.git.bake(_cwd=datasetdir)
             if not os.path.exists(os.path.join(datasetdir, '.git')):
-                # get groups and share with group
-                groups = git_config['url'] + '/api/v4/groups'
-                resp = requests.get(groups, headers={'PRIVATE-TOKEN': git_config['token']})
-                data = resp.json()
-
-                group_id = None
-                for g in data:
-                    if g['name'] == portal.id:
-                        group_id = g['id']
-                        break
-
                 # new remote repository
                 create_repo = git_config['url'] + 'api/v4/projects'
                 args = {'path': d_dir, 'visibility': 'public', 'lfs_enabled': True}
@@ -59,17 +59,23 @@ def git_update(portal, snapshot, git_config):
                 # clone repo
                 log.debug("GIT INIT", git=git.init())
                 log.debug("GIT REMOTE", git=git.remote('add', 'origin', repo_ssh))
+            else:
+                # pull any changes
+                log.debug("GIT PULL", git=git.pull('origin', 'master'))
 
-            # pull any changes
-            log.debug("GIT PULL", git=git.pull('origin', 'master'))
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('.'))
-            # commit
-            log.debug("GIT COMMIT", git=git.commit(m=str(snapshot)))
-            # git push origin master
-            log.debug("GIT PUSH", git=git.push('origin', 'master'))
-
+            try:
+                # commit
+                log.debug("GIT COMMIT", git=git.commit(m=str(snapshot)))
+                # git push origin master
+                log.debug("GIT PUSH", git=git.push('origin', 'master'))
+            except Exception as e:
+                if 'nothing to commit, working directory clean' in e.message:
+                    log.debug("NO CHANGES TO DATASET", dataset=d_dir, snapshot=snapshot, portal_id=portal.id)
+                else:
+                    raise e
 
 def help():
     return "perform head lookups"
