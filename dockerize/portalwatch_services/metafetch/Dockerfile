@@ -10,7 +10,6 @@ RUN chmod 0644 /etc/cron.d/crontab
 
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
-RUN crontab -l
 
 ADD $SCRIPT $INSTALL_PATH/$SCRIPT
 RUN chmod +x $INSTALL_PATH/$SCRIPT
