@@ -23,11 +23,11 @@ ENV DATADIR /datadir
 RUN mkdir -p $INSTALL_PATH $LOGS $DATADIR
 
 #SSH GIT CLONE
-ADD id_rsa $INSTALL_PATH/
-ADD ssh_config /etc/ssh/ssh_config
-RUN chmod 600 $INSTALL_PATH/id_rsa
-RUN ls -lah $INSTALL_PATH/id_rsa
-RUN cat /etc/ssh/ssh_config
+ADD id_rsa /root/.ssh/id_rsa
+ADD ssh_config /root/.ssh/ssh_config
+#RUN chmod 600 $INSTALL_PATH/id_rsa
+#RUN ls -lah $INSTALL_PATH/id_rsa
+#RUN cat /etc/ssh/ssh_config
 
 WORKDIR $INSTALL_PATH
  RUN git clone https://github.com/ADEQUATeDQ/portalmonitor.git portalmonitor
