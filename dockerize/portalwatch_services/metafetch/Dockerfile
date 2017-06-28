@@ -20,4 +20,4 @@ RUN chmod +x $INSTALL_PATH/$SCRIPT
 #CMD ["cron", "-f"]
 
 # Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+CMD ["cron", "-f"] && tail -f /var/log/cron.log
