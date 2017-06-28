@@ -1,17 +1,15 @@
 from portalwatch:latest
 
-
 ENV SCRIPT datafetch.sh
-#CRON JOB
-ADD crontab  $INSTALL_PATH/crontab
-RUN crontab $INSTALL_PATH/crontab
+
+# Add crontab file in the cron directory
+ADD crontab /etc/cron.d/crontab
+
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/crontab
 
 ADD $SCRIPT $INSTALL_PATH/$SCRIPT
 RUN chmod +x $INSTALL_PATH/$SCRIPT
-RUN touch /var/log/cron.log
-#ADD start-cron.sh /usr/bin/start-cron.sh
-#RUN chmod +x /usr/bin/start-cron.sh
-RUN crontab -l
 ENTRYPOINT []
 
 CMD ["cron", "-f"]
