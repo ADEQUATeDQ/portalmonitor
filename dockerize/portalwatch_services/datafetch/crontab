@@ -1,2 +1,1 @@
-#0 7 * * 1 . /adequate-portalharvester/datafetch.sh
-* * * * * root echo "Hello world" >> /var/log/cron.log 2>&1
+0 7 * * 1 . /adequate-portalharvester/datafetch.sh

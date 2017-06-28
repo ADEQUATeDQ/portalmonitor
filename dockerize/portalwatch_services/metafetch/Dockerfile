@@ -10,16 +10,15 @@ RUN chmod 0644 /etc/cron.d/crontab
 
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
-
-# Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+RUN crontab -l
 
 ADD $SCRIPT $INSTALL_PATH/$SCRIPT
 RUN chmod +x $INSTALL_PATH/$SCRIPT
-RUN touch /var/log/cron.log
 #ADD start-cron.sh /usr/bin/start-cron.sh
 #RUN chmod +x /usr/bin/start-cron.sh
-RUN crontab -l
-ENTRYPOINT []
+#ENTRYPOINT []
 
-CMD ["cron", "-f"]
+#CMD ["cron", "-f"]
+
+# Run the command on container startup
+CMD cron && tail -f /var/log/cron.log

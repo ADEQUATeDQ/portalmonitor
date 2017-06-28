@@ -1,1 +1,2 @@
-0 4 * * 1 . /adequate-portalharvester/metafetch.sh
+#0 4 * * 1 . /adequate-portalharvester/metafetch.sh
+* * * * * root echo "Hello world" >> /var/log/cron.log 2>&1
