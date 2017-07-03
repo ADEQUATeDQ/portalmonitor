@@ -2,6 +2,9 @@ import datetime
 
 import os
 from collections import defaultdict
+
+import shutil
+
 from odpw import utils
 
 import scrapy
@@ -190,7 +193,9 @@ class DataMonitorSpider( CrawlSpider ):
                 # remove git link if already exists
                 if os.path.exists(git):
                     os.remove(git)
-                os.link(disk, git)
+                # TODO hard links are not possible within docker.. copy for now
+                #os.link(disk, git)
+                shutil.copyfile(disk, git)
             except Exception as e:
                 ErrorHandler.handleError(log, 'hardlink', exception=e)
 
