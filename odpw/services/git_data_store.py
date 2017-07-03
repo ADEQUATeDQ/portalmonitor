@@ -24,7 +24,7 @@ def git_update(portal, snapshot, git_config):
         return
 
     # get groups and share with group
-    groups_url = git_config['url'] + '/api/v4/groups'
+    groups_url = git_config['url'] + 'api/v4/groups'
     resp = requests.get(groups_url, headers={'PRIVATE-TOKEN': git_config['token']})
     groups = resp.json()
 
