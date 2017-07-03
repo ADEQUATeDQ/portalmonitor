@@ -260,7 +260,7 @@ def cli(args, dbm):
     if args.portal:
         P =api.Session.query(Portal).filter(Portal.id==args.portal).one()
         if P is None:
-            log.warn("PORTAL NOT IN DB", portalid=args.portalid)
+            log.warn("PORTAL NOT IN DB", portalid=args.portal)
             return
         else:
             crawler = CrawlerProcess()
@@ -269,6 +269,7 @@ def cli(args, dbm):
             crawler.start()
     else:
         for P in api.Session.query(Portal):
+            log.warn("DOWNLOAD RESOURCES", portalid=P.id)
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
                           git_location=git_location)
