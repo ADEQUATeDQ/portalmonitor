@@ -196,8 +196,8 @@ class DataMonitorSpider( CrawlSpider ):
                 # TODO hard links are not possible within docker.. copy for now
                 #os.link(disk, git)
                 shutil.copyfile(disk, git)
-            except Exception as e:
-                ErrorHandler.handleError(log, 'hardlink', exception=e)
+            except Exception as ex:
+                ErrorHandler.handleError(log, "COPY_TO_GIT_LOCATION", exception=ex, exc_info=True, id=id, disk=disk, gitlocation=git, excShowtype=type(ex), excShowmsg=ex.message)
 
         try:
             header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
