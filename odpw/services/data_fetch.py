@@ -17,6 +17,7 @@ from scrapy.spiders import CrawlSpider
 import structlog
 
 from odpw.core.api import DBClient
+from odpw.core.model import Portal
 from odpw.utils.error_handling import ErrorHandler
 from odpw.utils.helper_functions import extractMimeType
 from odpw.utils.utils_snapshot import getCurrentSnapshot
@@ -256,12 +257,19 @@ def cli(args, dbm):
     sn = getCurrentSnapshot()
     api = DBClient(dbm=dbm)
 
-    #settings=get_project_settings()
-    crawler = CrawlerProcess()
-    #crawler.signals.connect(callback, signal=signals.spider_closed)
-    crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=args.portal, git_location=git_location)
-
-    crawler.start()
-
-
-
+    if args.portal:
+        P =api.Session.query(Portal).filter(Portal.id==args.portal).one()
+        if P is None:
+            log.warn("PORTAL NOT IN DB", portalid=args.portalid)
+            return
+        else:
+            crawler = CrawlerProcess()
+            crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
+                          git_location=git_location)
+            crawler.start()
+    else:
+        for P in api.Session.query(Portal):
+            crawler = CrawlerProcess()
+            crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
+                          git_location=git_location)
+            crawler.start()
