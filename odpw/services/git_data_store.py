@@ -4,6 +4,7 @@ import yaml
 import structlog
 import sh
 import requests
+import urlparse
 
 
 from odpw.core.api import DBClient
@@ -24,7 +25,7 @@ def git_update(portal, snapshot, git_config):
         return
 
     # get groups and share with group
-    groups_url = git_config['url'] + 'api/v4/groups'
+    groups_url = urlparse.urljoin(git_config['url'], 'api/v4/groups')
     resp = requests.get(groups_url, headers={'PRIVATE-TOKEN': git_config['token']})
     groups = resp.json()
 
@@ -41,7 +42,7 @@ def git_update(portal, snapshot, git_config):
             git = sh.git.bake(_cwd=datasetdir)
             if not os.path.exists(os.path.join(datasetdir, '.git')):
                 # new remote repository
-                create_repo = git_config['url'] + 'api/v4/projects'
+                create_repo = urlparse.urljoin(git_config['url'], 'api/v4/projects')
                 args = {'path': d_dir, 'visibility': 'public', 'lfs_enabled': True}
                 if group_id:
                     args['namespace_id'] = group_id
