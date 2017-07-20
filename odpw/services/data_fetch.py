@@ -134,7 +134,7 @@ class DataMonitorSpider( CrawlSpider ):
                     dir_name = s.id
 
                 filename = s.uri.split('/')[-1]
-                if len(filename) < 2:
+                if len(filename) < 4:
                     filename = s.uri[:-150]
                 filename = utils.helper_functions.format_filename(filename)
                 filename = os.path.join(self.git_location, self.portalID, dir_name, filename)
