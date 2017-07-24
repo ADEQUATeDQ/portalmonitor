@@ -5,7 +5,7 @@ from werkzeug.utils import redirect
 from odpw.web_rest.rest.portal_namespace import ns as portal_namespace
 from odpw.web_rest.rest.portals_namespace import ns as portals_namespace
 # TODO temporarily disabled datamonitor APIs
-#from odpw.web_rest.rest.datamonitor_namespace import ns as datamonitor_namespace
+from odpw.web_rest.rest.datamonitor_namespace import ns as datamonitor_namespace
 from odpw.web_rest.rest.memento_namespace import ns as memento_namespace
 from odpw.web_rest.rest.odpw_restapi import api
 from odpw.web_rest.ui.flask_sqlalchemy_session import flask_scoped_session
@@ -94,7 +94,7 @@ def create_app(dbm, conf):
     blueprint = Blueprint('api', __name__, url_prefix=conf['url_prefix_rest'])
     api.init_app(blueprint)
 
-    bps = [portal_namespace, portals_namespace, memento_namespace]
+    bps = [portal_namespace, portals_namespace, memento_namespace, datamonitor_namespace]
     for bp in bps:
         api.add_namespace(bp)
 
