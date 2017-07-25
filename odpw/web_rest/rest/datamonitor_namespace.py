@@ -95,25 +95,38 @@ from datetime import datetime
 #             raise e
 #===============================================================================
 
+def get_data(url, date):
+    session = current_app.config['dbsession']
+    res = session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri == url).filter(
+        ResourceCrawlLog.timestamp > date).order_by(ResourceCrawlLog.timestamp - date).first()
+    pname = res[0]
+    head, tail = os.path.split(pname)
+    head = head.replace("/data/datamonitor", "")
+
+    filename = os.path.join(head, tail)
+    if not os.path.isfile(filename):
+        current_app.logger.error("File %s does not exists", filename)
+
+    return send_file(filename, as_attachment=True)
+
+
+@ns.route('/data/<path:url>')
+@ns.route('/memento/<path:url>')
+@ns.doc(params={'url': 'URL (HTTP URL)'})
+class GetDataWithoutDate(Resource):
+
+    def get(self, url):
+        d = datetime.now()
+        return get_data(url, d)
+
+
 @ns.route('/data/<date>/<path:url>')
 @ns.route('/memento/<date>/<path:url>')
 @ns.doc(params={'url': 'URL (HTTP URL)', 'date':'Date as \"YYYY<MM|DD|HH|MM|SS>\"'})
 class GetData(Resource):
-
-    def get(self, date,url):
+    def get(self, date, url):
         d = parseDate(date)
-
-        session = current_app.config['dbsession']
-        res=session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri==url).filter(ResourceCrawlLog.timestamp>d).order_by(ResourceCrawlLog.timestamp-d).first()
-        pname = res[0]
-        head, tail = os.path.split(pname)
-        head = head.replace("/data/datamonitor", "")
-
-        filename = os.path.join(head, tail)
-        if not os.path.isfile(filename):
-            current_app.logger.error("File %s does not exists", filename)
-
-        return send_file(filename, as_attachment=True)
+        return get_data(url, d)
 
 @ns.route('/list')
 class List(Resource):
