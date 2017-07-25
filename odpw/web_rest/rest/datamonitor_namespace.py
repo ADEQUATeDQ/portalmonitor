@@ -132,12 +132,12 @@ class GetData(Resource):
 
         session = current_app.config['dbsession']
         res = session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri == url).filter(
-            ResourceCrawlLog.timestamp > date).order_by(ResourceCrawlLog.timestamp - date).first()
+            ResourceCrawlLog.timestamp > d).order_by(ResourceCrawlLog.timestamp - d).first()
         if res:
             pname = res[0]
             return get_data(pname)
         else:
-            resp = jsonify({'error': 'no archived version available for crawltime > ' + str(date)})
+            resp = jsonify({'error': 'no archived version available for crawltime > ' + str(d)})
             resp.status_code = 404
             return resp
 
