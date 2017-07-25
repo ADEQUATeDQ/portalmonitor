@@ -95,11 +95,7 @@ from datetime import datetime
 #             raise e
 #===============================================================================
 
-def get_data(url, date):
-    session = current_app.config['dbsession']
-    res = session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri == url).filter(
-        ResourceCrawlLog.timestamp > date).order_by(ResourceCrawlLog.timestamp - date).first()
-    pname = res[0]
+def get_data(pname):
     head, tail = os.path.split(pname)
     head = head.replace("/data/datamonitor", "")
 
@@ -110,14 +106,21 @@ def get_data(url, date):
     return send_file(filename, as_attachment=True)
 
 
+
 @ns.route('/data/<path:url>')
 @ns.route('/memento/<path:url>')
 @ns.doc(params={'url': 'URL (HTTP URL)'})
 class GetDataWithoutDate(Resource):
 
     def get(self, url):
-        d = datetime.now()
-        return get_data(url, d)
+        session = current_app.config['dbsession']
+        res = session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri == url).order_by(ResourceCrawlLog.timestamp.desc()).first()
+        if res:
+            pname = res[0]
+            return get_data(pname)
+        else:
+            resp = jsonify({'error': 'no archived version available'})
+            return resp
 
 
 @ns.route('/data/<date>/<path:url>')
@@ -126,7 +129,18 @@ class GetDataWithoutDate(Resource):
 class GetData(Resource):
     def get(self, date, url):
         d = parseDate(date)
-        return get_data(url, d)
+
+        session = current_app.config['dbsession']
+        res = session.query(ResourceCrawlLog.disklocation).filter(ResourceCrawlLog.uri == url).filter(
+            ResourceCrawlLog.timestamp > date).order_by(ResourceCrawlLog.timestamp - date).first()
+        if res:
+            pname = res[0]
+            return get_data(pname)
+        else:
+            resp = jsonify({'error': 'no archived version available for crawltime > ' + str(date)})
+            resp.status_code = 404
+            return resp
+
 
 @ns.route('/list')
 class List(Resource):
