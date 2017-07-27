@@ -15,16 +15,16 @@ do
     SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf DataFetch -p $pName "
     cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
     echo $cmd
-    #eval $cmd
-    #gzip $LOGS/$LOGF.*
+    eval $cmd
+    gzip $LOGS/$LOGF.*
 done
 
 LOGF=git-store_$week
 SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf GitDataStore"
 cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
 echo $cmd
-#eval $cmd
-#gzip $LOGS/$LOGF.*
+eval $cmd
+gzip $LOGS/$LOGF.*
 
 P=$(printf %s\\n "${PORTALS[@]}"|sed 's/["\]/\\&/g;s/.*/"&"/;1s/^/[/;$s/$/]/;$!s/$/,/')
 
