@@ -28,4 +28,4 @@ gzip $LOGS/$LOGF.*
 
 P=$(printf %s\\n "${PORTALS[@]}"|sed 's/["\]/\\&/g;s/.*/"&"/;1s/^/[/;$s/$/]/;$!s/$/,/')
 
-printf '{"portals":%s,"snapshot":"%s","date":"%s"}\n' "$P" "$week" "$DATE" > /logs/fetched_portals.conf
+printf '{"portals":%s,"snapshot":"%s","date":"%s"}\n' "$P" "$week" "$DATE" > /logs/fetched_portals.json
