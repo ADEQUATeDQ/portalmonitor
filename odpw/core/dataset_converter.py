@@ -301,7 +301,8 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             url = portal_url.rstrip('/') + '/api/records/1.0/download?dataset=' + identifier + '&format=' + format
 
             # BNode: dataset_ref + url
-            bnode_hash = hashlib.sha1(dataset_ref.n3() + url)
+            id_string = dataset_ref.n3() + url
+            bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
             distribution = BNode(bnode_hash.hexdigest())
 
             g.add((dataset_ref, DCAT.distribution, distribution))
@@ -315,7 +316,8 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             # License
             if license:
                 # BNode: distribution + url
-                bnode_hash = hashlib.sha1(distribution.n3() + license)
+                id_string = distribution.n3() + license
+                bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
                 l = BNode(bnode_hash.hexdigest())
 
                 g.add((distribution, DCT.license, l))
@@ -324,7 +326,8 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
 
             # Format
             # BNode: distribution + format + mimetype
-            bnode_hash = hashlib.sha1(distribution.n3() + format + mimetype)
+            id_string = distribution.n3() + format + mimetype
+            bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
             f = BNode(bnode_hash.hexdigest())
 
             g.add((distribution, DCT['format'], f))
@@ -344,14 +347,16 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
     # attachments
     for attachment in dataset_dict.get('attachments', []):
         # BNode: dataset_ref + url
-        bnode_hash = hashlib.sha1(dataset_ref.n3() + attachment)
+        id_string = dataset_ref.n3() + attachment
+        bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
         distribution = BNode(bnode_hash.hexdigest())
 
         g.add((dataset_ref, DCAT.distribution, distribution))
         g.add((distribution, RDF.type, DCAT.Distribution))
         if license:
             # BNode: distribution + url
-            bnode_hash = hashlib.sha1(distribution.n3() + license)
+            id_string = distribution.n3() + license
+            bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
             l = BNode(bnode_hash.hexdigest())
 
             g.add((distribution, DCT.license, l))
@@ -467,7 +472,8 @@ class CKANConverter:
                 publisher_details = URIRef(publisher_uri)
             else:
                 # No organization nor publisher_uri
-                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.publisher.n3() + publisher_name)
+                id_string = dataset_ref.n3() + DCT.publisher.n3() + publisher_name
+                bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
                 publisher_details = BNode(bnode_hash.hexdigest())
 
             g.add((publisher_details, RDF.type, FOAF.Organization))
@@ -490,7 +496,8 @@ class CKANConverter:
         start = self._get_dataset_value(dataset_dict, 'temporal_start')
         end = self._get_dataset_value(dataset_dict, 'temporal_end')
         if start or end:
-            bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.temporal.n3() + str(start) + str(end))
+            id_string = dataset_ref.n3() + DCT.temporal.n3() + start + end
+            bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
             temporal_extent = BNode(bnode_hash.hexdigest())
 
             g.add((temporal_extent, RDF.type, DCT.PeriodOfTime))
@@ -501,15 +508,16 @@ class CKANConverter:
             g.add((dataset_ref, DCT.temporal, temporal_extent))
 
         # Spatial
-        spatial_uri = self._get_dataset_value(dataset_dict, 'spatial_uri')
-        spatial_text = self._get_dataset_value(dataset_dict, 'spatial_text')
-        spatial_geom = self._get_dataset_value(dataset_dict, 'spatial')
+        spatial_uri = self._get_dataset_value(dataset_dict, 'spatial_uri', default='')
+        spatial_text = self._get_dataset_value(dataset_dict, 'spatial_text', default='')
+        spatial_geom = self._get_dataset_value(dataset_dict, 'spatial', default='')
 
         if spatial_uri or spatial_text or spatial_geom:
             if spatial_uri:
                 spatial_ref = URIRef(spatial_uri)
             else:
-                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.spatial.n3() + str(spatial_uri) + str(spatial_text) + str(spatial_geom))
+                id_string = dataset_ref.n3() + DCT.spatial.n3() + spatial_uri + spatial_text + spatial_geom
+                bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
                 spatial_ref = BNode(bnode_hash.hexdigest())
 
             g.add((spatial_ref, RDF.type, DCT.Location))
@@ -534,15 +542,16 @@ class CKANConverter:
                     pass
 
         # License
-        license_id = self._get_dataset_value(dataset_dict, 'license_id')
-        license_url = self._get_dataset_value(dataset_dict, 'license_url')
-        license_title = self._get_dataset_value(dataset_dict, 'license_title')
+        license_id = self._get_dataset_value(dataset_dict, 'license_id', default='')
+        license_url = self._get_dataset_value(dataset_dict, 'license_url', default='')
+        license_title = self._get_dataset_value(dataset_dict, 'license_title', default='')
         license = None
         if license_id or license_url or license_title:
             if license_url and bool(urlparse.urlparse(license_url).netloc):
                 license = URIRef(license_url)
             else:
-                bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.license.n3() + str(license_id) + str(license_url) + str(license_title))
+                id_string = dataset_ref.n3() + DCT.license.n3() + license_id + license_url + license_title
+                bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
                 license = BNode(bnode_hash.hexdigest())
                 # maybe a non-valid url
                 if license_url:
@@ -584,7 +593,8 @@ class CKANConverter:
                        Literal(resource_dict['format'])))
             else:
                 if resource_dict.get('format'):
-                    bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT['format'].n3() + resource_dict['format'])
+                    id_string = dataset_ref.n3() + DCT['format'].n3() + resource_dict['format']
+                    bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
                     f = BNode(bnode_hash.hexdigest())
 
                     g.add((f, RDF.type, DCT.MediaTypeOrExtent))
