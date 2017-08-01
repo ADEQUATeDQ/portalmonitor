@@ -493,8 +493,8 @@ class CKANConverter:
             _add_triples_from_dict(self.g, dataset_dict, publisher_details, items)
 
         # Temporal
-        start = self._get_dataset_value(dataset_dict, 'temporal_start')
-        end = self._get_dataset_value(dataset_dict, 'temporal_end')
+        start = self._get_dataset_value(dataset_dict, 'temporal_start', default='')
+        end = self._get_dataset_value(dataset_dict, 'temporal_end', default='')
         if start or end:
             id_string = dataset_ref.n3() + DCT.temporal.n3() + start + end
             bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
