@@ -133,23 +133,29 @@ class DataMonitorSpider( CrawlSpider ):
                 else:
                     dir_name = s.id
 
-                filename = s.uri.split('/')[-1]
-                if len(filename) < 4:
-                    filename = s.uri[:-150]
-                filename = utils.helper_functions.format_filename(filename)
-                filename = os.path.join(self.git_location, self.portalID, dir_name, filename)
+                # try to get resource name
+                filename = None
+                for r in d.raw.get('resources', []):
+                    if r.get('url', '') == s.uri:
+                        filename = r.get('id')
+                        break
+                if not filename:
+                    filename = s.uri.split('/')[-1]
+                    if len(filename) < 4:
+                        filename = s.uri[:-150]
+                    filename = utils.helper_functions.format_filename(filename)
+                    filename = os.path.join(self.git_location, self.portalID, dir_name, 'resources', filename)
 
             yield Request(s.uri,
                           dont_filter=True,
                           meta={
                               'handle_httpstatus_all': True
-                              ,'domain':domain
-                              ,'referrer'  : None
-                              ,'snapshot':self.snapshot
+                              ,'domain': domain
+                              ,'referrer': None
+                              ,'snapshot': self.snapshot
                               ,'git': filename
                           })
             self.crawler.stats.inc_value('seeds')
-
             c=+1
 
         self.crawler.stats.set_value('seedPLDs',len(self.d))

@@ -10,6 +10,8 @@ from scrapy.utils.url import escape_ajax
 from sqlalchemy import not_
 from w3lib.url import safe_url_string
 
+from odpw.quality import dqv_export
+from odpw.quality.dqv_export import dataset_quality_to_dqv
 from odpw.utils import dynamicity
 
 log =structlog.get_logger()
@@ -35,6 +37,10 @@ from odpw.core.parsing import toDatetime, normaliseFormat
 from odpw.core.portal_fetch_processors import getPortalProcessor
 from odpw.core.db import  DBManager
 from odpw.core.api import DBClient
+
+from rdflib.namespace import Namespace, RDF
+DAQ = Namespace("http://purl.org/eis/vocab/daq#")
+DCAT = Namespace("http://www.w3.org/ns/dcat#")
 
 from random import randint
 from time import sleep
@@ -210,24 +216,8 @@ def insertDatasets(P, db, iter, snapshot, batch=100, store_local=False):
                     #analys quality
                     d.dcat=dict_to_dcat(d.data, P)
 
-                # store metadata in local git directory
-                if store_local != None:
-                    with Timer(key='store_to_local_git'):
-                        if 'name' in d.data:
-                            dir_name = d.data['name']
-                        else:
-                            dir_name = d.id
-                        filename = os.path.join(store_local, P.id, dir_name)
-                        if not os.path.exists(filename):
-                            os.makedirs(filename)
-                        with open(os.path.join(filename, 'metadata.json'), 'w') as f:
-                            json.dump(d.data, f, indent=4)
-                        with open(os.path.join(filename, 'dcat_metadata.ttl'), 'w') as f:
-                            g = rdflib.Graph()
-                            g.parse(data=json.dumps(d.dcat), format='json-ld')
-                            g.serialize(f, format='ttl')
-
                 DD=None
+                DQ=None
                 with Timer(key='db.datasetdataExists(md5v)'):
                     process = not db.exist_datasetdata(md5v)
                 if process:
@@ -260,6 +250,36 @@ def insertDatasets(P, db, iter, snapshot, batch=100, store_local=False):
                         )
 
                 bulk_obj['d'].append(D)
+
+
+                # store metadata in local git directory
+                try:
+                    if store_local != None:
+                        with Timer(key='store_to_local_git'):
+                            if 'name' in d.data:
+                                dir_name = d.data['name']
+                            else:
+                                dir_name = d.id
+                            filename = os.path.join(store_local, P.id, dir_name)
+                            if not os.path.exists(filename):
+                                os.makedirs(filename)
+
+                            with open(os.path.join(filename, 'original.json'), 'w') as f:
+                                json.dump(d.data, f, indent=4)
+
+                            g = rdflib.Graph()
+                            g.parse(data=json.dumps(d.dcat), format='json-ld')
+                            dqv_export.add_dimensions_and_metrics(g)
+                            dqv_export.general_prov(g)
+                            ds_id = g.value(predicate=RDF.type, object=DCAT.Dataset)
+                            if DQ:
+                                dataset_quality_to_dqv(g, ds_id, DQ, snapshot)
+                            with open(os.path.join(filename, 'metadata.jsonld'), 'w') as f:
+                                g.serialize(f, format='json-ld')
+
+                except Exception as exc:
+                    ErrorHandler.handleError(log, "StoreToLocalGitException", exception=exc, pid=P.id, dataset=d.id, snapshot=snapshot,
+                                             exc_info=True)
             else:
                 D= Dataset(id=d.id,
                        snapshot=d.snapshot,
@@ -319,11 +339,10 @@ def cli(args,dbm):
 
             for P in db.Session.query(Portal).filter(Portal.id.notin_(valid)):
                 PS=db.Session.query(PortalSnapshot).filter(PortalSnapshot.snapshot==sn).filter(PortalSnapshot.portalid==P.id)
-                db.delete(PS)
+                PS.delete(synchronize_session=False)
                 PSQ = db.Session.query(PortalSnapshotQuality).filter(PortalSnapshotQuality.snapshot == sn).filter(
                     PortalSnapshotQuality.portalid == P.id)
-                db.delete(PSQ)
-
+                PSQ.delete(synchronize_session=False)
                 tasks.append((P, dbConf, sn, store_local))
         else:
             for P in db.Session.query(Portal):
