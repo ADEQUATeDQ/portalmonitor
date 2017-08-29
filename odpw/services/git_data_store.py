@@ -66,7 +66,8 @@ def git_update(portal, snapshot, git_config):
 
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
-            log.debug("GIT ADD", git=git.add('.'))
+            log.debug("GIT ADD", git=git.add('-A'))
+
             try:
                 # commit
                 log.debug("GIT COMMIT", git=git.commit(m=str(snapshot)))
