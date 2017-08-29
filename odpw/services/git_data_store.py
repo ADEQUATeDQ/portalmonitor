@@ -4,7 +4,6 @@ import yaml
 import structlog
 import sh
 import requests
-import urlparse
 
 
 from odpw.core.api import DBClient
@@ -25,7 +24,7 @@ def git_update(portal, snapshot, git_config):
         return
 
     # get groups and share with group
-    groups_url = urlparse.urljoin(git_config['url'], 'api/v4/groups')
+    groups_url = git_config['url'] + 'api/v4/groups'
     resp = requests.get(groups_url, headers={'PRIVATE-TOKEN': git_config['token']})
     groups = resp.json()
 
@@ -42,7 +41,7 @@ def git_update(portal, snapshot, git_config):
             git = sh.git.bake(_cwd=datasetdir)
             if not os.path.exists(os.path.join(datasetdir, '.git')):
                 # new remote repository
-                create_repo = urlparse.urljoin(git_config['url'], 'api/v4/projects')
+                create_repo = git_config['url'] + 'api/v4/projects'
                 args = {'path': d_dir, 'visibility': 'public', 'lfs_enabled': True}
                 if group_id:
                     args['namespace_id'] = group_id
@@ -60,17 +59,15 @@ def git_update(portal, snapshot, git_config):
                 # clone repo
                 log.debug("GIT INIT", git=git.init())
                 log.debug("GIT REMOTE", git=git.remote('add', 'origin', repo_ssh))
-            else:
-                # pull any changes
-                log.debug("GIT PULL", git=git.pull('origin', 'master'))
 
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('-A'))
-
             try:
                 # commit
                 log.debug("GIT COMMIT", git=git.commit(m=str(snapshot)))
+                # pull any changes
+                log.debug("GIT PULL", git=git.pull('origin', 'master'))
                 # git push origin master
                 log.debug("GIT PUSH", git=git.push('origin', 'master'))
             except Exception as e:
