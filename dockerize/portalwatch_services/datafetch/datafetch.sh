@@ -17,14 +17,14 @@ do
     echo $cmd
     eval $cmd
     gzip $LOGS/$LOGF.*
-done
 
-LOGF=git-store_$week
-SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf GitDataStore"
-cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
-echo $cmd
-eval $cmd
-gzip $LOGS/$LOGF.*
+    LOGF=git-store_$week
+    SCRIPT="odpw -c $ADEQUATE/portalmonitor.conf GitDataStore --pid $pName "
+    cmd="$SCRIPT 1>> $LOGS/$LOGF.out 2> $LOGS/$LOGF.err"
+    echo $cmd
+    eval $cmd
+    gzip $LOGS/$LOGF.*
+done
 
 P=$(printf %s\\n "${PORTALS[@]}"|sed 's/["\]/\\&/g;s/.*/"&"/;1s/^/[/;$s/$/]/;$!s/$/,/')
 
