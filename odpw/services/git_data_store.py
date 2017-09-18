@@ -1,3 +1,4 @@
+import codecs
 import os
 
 import yaml
@@ -15,7 +16,22 @@ from odpw.utils.utils_snapshot import getCurrentSnapshot
 log = structlog.get_logger()
 
 
-def git_update(portal, snapshot, git_config):
+def csv_clean(datasetdir, csvengine):
+    resources_dir = os.path.join(datasetdir, 'resources')
+    clean_dir = os.path.join(datasetdir, 'cleaned')
+    if not os.path.exists(clean_dir):
+        os.mkdir(clean_dir)
+    if os.path.exists(resources_dir):
+        for r in os.listdir(resources_dir):
+            r_path = os.path.join(resources_dir, r)
+            with open(r_path, 'rb') as f:
+                req = requests.post(csvengine, files={'csv_file': f})
+                if req.status_code == 200:
+                    with codecs.open(os.path.join(clean_dir, r), 'w', 'utf-8') as out_f:
+                        out_f.write(req.content.decode('utf-8'))
+
+
+def git_update(portal, snapshot, git_config, clean):
     log.info("START GIT UPDATE", portal=portal.id, snapshot=snapshot, git=git_config)
 
     p_dir = os.path.join(git_config['datadir'], portal.id)
@@ -60,6 +76,10 @@ def git_update(portal, snapshot, git_config):
                 log.debug("GIT INIT", git=git.init())
                 log.debug("GIT REMOTE", git=git.remote('add', 'origin', repo_ssh))
 
+            # CSV clean
+            if clean:
+                csv_clean(datasetdir, git_config['csvengine'])
+
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('-A'))
@@ -86,6 +106,7 @@ def name():
 
 def setupCLI(pa):
     pa.add_argument('--pid', dest='portalid', help="Specific portal id")
+    pa.add_argument('--clean', help="Run the CSV clean service (if CSV file available)", action='store_true')
 
 
 def cli(args, dbm):
@@ -111,9 +132,7 @@ def cli(args, dbm):
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            git_update(P, sn, git)
+            git_update(P, sn, git, args.clean)
     else:
         for P in db.Session.query(Portal):
-            git_update(P, sn, git)
-
-
+            git_update(P, sn, git, args.clean)
