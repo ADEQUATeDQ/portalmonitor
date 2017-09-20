@@ -4,7 +4,8 @@ import datetime
 from collections import defaultdict
 
 from scrapy import signals
-from scrapy.xlib.pydispatch import dispatcher
+#from scrapy.xlib.pydispatch import dispatcher
+import pydispatch as dispatcher
 from time import sleep
 
 from scrapy.exceptions import DontCloseSpider
