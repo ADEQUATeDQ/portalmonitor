@@ -218,11 +218,21 @@ class PortalSnapshotResources(Resource):
 
             size = request.args.get("size")
             if size:
-                q = q.filter((MetaResource.size <= size) | (MetaResource.size == None))
+                q = q.filter(MetaResource.size <= size)
+                q = q.filter(MetaResource.size > 0)
 
             data = [row2dict(r)['uri'] for r in q.all()]
 
             return jsonify(data)
+
+
+def get_ds_name(session, md5, id):
+    d = session.query(DatasetData).filter(DatasetData.md5 == md5).one()
+    if 'name' in d.raw:
+        dir_name = d.raw['name']
+    else:
+        dir_name = id
+    return dir_name
 
 
 @ns.route('/<portalid>/<int:snapshot>/dschanges')
@@ -240,16 +250,19 @@ class PortalDatasetChanges(Resource):
         data={'adds':[],'dels':[],'updates':[]}
         for id, md5 in ds_cur.items():
             if id not in ds_prev:
-                data['adds'].append(id)
+                name = get_ds_name(session, md5, id)
+                data['adds'].append((id, name))
             else:
                 if md5 != ds_prev[id]:
-                    data['updates'].append(id)
+                    name = get_ds_name(session, ds_prev[id], id)
+                    data['updates'].append((id, name))
                 # del key from prev snapshot
                 del ds_prev[id]
 
         for id, md5 in ds_prev.items():
             if id not in ds_cur:
-                data['dels'].append(id)
+                name = get_ds_name(session, md5, id)
+                data['dels'].append((id, name))
 
         return jsonify(data)
 #
