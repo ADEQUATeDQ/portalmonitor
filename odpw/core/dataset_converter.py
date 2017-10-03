@@ -26,6 +26,7 @@ TIME = Namespace('http://www.w3.org/2006/time')
 LOCN = Namespace('http://www.w3.org/ns/locn#')
 GSP = Namespace('http://www.opengis.net/ont/geosparql#')
 OWL = Namespace('http://www.w3.org/2002/07/owl#')
+ADEQUATE = Namespace('https://www.adequate.at/ns#')
 
 GEOJSON_IMT = 'https://www.iana.org/assignments/media-types/application/vnd.geo+json'
 
@@ -401,6 +402,7 @@ class CKANConverter:
             ('alternate_identifier', ADMS.identifier, None),
             ('version_notes', ADMS.versionNotes, None),
             ('frequency', DCT.accrualPeriodicity, ['frequency-of-update']),
+            ('name', ADEQUATE.repositoryName, ['id']),
         ]
         _add_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 

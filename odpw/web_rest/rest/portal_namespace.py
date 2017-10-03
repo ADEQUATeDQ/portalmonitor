@@ -111,6 +111,8 @@ class PortalDatasetData(Resource):
             data=q.first()
 
             P= session.query(Portal).filter(Portal.id==portalid).first()
+            if data == None:
+                return make_response(jsonify({'error': 'Dataset not found'}), 500)
             return jsonify(dict_to_dcat(data.raw, P))
             #return jsonify(dict_to_dcat(data.raw, P))
 
