@@ -109,7 +109,7 @@ class DataMonitorSpider( CrawlSpider ):
 
         self.d=defaultdict(int)
         c=0
-        q=self.api.getDataUnfetchedResources(self.snapshot, format=self.format, portalid=self.portalID)
+        q=self.api.getDataResources(self.snapshot, format=self.format, portalid=self.portalID)
         log.info("Querying for uris", start=dc, end=dn, query=str(q))
         schedules=[s for s in q]
         log.info("Received seed uris", count=len(schedules))
@@ -225,25 +225,20 @@ class DataMonitorSpider( CrawlSpider ):
 
         if response.status>=300 and response.status<=310 and 'Location' in response.headers:
             self.crawler.stats.inc_value('redirects')
+            meta = response.meta
+            meta['referrer'] = response.url
             r=scrapy.Request( response.urljoin(response.headers['Location']),
-                                  meta={
-                                    'handle_httpstatus_all': True
-                                    ,'domain':response.meta['domain']
-                                    ,'experiment': response.meta['experiment']
-                                    ,'referrer'  : response.url
-                          }
+                                  meta=meta
+                                  #{
+                                  #  'handle_httpstatus_all': True
+                                  #  ,'domain':response.meta['domain']
+                                  #  ,'experiment': response.meta['experiment']
+                                  #  ,'referrer'  : response.url
+                                  #}
                 )
             yield r
 
-
         yield item
-
-
-
-
-
-
-
 
 
 

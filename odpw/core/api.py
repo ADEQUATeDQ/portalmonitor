@@ -286,6 +286,18 @@ class DBClient(object):
                 q=q.filter(MetaResource.format==format)
             return q
 
+    def getDataResources(self, snapshot, portalid=None, format=None):
+        with self.session_scope() as session:
+            q=session.query(MetaResource.uri, Dataset.id, Dataset.md5)\
+                .join(Dataset, Dataset.md5==MetaResource.md5)\
+                .filter(Dataset.snapshot==snapshot)\
+                .filter(MetaResource.valid==True)
+            if portalid:
+                q=q.filter(Dataset.portalid==portalid)
+            if format:
+                q=q.filter(MetaResource.format==format)
+            return q
+
     def getResourceInfos(self, snapshot, portalid=None):
         with self.session_scope() as session:
             q= session.query(ResourceInfo)\

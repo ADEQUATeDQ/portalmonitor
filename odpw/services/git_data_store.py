@@ -15,6 +15,11 @@ from odpw.utils.utils_snapshot import getCurrentSnapshot
 
 log = structlog.get_logger()
 
+def get_readme_md(repo_name, portal_id):
+    ds_landing_page = "http://{0}.pages.adequate-project.semantic-web.at:8082/{1}/".format(portal_id, repo_name)
+    return "##### Click here to get to the ADEQUATe report and versions of this dataset:\n" \
+           "#### [" + repo_name + "](" + ds_landing_page + ")"
+
 
 def csv_clean(datasetdir, csvengine):
     resources_dir = os.path.join(datasetdir, 'resources')
@@ -78,8 +83,15 @@ def git_update(portal, snapshot, git_config, clean):
 
             # CSV clean
             if clean:
+                # TODO this way we call the clean service every time.. should be part of datamonitor
                 csv_clean(datasetdir, git_config['csvengine'])
 
+            # create README.md
+            readme_file = os.path.join(datasetdir, 'README.md')
+            if not os.path.exists(readme_file):
+                with open(readme_file, 'w') as f:
+                    f.write(get_readme_md(d_dir, portal.id))
+            
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('-A'))
