@@ -269,10 +269,12 @@ def insertDatasets(P, db, iter, snapshot, batch=100, store_local=None):
 
                             g = rdflib.Graph()
                             g.parse(data=json.dumps(d.dcat), format='json-ld')
-                            dqv_export.add_dimensions_and_metrics(g)
                             dqv_export.general_prov(g)
                             ds_id = g.value(predicate=RDF.type, object=DCAT.Dataset)
+                            if not DQ:
+                                DQ = db.datasetqualityExists(md5=md5v)
                             if DQ:
+                                dqv_export.add_dimensions_and_metrics(g)
                                 dataset_quality_to_dqv(g, ds_id, DQ, snapshot)
                             with open(os.path.join(filename, 'metadata.jsonld'), 'w') as f:
                                 g.serialize(f, format='json-ld')
