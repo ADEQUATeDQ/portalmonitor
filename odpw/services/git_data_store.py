@@ -1,4 +1,3 @@
-import codecs
 import os
 
 import yaml
@@ -20,23 +19,7 @@ def get_readme_md(repo_name, portal_id):
     return "##### Click here to get to the ADEQUATe report and versions of this dataset:\n" \
            "#### [" + repo_name + "](" + ds_landing_page + ")"
 
-
-def csv_clean(datasetdir, csvengine):
-    resources_dir = os.path.join(datasetdir, 'resources')
-    clean_dir = os.path.join(datasetdir, 'cleaned')
-    if not os.path.exists(clean_dir):
-        os.mkdir(clean_dir)
-    if os.path.exists(resources_dir):
-        for r in os.listdir(resources_dir):
-            r_path = os.path.join(resources_dir, r)
-            with open(r_path, 'rb') as f:
-                req = requests.post(csvengine, files={'csv_file': f})
-                if req.status_code == 200:
-                    with codecs.open(os.path.join(clean_dir, r), 'w', 'utf-8') as out_f:
-                        out_f.write(req.content.decode('utf-8'))
-
-
-def git_update(portal, snapshot, git_config, clean):
+def git_update(portal, snapshot, git_config):
     log.info("START GIT UPDATE", portal=portal.id, snapshot=snapshot, git=git_config)
 
     p_dir = os.path.join(git_config['datadir'], portal.id)
@@ -81,17 +64,12 @@ def git_update(portal, snapshot, git_config, clean):
                 log.debug("GIT INIT", git=git.init())
                 log.debug("GIT REMOTE", git=git.remote('add', 'origin', repo_ssh))
 
-            # CSV clean
-            if clean:
-                # TODO this way we call the clean service every time.. should be part of datamonitor
-                csv_clean(datasetdir, git_config['csvengine'])
-
             # create README.md
             readme_file = os.path.join(datasetdir, 'README.md')
             if not os.path.exists(readme_file):
                 with open(readme_file, 'w') as f:
                     f.write(get_readme_md(d_dir, portal.id))
-            
+
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('-A'))
@@ -118,7 +96,6 @@ def name():
 
 def setupCLI(pa):
     pa.add_argument('--pid', dest='portalid', help="Specific portal id")
-    pa.add_argument('--clean', help="Run the CSV clean service (if CSV file available)", action='store_true')
 
 
 def cli(args, dbm):
@@ -144,7 +121,7 @@ def cli(args, dbm):
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            git_update(P, sn, git, args.clean)
+            git_update(P, sn, git)
     else:
         for P in db.Session.query(Portal):
-            git_update(P, sn, git, args.clean)
+            git_update(P, sn, git)

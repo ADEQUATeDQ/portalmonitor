@@ -21,6 +21,7 @@ import structlog
 
 from odpw.core.api import DBClient
 from odpw.core.model import Portal
+from odpw.utils import csvcleaner
 from odpw.utils.error_handling import ErrorHandler
 from odpw.utils.helper_functions import extractMimeType
 from odpw.utils.utils_snapshot import getCurrentSnapshot
@@ -39,6 +40,8 @@ class DataMonitorSpider( CrawlSpider ):
         self.portalID=kwargs['portalID']
         self.snapshot=kwargs['snapshot']
         self.git_location=kwargs['git_location']
+        self.git_url=kwargs['git_url']
+        self.csvclean=kwargs['csvclean']
         self.mime=defaultdict(int)
         self.status=defaultdict(int)
         if not os.path.exists(os.path.dirname(self.datadir)):
@@ -208,6 +211,9 @@ class DataMonitorSpider( CrawlSpider ):
                 # TODO hard links are not possible within docker.. copy for now
                 #os.link(disk, git)
                 shutil.copyfile(disk, git)
+                if self.csvclean:
+                    metadata = os.path.join(os.path.dirname(git), '..', 'metadata.jsonld')
+                    csvcleaner.csv_clean(filename=git, git_url=self.git_url, orig_url=response.url, metadata=metadata)
             except Exception as ex:
                 ErrorHandler.handleError(log, "COPY_TO_GIT_LOCATION", exception=ex, exc_info=True, id=id, disk=disk, gitlocation=git, excShowtype=type(ex), excShowmsg=ex.message)
 
@@ -250,10 +256,12 @@ def name():
 def setupCLI(pa):
     pa.add_argument("-f", "--filter", help='filter by file format', dest='format', default=None)
     pa.add_argument("-p", "--portal", help='filter by portalid', dest='portal', default=None)
+    pa.add_argument('--clean', help="Run the CSV clean service (if CSV file available)", action='store_true')
 def cli(args, dbm):
 
     datadir=None
     git_location = None
+    git_url = None
     if args.config:
         with open(args.config) as f_conf:
             config = yaml.load(f_conf)
@@ -261,6 +269,8 @@ def cli(args, dbm):
                 datadir=config['data']['datadir']
             if 'git' in config and 'datadir' in config['git']:
                 git_location = config['git']['datadir']
+            if 'git' in config and 'url' in config['git']:
+                git_url = config['git']['url']
 
     if datadir is None:
         log.error("No data dir specified in config", config=args.config)
@@ -277,12 +287,12 @@ def cli(args, dbm):
         else:
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
-                          git_location=git_location)
+                          git_location=git_location, csvclean=args.clean, git_url=git_url)
             crawler.start()
     else:
         for P in api.Session.query(Portal):
             log.warn("DOWNLOAD RESOURCES", portalid=P.id)
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
-                          git_location=git_location)
+                          git_location=git_location, csvclean=args.clean)
             crawler.start()
