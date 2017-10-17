@@ -287,12 +287,12 @@ def cli(args, dbm):
         else:
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
-                          git_location=git_location, csvclean=args.clean, git_url=git_url)
+                          git_location=git_location, csvclean=args.clean, git_url=git_url + P.id + '/')
             crawler.start()
     else:
         for P in api.Session.query(Portal):
             log.warn("DOWNLOAD RESOURCES", portalid=P.id)
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
-                          git_location=git_location + P.id + '/', csvclean=args.clean)
+                          git_location=git_location, csvclean=args.clean, git_url=git_url + P.id + '/')
             crawler.start()
