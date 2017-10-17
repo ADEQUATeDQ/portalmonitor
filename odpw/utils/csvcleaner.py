@@ -13,8 +13,8 @@ from odpw.services import stream_csv
 from odpw.utils.error_handling import ErrorHandler
 from odpw.utils.utils_snapshot import tofirstdayinisoweek, toLastdayinisoweek, getCurrentSnapshot
 
-AD_AGENT = URIRef("http://www.adequate.at/")
-AD = Namespace("http://www.adequate.at/ns/")
+AD_AGENT = URIRef("https://www.adequate.at/")
+AD = Namespace("https://www.adequate.at/ns#")
 
 
 log =structlog.get_logger()
@@ -64,12 +64,12 @@ def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True):
             ErrorHandler.handleError(log, "GetCSVWMetadata", exception=e, url=orig_url, snapshot=snapshot,
                                      exc_info=True)
 
-    # add new resource
     dataset_ref = g.value(predicate=RDF.type, object=DCAT.Dataset)
-    git_res_page = git_url + 'blob/master/resources/' + f_name
-    git_res_raw = git_url + 'raw/master/resources/' + f_name
+    repo_name = g.value(subject=dataset_ref, predicate=AD.repositoryName)
 
-    #orig_dist = g.subjects(predicate=DCAT.accessURL, object=URIRef(orig_url))
+    # add new resource
+    git_res_page = git_url + str(repo_name) + '/' + 'tree/master/cleaned/' + f_name
+    git_res_raw = git_url + str(repo_name) + '/' + 'raw/master/cleaned/' + f_name
 
     distribution = URIRef(git_res_page)
     access_url = URIRef(git_res_raw)
@@ -86,13 +86,13 @@ def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True):
 
     # add CSV modifications to metadata
     if not header_line:
-        g.add((activity, AD.csvCleanModification, AD.GenericHeader))
+        g.add((access_url, AD.csvCleanModification, AD.GenericHeader))
     if deli != out_delimiter:
-        g.add((activity, AD.csvCleanModification, AD.DefaultDelimiter))
+        g.add((access_url, AD.csvCleanModification, AD.DefaultDelimiter))
     if encoding != out_encoding:
-        g.add((activity, AD.csvCleanModification, AD.Utf8Encoding))
+        g.add((access_url, AD.csvCleanModification, AD.Utf8Encoding))
     if descriptionLines:
-        g.add((activity, AD.csvCleanModification, AD.DropCommentLines))
+        g.add((access_url, AD.csvCleanModification, AD.DropCommentLines))
         # add comment lines metadata
         for l in descriptionLines:
             out = StringIO()
@@ -101,3 +101,12 @@ def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True):
             g.add((distribution, RDFS.comment, Literal(out.getvalue())))
 
     g.serialize(destination=metadata, format='json-ld')
+
+
+if __name__ == '__main__':
+    csv_clean(
+        metadata='/home/neumaier/Downloads/metadata.jsonld',
+        filename='/home/neumaier/Downloads/et_2010.csv',
+        git_url='http://adequate-project.semantic-web.at:5003/www_opendataportal_at/',
+        orig_url="http://www.win2day.at/download/et_2010.csv"
+    )

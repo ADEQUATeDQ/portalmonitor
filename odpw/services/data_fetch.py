@@ -269,8 +269,8 @@ def cli(args, dbm):
                 datadir=config['data']['datadir']
             if 'git' in config and 'datadir' in config['git']:
                 git_location = config['git']['datadir']
-            if 'git' in config and 'url' in config['git']:
-                git_url = config['git']['url']
+            if 'git' in config and 'external' in config['git']:
+                git_url = config['git']['external']
 
     if datadir is None:
         log.error("No data dir specified in config", config=args.config)
@@ -294,5 +294,5 @@ def cli(args, dbm):
             log.warn("DOWNLOAD RESOURCES", portalid=P.id)
             crawler = CrawlerProcess()
             crawler.crawl(DataMonitorSpider, api=api, datadir=datadir, snapshot=sn, format=args.format, portalID=P.id,
-                          git_location=git_location, csvclean=args.clean)
+                          git_location=git_location + P.id + '/', csvclean=args.clean)
             crawler.start()

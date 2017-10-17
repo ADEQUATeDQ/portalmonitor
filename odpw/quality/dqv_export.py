@@ -57,6 +57,7 @@ def add_dimensions_and_metrics(g):
     g.add((date, RDF.type, DQV.Metric))
     g.add((date, SKOS.prefLabel, Literal("Date")))
     g.add((date, SKOS.definition, Literal("Does the meta data contain information about creation and modification date of metadata and resources respectively?")))
+    g.add((date, RDFS.comment, Literal("Some of the creation and modification date fields for the dataset and resources are empty")))
     g.add((date, DQV.expectedDataType, XSD.double))
     g.add((date, DQV.inDimension, ex))
 
@@ -64,6 +65,7 @@ def add_dimensions_and_metrics(g):
     g.add((rights, RDF.type, DQV.Metric))
     g.add((rights, SKOS.prefLabel, Literal("Rights")))
     g.add((rights, SKOS.definition, Literal("Does the meta data contain information about the license of the dataset or resource?")))
+    g.add((rights, RDFS.comment, Literal("The dataset has no license information")))
     g.add((rights, DQV.expectedDataType, XSD.double))
     g.add((rights, DQV.inDimension, ex))
 
@@ -71,6 +73,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Preservation")))
     g.add((x, SKOS.definition, Literal("Does the meta data contain information about format, size or update frequency of the resources?")))
+    g.add((x, RDFS.comment, Literal("Information (size, format, mimetype,..) for preserving/archiving the dataset resource are missing")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, ex))
 
@@ -78,6 +81,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Access")))
     g.add((x, SKOS.definition, Literal("Does the meta data contain access information for the resources?")))
+    g.add((x, RDFS.comment, Literal("Some of the resources do not have an access URL")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, ex))
 
@@ -85,6 +89,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Discovery")))
     g.add((x, SKOS.definition, Literal("Does the meta data contain information that can help to discover/search datasets?")))
+    g.add((x, RDFS.comment, Literal("Some of the title, description and keyword fields are empty")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, ex))
 
@@ -92,6 +97,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Contact")))
     g.add((x, SKOS.definition, Literal("Does the meta data contain information to contact the data provider or publisher?")))
+    g.add((x, RDFS.comment, Literal("Contact information is missing")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, ex))
 
@@ -105,6 +111,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("ContactURL")))
     g.add((x, SKOS.definition, Literal("Are the available values of contact properties valid HTTP URLs?")))
+    g.add((x, RDFS.comment, Literal("The publisher or contact URL is not a syntactically valid URI")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -112,6 +119,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("DateFormat")))
     g.add((x, SKOS.definition, Literal("Is date information specified in a valid date format?")))
+    g.add((x, RDFS.comment, Literal("Some of the creation and modification dates are not in a valid date format")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -119,6 +127,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("FileFormat")))
     g.add((x, SKOS.definition, Literal("Is the specified file format or media type registered by IANA?")))
+    g.add((x, RDFS.comment, Literal("Some of the specified mime types and file format are not registered with IANA (iana.org/)")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -126,6 +135,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("ContactEmail")))
     g.add((x, SKOS.definition, Literal("Are the available values of contact properties valid emails?")))
+    g.add((date, RDFS.comment, Literal("The publisher or contact Email is not a syntacically valid Email")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -133,6 +143,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("License")))
     g.add((x, SKOS.definition, Literal("Can the license be mapped to the list of licenses reviewed by opendefinition.org?")))
+    g.add((x, RDFS.comment, Literal("The specified license could not mapped to the list provided by opendefinition.org")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -140,6 +151,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("AccessURL")))
     g.add((x, SKOS.definition, Literal("Are the available values of access properties valid HTTP URLs?")))
+    g.add((x, RDFS.comment, Literal("The download or access URL is not a syntacically valid URI")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -153,6 +165,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Format Openness")))
     g.add((x, SKOS.definition, Literal("Is the file format based on an open standard?")))
+    g.add((x, RDFS.comment, Literal("Some of the specified formats are not considerd open")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
@@ -160,6 +173,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Format machine readability")))
     g.add((x, SKOS.definition, Literal("Can the file format be considered as machine readable?")))
+    g.add((x, RDFS.comment, Literal("Some of the specified formats are not to be machien readable")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
@@ -167,6 +181,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("License Openneness")))
     g.add((x, SKOS.definition, Literal("Is the used license conform to the open definition?")))
+    g.add((x, RDFS.comment, Literal("The specified license is not considerd to be open by the opendefinition.org")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
