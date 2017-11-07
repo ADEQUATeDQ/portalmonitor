@@ -698,10 +698,15 @@ def getPortalDatasets(Session, portalid,snapshot):
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dataset', methods=['GET'], defaults={'dataset': None})
+@ui.route('/portal/<portalid>/dataset/<path:dataset>', methods=['GET'], defaults={'snapshot': None})
 @ui.route('/portal/<portalid>/<int:snapshot>/dataset/<path:dataset>', methods=['GET'])
 @cache.cached(timeout=60*60*24)
 def portalDataset(snapshot, portalid, dataset):
     with Timer(key="portalDataset",verbose=True):
+
+        if not snapshot:
+            snapshot = getCurrentSnapshot()
+
         Session=current_app.config['dbsession']
         data = getPortalInfos(Session,portalid,snapshot)
         #data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
