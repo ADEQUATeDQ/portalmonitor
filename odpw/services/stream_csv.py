@@ -64,7 +64,6 @@ def addMetadata(url, snapshot, graph, max_lines=100, csvw_activity=None):
         graph.add((resource, CSVW.url, ref))
 
         if csvw_activity:
-            graph.add((csvw_activity, PROV.wasDerivedFrom, ref))
             graph.add((resource, PROV.wasGeneratedBy, csvw_activity))
             graph.add((csvw_activity, PROV.generated, resource))
             graph.add((resource, RDF.type, PROV.Entity))
