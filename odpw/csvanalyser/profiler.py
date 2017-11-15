@@ -33,9 +33,9 @@ def profile(table):
         'columns': table.columns,
         'header': header,
         'types': [c.label for c in columns],
-        'delimiter': table.delimiter,
-        'encoding': table.encoding,
-        'quotechar': table.quotechar
+        'delimiter': table.meta['delimiter'],
+        'encoding': table.meta['encoding'],
+        'quotechar': table.meta['quotechar']
     }
     return data
 
