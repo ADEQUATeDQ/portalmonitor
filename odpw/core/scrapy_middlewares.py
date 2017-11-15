@@ -145,30 +145,26 @@ class FileDownloader(object):
             request.meta['size']=sys.getsizeof(content)
 
             #check if digest exists?, if yes, get file location and file size
-            loc= spider.api.getContentLocation(uri=response.url,digest=digest)
             last_digest= spider.api.getLastDigest(uri=response.url)
 
             request.meta['contentchanged']=0 if last_digest and last_digest[0]==digest else 1
-            if loc:
-                request.meta['disk']=loc[0]
-            else:
-                try:
-                    filename=os.path.join(spider.datadir,self.getFileName(request.url,domain=domain))
-                    if not os.path.exists(os.path.dirname(filename)):
-                        os.makedirs(os.path.dirname(filename))
 
-                    request.meta['disk']=filename
-                    with open(filename,'wb') as fw:
-                        try:
-                            fw.write(content)
-                        except Exception as e:
-                            request.meta['error']=getExceptionString(e)
-                            ErrorHandler.handleError("Writing file", exception=e)
-                except Exception as e:
-                    ErrorHandler.handleError(log,'file_download',exception=e, uri=request.url)
-                    request.meta['error']=getExceptionString(e)
-                    status=606
-                    return Response(url=request.url, status=status, headers=response.headers, request=request)
+            try:
+                filename=request.meta['git']
+                if not os.path.exists(os.path.dirname(filename)):
+                    os.makedirs(os.path.dirname(filename))
+
+                with open(filename,'wb') as fw:
+                    try:
+                        fw.write(content)
+                    except Exception as e:
+                        request.meta['error']=getExceptionString(e)
+                        ErrorHandler.handleError("Writing file", exception=e)
+            except Exception as e:
+                ErrorHandler.handleError(log,'file_download',exception=e, uri=request.url)
+                request.meta['error']=getExceptionString(e)
+                status=606
+                return Response(url=request.url, status=status, headers=response.headers, request=request)
 
         r= Response(url=response.url,status=response.status, headers=response.headers, request=request)
         return r

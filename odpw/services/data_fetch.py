@@ -201,21 +201,14 @@ class DataMonitorSpider( CrawlSpider ):
         }
 
         # set hard link to git location
-        disk = response.meta.get('disk', None)
         git = response.meta.get('git', None)
-        if disk and git:
+        if git:
             try:
-                # remove git link if already exists
-                if os.path.exists(git):
-                    os.remove(git)
-                # TODO hard links are not possible within docker.. copy for now
-                #os.link(disk, git)
-                shutil.copyfile(disk, git)
                 if self.csvclean:
                     metadata = os.path.join(os.path.dirname(git), '..', 'metadata.jsonld')
                     csvcleaner.csv_clean(filename=git, git_url=self.git_url, orig_url=response.url, metadata=metadata)
             except Exception as ex:
-                ErrorHandler.handleError(log, "COPY_TO_GIT_LOCATION", exception=ex, exc_info=True, id=id, disk=disk, gitlocation=git, excShowtype=type(ex), excShowmsg=ex.message)
+                ErrorHandler.handleError(log, "CSVCLEAN", exception=ex, exc_info=True, id=id, gitlocation=git, excShowtype=type(ex), excShowmsg=ex.message)
 
         try:
             header_dict = dict((k.lower(), v) for k, v in dict(response.headers).iteritems())
