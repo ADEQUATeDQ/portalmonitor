@@ -163,6 +163,7 @@ class DataMonitorSpider( CrawlSpider ):
                               ,'referrer': None
                               ,'snapshot': self.snapshot
                               ,'git': filename
+                              ,'orig_url': s.uri
                           })
             self.crawler.stats.inc_value('seeds')
             c=+1
@@ -206,7 +207,7 @@ class DataMonitorSpider( CrawlSpider ):
             try:
                 if self.csvclean:
                     metadata = os.path.join(os.path.dirname(git), '..', 'metadata.jsonld')
-                    csvcleaner.csv_clean(filename=git, git_url=self.git_url, orig_url=response.url, metadata=metadata)
+                    csvcleaner.csv_clean(filename=git, git_url=self.git_url, orig_url=response.meta['orig_url'], metadata=metadata)
             except Exception as ex:
                 ErrorHandler.handleError(log, "CSVCLEAN", exception=ex, exc_info=True, id=id, gitlocation=git, excShowtype=type(ex), excShowmsg=ex.message)
 

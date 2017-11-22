@@ -29,7 +29,12 @@ def adequate_prov(graph, snapshot):
     return ad_activity
 
 
-def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True):
+def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True, max_file_size=10):
+    # get the file size in MB
+    filesize = os.path.getsize(filename) >> 20
+    if filesize > max_file_size:
+        return
+
     # TODO read csv files in dir, run pyyacp and and track modifications, read jsonld, add new resource with description and modifications
     out_encoding = 'utf-8'
     out_delimiter = ','
@@ -101,12 +106,3 @@ def csv_clean(filename, git_url, orig_url, metadata, stream_orig=True):
             g.add((distribution, RDFS.comment, Literal(out.getvalue())))
 
     g.serialize(destination=metadata, format='json-ld')
-
-
-if __name__ == '__main__':
-    csv_clean(
-        metadata='/home/neumaier/Downloads/metadata.jsonld',
-        filename='/home/neumaier/Downloads/et_2010.csv',
-        git_url='http://adequate-project.semantic-web.at:5003/www_opendataportal_at/',
-        orig_url="http://www.win2day.at/download/et_2010.csv"
-    )
