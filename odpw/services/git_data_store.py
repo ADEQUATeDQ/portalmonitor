@@ -84,7 +84,8 @@ def git_update(portal, snapshot, git_config):
                 if 'nothing to commit, working directory clean' in e.message:
                     log.debug("NO CHANGES TO DATASET", dataset=d_dir, snapshot=snapshot, portal_id=portal.id)
                 else:
-                    raise e
+                    log.warn("GitDataStore - pull/push", dataset=d_dir, error=e.message)
+
 
 def help():
     return "perform head lookups"
