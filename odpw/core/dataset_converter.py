@@ -403,6 +403,7 @@ class CKANConverter:
             ('version_notes', ADMS.versionNotes, None),
             ('frequency', DCT.accrualPeriodicity, ['frequency-of-update']),
             ('name', ADEQUATE.repositoryName, ['id']),
+            ('categorization', ADEQUATE.category, None),
         ]
         _add_triples_from_dict(self.g, dataset_dict, dataset_ref, items)
 
