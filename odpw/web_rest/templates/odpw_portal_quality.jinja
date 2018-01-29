@@ -14,6 +14,7 @@
 
 {% block portalcontent %}
 <h2>Quality Assessment over the DCAT representation</h2>
+{% if data.quality %}
 <div class="row">
     <div class="eight wide column" >
         {% for k in qa %}
@@ -50,5 +51,6 @@
         {{ plot_script }}
     </div>
 </div>
+{% endif %}
 {% endblock %}
 

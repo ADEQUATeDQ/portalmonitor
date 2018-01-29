@@ -450,36 +450,45 @@ def portal(portalid,snapshot=getSnapshotfromTime(datetime.datetime.now())):
         current_sn = snapshot
         Session=current_app.config['dbsession']
         data=getPortalInfos(Session,portalid,snapshot)
+        dynamicityEnabled = current_app.config.get('dynamicity', False)
+
 
         with Timer(key="query_portal",verbose=True):
-            r = Session.query(Portal).filter(Portal.id == portalid) \
+            q = Session.query(Portal).filter(Portal.id == portalid) \
                 .join(PortalSnapshotQuality, PortalSnapshotQuality.portalid == Portal.id) \
                 .filter(PortalSnapshotQuality.snapshot == snapshot) \
                 .join(PortalSnapshot, PortalSnapshot.portalid == Portal.id) \
                 .filter(PortalSnapshot.snapshot == snapshot) \
-                .join(PortalSnapshotDynamicity, PortalSnapshotDynamicity.portalid == Portal.id) \
-                .filter(PortalSnapshotDynamicity.snapshot == snapshot) \
                 .add_entity(PortalSnapshot) \
-                .add_entity(PortalSnapshotQuality) \
-                .add_entity(PortalSnapshotDynamicity).first()
+                .add_entity(PortalSnapshotQuality)
+
+            if dynamicityEnabled:
+                q = q.join(PortalSnapshotDynamicity, PortalSnapshotDynamicity.portalid == Portal.id) \
+                    .filter(PortalSnapshotDynamicity.snapshot == snapshot) \
+                    .add_entity(PortalSnapshotDynamicity)
+            r = q.first()
             while r is None:
                 snapshot= getPreviousWeek(snapshot)
-                r = Session.query(Portal).filter(Portal.id == portalid) \
+                q = Session.query(Portal).filter(Portal.id == portalid) \
                     .join(PortalSnapshotQuality, PortalSnapshotQuality.portalid == Portal.id) \
                     .filter(PortalSnapshotQuality.snapshot == snapshot) \
                     .join(PortalSnapshot, PortalSnapshot.portalid == Portal.id) \
                     .filter(PortalSnapshot.snapshot == snapshot) \
-                    .join(PortalSnapshotDynamicity, PortalSnapshotDynamicity.portalid == Portal.id) \
-                    .filter(PortalSnapshotDynamicity.snapshot == snapshot) \
                     .add_entity(PortalSnapshot) \
-                    .add_entity(PortalSnapshotQuality) \
-                    .add_entity(PortalSnapshotDynamicity).first()
+                    .add_entity(PortalSnapshotQuality)
+
+                if dynamicityEnabled:
+                    q = q.join(PortalSnapshotDynamicity, PortalSnapshotDynamicity.portalid == Portal.id) \
+                        .filter(PortalSnapshotDynamicity.snapshot == snapshot) \
+                        .add_entity(PortalSnapshotDynamicity)
+                r = q.first()
 
             data['portal'] = row2dict(r[0])
             data['fetchInfo'] = row2dict(r[1])
             data['fetchInfo']['duration']=data['fetchInfo']['end']-data['fetchInfo']['start']
 
-            data['dynamicity'] = row2dict(r[3])
+            if dynamicityEnabled:
+                data['dynamicity'] = row2dict(r[3])
             data['quality'] = row2dict(r[2])
 
 
@@ -804,28 +813,34 @@ def portalQuality(snapshot, portalid):
                          'dim_color': inD['color'], 'value': value, 'perc': perc}
                     c.update(v)
                     d.append(c)
-        df= pd.DataFrame(d)
-        with Timer(key="dataDF", verbose=True) as t:
-            p= qualityChart(df)
 
-        script, div= components(p)
-
+        data = getPortalInfos(Session,portalid,snapshot)
         js_resources = INLINE.render_js()
         css_resources = INLINE.render_css()
 
-        data = getPortalInfos(Session,portalid,snapshot)
-        data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
-        data['quality']=qdata
-        return render("odpw_portal_quality.jinja",
-            plot_script=script
-            ,plot_div=div
-            ,js_resources=js_resources
-            ,css_resources=css_resources
-            ,snapshot=snapshot
-            , portalid=portalid
-            , data=data
-            , qa=qa
-        )
+        if d:
+            df= pd.DataFrame(d)
+            with Timer(key="dataDF", verbose=True) as t:
+                p= qualityChart(df)
+
+            script, div= components(p)
+
+
+            data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
+            data['quality']=qdata
+            return render("odpw_portal_quality.jinja",
+                plot_script=script
+                ,plot_div=div
+                ,js_resources=js_resources
+                ,css_resources=css_resources
+                ,snapshot=snapshot
+                , portalid=portalid
+                , data=data
+                , qa=qa
+            )
+        else:
+            return render("odpw_portal_quality.jinja", snapshot=snapshot, js_resources=js_resources, css_resources=css_resources, portalid=portalid, data=data, qa=qa)
+
 
 @ui.route('/portal/<portalid>/<int:snapshot>/dynamics', methods=['GET'])
 @cache.cached(timeout=60*60*24)

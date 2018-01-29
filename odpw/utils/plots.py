@@ -428,6 +428,7 @@ def evolutionCharts(df):
 
 
     df['week']= df['snapshot'].apply(getWeekString)
+    df = df[df['end'].notnull()]
     df=df.sort(['snapshot'], ascending=[1])
     df['snapshotId']= range(1, len(df) + 1)
 
