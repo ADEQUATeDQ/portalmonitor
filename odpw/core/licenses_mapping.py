@@ -21,6 +21,7 @@ ID_MAPPING_TO_OPEN_DEF = {
     'cc-by-2.1': 'CC-BY-4.0', # map to latest cc-by
     'CC-BY-3.0': 'CC-BY-4.0', # map to latest cc-by
     'cc-by-4.0': 'CC-BY-4.0', # map to latest cc-by
+    'cc-by-at-30': 'CC-BY-4.0',
     'uk-ogl': 'OGL-UK-3.0', # map to latest
     'ukcrown': 'ukcrown',
     'ukcrown-withrights': 'ukcrown-withrights',
