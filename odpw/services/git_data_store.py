@@ -15,7 +15,7 @@ from odpw.utils.utils_snapshot import getCurrentSnapshot
 log = structlog.get_logger()
 
 def get_readme_md(repo_name, portal_id):
-    ds_landing_page = "http://{0}.pages.adequate-project.semantic-web.at:8082/{1}/".format(portal_id, repo_name)
+    ds_landing_page = "http://{0}.pages.adequate.at/{1}/".format(portal_id, repo_name)
     return "##### Click here to get to the ADEQUATe report and versions of this dataset:\n" \
            "#### [" + repo_name + "](" + ds_landing_page + ")"
 
