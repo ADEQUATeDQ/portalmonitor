@@ -19,7 +19,8 @@ def get_readme_md(repo_name, portal_id):
     return "##### Click here to get to the ADEQUATe report and versions of this dataset:\n" \
            "#### [" + repo_name + "](" + ds_landing_page + ")"
 
-def git_update(portal, snapshot, git_config):
+
+def git_update(portal, snapshot, git_config, create_readme):
     log.info("START GIT UPDATE", portal=portal.id, snapshot=snapshot, git=git_config)
 
     p_dir = os.path.join(git_config['datadir'], portal.id)
@@ -66,7 +67,7 @@ def git_update(portal, snapshot, git_config):
 
             # create README.md
             readme_file = os.path.join(datasetdir, 'README.md')
-            if not os.path.exists(readme_file):
+            if create_readme or not os.path.exists(readme_file):
                 with open(readme_file, 'w') as f:
                     f.write(get_readme_md(d_dir, portal.id))
 
@@ -97,6 +98,7 @@ def name():
 
 def setupCLI(pa):
     pa.add_argument('--pid', dest='portalid', help="Specific portal id")
+    pa.add_argument('--readme', dest='readme', action='store_true', help="(Re-)create readme file for repositories.")
 
 
 def cli(args, dbm):
@@ -115,14 +117,13 @@ def cli(args, dbm):
 
     sn = getCurrentSnapshot()
 
-
     if args.portalid:
         P =db.Session.query(Portal).filter(Portal.id==args.portalid).one()
         if P is None:
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            git_update(P, sn, git)
+            git_update(P, sn, git, create_readme=args.readme)
     else:
         for P in db.Session.query(Portal):
-            git_update(P, sn, git)
+            git_update(P, sn, git, create_readme=args.readme)
