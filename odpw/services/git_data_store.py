@@ -11,11 +11,17 @@ from odpw.core.model import Portal
 
 from odpw.utils.utils_snapshot import getCurrentSnapshot
 
+ADEQUATE_PORTALS_LOOKUP = {
+    'data_gv_at': 'datagv',
+    'www_opendataportal_at': 'opendataportal'
+}
+
 
 log = structlog.get_logger()
 
 def get_readme_md(repo_name, portal_id):
-    ds_landing_page = "http://{0}.pages.adequate.at/{1}/".format(portal_id, repo_name)
+    portal_name = ADEQUATE_PORTALS_LOOKUP[portal_id]
+    ds_landing_page = "http://{0}.pages.adequate.at/{1}/".format(portal_name, repo_name)
     return "##### Click here to get to the ADEQUATe report and versions of this dataset:\n" \
            "#### [" + repo_name + "](" + ds_landing_page + ")"
 
