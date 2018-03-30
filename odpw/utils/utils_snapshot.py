@@ -76,7 +76,9 @@ def getNextWeek(snapshot):
 
 def getPreviousWeek(snapshot):
     d = tofirstdayinisoweek(snapshot)
-    return getSnapshotfromTime(d, timedelta(days=7), before=True)
+    prev = getSnapshotfromTime(d, timedelta(days=7), before=True)
+    if snapshot == prev:
+        return prev-1
 
 def getWeekString1(yearweek):
     if yearweek is None or len(str(yearweek))==0:
