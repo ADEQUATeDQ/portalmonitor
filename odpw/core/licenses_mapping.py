@@ -1,9 +1,12 @@
 import requests
+import json
 
 __author__ = 'neumaier'
 
 
 OPEN_DEFINITION = 'http://licenses.opendefinition.org/licenses/groups/all.json'
+GITHUB = 'https://raw.githubusercontent.com/okfn/licenses/master/licenses/groups/all.json'
+LOCAL_FILE = 'quality/all_licenses.json'
 
 ID_MAPPING_TO_OPEN_DEF = {
     'cc-by': 'CC-BY-4.0', # map to latest cc-by
@@ -21,7 +24,6 @@ ID_MAPPING_TO_OPEN_DEF = {
     'cc-by-2.1': 'CC-BY-4.0', # map to latest cc-by
     'CC-BY-3.0': 'CC-BY-4.0', # map to latest cc-by
     'cc-by-4.0': 'CC-BY-4.0', # map to latest cc-by
-    'cc-by-at-30': 'CC-BY-4.0',
     'uk-ogl': 'OGL-UK-3.0', # map to latest
     'ukcrown': 'ukcrown',
     'ukcrown-withrights': 'ukcrown-withrights',
@@ -82,10 +84,20 @@ class LicensesOpennessMapping:
 
     def __init__(self):
         if not LicensesOpennessMapping.__licenses_list:
-            resp = requests.get(OPEN_DEFINITION)
-            if resp.status_code != requests.codes.ok:
-                raise Exception("(%s) Cannot get OpenDefinition licenses.", OPEN_DEFINITION)
-            self.licenses_list = resp.json()
+            try:
+                resp = requests.get(OPEN_DEFINITION)
+                if resp.status_code != requests.codes.ok:
+                    raise Exception("(%s) Cannot get OpenDefinition licenses.", OPEN_DEFINITION)
+                self.licenses_list = resp.json()
+            except Exception as e:
+                try:
+                    resp = requests.get(GITHUB)
+                    if resp.status_code != requests.codes.ok:
+                        raise Exception("(%s) Cannot get OpenDefinition licenses.", OPEN_DEFINITION)
+                    self.licenses_list = resp.json()
+                except Exception as e:
+                    with open(LOCAL_FILE, 'r') as f:
+                        self.licenses_list = json.load(f)
             LicensesOpennessMapping.__licenses_list= self.licenses_list
         else:
             self.licenses_list = LicensesOpennessMapping.__licenses_list

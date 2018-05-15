@@ -64,6 +64,8 @@ def add_dcat_to_graph(dataset_dict, portal, graph, portal_uri):
         str_ds = json.dumps(dataset_dict)
         graph.parse(data=str_ds, format='json-ld')
         dataset_ref = graph.value(predicate=RDF.type, object=DCAT.Dataset)
+    elif portal.software == 'DataGouvFr':
+        dataset_ref = graph_from_data_gouv_fr(graph, dataset_dict, portal.apiuri)
 
     # add portal ref to graph
     if portal_uri and dataset_ref:
@@ -92,6 +94,8 @@ def dict_to_dcat(dataset_dict, portal, graph=None, format='json-ld', portal_uri=
         str_ds = json.dumps(dataset_dict)
         graph.parse(data=str_ds, format='json-ld')
         dataset_ref = graph.value(predicate=RDF.type, object=DCAT.Dataset)
+    elif portal.software == 'DataGouvFr':
+        dataset_ref = graph_from_data_gouv_fr(graph, dataset_dict, portal.apiuri)
 
     # add portal ref to graph
     if portal_uri and dataset_ref:
@@ -377,6 +381,125 @@ def graph_from_opendatasoft(g, dataset_dict, portal_url):
             url = portal_url.rstrip('/') + '/api/datasets/1.0/' + identifier + '/attachments/' + attachment.get('id')
             g.add((distribution, DCT.accessURL, Literal(url)))
     return dataset_ref
+
+
+def graph_from_data_gouv_fr(g, dataset_dict, portal_url):
+    identifier = dataset_dict['id']
+    uri = dataset_dict['page']
+
+    # dataset subject
+    dataset_ref = URIRef(uri)
+    for prefix, namespace in namespaces.iteritems():
+        g.bind(prefix, namespace)
+
+    g.add((dataset_ref, RDF.type, DCAT.Dataset))
+
+    # identifier
+    g.add((dataset_ref, DCT.identifier, Literal(identifier)))
+    # Basic fields
+    items = [
+        ('title', DCT.title, None),
+        ('description', DCT.description, None),
+        ('page', DCAT.landingPage, None),
+        ('frequency', DCT.accrualPeriodicity, None),
+    ]
+    _add_triples_from_dict(g, dataset_dict, dataset_ref, items)
+
+    # Tags
+    for tag in dataset_dict.get('tags', []):
+        if isinstance(tag, basestring):
+            g.add((dataset_ref, DCAT.keyword, Literal(tag)))
+
+    # Dates
+    items = [
+        ('created_at', DCT.issued, None),
+        ('last_modified', DCT.modified, ['last_update'])
+    ]
+    _add_date_triples_from_dict(g, dataset_dict, dataset_ref, items)
+
+    # publisher
+    publisher = dataset_dict.get('organization')
+    if publisher and isinstance(publisher, dict):
+        publisher_id = publisher.get('id')
+        publisher_name = publisher.get('name')
+        publisher_page = publisher.get('page')
+        if publisher_page:
+            publisher_details = URIRef(publisher_page)
+            g.add((publisher_details, FOAF.homepage, URIRef(publisher_page)))
+        else:
+            # BNode: dataset_ref + DCT.publisher + publisher_name
+            bnode_hash = hashlib.sha1(dataset_ref.n3() + DCT.publisher.n3() + publisher_id)
+            publisher_details = BNode(bnode_hash.hexdigest())
+
+        g.add((publisher_details, RDF.type, FOAF.Organization))
+        g.add((publisher_details, DCT.identifier, Literal(publisher_id)))
+        g.add((dataset_ref, DCT.publisher, publisher_details))
+        if publisher_name:
+            g.add((publisher_details, FOAF.name, Literal(publisher_name)))
+
+    license = None
+    license_id = dataset_dict.get('license')
+    if license_id:
+        id_string = dataset_ref.n3() + DCT.license.n3() + license_id
+        bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
+        license = BNode(bnode_hash.hexdigest())
+        g.add((license, RDF.type, DCT.LicenseDocument))
+        g.add((license, DCT.identifier, Literal(license_id)))
+
+    # Resources
+    for resource_dict in dataset_dict.get('resources', []):
+        distribution = URIRef(resource_dict['id'])
+
+        g.add((dataset_ref, DCAT.distribution, distribution))
+        g.add((distribution, RDF.type, DCAT.Distribution))
+
+        # License
+        if license:
+            g.add((distribution, DCT.license, license))
+
+        # Simple values
+        items = [
+            ('title', DCT.title, None),
+            ('description', DCT.description, None),
+            ('created_at', DCT.issued, None),
+            ('last_modified', DCT.modified, None)
+        ]
+        _add_triples_from_dict(g, resource_dict, distribution, items)
+
+        if resource_dict.get('format'):
+            id_string = dataset_ref.n3() + DCT['format'].n3() + resource_dict['format']
+            bnode_hash = hashlib.sha1(id_string.encode('utf-8'))
+            f = BNode(bnode_hash.hexdigest())
+
+            g.add((f, RDF.type, DCT.MediaTypeOrExtent))
+            g.add((f, RDFS.label, Literal(resource_dict['format'])))
+            g.add((distribution, DCT['format'], f))
+            if resource_dict.get('mime'):
+                g.add((f, RDF.value, Literal(resource_dict['mime'])))
+
+        if resource_dict.get('mime'):
+            g.add((distribution, DCAT.mediaType,
+                   Literal(resource_dict['mime'])))
+
+        download_url = resource_dict.get('url')
+        if download_url:
+            download_url = download_url.strip()
+            if is_valid_uri(download_url):
+                g.add((distribution, DCAT.downloadURL, URIRef(download_url)))
+            else:
+                g.add((distribution, DCAT.downloadURL, Literal(download_url)))
+
+        if resource_dict.get('filesize'):
+            try:
+                g.add((distribution, DCAT.byteSize,
+                       Literal(float(resource_dict['filesize']),
+                               datatype=XSD.decimal)))
+            except (ValueError, TypeError):
+                g.add((distribution, DCAT.byteSize,
+                       Literal(resource_dict['filesize'])))
+    return dataset_ref
+
+
 
 class CKANConverter:
     def __init__(self, graph, portal_base_url):

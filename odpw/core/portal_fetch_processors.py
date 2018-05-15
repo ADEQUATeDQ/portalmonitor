@@ -38,6 +38,8 @@ def getPortalProcessor(P):
         return OpenDataSoft()
     elif P.software == 'XMLDCAT':
         return XMLDCAT()
+    elif P.software == 'DataGouvFr':
+        return DataGouvFr()
     else:
         raise NotImplementedError(P.software + ' is not implemented')
 
@@ -325,6 +327,41 @@ class XMLDCAT(PortalProcessor):
             if (s, p, o) not in g:
                 g.add((s, p, o))
                 self._add_triples(g, orig_g, o)
+
+
+class DataGouvFr(PortalProcessor):
+    def generateFetchDatasetIter(self, Portal, PortalSnapshot, sn, dcat=True):
+        api = urlparse.urljoin(Portal.uri, '/api/1/datasets/?page_size=100')
+        processed = set([])
+
+        while True:
+            resp = requests.get(api, verify=False)
+            if resp.status_code != requests.codes.ok:
+                # TODO wait? appropriate message
+                pass
+
+            res = resp.json()
+            # returns a list of datasets
+            if not res:
+                break
+            for datasetJSON in res['data']:
+                if 'id' not in datasetJSON:
+                    continue
+
+                datasetID = datasetJSON['id']
+                if datasetID not in processed:
+                    processed.add(datasetID)
+                    d = Dataset(snapshot=sn, portalID=Portal.id, did=datasetID, data=datasetJSON, status=200,
+                                software=Portal.software)
+
+                    if len(processed) % 1000 == 0:
+                        log.info("ProgressDSFetch", pid=Portal.id, processed=len(processed))
+                    yield d
+            if 'next_page' in res and res['next_page']:
+                api = res['next_page']
+            else:
+                break
+        PortalSnapshot.datasetcount = len(processed)
 
 
 def getPackageList(apiurl):
