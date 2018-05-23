@@ -73,7 +73,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Preservation")))
     g.add((x, SKOS.definition, Literal("Does the meta data contain information about format, size or update frequency of the resources?")))
-    g.add((x, RDFS.comment, Literal("Information (size, format, mimetype,..) for preserving/archiving the dataset resource are missing")))
+    g.add((x, RDFS.comment, Literal("Information (size, format, mimetype, ..) for preserving/archiving the dataset resource are missing")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, ex))
 
@@ -135,7 +135,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("ContactEmail")))
     g.add((x, SKOS.definition, Literal("Are the available values of contact properties valid emails?")))
-    g.add((date, RDFS.comment, Literal("The publisher or contact Email is not a syntacically valid Email")))
+    g.add((date, RDFS.comment, Literal("The publisher or contact Email is not a syntactically valid Email")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -151,7 +151,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("AccessURL")))
     g.add((x, SKOS.definition, Literal("Are the available values of access properties valid HTTP URLs?")))
-    g.add((x, RDFS.comment, Literal("The download or access URL is not a syntacically valid URI")))
+    g.add((x, RDFS.comment, Literal("The download or access URL is not a syntactically valid URL")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, co))
 
@@ -165,7 +165,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Format Openness")))
     g.add((x, SKOS.definition, Literal("Is the file format based on an open standard?")))
-    g.add((x, RDFS.comment, Literal("Some of the specified formats are not considerd open")))
+    g.add((x, RDFS.comment, Literal("Some of the specified formats are not considered open")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
@@ -173,7 +173,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("Format machine readability")))
     g.add((x, SKOS.definition, Literal("Can the file format be considered as machine readable?")))
-    g.add((x, RDFS.comment, Literal("Some of the specified formats are not to be machien readable")))
+    g.add((x, RDFS.comment, Literal("Some of the specified formats are not considered as machine readable")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
@@ -181,7 +181,7 @@ def add_dimensions_and_metrics(g):
     g.add((x, RDF.type, DQV.Metric))
     g.add((x, SKOS.prefLabel, Literal("License Openneness")))
     g.add((x, SKOS.definition, Literal("Is the used license conform to the open definition?")))
-    g.add((x, RDFS.comment, Literal("The specified license is not considerd to be open by the opendefinition.org")))
+    g.add((x, RDFS.comment, Literal("The specified license is not considered to be open by the opendefinition.org")))
     g.add((x, DQV.expectedDataType, XSD.double))
     g.add((x, DQV.inDimension, od))
 
