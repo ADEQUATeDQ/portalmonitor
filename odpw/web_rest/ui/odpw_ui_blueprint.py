@@ -396,20 +396,23 @@ def portaldash():
             data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]
         return render("odpw_portaldash.jinja",  data=data, snapshot=cursn)
 
-def getResourceInfo(session,dbc, portalid, snapshot):
 
+def getResourceInfo(session,dbc, portalid, snapshot, orga=None):
     with Timer(key="getResourceInfo",verbose=True):
         data={}
 
         with Timer(key="query_getResourceInfoValid", verbose=True):
             data['valid']={}
-            for valid in validURLDist(session,snapshot, portalid=portalid):
+            for valid in validURLDist(session,snapshot, portalid=portalid, orga=orga):
                 data['valid'][valid[0]]=valid[1]
         with Timer(key="query_getResourceInfoStatus", verbose=True):
             data['status']={}
+            if not orga:
+                viewName = "view_{}_{}_{}".format('resstatus', portalid, snapshot)
+            else:
+                viewName = "view_{}_{}_{}_{}".format('resstatus', portalid, snapshot, orga)
 
-            viewName = "view_{}_{}_{}".format('resstatus', portalid, snapshot)
-            qorg = statusCodeDist(session,snapshot,portalid=portalid)
+            qorg = statusCodeDist(session,snapshot,portalid=portalid, orga=orga)
             q = withView(qorg, viewName, session, dbc)
             start = time.time()
             for res in q:
@@ -420,7 +423,6 @@ def getResourceInfo(session,dbc, portalid, snapshot):
                 createView(qorg, viewName, session)
 
         return {'resourcesInfo':data}
-
 
 
 # @ui.route('/portal/<portalid>/<int:snapshot>', methods=['GET'])
@@ -556,7 +558,7 @@ def resourceInfo(snapshot, portalid, uri):
             qorg = getResourceInfos(Session, snapshot, portalid)
             q = withView(qorg, viewName, Session, dbc)
             start = time.time()
-            data['resources'] = [row2dict(r) for r in q.all()]
+            data['resources'] = [row2dict(r[0]) for r in q.all()]
             end = time.time()
             if (end - start) > 5:
                 print("Create View {}".format(viewName))
@@ -580,7 +582,21 @@ def resourceInfo(snapshot, portalid, uri):
         return render("odpw_portal_resource.jinja", snapshot=snapshot, portalid=portalid, uri=uri, data=data)
 
 
-@ui.route('/linkchecker/<portalid>', methods=['GET'])
+@ui.route('/portal/<portalid>/<int:snapshot>/linkcheck/', methods=['GET'])
+@cache.cached(timeout=60*60*24)
+def portalLinkCheck(snapshot, portalid):
+    Session = current_app.config['dbsession']
+
+    data = getPortalInfos(Session, portalid, snapshot)
+    q = Session.query(Dataset.organisation) \
+        .filter(Dataset.portalid == portalid) \
+        .filter(Dataset.snapshot == snapshot).distinct(Dataset.organisation)
+
+    data['organisations'] = [row2dict(res) for res in q]
+
+    return render("odpw_portal_linkchecker.jinja", snapshot=snapshot, portalid=portalid, data=data)
+
+
 @ui.route('/portal/<portalid>/<int:snapshot>/resources', methods=['GET'])
 @cache.cached(timeout=60*60*24)
 def portalRes(portalid, snapshot=None):
@@ -590,6 +606,53 @@ def portalRes(portalid, snapshot=None):
     data={}
     data.update(getPortalInfos(Session, portalid, snapshot))
     return render("odpw_portal_resources.jinja",  data=data,snapshot=snapshot, portalid=portalid)
+
+
+def getDatasetURI(datasetid, portalid):
+    session=current_app.config['dbsession']
+    p = session.query(Portal).filter(Portal.id == portalid).first()
+    if p.software == 'CKAN':
+        uri = '{0}/dataset/{1}'.format(p.apiuri.rstrip('/'), datasetid)
+    elif p.software == 'Socrata':
+        uri = '{0}/dataset/{1}'.format(p.uri.rstrip('/'), datasetid)
+    elif p.software == 'OpenDataSoft':
+        uri = '{0}/explore/dataset/{1}'.format(p.uri.rstrip('/'), datasetid)
+    else:
+        uri = datasetid
+    return uri
+
+
+@ui.route('/portal/<portalid>/<int:snapshot>/linkcheck/<orga>', methods=['GET'])
+@cache.cached(timeout=60*60*24)
+def orga_resources(portalid, snapshot, orga):
+    Session = current_app.config['dbsession']
+    data = {}
+    data.update(getPortalInfos(Session, portalid, snapshot))
+    return render("odpw_portal_linkchecker_orga.jinja", data=data, snapshot=snapshot, portalid=portalid, organisation=orga)
+
+
+@ui.route('/portal/<portalid>/<int:snapshot>/linkcheck/<orga>/body', methods=['GET'])
+@cache.cached(timeout=60*60*24)
+def orga_resource(portalid, snapshot, orga):
+    with Timer(key="get_orga_resource",verbose=True):
+        Session=current_app.config['dbsession']
+        dbc=current_app.config['dbc']
+
+        data = getResourceInfo(Session, dbc, portalid, snapshot, orga)
+        q = getResourceInfos(Session, snapshot, portalid, orga)
+
+        data['resList'] = []
+        for i in q:
+            dataset = i[1]
+            orig_link = getDatasetURI(dataset.id, portalid)
+            data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset.title}})
+
+        data.update(getPortalInfos(Session,portalid,snapshot))
+        r=current_app.config['dbsession'].query(Portal.resourcecount).filter(Portal.id==portalid)
+        for P in r:
+            data['resources']=P[0]
+
+        return render("odpw_portal_resources_list.jinja", data=data, snapshot=snapshot, portalid=portalid)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/resources/body', methods=['GET'])
@@ -606,14 +669,18 @@ def portalResBody(snapshot, portalid):
             viewName = "view_{}_{}_{}".format('resinfo', portalid, snapshot)
             qorg = getResourceInfos(Session,snapshot, portalid)
             q = withView(qorg, viewName, Session, dbc)
-            #print q
+
+
             start = time.time()
-            data['uris'] = [row2dict(i) for i in q]
+            data['resList'] = []
+            for i in q:
+                dataset = i[1]
+                orig_link = getDatasetURI(dataset.id, portalid)
+                data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset.title}})
             end = time.time()
             if (end - start) > 5:
                 print("Create View {}".format(viewName))
                 createView(qorg, viewName, Session)
-
 
         data.update(getPortalInfos(Session,portalid,snapshot))
         #data['portals']= [ row2dict(r) for r in Session.query(Portal).all()]

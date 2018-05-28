@@ -1,0 +1,66 @@
+{% extends "odpw_portal_layout.jinja" %}
+{% set active_sub_page = "ui.portalLinkCheck" -%}
+
+
+{% block portalcontent %}
+    <div class="ui container centered" id="body">
+        <div class="ui segment" id="loader" style="height:400px;">
+            <div class="ui active dimmer">
+                <div class="ui indeterminate large text loader">We are getting the HTTP header information. Stay with us!</div>
+            </div>
+             <p></p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+    $(document).ready(function() {
+        bodyURL="{{url_for('ui.orga_resource', portalid=portalid, snapshot=snapshot, orga=organisation)}}"
+        $.ajax({
+            url: bodyURL,
+            success: function(data) {
+                $('#loader').remove();
+                html=$($.parseHTML(data))
+                $('#body').html(html);
+                $('#show200').on('click', function(){filter(200)})
+                $('#show404').on('click', function(){filter(404)})
+                $('#showAll').on('click', function(){filter(null)})
+                $('#showErrors').on('click', function(){filterGreater(404)})
+            },
+            type: 'GET'
+            }
+        )
+
+        function filter(filterStatus) {
+            var filterStatus = filterStatus;
+            $('#uris>div.item').each(function (index, element) {
+                $(element).find(".status").each(function(index, status){
+
+                    if( (filterStatus == null) || ($(status).text().indexOf(filterStatus) >= 0)){
+                        $(element).show();
+                    }else{
+                        $(element).hide();
+                    }
+                });
+            });
+        };
+        function filterGreater(filterStatus) {
+            var filterStatus = filterStatus;
+            $('#uris>div.item').each(function (index, element) {
+                $(element).find(".status").each(function(index, status){
+
+                    if( (filterStatus == null) || (parseInt($(status).text())>filterStatus)){
+                        $(element).show();
+                    }else{
+                        $(element).hide();
+                    }
+                });
+            });
+        };
+
+
+    })
+
+
+ {% endblock %}

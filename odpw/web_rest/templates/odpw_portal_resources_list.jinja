@@ -6,35 +6,34 @@
 
 <div>
     <div class="ui compact button " id="showAll" tabindex="0">
-        <i class="info icon"></i>
-        show all {{ data.resourcesInfo.status.items()|sum(attribute="1")}} resources
+        <i class="info icon"></i> Show all {{ data.resourcesInfo.status.items()|sum(attribute="1")}} resources
     </div>
     {% if  data.resourcesInfo.status.200 and (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200)>0 %}
         <div class="ui compact button"  id="show200" tabindex="0">
-            show {{ data.resourcesInfo.status.200 }}  available resources
+            Show {{ data.resourcesInfo.status.200 }} available resources
         </div>
     {% endif %}
     {% if  data.resourcesInfo.status.404 %}
         <div class="ui compact button" id="show404" tabindex="0">
-            show {{ data.resourcesInfo.status.404 }} non available resources
+            Show {{ data.resourcesInfo.status.404 }} non-available resources
         </div>
     {% endif %}
 
     {% if data.resourcesInfo.status.200 and data.resourcesInfo.status.404 and (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200)>0 %}
         <div class="ui compact button" id="showErrors" tabindex="0">
-            show {{ (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200-data.resourcesInfo.status.404) }} resources with other errors
+            Show {{ (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200-data.resourcesInfo.status.404) }} resources with other errors
         </div>
     {% endif %}
 </div>
 
 
 <div class="ui relaxed divided list" id="uris">
-    {% for uri in data.uris %}
+    {% for res in data.resList %}
     <div class="item">
 
-          {% if uri.status > 400  and uri.status < 600  %}
+          {% if res.uri.status > 400  and res.uri.status < 600  %}
                 <i class="large minus square middle aligned red icon"></i>
-            {% elif uri.status==200 %}
+            {% elif res.uri.status==200 %}
                 <i class="large check square middle aligned green icon"></i>
             {% else %}
                 <i class="large minus square middle aligned orange icon"></i>
@@ -42,28 +41,29 @@
 
         <div class="content">
             <div class="header">
-                <a href="{{uri.uri}}">{{uri.uri}}</a>
+                <a target="_blank" href="{{res.uri.uri}}">{{res.uri.uri|truncate(100, True)}} <i class="external alternate icon"></i></a>
             </div>
             <div class="meta">
                 <div class="ui small
-                     {% if uri.status > 400 and uri.status < 600 %}
+                     {% if res.uri.status > 400 and res.uri.status < 600 %}
                         red
-                    {% elif uri.status==200 %}
+                    {% elif res.uri.status==200 %}
                         green
                     {% else %}
                         orange
                     {% endif %}
                      basic label">
                     status
-                    <div class="detail status">{{uri.status}}</div>
+                    <div class="detail status">{{res.uri.status}}</div>
                 </div>
-                <div class="ui basic label">checked at {{uri.timestamp.strftime('%Y-%m-%d %H:%M')}}</div>
-                {% if uri.status!=200 %}
-                    <div class="ui basic label">exception:{{uri.exc}}</div>
+                <div class="ui basic label">checked at {{res.uri.timestamp.strftime('%Y-%m-%d %H:%M')}}</div>
+                {% if res.uri.status!=200 %}
+                    <div class="ui basic label">exception: {{res.uri.exc}}</div>
                 {% endif %}
+                <a target="_blank" href="{{res.dataset.uri}}" class="ui smaller label">{{res.dataset.title|truncate(50, True)}} <i class="external alternate icon"></i></a>
 
-                <a href="{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=uri.uri)}}" class="ui smaller label">
-                    <i class="line chart icon"></i>
+                <a target="_blank" href="{{url_for("ui.resourceInfo", portalid=portalid, snapshot=snapshot, uri=res.uri.uri)}}" class="ui smaller label">
+                    <i class="area chart icon">History</i>
                 </a>
             </div>
         </div>

@@ -9,12 +9,13 @@
             <div class="ui secondary vertical inverted fluid labeled icon menu">
                 {% set navigation_bar = [
                     ('ui.portal', 'info', 'Info'),
-                    ('ui.portalQuality', 'info', 'Quality'),
-                    ('ui.portalEvolution', 'info', 'Evolution'),
-                    ('ui.portalFormats', 'info', 'Stats'),
-                    ('ui.portalRes', 'grid layout', 'Resources'),
-                    ('ui.portalDataset', 'grid layout', 'Datasets'),
-                    ('ui.portalDynamicy', 'external', 'Dynamicity')
+                    ('ui.portalQuality', 'star', 'Quality'),
+                    ('ui.portalEvolution', 'chart line', 'Evolution'),
+                    ('ui.portalFormats', 'file alternate', 'Stats'),
+                    ('ui.portalRes', 'table', 'Resources'),
+                    ('ui.portalDataset', 'list', 'Datasets'),
+                    ('ui.portalDynamicy', 'chart area', 'Dynamicity'),
+                    ('ui.portalLinkCheck', 'eye', 'Link Checker')
                     ]
                 -%}
                 {% set active_sub_page = active_sub_page|default('ui.portal') -%}

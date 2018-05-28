@@ -2,8 +2,12 @@
 
 {% block portalcontent %}
 <div class="ui container">
+    {% if contact %}
     <h2>Report for organisation {{organisation}} and contact information {{contact}}</h2>
     We found {{data['contact_report'][contact][organisation]|length}} datasets describing {{data.contact_report.summary.totaluris}} resources.
+    {% else %}
+    <h2>Report for organisation {{organisation}}</h2>
+    {% endif %}
     <h3>{{data.contact_report.summary.totaluris}} Resources </h3>
     <div>
         We performed for {{data.contact_report.summary.status.total}} resources availability checks.
@@ -42,15 +46,14 @@
     <div class="ui relaxed divided list">
     {% for ds in data['contact_report'][contact][organisation] %}
         <div class="item">
-            <i class="large github middle aligned icon"></i>
+            <i class="large file middle aligned icon"></i>
             <div class="content">
-                <div class="header"><a href="{{url_for('ui.portalDataset', portalid=portalid, snapshot=snapshot, dataset=ds.dataset.id)}}">{{ds.dataset.title}}</a>
-                <a class="header" href="{{ds.dataset.external_uri}}">external</a>
-                </div>
+                <div class="header"><a href="{{url_for('ui.portalDataset', portalid=portalid, snapshot=snapshot, dataset=ds.dataset.id)}}">{{ds.dataset.title}}</a></div>
+
                 <div class="description">
                     <div class="ui list">
                         <div class="item">
-                            <i class="users icon"></i>
+                            <i class="external alternate icon"></i>
                             <div class="content">
                                 {% if ds.report| length > 0 %}
                                     {{ds.report.keys()}}
@@ -61,13 +64,13 @@
 
                             <div class="content">
                                 <span class="ui right pointing small label">
-                                     {% if ds.resources|length==ds.resourcesStatus[200] %}
-                                <i class="smile green icon"></i>
-                            {% elif ds.resourcesStatus.total==ds.resourcesStatus[200] %}
-                                <i class="star half empty green icon"></i>
-                            {% else %}
-                                <i class="star half orange icon"></i>
-                            {% endif %}
+                                    {% if ds.resources|length==ds.resourcesStatus[200] %}
+                                    <i class="smile green icon"></i>
+                                    {% elif ds.resourcesStatus.total==ds.resourcesStatus[200] %}
+                                    <i class="exclamation circle green icon"></i>
+                                    {% else %}
+                                    <i class="exclamation circle red icon"></i>
+                                    {% endif %}
                                     {{ds.resources|length}} resources
                                 </span>
                                 <span class="ui basic label">

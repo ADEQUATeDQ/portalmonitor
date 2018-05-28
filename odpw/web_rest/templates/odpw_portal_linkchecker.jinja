@@ -1,0 +1,20 @@
+{% extends "odpw_portal_layout.jinja" %}
+{% set active_sub_page = "ui.portalLinkCheck" -%}
+
+{% block portalcontent %}
+<div class="ui container">
+    <h2>Check links for the following Organisations:</h2>
+
+    <div class="ui list">
+    {% for orga in data.organisations %}
+        <div class="item">
+            <i class="ui user circle outline icon"></i>
+            <div class="content">
+                <a href="{{url_for('ui.orga_resources',portalid=portalid, snapshot=snapshot, orga=orga.organisation,)}}">{{orga.organisation}}</a>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

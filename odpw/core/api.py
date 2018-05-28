@@ -376,15 +376,19 @@ def getMetaResource(session, snapshot, portalid=None):
         q = q.filter(Dataset.portalid == portalid)
     return q
 
-def getResourceInfos(session, snapshot, portalid=None):
-    q= session.query(ResourceInfo) \
+def getResourceInfos(session, snapshot, portalid=None, orga=None):
+    q= session.query(ResourceInfo, Dataset) \
         .filter(ResourceInfo.snapshot == snapshot) \
+        .filter(Dataset.snapshot == snapshot) \
         .join(MetaResource, ResourceInfo.uri == MetaResource.uri) \
-        .join(Dataset, Dataset.md5 == MetaResource.md5) \
-        .filter(Dataset.snapshot == snapshot)
+        .join(Dataset, Dataset.md5 == MetaResource.md5)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
+    if orga:
+        q=q.filter(Dataset.organisation == orga)
     return q
+
+
 
 #--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--#
 ### PORTAL
@@ -413,7 +417,7 @@ def portalSnapshotQuality(session, portalid, snapshot):
             .filter(PortalSnapshotQuality.snapshot==snapshot)
 
 
-def statusCodeDist(session, snapshot,portalid=None):
+def statusCodeDist(session, snapshot,portalid=None, orga=None):
 
     q= session.query(ResourceInfo.status,func.count())\
         .join(MetaResource, ResourceInfo.uri==MetaResource.uri)\
@@ -422,6 +426,8 @@ def statusCodeDist(session, snapshot,portalid=None):
         .filter(ResourceInfo.snapshot==snapshot)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
+    if orga:
+        q=q.filter(Dataset.organisation == orga)
 
     q=q.group_by(ResourceInfo.status)
     q=q.order_by(func.count().desc())
@@ -487,12 +493,14 @@ def distinctLicenses(session, snapshot, portalid=None):
         q=q.filter(Dataset.portalid==portalid)
     return q
 
-def validURLDist(session, snapshot,portalid=None):
+def validURLDist(session, snapshot,portalid=None, orga=None):
     q= session.query(MetaResource.valid, func.count().label('count'))\
         .join(Dataset,Dataset.md5==MetaResource.md5)\
         .filter(Dataset.snapshot==snapshot)
     if portalid:
         q=q.filter(Dataset.portalid==portalid)
+    if orga:
+        q=q.filter(Dataset.organisation == orga)
 
     q=q.group_by(MetaResource.valid)
     q=q.order_by(func.count(MetaResource.valid).desc())
