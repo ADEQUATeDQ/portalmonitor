@@ -84,6 +84,7 @@ def get_non_proprietary():
          'ttl',
          'txt',
          'wms',
+         'wfs',
          'xml',
          'xml.zip',
          'zip',
