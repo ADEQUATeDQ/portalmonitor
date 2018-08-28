@@ -558,11 +558,17 @@ def resourceInfo(snapshot, portalid, uri):
             qorg = getResourceInfos(Session, snapshot, portalid)
             q = withView(qorg, viewName, Session, dbc)
             start = time.time()
-            data['resources'] = [row2dict(r[0]) for r in q.all()]
+            data['resources'] = [row2dict(r) for r in q.all()]
             end = time.time()
             if (end - start) > 5:
                 print("Create View {}".format(viewName))
-                createView(qorg, viewName, Session)
+                try:
+                    createView(qorg, viewName, Session)
+                except Exception as e:
+                    if 'already exists' in e.message:
+                        pass
+                    else:
+                        raise e
 
         with Timer(key="query_resourceInfo", verbose=True):
             q = Session.query(ResourceInfo) \
@@ -643,9 +649,10 @@ def orga_resource(portalid, snapshot, orga):
 
         data['resList'] = []
         for i in q:
-            dataset = i[1]
-            orig_link = getDatasetURI(dataset.id, portalid)
-            data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset.title}})
+            dataset_id = i[1]
+            dataset_title = i[2]
+            orig_link = getDatasetURI(dataset_id, portalid)
+            data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset_title}})
 
         data.update(getPortalInfos(Session,portalid,snapshot))
         r=current_app.config['dbsession'].query(Portal.resourcecount).filter(Portal.id==portalid)
@@ -674,9 +681,10 @@ def portalResBody(snapshot, portalid):
             start = time.time()
             data['resList'] = []
             for i in q:
-                dataset = i[1]
-                orig_link = getDatasetURI(dataset.id, portalid)
-                data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset.title}})
+                dataset_id = i[1]
+                dataset_title = i[2]
+                orig_link = getDatasetURI(dataset_id, portalid)
+                data['resList'].append({'uri': row2dict(i[0]), 'dataset': {'uri': orig_link, 'title': dataset_title}})
             end = time.time()
             if (end - start) > 5:
                 print("Create View {}".format(viewName))

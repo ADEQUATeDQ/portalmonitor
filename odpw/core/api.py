@@ -377,7 +377,7 @@ def getMetaResource(session, snapshot, portalid=None):
     return q
 
 def getResourceInfos(session, snapshot, portalid=None, orga=None):
-    q= session.query(ResourceInfo, Dataset) \
+    q= session.query(ResourceInfo, Dataset.id, Dataset.title) \
         .filter(ResourceInfo.snapshot == snapshot) \
         .filter(Dataset.snapshot == snapshot) \
         .join(MetaResource, ResourceInfo.uri == MetaResource.uri) \

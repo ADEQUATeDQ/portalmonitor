@@ -8,7 +8,7 @@
     <div class="ui list">
     {% for orga in data.organisations %}
         <div class="item">
-            <i class="ui user circle outline icon"></i>
+            <i class="ui small circle icon"></i>
             <div class="content">
                 <a href="{{url_for('ui.orga_resources',portalid=portalid, snapshot=snapshot, orga=orga.organisation,)}}">{{orga.organisation}}</a>
             </div>
