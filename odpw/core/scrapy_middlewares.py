@@ -175,7 +175,7 @@ class FileDownloader(object):
         datefolders=now.strftime("%Y/%m/%d/%H")
 
         urlencoded = urllib.quote_plus(uri)[:240]
-        log.info("Encoded url "+urlencoded);
+        log.info("Encoded url "+urlencoded)
 
         fileLocation = os.path.join(datefolders,domain,urlencoded)
         log.info("FileLocation", uri=uri, disk=fileLocation)

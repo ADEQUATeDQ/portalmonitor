@@ -26,7 +26,7 @@ def get_readme_md(repo_name, portal_id):
            "#### [" + repo_name + "](" + ds_landing_page + ")"
 
 
-def git_update(portal, snapshot, git_config, create_readme):
+def git_update(portal, snapshot, git_config, create_readme, max_file_size):
     log.info("START GIT UPDATE", portal=portal.id, snapshot=snapshot, git=git_config)
 
     p_dir = os.path.join(git_config['datadir'], portal.id)
@@ -77,6 +77,14 @@ def git_update(portal, snapshot, git_config, create_readme):
                 with open(readme_file, 'w') as f:
                     f.write(get_readme_md(d_dir, portal.id))
 
+            # remove big files
+            if max_file_size > 0:
+                for root, dirs, files in os.walk(datasetdir):
+                    for file_ in files:
+                        res_path = os.path.join(root, file_)
+                        if (os.path.getsize(res_path) >> 20) > max_file_size:
+                            os.remove(res_path)
+
             # add untracked files
             log.debug("GIT STATUS", git=git.status())
             log.debug("GIT ADD", git=git.add('-A'))
@@ -105,6 +113,7 @@ def name():
 def setupCLI(pa):
     pa.add_argument('--pid', dest='portalid', help="Specific portal id")
     pa.add_argument('--readme', dest='readme', action='store_true', help="(Re-)create readme file for repositories.")
+    pa.add_argument('--max-file-size', type=float, help="Set the maximum size for files in the repositories.", default=100)
 
 
 def cli(args, dbm):
@@ -129,7 +138,7 @@ def cli(args, dbm):
             log.warn("PORTAL NOT IN DB", portalid=args.portalid)
             return
         else:
-            git_update(P, sn, git, create_readme=args.readme)
+            git_update(P, sn, git, create_readme=args.readme, max_file_size=args.max_file_size)
     else:
         for P in db.Session.query(Portal):
-            git_update(P, sn, git, create_readme=args.readme)
+            git_update(P, sn, git, create_readme=args.readme, max_file_size=args.max_file_size)
