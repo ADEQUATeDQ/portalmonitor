@@ -1,8 +1,5 @@
 
 {% macro resourceTable() -%}
-<div id="test">
-<h3 class="ui header">HTTP HEADER REPORT</h3>
-</div>
 
 <div>
 <h5 class="ui header">HTTP Status Codes</h5>
@@ -10,12 +7,13 @@
       <div class="item"><b>200</b> OK</div>
       <div class="item"><b>403</b> Forbidden: The user might not have the necessary permissions</div>
       <div class="item"><b>404</b> Not Found: The requested resource could not be found</div>
-      <div class="item"><b>606</b> ADEQUATe Error: Error code defined by ADEQUATe for any errors during the crawling process, e.g., if the host address could not be resolved.</div>
-      <div class="item"></div>
+      <div class="item"><b>606</b> ADEQUATe Error: Error code defined by ADEQUATe for any exceptions during the crawling process, e.g., if the host address could not be resolved.</div>
     </div>
     <p>Find a full list of the standard HTTP status codes on <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">Wikipedia</a>.</p>
 </div>
 
+<div id="test">
+<h3 class="ui header">HTTP HEADER REPORT</h3>
 <div>
     <div class="ui compact button " id="showAll" tabindex="0">
         <i class="info icon"></i> Show all {{ data.resourcesInfo.status.items()|sum(attribute="1")}} resources
@@ -36,6 +34,7 @@
             Show {{ (data.resourcesInfo.status.items()|sum(attribute="1")-data.resourcesInfo.status.200-data.resourcesInfo.status.404) }} resources with other errors
         </div>
     {% endif %}
+</div>
 </div>
 
 
