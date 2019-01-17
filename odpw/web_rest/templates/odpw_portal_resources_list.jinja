@@ -2,14 +2,25 @@
 {% macro resourceTable() -%}
 
 <div>
-<h5 class="ui header">HTTP Status Codes</h5>
+    <h3 class="ui header">HTTP Status Codes</h3>
+    <h5 class="ui header">Standard Codes</h5>
     <div class="ui bulleted list">
       <div class="item"><b>200</b> OK</div>
       <div class="item"><b>403</b> Forbidden: The user might not have the necessary permissions</div>
       <div class="item"><b>404</b> Not Found: The requested resource could not be found</div>
-      <div class="item"><b>606</b> ADEQUATe Error: Error code defined by ADEQUATe for any exceptions during the crawling process, e.g., if the host address could not be resolved.</div>
+      <div class="item">Find a full list of the standard HTTP status codes on <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">Wikipedia</a></div>
     </div>
-    <p>Find a full list of the standard HTTP status codes on <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">Wikipedia</a>.</p>
+
+    <h5 class="ui header">ADEQUATe defined</h5>
+    <div class="ui bulleted list">
+      <div class="item"><b>602</b> IgnoreRequest: Robots.txt permits crawling the resource</div>
+      <div class="item"><b>603</b> NotSupported</div>
+      <div class="item"><b>604</b> ConnectError</div>
+      <div class="item"><b>605</b> ConnectionRefusedError</div>
+      <div class="item"><b>607</b> TCPTimedOutError</div>
+      <div class="item"><b>608</b> TimeoutError</div>
+      <div class="item"><b>606</b> Any other exceptions during the crawling process, e.g., if the host address could not be resolved.</div>
+    </div>
 </div>
 
 <div id="test">
