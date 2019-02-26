@@ -608,13 +608,13 @@ def portalLinkCheckCSV(portalid):
 
         for o in data['organisations']:
             orga = o['organisation']
-            with Timer(key="query_orga-emails", verbose=True):
-                portal=Session.query(Portal).filter(Portal.id==portalid).first()
-                # print('portal: ', portal, 'snapshot: ', snapshot, 'orga: ', orga)
-                data['contacts'] = contactPerOrga(Session, portal, snapshot, orga)
-                for cont in data['contacts']:
-                    linkcheck = url_for('.portalLinkCheck', portalid=portalid, snapshot=snapshot)
-                    cw.writerow([orga, cont, linkcheck])
+        #    with Timer(key="query_orga-emails", verbose=True):
+        #        portal=Session.query(Portal).filter(Portal.id==portalid).first()
+        #        # print('portal: ', portal, 'snapshot: ', snapshot, 'orga: ', orga)
+        #        data['contacts'] = contactPerOrga(Session, portal, snapshot, orga)
+        #        for cont in data['contacts']:
+            linkcheck = url_for('.portalLinkCheck', portalid=portalid, snapshot=snapshot)
+            cw.writerow([orga, linkcheck])
 
         output = make_response(si.getvalue())
         output.headers["Content-Disposition"] = "attachment; filename=export.csv"
