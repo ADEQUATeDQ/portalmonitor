@@ -18,6 +18,7 @@ def contactPerOrga(Session, portal, snapshot, orga):
         .add_entity(DatasetData).add_entity(DatasetQuality)
     pereMail = set([])
     for res in q:  # Dataset, DatasetData, DatasetQuality
+        print(res)
         ds = row2dict(res)
 
         d = portal_fetch_processors.Dataset(snapshot=snapshot, portalID=portal.id, did=ds['id'], data=ds['raw'],
