@@ -606,10 +606,11 @@ def portalLinkCheckCSV(portalid):
 
             data['organisations'] = [row2dict(res) for res in q]
 
-        for orga in data['organisations']:
+        for o in data['organisations']:
+            orga = o['organisation']
             with Timer(key="query_orga-emails", verbose=True):
                 portal=Session.query(Portal).filter(Portal.id==portalid).first()
-                print('portal: ', portal, 'snapshot: ', snapshot, 'orga: ', orga)
+                # print('portal: ', portal, 'snapshot: ', snapshot, 'orga: ', orga)
                 data['contacts'] = contactPerOrga(Session, portal, snapshot, orga)
                 for cont in data['contacts']:
                     linkcheck = url_for('.portalLinkCheck', portalid=portalid, snapshot=snapshot)
