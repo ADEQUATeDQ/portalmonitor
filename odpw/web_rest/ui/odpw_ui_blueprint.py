@@ -613,7 +613,7 @@ def portalLinkCheckCSV(portalid):
         #        # print('portal: ', portal, 'snapshot: ', snapshot, 'orga: ', orga)
         #        data['contacts'] = contactPerOrga(Session, portal, snapshot, orga)
         #        for cont in data['contacts']:
-            linkcheck = 'https://tools.adequate.at' + url_for('.orga_resources', portalid=portalid, snapshot=snapshot)
+            linkcheck = 'https://tools.adequate.at' + url_for('.orga_resources', portalid=portalid, snapshot=snapshot, orga=orga)
             cw.writerow([orga, linkcheck])
 
         output = make_response(si.getvalue())
