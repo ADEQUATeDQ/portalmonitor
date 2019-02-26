@@ -4,12 +4,14 @@ import json
 import time
 from collections import defaultdict
 from urlparse import urlparse
+import StringIO
+import csv
 
 import jinja2
 import pandas as pd
 from bokeh.embed import components
 from bokeh.resources import INLINE
-from flask import Blueprint, current_app, render_template, jsonify
+from flask import Blueprint, current_app, render_template, jsonify, make_response, url_for
 from markupsafe import Markup
 from sqlalchemy import func, and_
 
@@ -586,6 +588,40 @@ def resourceInfo(snapshot, portalid, uri):
 
 
         return render("odpw_portal_resource.jinja", snapshot=snapshot, portalid=portalid, uri=uri, data=data)
+
+
+@ui.route('/portal/<portalid>/linkcheck/csv', methods=['GET'])
+def portalLinkCheckCSV(portalid):
+    with Timer(key="get_portalLinkCheckCSV",verbose=True):
+        si = StringIO.StringIO()
+        cw = csv.writer(si)
+        snapshot = getCurrentSnapshot()
+
+        Session=current_app.config['dbsession']
+        data=getPortalInfos(Session,portalid,snapshot)
+        with Timer(key="query_portalorgas",verbose=True):
+            q = Session.query(Dataset.organisation) \
+                .filter(Dataset.portalid == portalid) \
+                .filter(Dataset.snapshot == snapshot).distinct(Dataset.organisation)
+
+            data['organisations'] = [row2dict(res) for res in q]
+            for orga in data['organisations']:
+                with Timer(key="query_portalreport", verbose=True):
+                    data['contacts'] = contactPerOrga(Session, portal, snapshot, orga)
+                    for cont in data['contacts']:
+                        linkcheck = url_for('.portalLinkCheck', portalid=portalid, snapshot=snapshot)
+                        cw.writerow([orga, cont, linkcheck])
+
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+        output.headers["Content-type"] = "text/csv"
+        return output
+
+
+@ui.route('/portal/<portalid>/linkcheck/', methods=['GET'])
+def portalDynamicLinkCheck(portalid):
+    snapshot = getCurrentSnapshot()
+    return portalLinkCheck(snapshot, portalid)
 
 
 @ui.route('/portal/<portalid>/<int:snapshot>/linkcheck/', methods=['GET'])
