@@ -15,7 +15,7 @@ chardet==2.3.0
 ckanapi==4.0
 click==6.7
 constantly==15.1.0
-cryptography==1.7.2
+cryptography==3.2
 cssselect==1.0.1
 cycler==0.10.0
 decorator==4.0.11
