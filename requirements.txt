@@ -81,7 +81,7 @@ pyparsing==2.1.10
 python-dateutil==2.6.0
 python-slugify==1.2.1
 pytz==2016.10
-PyYAML==3.12
+PyYAML==5.4
 queuelib==1.4.2
 rarfile==3.0
 rdflib==4.2.2
