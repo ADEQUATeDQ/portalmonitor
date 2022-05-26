@@ -103,7 +103,7 @@ structlog==16.1.0
 subprocess32==3.2.7
 tldextract==2.0.2
 tornado==4.4.2
-Twisted==16.6.0
+Twisted==22.4.0
 unicodecsv==0.14.1
 Unidecode==0.4.20
 url==0.4.0
