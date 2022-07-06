@@ -52,7 +52,7 @@ itsdangerous==0.24
 Jinja2==2.9.5
 jsonschema==2.5.1
 keepalive==0.5
-lxml==3.7.2
+lxml==4.9.1
 MarkupSafe==0.23
 matplotlib==2.0.0
 memoizer==0.0.1
