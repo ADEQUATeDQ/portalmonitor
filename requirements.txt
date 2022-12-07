@@ -9,7 +9,7 @@ bokeh==0.12.4
 bson==0.4.3
 cache==1.0.3
 cachetools==2.0.0
-certifi==2017.1.23
+certifi==2022.12.7
 cffi==1.9.1
 chardet==2.3.0
 ckanapi==4.0
